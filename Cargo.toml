@@ -1,0 +1,29 @@
+[package]
+name = "oxirush-s1ap"
+version = "0.2.0"
+edition = "2024"
+description = "LTE S1AP (S1 Application Protocol) APER codec — auto-generated from 3GPP ASN.1 definitions"
+license = "Apache-2.0"
+repository = "https://github.com/linouxis9/oxirush-s1ap"
+authors = ["Valentin D'Emmanuele"]
+rust-version = "1.85"
+keywords = ["lte", "s1ap", "3gpp", "asn1", "aper"]
+categories = ["network-programming", "encoding", "parser-implementations"]
+readme = "README.md"
+include = [
+    "src/**/*.rs",
+    "examples/**/*.rs",
+    "tests/**/*.rs",
+    "README.md",
+    "LICENSE",
+]
+
+[dependencies]
+paste = "1"
+rasn = { version = "0.28.15", default-features = false, features = ["bytes"] }
+
+[dev-dependencies]
+hex = "0.4"
+
+[package.metadata.docs.rs]
+rustc-args = ["--cfg", "docsrs"]
