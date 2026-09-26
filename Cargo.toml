@@ -25,5 +25,14 @@ rasn = { version = "0.28.15", default-features = false, features = ["bytes"] }
 [dev-dependencies]
 hex = "0.4"
 
-[package.metadata.docs.rs]
-rustc-args = ["--cfg", "docsrs"]
+[[example]]
+name = "build_pdu"
+doc-scrape-examples = false
+
+[[example]]
+name = "decode_manually"
+doc-scrape-examples = false
+
+[[example]]
+name = "extract_ies"
+doc-scrape-examples = false
