@@ -682,7 +682,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousAdditionalGUTIIEExtensions::decode(decoder)?);
             }
@@ -814,7 +814,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousAllocationAndRetentionPriorityIEExtensions::decode(
                     decoder,
@@ -991,7 +991,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousAssistanceDataForCECapableUEsIEExtensions::decode(
                     decoder,
@@ -1101,7 +1101,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousAssistanceDataForPagingIEExtensions::decode(
                     decoder,
@@ -1219,7 +1219,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousAssistanceDataForRecommendedCellsIEExtensions::decode(decoder)?);
@@ -1291,7 +1291,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 6));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(PLMNidentity::decode(decoder)?);
             }
@@ -1383,7 +1383,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousBearersSubjectToEarlyStatusTransferItemIEExtensions::decode(decoder)?,
@@ -1449,7 +1449,7 @@ pub mod s1_ap_ies {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
         size("1..=256"),
@@ -1458,6 +1458,59 @@ pub mod s1_ap_ies {
     pub struct BearersSubjectToEarlyStatusTransferList(
         pub SequenceOf<AnonymousBearersSubjectToEarlyStatusTransferList>,
     );
+    impl Encode for BearersSubjectToEarlyStatusTransferList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for BearersSubjectToEarlyStatusTransferList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousBearersSubjectToEarlyStatusTransferList>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousBearersSubjectToEarlyStatusTransferList::decode(
+                    decoder,
+                )?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -1539,7 +1592,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousBearersSubjectToStatusTransferItemIEExtensions::decode(decoder)?,
@@ -1611,7 +1664,7 @@ pub mod s1_ap_ies {
         }
     }
     #[doc = " B"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
         size("1..=256"),
@@ -1620,6 +1673,59 @@ pub mod s1_ap_ies {
     pub struct BearersSubjectToStatusTransferList(
         pub SequenceOf<AnonymousBearersSubjectToStatusTransferList>,
     );
+    impl Encode for BearersSubjectToStatusTransferList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for BearersSubjectToStatusTransferList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousBearersSubjectToStatusTransferList>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousBearersSubjectToStatusTransferList::decode(
+                    decoder,
+                )?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, value("0..=10000000000"))]
     pub struct BitRate(pub u64);
@@ -1673,7 +1779,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 4));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(BluetoothName::decode(decoder)?);
             }
@@ -1769,7 +1875,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousBluetoothMeasurementConfigurationIEExtensions::decode(decoder)?);
@@ -1954,7 +2060,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCGIIEExtensions::decode(decoder)?);
             }
@@ -2054,7 +2160,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 16));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(CNTypeRestrictionsItem::decode(decoder)?);
             }
@@ -2142,7 +2248,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCNTypeRestrictionsItemIEExtensions::decode(
                     decoder,
@@ -2253,7 +2359,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCOUNTValueExtendedIEExtensions::decode(decoder)?);
             }
@@ -2360,7 +2466,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCOUNTvalueIEExtensions::decode(decoder)?);
             }
@@ -2472,7 +2578,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCOUNTvaluePDCPSNlength18IEExtensions::decode(
                     decoder,
@@ -2561,7 +2667,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(CSGIdListItem::decode(decoder)?);
             }
@@ -2644,7 +2750,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCSGIdListItemIEExtensions::decode(decoder)?);
             }
@@ -2720,7 +2826,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(CancelledCellinEAIItem::decode(decoder)?);
             }
@@ -2808,7 +2914,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCancelledCellinEAIItemIEExtensions::decode(
                     decoder,
@@ -2885,7 +2991,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(CancelledCellinTAIItem::decode(decoder)?);
             }
@@ -2973,7 +3079,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCancelledCellinTAIItemIEExtensions::decode(
                     decoder,
@@ -3291,7 +3397,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCdma2000OneXSRVCCInfoIEExtensions::decode(decoder)?);
             }
@@ -3430,7 +3536,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCellBasedMDTIEExtensions::decode(decoder)?);
             }
@@ -3533,7 +3639,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCellBasedQMCIEExtensions::decode(decoder)?);
             }
@@ -3604,7 +3710,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(CellIDBroadcastItem::decode(decoder)?);
             }
@@ -3692,7 +3798,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCellIDBroadcastItemIEExtensions::decode(decoder)?);
             }
@@ -3763,7 +3869,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(CellIDCancelledItem::decode(decoder)?);
             }
@@ -3851,7 +3957,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCellIDCancelledItemIEExtensions::decode(decoder)?);
             }
@@ -3926,7 +4032,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 32));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(EUTRANCGI::decode(decoder)?);
             }
@@ -3977,7 +4083,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 32));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(EUTRANCGI::decode(decoder)?);
             }
@@ -4062,7 +4168,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousCellIdentifierAndCELevelForCECapableUEsIEExtensions::decode(decoder)?,
@@ -4174,7 +4280,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCellTypeIEExtensions::decode(decoder)?);
             }
@@ -4242,7 +4348,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(CompletedCellinEAIItem::decode(decoder)?);
             }
@@ -4330,7 +4436,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCompletedCellinEAIItemIEExtensions::decode(
                     decoder,
@@ -4403,7 +4509,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(CompletedCellinTAIItem::decode(decoder)?);
             }
@@ -4491,7 +4597,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCompletedCellinTAIItemIEExtensions::decode(
                     decoder,
@@ -4604,7 +4710,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousConnectedengNBItemIEExtensions::decode(decoder)?);
             }
@@ -4679,7 +4785,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(ConnectedengNBItem::decode(decoder)?);
             }
@@ -4762,7 +4868,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousContextatSourceIEExtensions::decode(decoder)?);
             }
@@ -4883,7 +4989,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCriticalityDiagnosticsIEExtensions::decode(
                     decoder,
@@ -5005,7 +5111,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCriticalityDiagnosticsIEItemIEExtensions::decode(
                     decoder,
@@ -5042,13 +5148,61 @@ pub mod s1_ap_ies {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
         size("1..=256"),
         identifier = "CriticalityDiagnostics-IE-List"
     )]
     pub struct CriticalityDiagnosticsIEList(pub SequenceOf<CriticalityDiagnosticsIEItem>);
+    impl Encode for CriticalityDiagnosticsIEList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for CriticalityDiagnosticsIEList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<CriticalityDiagnosticsIEItem>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(CriticalityDiagnosticsIEItem::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -5133,7 +5287,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousDAPSRequestInfoIEExtensions::decode(decoder)?);
             }
@@ -5247,7 +5401,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousDAPSResponseInfoIEExtensions::decode(decoder)?);
             }
@@ -5354,7 +5508,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousDAPSResponseInfoItemIEExtensions::decode(decoder)?);
             }
@@ -5459,7 +5613,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousDAPSResponseInfoList::decode(decoder)?);
             }
@@ -5550,7 +5704,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousDLCPSecurityInformationIEExtensions::decode(
                     decoder,
@@ -5717,7 +5871,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABInformationList::decode(decoder)?);
             }
@@ -5805,7 +5959,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABInformationListItemIEExtensions::decode(
                     decoder,
@@ -5914,7 +6068,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABItemIEExtensions::decode(decoder)?);
             }
@@ -6025,7 +6179,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABLevelQoSParametersIEExtensions::decode(
                     decoder,
@@ -6132,7 +6286,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABList::decode(decoder)?);
             }
@@ -6220,7 +6374,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABUsageReportItemIEExtensions::decode(decoder)?);
             }
@@ -6333,7 +6487,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 2));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABUsageReportList::decode(decoder)?);
             }
@@ -6349,8 +6503,8 @@ pub mod s1_ap_ies {
     pub struct EARFCN(pub Integer);
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "ECGI-List")]
-    pub struct ECGIList(pub SequenceOf<EUTRANCGI>);
-    impl Encode for ECGIList {
+    pub struct ECGI_List(pub SequenceOf<EUTRANCGI>);
+    impl Encode for ECGI_List {
         fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
             &self,
             encoder: &mut E,
@@ -6377,7 +6531,7 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    impl Decode for ECGIList {
+    impl Decode for ECGI_List {
         fn decode_with_tag_and_constraints<D: Decoder>(
             decoder: &mut D,
             tag: Tag,
@@ -6391,7 +6545,58 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(EUTRANCGI::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct ECGIList(pub SequenceOf<EUTRANCGI>);
+    impl Encode for ECGIList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ECGIList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<EUTRANCGI>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(EUTRANCGI::decode(decoder)?);
             }
@@ -6442,7 +6647,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(EUTRANCGI::decode(decoder)?);
             }
@@ -6537,7 +6742,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENDCSONConfigurationTransferIEExtensions::decode(
                     decoder,
@@ -6671,7 +6876,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENDCSONeNBIdentificationIEExtensions::decode(
                     decoder,
@@ -6785,7 +6990,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENDCSONengNBIdentificationIEExtensions::decode(
                     decoder,
@@ -6899,7 +7104,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENDCTransferTypeReplyIEExtensions::decode(decoder)?);
             }
@@ -7011,7 +7216,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENDCTransferTypeRequestIEExtensions::decode(
                     decoder,
@@ -7134,7 +7339,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousENBEarlyStatusTransferTransparentContainerIEExtensions::decode(
@@ -7259,7 +7464,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousENBStatusTransferTransparentContainerIEExtensions::decode(decoder)?,
@@ -7335,7 +7540,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 2));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TransportLayerAddress::decode(decoder)?);
             }
@@ -7418,7 +7623,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENBX2ExtTLAIEExtensions::decode(decoder)?);
             }
@@ -7493,7 +7698,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 16));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(ENBX2ExtTLA::decode(decoder)?);
             }
@@ -7544,7 +7749,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 16));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TransportLayerAddress::decode(decoder)?);
             }
@@ -7595,7 +7800,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 2));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TransportLayerAddress::decode(decoder)?);
             }
@@ -7649,7 +7854,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 15));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(PLMNidentity::decode(decoder)?);
             }
@@ -7732,7 +7937,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousEUTRANCGIIEExtensions::decode(decoder)?);
             }
@@ -7813,7 +8018,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(EmergencyAreaIDBroadcastItem::decode(decoder)?);
             }
@@ -7901,7 +8106,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousEmergencyAreaIDBroadcastItemIEExtensions::decode(
                     decoder,
@@ -7978,7 +8183,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(EmergencyAreaIDCancelledItem::decode(decoder)?);
             }
@@ -8066,7 +8271,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousEmergencyAreaIDCancelledItemIEExtensions::decode(
                     decoder,
@@ -8143,7 +8348,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(EmergencyAreaID::decode(decoder)?);
             }
@@ -8194,7 +8399,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(EmergencyAreaID::decode(decoder)?);
             }
@@ -8346,7 +8551,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousExpectedUEActivityBehaviourIEExtensions::decode(
                     decoder,
@@ -8467,7 +8672,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousExpectedUEBehaviourIEExtensions::decode(decoder)?);
             }
@@ -8590,7 +8795,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousFiveGSTAIIEExtensions::decode(decoder)?);
             }
@@ -8681,7 +8886,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 4096));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(LAC::decode(decoder)?);
             }
@@ -8732,7 +8937,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 16));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(ForbiddenLAsItem::decode(decoder)?);
             }
@@ -8815,7 +9020,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousForbiddenLAsItemIEExtensions::decode(decoder)?);
             }
@@ -8890,7 +9095,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 4096));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TAC::decode(decoder)?);
             }
@@ -8941,7 +9146,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 16));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(ForbiddenTAsItem::decode(decoder)?);
             }
@@ -9024,7 +9229,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousForbiddenTAsItemIEExtensions::decode(decoder)?);
             }
@@ -9133,7 +9338,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousGBRQosInformationIEExtensions::decode(decoder)?);
             }
@@ -9249,7 +9454,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousGERANCellIDIEExtensions::decode(decoder)?);
             }
@@ -9360,7 +9565,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousGNBIEExtensions::decode(decoder)?);
             }
@@ -9478,7 +9683,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousGUMMEIIEExtensions::decode(decoder)?);
             }
@@ -9557,7 +9762,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(GUMMEI::decode(decoder)?);
             }
@@ -9656,7 +9861,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousGlobalENBIDIEExtensions::decode(decoder)?);
             }
@@ -9763,7 +9968,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousGlobalGNBIDIEExtensions::decode(decoder)?);
             }
@@ -9888,7 +10093,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousGlobalEnGNBIDIEExtensions::decode(decoder)?);
             }
@@ -10016,7 +10221,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousHandoverRestrictionListIEExtensions::decode(
                     decoder,
@@ -10183,7 +10388,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousImmediateMDTIEExtensions::decode(decoder)?);
             }
@@ -10301,7 +10506,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousInformationOnRecommendedCellsAndENBsForPagingIEExtensions::decode(
@@ -10434,7 +10639,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousInterSystemMeasurementItemIEExtensions::decode(
                     decoder,
@@ -10542,7 +10747,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 64));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(InterSystemMeasurementItem::decode(decoder)?);
             }
@@ -10630,7 +10835,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousInterSystemMeasurementParametersIEExtensions::decode(decoder)?);
@@ -10746,7 +10951,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousIntersystemMeasurementConfigurationIEExtensions::decode(decoder)?,
@@ -10881,7 +11086,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousLAIIEExtensions::decode(decoder)?);
             }
@@ -11040,7 +11245,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousLastVisitedEUTRANCellInformationIEExtensions::decode(decoder)?);
@@ -11193,7 +11398,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousListeningSubframePatternIEExtensions::decode(
                     decoder,
@@ -11302,7 +11507,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousLoggedMBSFNMDTIEExtensions::decode(decoder)?);
             }
@@ -11413,7 +11618,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousLoggedMDTIEExtensions::decode(decoder)?);
             }
@@ -11550,7 +11755,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousM1PeriodicReportingIEExtensions::decode(decoder)?);
             }
@@ -11668,7 +11873,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousM1ThresholdEventA2IEExtensions::decode(decoder)?);
             }
@@ -11772,7 +11977,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousM3ConfigurationIEExtensions::decode(decoder)?);
             }
@@ -11897,7 +12102,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousM4ConfigurationIEExtensions::decode(decoder)?);
             }
@@ -12013,7 +12218,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousM5ConfigurationIEExtensions::decode(decoder)?);
             }
@@ -12129,7 +12334,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousM6ConfigurationIEExtensions::decode(decoder)?);
             }
@@ -12266,7 +12471,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousM7ConfigurationIEExtensions::decode(decoder)?);
             }
@@ -12343,7 +12548,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 8));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(MBSFNResultToLogInfo::decode(decoder)?);
             }
@@ -12431,7 +12636,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousMBSFNResultToLogInfoIEExtensions::decode(decoder)?);
             }
@@ -12551,7 +12756,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousMDTConfigurationIEExtensions::decode(decoder)?);
             }
@@ -12685,7 +12890,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 16));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(PLMNidentity::decode(decoder)?);
             }
@@ -12872,7 +13077,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousMutingPatternInformationIEExtensions::decode(
                     decoder,
@@ -13024,7 +13229,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousNBIoTPagingEDRXInformationIEExtensions::decode(
                     decoder,
@@ -13171,7 +13376,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousNGENBIEExtensions::decode(decoder)?);
             }
@@ -13274,7 +13479,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousNRCGIIEExtensions::decode(decoder)?);
             }
@@ -13389,7 +13594,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousNRUESecurityCapabilitiesIEExtensions::decode(
                     decoder,
@@ -13503,7 +13708,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousNRUESidelinkAggregateMaximumBitrateIEExtensions::decode(decoder)?,
@@ -13613,7 +13818,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousNRV2XServicesAuthorizedIEExtensions::decode(
                     decoder,
@@ -13804,7 +14009,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPC5FlowBitRatesIEExtensions::decode(decoder)?);
             }
@@ -13911,7 +14116,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPC5QoSFlowItemIEExtensions::decode(decoder)?);
             }
@@ -13989,7 +14194,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 2048));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(PC5QoSFlowItem::decode(decoder)?);
             }
@@ -14072,7 +14277,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPC5QoSParametersIEExtensions::decode(decoder)?);
             }
@@ -14188,7 +14393,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPLMNAreaBasedQMCIEExtensions::decode(decoder)?);
             }
@@ -14259,7 +14464,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 16));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(PLMNidentity::decode(decoder)?);
             }
@@ -14354,7 +14559,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPSCellInformationIEExtensions::decode(decoder)?);
             }
@@ -14422,7 +14627,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(EUTRANCGI::decode(decoder)?);
             }
@@ -14533,7 +14738,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPagingEDRXInformationIEExtensions::decode(decoder)?);
             }
@@ -14648,7 +14853,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPagingAttemptInformationIEExtensions::decode(
                     decoder,
@@ -14876,7 +15081,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousProSeAuthorizedIEExtensions::decode(decoder)?);
             }
@@ -15044,7 +15249,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousRIMTransferIEExtensions::decode(decoder)?);
             }
@@ -15147,7 +15352,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousRLFReportInformationIEExtensions::decode(decoder)?);
             }
@@ -15305,7 +15510,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousRecommendedCellItemIEExtensions::decode(decoder)?);
             }
@@ -15397,7 +15602,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 16));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousRecommendedCellList::decode(decoder)?);
             }
@@ -15476,7 +15681,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousRecommendedCellsForPagingIEExtensions::decode(
                     decoder,
@@ -15574,7 +15779,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousRecommendedENBItemIEExtensions::decode(decoder)?);
             }
@@ -15662,7 +15867,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 16));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousRecommendedENBList::decode(decoder)?);
             }
@@ -15741,7 +15946,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousRecommendedENBsForPagingIEExtensions::decode(
                     decoder,
@@ -15885,7 +16090,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousRequestTypeIEExtensions::decode(decoder)?);
             }
@@ -15992,7 +16197,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousSTMSIIEExtensions::decode(decoder)?);
             }
@@ -16095,7 +16300,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousSONConfigurationTransferIEExtensions::decode(
                     decoder,
@@ -16244,7 +16449,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousSONInformationReplyIEExtensions::decode(decoder)?);
             }
@@ -16386,7 +16591,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousScheduledCommunicationTimeIEExtensions::decode(
                     decoder,
@@ -16495,7 +16700,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousSecondaryRATDataUsageReportItemIEExtensions::decode(decoder)?);
             }
@@ -16596,7 +16801,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousSecondaryRATDataUsageReportList::decode(decoder)?);
             }
@@ -16684,7 +16889,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousSecurityContextIEExtensions::decode(decoder)?);
             }
@@ -16766,7 +16971,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 32));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(ServedDCNsItem::decode(decoder)?);
             }
@@ -16840,7 +17045,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousServedDCNsItemIEExtensions::decode(decoder)?);
             }
@@ -16916,7 +17121,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 8));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(ServedGUMMEIsItem::decode(decoder)?);
             }
@@ -16992,7 +17197,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousServedGUMMEIsItemIEExtensions::decode(decoder)?);
             }
@@ -17071,7 +17276,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(MMEGroupID::decode(decoder)?);
             }
@@ -17122,7 +17327,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(MMECode::decode(decoder)?);
             }
@@ -17173,7 +17378,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 32));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(PLMNidentity::decode(decoder)?);
             }
@@ -17266,7 +17471,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousSourceNgRanNodeIDIEExtensions::decode(decoder)?);
             }
@@ -17416,7 +17621,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousSourceeNBIDIEExtensions::decode(decoder)?);
             }
@@ -17516,7 +17721,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousSourceeNBToTargeteNBTransparentContainerIEExtensions::decode(decoder)?,
@@ -17679,7 +17884,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousSubscriptionBasedUEDifferentiationInfoIEExtensions::decode(decoder)?,
@@ -17781,7 +17986,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(SupportedTAsItem::decode(decoder)?);
             }
@@ -17855,7 +18060,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousSupportedTAsItemIEExtensions::decode(decoder)?);
             }
@@ -17958,7 +18163,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousSynchronisationInformationIEExtensions::decode(
                     decoder,
@@ -17976,7 +18181,7 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "listeningSubframePattern")]
         pub listening_subframe_pattern: Option<ListeningSubframePattern>,
         #[rasn(identifier = "aggressoreCGI-List")]
-        pub aggressore_cgi_list: Option<ECGIList>,
+        pub aggressore_cgi_list: Option<ECGI_List>,
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SynchronisationInformationIEExtensions>,
     }
@@ -17984,7 +18189,7 @@ pub mod s1_ap_ies {
         pub fn new(
             source_stratum_level: Option<StratumLevel>,
             listening_subframe_pattern: Option<ListeningSubframePattern>,
-            aggressore_cgi_list: Option<ECGIList>,
+            aggressore_cgi_list: Option<ECGI_List>,
             i_e_extensions: Option<SynchronisationInformationIEExtensions>,
         ) -> Self {
             Self {
@@ -18069,7 +18274,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTABasedMDTIEExtensions::decode(decoder)?);
             }
@@ -18163,7 +18368,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTABasedQMCIEExtensions::decode(decoder)?);
             }
@@ -18261,7 +18466,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTAIIEExtensions::decode(decoder)?);
             }
@@ -18336,7 +18541,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TAIBroadcastItem::decode(decoder)?);
             }
@@ -18410,7 +18615,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTAIBroadcastItemIEExtensions::decode(decoder)?);
             }
@@ -18485,7 +18690,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TAICancelledItem::decode(decoder)?);
             }
@@ -18559,7 +18764,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTAICancelledItemIEExtensions::decode(decoder)?);
             }
@@ -18657,7 +18862,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTAIBasedMDTIEExtensions::decode(decoder)?);
             }
@@ -18751,7 +18956,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTAIBasedQMCIEExtensions::decode(decoder)?);
             }
@@ -18822,7 +19027,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 2048));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TAI::decode(decoder)?);
             }
@@ -18873,7 +19078,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 8));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TAI::decode(decoder)?);
             }
@@ -18924,7 +19129,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 8));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TAI::decode(decoder)?);
             }
@@ -18975,7 +19180,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TAI::decode(decoder)?);
             }
@@ -19026,7 +19231,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 8));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TAC::decode(decoder)?);
             }
@@ -19077,7 +19282,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 8));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(TAC::decode(decoder)?);
             }
@@ -19195,7 +19400,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTargetNgRanNodeIDIEExtensions::decode(decoder)?);
             }
@@ -19300,7 +19505,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTargetRNCIDIEExtensions::decode(decoder)?);
             }
@@ -19411,7 +19616,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTargeteNBIDIEExtensions::decode(decoder)?);
             }
@@ -19511,7 +19716,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousTargeteNBToSourceeNBTransparentContainerIEExtensions::decode(decoder)?,
@@ -19634,7 +19839,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTimeSynchronisationInfoIEExtensions::decode(
                     decoder,
@@ -19745,7 +19950,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTraceActivationIEExtensions::decode(decoder)?);
             }
@@ -19887,7 +20092,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTunnelInformationIEExtensions::decode(decoder)?);
             }
@@ -19973,7 +20178,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 16));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(LastVisitedCellItem::decode(decoder)?);
             }
@@ -20064,7 +20269,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUES1APIDPairIEExtensions::decode(decoder)?);
             }
@@ -20189,7 +20394,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousUEAssociatedLogicalS1ConnectionItemIEExtensions::decode(decoder)?,
@@ -20294,7 +20499,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEAggregateMaximumBitrateIEExtensions::decode(
                     decoder,
@@ -20400,7 +20605,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEAppLayerMeasConfigIEExtensions::decode(decoder)?);
             }
@@ -20540,7 +20745,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUESecurityCapabilitiesIEExtensions::decode(
                     decoder,
@@ -20646,7 +20851,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousUESidelinkAggregateMaximumBitrateIEExtensions::decode(decoder)?);
@@ -20752,7 +20957,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousULCPSecurityInformationIEExtensions::decode(
                     decoder,
@@ -20873,7 +21078,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUserLocationInformationIEExtensions::decode(
                     decoder,
@@ -20977,7 +21182,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousV2XServicesAuthorizedIEExtensions::decode(decoder)?);
             }
@@ -21078,7 +21283,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 4));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(WLANName::decode(decoder)?);
             }
@@ -21173,7 +21378,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousWLANMeasurementConfigurationIEExtensions::decode(
                     decoder,
@@ -21289,7 +21494,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousWUSAssistanceInformationIEExtensions::decode(
                     decoder,
@@ -21426,7 +21631,7 @@ pub mod s1_ap_ies {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousX2TNLConfigurationInfoIEExtensions::decode(
                     decoder,
@@ -21651,7 +21856,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCSGMembershipInfoIEExtensions::decode(decoder)?);
             }
@@ -21761,7 +21966,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousCellTrafficTraceProtocolIEs::decode(decoder)?);
             }
@@ -21866,7 +22071,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousConnectionEstablishmentIndicationProtocolIEs::decode(decoder)?);
@@ -21962,7 +22167,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousDeactivateTraceProtocolIEs::decode(decoder)?);
             }
@@ -22067,7 +22272,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousDownlinkNASTransportProtocolIEs::decode(decoder)?);
             }
@@ -22172,7 +22377,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousDownlinkNonUEAssociatedLPPaTransportProtocolIEs::decode(decoder)?,
@@ -22274,7 +22479,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousDownlinkS1cdma2000tunnellingProtocolIEs::decode(
                     decoder,
@@ -22381,7 +22586,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousDownlinkUEAssociatedLPPaTransportProtocolIEs::decode(decoder)?);
@@ -22487,7 +22692,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABAdmittedItemIEExtensions::decode(decoder)?);
             }
@@ -22564,9 +22769,57 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
-    #[rasn(delegate, identifier = "E-RABAdmittedList")]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=256"), identifier = "E-RABAdmittedList")]
     pub struct ERABAdmittedList(pub SequenceOf<AnonymousERABAdmittedList>);
+    impl Encode for ERABAdmittedList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABAdmittedList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABAdmittedList>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABAdmittedList::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -22648,7 +22901,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABDataForwardingItemIEExtensions::decode(
                     decoder,
@@ -22774,7 +23027,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABFailedToResumeItemResumeReqIEExtensions::decode(decoder)?);
             }
@@ -22885,7 +23138,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABFailedToResumeItemResumeResIEExtensions::decode(decoder)?);
             }
@@ -22945,11 +23198,66 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
-    #[rasn(delegate, identifier = "E-RABFailedToResumeListResumeReq")]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(
+        delegate,
+        size("1..=256"),
+        identifier = "E-RABFailedToResumeListResumeReq"
+    )]
     pub struct ERABFailedToResumeListResumeReq(
         pub SequenceOf<AnonymousERABFailedToResumeListResumeReq>,
     );
+    impl Encode for ERABFailedToResumeListResumeReq {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABFailedToResumeListResumeReq {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABFailedToResumeListResumeReq>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABFailedToResumeListResumeReq::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -22980,11 +23288,66 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
-    #[rasn(delegate, identifier = "E-RABFailedToResumeListResumeRes")]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(
+        delegate,
+        size("1..=256"),
+        identifier = "E-RABFailedToResumeListResumeRes"
+    )]
     pub struct ERABFailedToResumeListResumeRes(
         pub SequenceOf<AnonymousERABFailedToResumeListResumeRes>,
     );
+    impl Encode for ERABFailedToResumeListResumeRes {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABFailedToResumeListResumeRes {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABFailedToResumeListResumeRes>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABFailedToResumeListResumeRes::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -23066,7 +23429,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABFailedToSetupItemHOReqAckIEExtensions::decode(
                     decoder,
@@ -23128,11 +23491,63 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
-    #[rasn(delegate, identifier = "E-RABFailedtoSetupListHOReqAck")]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(
+        delegate,
+        size("1..=256"),
+        identifier = "E-RABFailedtoSetupListHOReqAck"
+    )]
     pub struct ERABFailedtoSetupListHOReqAck(
         pub SequenceOf<AnonymousERABFailedtoSetupListHOReqAck>,
     );
+    impl Encode for ERABFailedtoSetupListHOReqAck {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABFailedtoSetupListHOReqAck {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABFailedtoSetupListHOReqAck>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABFailedtoSetupListHOReqAck::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -23209,7 +23624,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABModificationConfirmProtocolIEs::decode(
                     decoder,
@@ -23311,7 +23726,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABModificationIndicationProtocolIEs::decode(
                     decoder,
@@ -23423,7 +23838,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABModifyItemBearerModConfIEExtensions::decode(
                     decoder,
@@ -23533,7 +23948,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABModifyItemBearerModResIEExtensions::decode(
                     decoder,
@@ -23636,7 +24051,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABModifyListBearerModConf::decode(decoder)?);
             }
@@ -23717,7 +24132,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABModifyListBearerModRes::decode(decoder)?);
             }
@@ -23795,7 +24210,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABModifyRequestProtocolIEs::decode(decoder)?);
             }
@@ -23897,7 +24312,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABModifyResponseProtocolIEs::decode(decoder)?);
             }
@@ -24002,7 +24417,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(
                     AnonymousERABNotToBeModifiedItemBearerModIndIEExtensions::decode(decoder)?,
@@ -24069,11 +24484,68 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
-    #[rasn(delegate, identifier = "E-RABNotToBeModifiedListBearerModInd")]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(
+        delegate,
+        size("1..=256"),
+        identifier = "E-RABNotToBeModifiedListBearerModInd"
+    )]
     pub struct ERABNotToBeModifiedListBearerModInd(
         pub SequenceOf<AnonymousERABNotToBeModifiedListBearerModInd>,
     );
+    impl Encode for ERABNotToBeModifiedListBearerModInd {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABNotToBeModifiedListBearerModInd {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABNotToBeModifiedListBearerModInd>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABNotToBeModifiedListBearerModInd::decode(
+                    decoder,
+                )?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -24147,7 +24619,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABReleaseCommandProtocolIEs::decode(decoder)?);
             }
@@ -24252,7 +24724,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABReleaseIndicationProtocolIEs::decode(decoder)?);
             }
@@ -24362,7 +24834,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABReleaseItemBearerRelCompIEExtensions::decode(
                     decoder,
@@ -24421,13 +24893,61 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
         size("1..=256"),
         identifier = "E-RABReleaseListBearerRelComp"
     )]
     pub struct ERABReleaseListBearerRelComp(pub SequenceOf<AnonymousERABReleaseListBearerRelComp>);
+    impl Encode for ERABReleaseListBearerRelComp {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABReleaseListBearerRelComp {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABReleaseListBearerRelComp>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABReleaseListBearerRelComp::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -24501,7 +25021,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABReleaseResponseProtocolIEs::decode(decoder)?);
             }
@@ -24606,7 +25126,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABSetupItemBearerSUResIEExtensions::decode(
                     decoder,
@@ -24724,7 +25244,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABSetupItemCtxtSUResIEExtensions::decode(
                     decoder,
@@ -24835,7 +25355,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABSetupListBearerSURes::decode(decoder)?);
             }
@@ -24916,7 +25436,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABSetupListCtxtSURes::decode(decoder)?);
             }
@@ -24994,7 +25514,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABSetupRequestProtocolIEs::decode(decoder)?);
             }
@@ -25094,7 +25614,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABSetupResponseProtocolIEs::decode(decoder)?);
             }
@@ -25148,11 +25668,66 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
-    #[rasn(delegate, identifier = "E-RABSubjecttoDataForwardingList")]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(
+        delegate,
+        size("1..=256"),
+        identifier = "E-RABSubjecttoDataForwardingList"
+    )]
     pub struct ERABSubjecttoDataForwardingList(
         pub SequenceOf<AnonymousERABSubjecttoDataForwardingList>,
     );
+    impl Encode for ERABSubjecttoDataForwardingList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABSubjecttoDataForwardingList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABSubjecttoDataForwardingList>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABSubjecttoDataForwardingList::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -25234,7 +25809,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousERABToBeModifiedItemBearerModIndIEExtensions::decode(decoder)?);
@@ -25351,7 +25926,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousERABToBeModifiedItemBearerModReqIEExtensions::decode(decoder)?);
@@ -25417,11 +25992,66 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
-    #[rasn(delegate, identifier = "E-RABToBeModifiedListBearerModInd")]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(
+        delegate,
+        size("1..=256"),
+        identifier = "E-RABToBeModifiedListBearerModInd"
+    )]
     pub struct ERABToBeModifiedListBearerModInd(
         pub SequenceOf<AnonymousERABToBeModifiedListBearerModInd>,
     );
+    impl Encode for ERABToBeModifiedListBearerModInd {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABToBeModifiedListBearerModInd {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABToBeModifiedListBearerModInd>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABToBeModifiedListBearerModInd::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -25452,7 +26082,7 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
         size("1..=256"),
@@ -25461,6 +26091,57 @@ pub mod s1_ap_pdu_contents {
     pub struct ERABToBeModifiedListBearerModReq(
         pub SequenceOf<AnonymousERABToBeModifiedListBearerModReq>,
     );
+    impl Encode for ERABToBeModifiedListBearerModReq {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABToBeModifiedListBearerModReq {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABToBeModifiedListBearerModReq>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABToBeModifiedListBearerModReq::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -25542,7 +26223,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABToBeSetupItemBearerSUReqIEExtensions::decode(
                     decoder,
@@ -25668,7 +26349,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABToBeSetupItemCtxtSUReqIEExtensions::decode(
                     decoder,
@@ -25794,7 +26475,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABToBeSetupItemHOReqIEExtensions::decode(
                     decoder,
@@ -25865,13 +26546,61 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
         size("1..=256"),
         identifier = "E-RABToBeSetupListBearerSUReq"
     )]
     pub struct ERABToBeSetupListBearerSUReq(pub SequenceOf<AnonymousERABToBeSetupListBearerSUReq>);
+    impl Encode for ERABToBeSetupListBearerSUReq {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABToBeSetupListBearerSUReq {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABToBeSetupListBearerSUReq>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABToBeSetupListBearerSUReq::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -25946,7 +26675,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABToBeSetupListCtxtSUReq::decode(decoder)?);
             }
@@ -25983,9 +26712,57 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
-    #[rasn(delegate, identifier = "E-RABToBeSetupListHOReq")]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=256"), identifier = "E-RABToBeSetupListHOReq")]
     pub struct ERABToBeSetupListHOReq(pub SequenceOf<AnonymousERABToBeSetupListHOReq>);
+    impl Encode for ERABToBeSetupListHOReq {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABToBeSetupListHOReq {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABToBeSetupListHOReq>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABToBeSetupListHOReq::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -26067,7 +26844,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABToBeSwitchedDLItemIEExtensions::decode(
                     decoder,
@@ -26134,9 +26911,57 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
-    #[rasn(delegate, identifier = "E-RABToBeSwitchedDLList")]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=256"), identifier = "E-RABToBeSwitchedDLList")]
     pub struct ERABToBeSwitchedDLList(pub SequenceOf<AnonymousERABToBeSwitchedDLList>);
+    impl Encode for ERABToBeSwitchedDLList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABToBeSwitchedDLList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABToBeSwitchedDLList>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABToBeSwitchedDLList::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -26218,7 +27043,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABToBeSwitchedULItemIEExtensions::decode(
                     decoder,
@@ -26285,9 +27110,57 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
-    #[rasn(delegate, identifier = "E-RABToBeSwitchedULList")]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=256"), identifier = "E-RABToBeSwitchedULList")]
     pub struct ERABToBeSwitchedULList(pub SequenceOf<AnonymousERABToBeSwitchedULList>);
+    impl Encode for ERABToBeSwitchedULList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABToBeSwitchedULList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABToBeSwitchedULList>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABToBeSwitchedULList::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -26364,7 +27237,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENBCPRelocationIndicationProtocolIEs::decode(
                     decoder,
@@ -26466,7 +27339,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENBConfigurationTransferProtocolIEs::decode(
                     decoder,
@@ -26573,7 +27446,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENBConfigurationUpdateProtocolIEs::decode(decoder)?);
             }
@@ -26678,7 +27551,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousENBConfigurationUpdateAcknowledgeProtocolIEs::decode(decoder)?);
@@ -26779,7 +27652,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENBConfigurationUpdateFailureProtocolIEs::decode(
                     decoder,
@@ -26881,7 +27754,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENBDirectInformationTransferProtocolIEs::decode(
                     decoder,
@@ -26988,7 +27861,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENBEarlyStatusTransferProtocolIEs::decode(decoder)?);
             }
@@ -27088,7 +27961,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousENBStatusTransferProtocolIEs::decode(decoder)?);
             }
@@ -27188,7 +28061,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousErrorIndicationProtocolIEs::decode(decoder)?);
             }
@@ -27288,7 +28161,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousHandoverCancelProtocolIEs::decode(decoder)?);
             }
@@ -27393,7 +28266,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousHandoverCancelAcknowledgeProtocolIEs::decode(
                     decoder,
@@ -27490,7 +28363,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousHandoverCommandProtocolIEs::decode(decoder)?);
             }
@@ -27585,7 +28458,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousHandoverFailureProtocolIEs::decode(decoder)?);
             }
@@ -27680,7 +28553,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousHandoverNotifyProtocolIEs::decode(decoder)?);
             }
@@ -27785,7 +28658,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousHandoverPreparationFailureProtocolIEs::decode(
                     decoder,
@@ -27882,7 +28755,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousHandoverRequestProtocolIEs::decode(decoder)?);
             }
@@ -27987,7 +28860,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousHandoverRequestAcknowledgeProtocolIEs::decode(
                     decoder,
@@ -28084,7 +28957,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousHandoverRequiredProtocolIEs::decode(decoder)?);
             }
@@ -28184,7 +29057,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousHandoverSuccessProtocolIEs::decode(decoder)?);
             }
@@ -28289,7 +29162,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousInitialContextSetupFailureProtocolIEs::decode(
                     decoder,
@@ -28391,7 +29264,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousInitialContextSetupRequestProtocolIEs::decode(
                     decoder,
@@ -28498,7 +29371,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousInitialContextSetupResponseProtocolIEs::decode(
                     decoder,
@@ -28595,7 +29468,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousInitialUEMessageProtocolIEs::decode(decoder)?);
             }
@@ -28705,7 +29578,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousKillRequestProtocolIEs::decode(decoder)?);
             }
@@ -28805,7 +29678,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousKillResponseProtocolIEs::decode(decoder)?);
             }
@@ -28900,7 +29773,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousLocationReportProtocolIEs::decode(decoder)?);
             }
@@ -29000,7 +29873,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousLocationReportingControlProtocolIEs::decode(
                     decoder,
@@ -29107,7 +29980,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousLocationReportingFailureIndicationProtocolIEs::decode(decoder)?);
@@ -29208,7 +30081,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousMMECPRelocationIndicationProtocolIEs::decode(
                     decoder,
@@ -29310,7 +30183,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousMMEConfigurationTransferProtocolIEs::decode(
                     decoder,
@@ -29417,7 +30290,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousMMEConfigurationUpdateProtocolIEs::decode(decoder)?);
             }
@@ -29522,7 +30395,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousMMEConfigurationUpdateAcknowledgeProtocolIEs::decode(decoder)?);
@@ -29623,7 +30496,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousMMEConfigurationUpdateFailureProtocolIEs::decode(
                     decoder,
@@ -29725,7 +30598,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousMMEDirectInformationTransferProtocolIEs::decode(
                     decoder,
@@ -29832,7 +30705,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousMMEEarlyStatusTransferProtocolIEs::decode(decoder)?);
             }
@@ -29932,7 +30805,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousMMEStatusTransferProtocolIEs::decode(decoder)?);
             }
@@ -30037,7 +30910,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousNASDeliveryIndicationProtocolIEs::decode(decoder)?);
             }
@@ -30137,7 +31010,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousNASNonDeliveryIndicationProtocolIEs::decode(
                     decoder,
@@ -30234,7 +31107,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousOverloadStartProtocolIEs::decode(decoder)?);
             }
@@ -30334,7 +31207,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousOverloadStopProtocolIEs::decode(decoder)?);
             }
@@ -30434,7 +31307,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPWSFailureIndicationProtocolIEs::decode(decoder)?);
             }
@@ -30534,7 +31407,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPWSRestartIndicationProtocolIEs::decode(decoder)?);
             }
@@ -30634,7 +31507,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPagingProtocolIEs::decode(decoder)?);
             }
@@ -30734,7 +31607,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPathSwitchRequestProtocolIEs::decode(decoder)?);
             }
@@ -30839,7 +31712,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPathSwitchRequestAcknowledgeProtocolIEs::decode(
                     decoder,
@@ -30941,7 +31814,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPathSwitchRequestFailureProtocolIEs::decode(
                     decoder,
@@ -31029,7 +31902,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousPrivateMessagePrivateIEs::decode(decoder)?);
             }
@@ -31120,7 +31993,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousRerouteNASRequestProtocolIEs::decode(decoder)?);
             }
@@ -31206,7 +32079,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousResetProtocolIEs::decode(decoder)?);
             }
@@ -31297,7 +32170,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousResetAcknowledgeProtocolIEs::decode(decoder)?);
             }
@@ -31414,7 +32287,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousRetrieveUEInformationProtocolIEs::decode(decoder)?);
             }
@@ -31500,7 +32373,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousS1SetupFailureProtocolIEs::decode(decoder)?);
             }
@@ -31586,7 +32459,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousS1SetupRequestProtocolIEs::decode(decoder)?);
             }
@@ -31677,7 +32550,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousS1SetupResponseProtocolIEs::decode(decoder)?);
             }
@@ -31768,7 +32641,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousSecondaryRATDataUsageReportProtocolIEs::decode(
                     decoder,
@@ -31861,7 +32734,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTAIItemIEExtensions::decode(decoder)?);
             }
@@ -31946,7 +32819,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(1, 256));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTAIList::decode(decoder)?);
             }
@@ -32020,7 +32893,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTraceFailureIndicationProtocolIEs::decode(decoder)?);
             }
@@ -32106,7 +32979,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousTraceStartProtocolIEs::decode(decoder)?);
             }
@@ -32152,7 +33025,7 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
         size("1..=256"),
@@ -32161,6 +33034,59 @@ pub mod s1_ap_pdu_contents {
     pub struct UEAssociatedLogicalS1ConnectionListRes(
         pub SequenceOf<AnonymousUEAssociatedLogicalS1ConnectionListRes>,
     );
+    impl Encode for UEAssociatedLogicalS1ConnectionListRes {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for UEAssociatedLogicalS1ConnectionListRes {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousUEAssociatedLogicalS1ConnectionListRes>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousUEAssociatedLogicalS1ConnectionListRes::decode(
+                    decoder,
+                )?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Anonymous SEQUENCE OF member "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "SEQUENCE")]
@@ -32178,7 +33104,7 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
         size("1..=256"),
@@ -32187,6 +33113,59 @@ pub mod s1_ap_pdu_contents {
     pub struct UEAssociatedLogicalS1ConnectionListResAck(
         pub SequenceOf<AnonymousUEAssociatedLogicalS1ConnectionListResAck>,
     );
+    impl Encode for UEAssociatedLogicalS1ConnectionListResAck {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for UEAssociatedLogicalS1ConnectionListResAck {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousUEAssociatedLogicalS1ConnectionListResAck>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousUEAssociatedLogicalS1ConnectionListResAck::decode(
+                    decoder,
+                )?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Anonymous SEQUENCE OF member "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "SEQUENCE")]
@@ -32254,7 +33233,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUECapabilityInfoIndicationProtocolIEs::decode(
                     decoder,
@@ -32352,7 +33331,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextModificationConfirmProtocolIEs::decode(
                     decoder,
@@ -32445,7 +33424,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextModificationFailureProtocolIEs::decode(
                     decoder,
@@ -32538,7 +33517,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextModificationIndicationProtocolIEs::decode(
                     decoder,
@@ -32636,7 +33615,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextModificationRequestProtocolIEs::decode(
                     decoder,
@@ -32734,7 +33713,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextModificationResponseProtocolIEs::decode(
                     decoder,
@@ -32827,7 +33806,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextReleaseCommandProtocolIEs::decode(
                     decoder,
@@ -32920,7 +33899,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextReleaseCompleteProtocolIEs::decode(
                     decoder,
@@ -33013,7 +33992,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextReleaseRequestProtocolIEs::decode(
                     decoder,
@@ -33111,7 +34090,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextResumeFailureProtocolIEs::decode(decoder)?);
             }
@@ -33202,7 +34181,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextResumeRequestProtocolIEs::decode(decoder)?);
             }
@@ -33298,7 +34277,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextResumeResponseProtocolIEs::decode(
                     decoder,
@@ -33391,7 +34370,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextSuspendRequestProtocolIEs::decode(
                     decoder,
@@ -33489,7 +34468,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEContextSuspendResponseProtocolIEs::decode(
                     decoder,
@@ -33582,7 +34561,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUEInformationTransferProtocolIEs::decode(decoder)?);
             }
@@ -33672,7 +34651,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousUERadioCapabilityIDMappingRequestProtocolIEs::decode(decoder)?);
@@ -33769,7 +34748,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousUERadioCapabilityIDMappingResponseProtocolIEs::decode(decoder)?);
@@ -33861,7 +34840,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUERadioCapabilityMatchRequestProtocolIEs::decode(
                     decoder,
@@ -33959,7 +34938,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUERadioCapabilityMatchResponseProtocolIEs::decode(
                     decoder,
@@ -34049,7 +35028,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUplinkNASTransportProtocolIEs::decode(decoder)?);
             }
@@ -34140,7 +35119,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values
                     .push(AnonymousUplinkNonUEAssociatedLPPaTransportProtocolIEs::decode(decoder)?);
@@ -34232,7 +35211,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUplinkS1cdma2000tunnellingProtocolIEs::decode(
                     decoder,
@@ -34330,7 +35309,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousUplinkUEAssociatedLPPaTransportProtocolIEs::decode(
                     decoder,
@@ -34423,7 +35402,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousWriteReplaceWarningRequestProtocolIEs::decode(
                     decoder,
@@ -34521,7 +35500,7 @@ pub mod s1_ap_pdu_contents {
             const LENGTH_CONSTRAINTS: Constraints =
                 rasn::constraints!(rasn::value_constraint!(0, 65535));
             let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
-            let mut values = Vec::with_capacity(length);
+            let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousWriteReplaceWarningResponseProtocolIEs::decode(
                     decoder,
@@ -35004,6 +35983,11 @@ impl From<SequenceOf<EUTRANCGI>> for ECGIList {
     }
 }
 impl From<SequenceOf<EUTRANCGI>> for ECGIListForRestart {
+    fn from(value: SequenceOf<EUTRANCGI>) -> Self {
+        Self(value)
+    }
+}
+impl From<SequenceOf<EUTRANCGI>> for ECGI_List {
     fn from(value: SequenceOf<EUTRANCGI>) -> Self {
         Self(value)
     }
@@ -37269,6 +38253,9 @@ macro_rules! __s1ap_ie_id {
     (Routing_ID) => {
         148u16
     };
+    (S1_Message) => {
+        225u16
+    };
     (SIPTO_L_GW_TransportLayerAddress) => {
         184u16
     };
@@ -38579,6 +39566,10 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::RoutingID = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
+    (S1_Message, $value:expr) => {{
+        let value: $crate::__rasn::types::OctetString = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
     (SIPTO_L_GW_TransportLayerAddress, $value:expr) => {{
         let value: $crate::s1ap::TransportLayerAddress = ($value).into();
         $crate::s1ap::encode_open_type(&value)
@@ -39215,6 +40206,7 @@ macro_rules! __s1ap_decode_ie {
     (ResetType, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ResetType>($value) };
     (RoutingID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::RoutingID>($value) };
     (Routing_ID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::RoutingID>($value) };
+    (S1_Message, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::__rasn::types::OctetString>($value) };
     (SIPTO_L_GW_TransportLayerAddress, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TransportLayerAddress>($value) };
     (SONConfigurationTransfer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::SONConfigurationTransfer>($value) };
     (SONConfigurationTransferECT, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::SONConfigurationTransfer>($value) };
@@ -39982,10 +40974,17 @@ impl std::fmt::Display for S1APPDU {
     }
 }
 /// Encode a typed ASN.1 value for an S1AP open type using APER.
+///
+/// An open type holds a complete encoding, in which an empty encoding
+/// becomes one zero octet (X.691 §11.1.4, §11.2.1).
 pub fn encode_open_type<T: rasn::Encode>(
     value: &T,
 ) -> Result<rasn::types::Any, rasn::error::EncodeError> {
-    rasn::aper::encode(value).map(rasn::types::Any::new)
+    let mut bytes = rasn::aper::encode(value)?;
+    if bytes.is_empty() {
+        bytes.push(0);
+    }
+    Ok(rasn::types::Any::new(bytes))
 }
 /// Decode a typed ASN.1 value from an S1AP open type using APER.
 pub fn decode_open_type<T: rasn::Decode>(

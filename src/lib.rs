@@ -43,6 +43,8 @@ pub mod s1ap;
 
 #[doc(hidden)]
 pub use paste as __paste;
+#[doc(hidden)]
+pub use rasn as __rasn;
 
 pub use s1ap::S1apPduKind;
 

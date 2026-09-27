@@ -34,7 +34,7 @@ shape, macros, generated-source release model, and example workflow for TS 38.41
 
 ```toml
 [dependencies]
-oxirush-s1ap = "0.2"
+oxirush-s1ap = "0.3"
 ```
 
 ```rust
