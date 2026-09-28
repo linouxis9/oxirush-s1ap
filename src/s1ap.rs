@@ -82,6 +82,8 @@ pub mod s1_ap_constants {
     pub const ID_AERIAL_UESUBSCRIPTION_INFORMATION: ProtocolIEID = ProtocolIEID(277);
     pub const ID_ASSISTANCE_DATA_FOR_PAGING: ProtocolIEID = ProtocolIEID(211);
     pub const ID_BEARER_TYPE: ProtocolIEID = ProtocolIEID(233);
+    pub const ID_BEARERS_SUBJECT_TO_DLDISCARDING_ITEM: ProtocolIEID = ProtocolIEID(351);
+    pub const ID_BEARERS_SUBJECT_TO_DLDISCARDING_LIST: ProtocolIEID = ProtocolIEID(352);
     pub const ID_BEARERS_SUBJECT_TO_EARLY_STATUS_TRANSFER_ITEM: ProtocolIEID = ProtocolIEID(322);
     pub const ID_BEARERS_SUBJECT_TO_STATUS_TRANSFER_ITEM: ProtocolIEID = ProtocolIEID(89);
     pub const ID_BLUETOOTH_MEASUREMENT_CONFIGURATION: ProtocolIEID = ProtocolIEID(284);
@@ -100,6 +102,8 @@ pub mod s1_ap_constants {
     pub const ID_CELL_ACCESS_MODE: ProtocolIEID = ProtocolIEID(145);
     pub const ID_CELL_IDENTIFIER_AND_CELEVEL_FOR_CECAPABLE_UES: ProtocolIEID = ProtocolIEID(212);
     pub const ID_CELL_TRAFFIC_TRACE: ProcedureCode = ProcedureCode(42);
+    pub const ID_COARSE_UELOCATION: ProtocolIEID = ProtocolIEID(354);
+    pub const ID_COARSE_UELOCATION_REQUESTED: ProtocolIEID = ProtocolIEID(353);
     pub const ID_CONCURRENT_WARNING_MESSAGE_INDICATOR: ProtocolIEID = ProtocolIEID(142);
     pub const ID_CONNECTEDENG_NBLIST: ProtocolIEID = ProtocolIEID(291);
     pub const ID_CONNECTEDENG_NBTO_ADD_LIST: ProtocolIEID = ProtocolIEID(292);
@@ -157,6 +161,8 @@ pub mod s1_ap_constants {
     pub const ID_E_RABRELEASE_ITEM_HOCMD: ProtocolIEID = ProtocolIEID(49);
     pub const ID_E_RABRELEASE_LIST_BEARER_REL_COMP: ProtocolIEID = ProtocolIEID(69);
     pub const ID_E_RABRELEASED_LIST: ProtocolIEID = ProtocolIEID(110);
+    pub const ID_E_RABSECURITY_RESULT_ITEM: ProtocolIEID = ProtocolIEID(334);
+    pub const ID_E_RABSECURITY_RESULT_LIST: ProtocolIEID = ProtocolIEID(335);
     pub const ID_E_RABSETUP: ProcedureCode = ProcedureCode(5);
     pub const ID_E_RABSETUP_ITEM_BEARER_SURES: ProtocolIEID = ProtocolIEID(39);
     pub const ID_E_RABSETUP_ITEM_CTXT_SURES: ProtocolIEID = ProtocolIEID(50);
@@ -179,6 +185,8 @@ pub mod s1_ap_constants {
     pub const ID_E_RABTO_BE_SWITCHED_DLLIST: ProtocolIEID = ProtocolIEID(22);
     pub const ID_E_RABTO_BE_SWITCHED_ULITEM: ProtocolIEID = ProtocolIEID(94);
     pub const ID_E_RABTO_BE_SWITCHED_ULLIST: ProtocolIEID = ProtocolIEID(95);
+    pub const ID_E_RABTO_BE_UPDATED_ITEM: ProtocolIEID = ProtocolIEID(342);
+    pub const ID_E_RABTO_BE_UPDATED_LIST: ProtocolIEID = ProtocolIEID(341);
     pub const ID_E_RABUSAGE_REPORT_ITEM: ProtocolIEID = ProtocolIEID(267);
     pub const ID_E_RABTO_RELEASE_LIST_HOCMD: ProtocolIEID = ProtocolIEID(13);
     pub const ID_E_UTRAN_TRACE_ID: ProtocolIEID = ProtocolIEID(86);
@@ -235,16 +243,22 @@ pub mod s1_ap_constants {
     pub const ID_LHN_ID: ProtocolIEID = ProtocolIEID(186);
     pub const ID_LPPA_PDU: ProtocolIEID = ProtocolIEID(147);
     pub const ID_LTE_M_INDICATION: ProtocolIEID = ProtocolIEID(272);
+    pub const ID_LTE_NTN_TAI_INFORMATION: ProtocolIEID = ProtocolIEID(339);
     pub const ID_LAST_NG_RANPLMNIDENTITY: ProtocolIEID = ProtocolIEID(290);
     pub const ID_LOCATION_REPORT: ProcedureCode = ProcedureCode(33);
     pub const ID_LOCATION_REPORTING_CONTROL: ProcedureCode = ProcedureCode(31);
     pub const ID_LOCATION_REPORTING_FAILURE_INDICATION: ProcedureCode = ProcedureCode(32);
     pub const ID_LOGGED_MBSFNMDT: ProtocolIEID = ProtocolIEID(197);
+    pub const ID_LOGGED_MDTTRIGGER: ProtocolIEID = ProtocolIEID(344);
     pub const ID_M3_CONFIGURATION: ProtocolIEID = ProtocolIEID(171);
     pub const ID_M4_CONFIGURATION: ProtocolIEID = ProtocolIEID(172);
+    pub const ID_M4_REPORT_AMOUNT: ProtocolIEID = ProtocolIEID(346);
     pub const ID_M5_CONFIGURATION: ProtocolIEID = ProtocolIEID(173);
+    pub const ID_M5_REPORT_AMOUNT: ProtocolIEID = ProtocolIEID(347);
     pub const ID_M6_CONFIGURATION: ProtocolIEID = ProtocolIEID(220);
+    pub const ID_M6_REPORT_AMOUNT: ProtocolIEID = ProtocolIEID(348);
     pub const ID_M7_CONFIGURATION: ProtocolIEID = ProtocolIEID(221);
+    pub const ID_M7_REPORT_AMOUNT: ProtocolIEID = ProtocolIEID(349);
     pub const ID_MDT_LOCATION_INFO: ProtocolIEID = ProtocolIEID(174);
     pub const ID_MDTCONFIGURATION: ProtocolIEID = ProtocolIEID(162);
     pub const ID_MDTCONFIGURATION_NR: ProtocolIEID = ProtocolIEID(316);
@@ -302,6 +316,7 @@ pub mod s1_ap_constants {
     pub const ID_PWSFAILED_ECGILIST: ProtocolIEID = ProtocolIEID(222);
     pub const ID_PAGING: ProcedureCode = ProcedureCode(10);
     pub const ID_PAGING_E_DRXINFORMATION: ProtocolIEID = ProtocolIEID(227);
+    pub const ID_PAGING_CAUSE: ProtocolIEID = ProtocolIEID(331);
     pub const ID_PAGING_PRIORITY: ProtocolIEID = ProtocolIEID(151);
     pub const ID_PATH_SWITCH_REQUEST: ProcedureCode = ProcedureCode(3);
     pub const ID_PENDING_DATA_INDICATION: ProtocolIEID = ProtocolIEID(283);
@@ -309,6 +324,8 @@ pub mod s1_ap_constants {
     pub const ID_PRIVATE_MESSAGE: ProcedureCode = ProcedureCode(39);
     pub const ID_PRO_SE_AUTHORIZED: ProtocolIEID = ProtocolIEID(195);
     pub const ID_PRO_SE_UETO_NETWORK_RELAYING: ProtocolIEID = ProtocolIEID(216);
+    pub const ID_RACSINDICATION: ProtocolIEID = ProtocolIEID(330);
+    pub const ID_RAT_RESTRICTIONS: ProtocolIEID = ProtocolIEID(336);
     pub const ID_RAT_TYPE: ProtocolIEID = ProtocolIEID(232);
     pub const ID_RRC_ESTABLISHMENT_CAUSE: ProtocolIEID = ProtocolIEID(134);
     pub const ID_RRC_RESUME_CAUSE: ProtocolIEID = ProtocolIEID(245);
@@ -322,6 +339,7 @@ pub mod s1_ap_constants {
     pub const ID_REPETITION_PERIOD: ProtocolIEID = ProtocolIEID(114);
     pub const ID_REQUEST_TYPE: ProtocolIEID = ProtocolIEID(98);
     pub const ID_REQUEST_TYPE_ADDITIONAL_INFO: ProtocolIEID = ProtocolIEID(298);
+    pub const ID_REQUESTED_TNLINFO: ProtocolIEID = ProtocolIEID(356);
     pub const ID_REROUTE_NASREQUEST: ProcedureCode = ProcedureCode(52);
     pub const ID_RESET: ProcedureCode = ProcedureCode(14);
     pub const ID_RESET_TYPE: ProtocolIEID = ProtocolIEID(92);
@@ -329,6 +347,7 @@ pub mod s1_ap_constants {
     pub const ID_ROUTING_ID: ProtocolIEID = ProtocolIEID(148);
     pub const ID_S_TMSI: ProtocolIEID = ProtocolIEID(96);
     pub const ID_S1_MESSAGE: ProtocolIEID = ProtocolIEID(225);
+    pub const ID_S1_REMOVAL: ProcedureCode = ProcedureCode(67);
     pub const ID_S1_SETUP: ProcedureCode = ProcedureCode(17);
     pub const ID_SIPTO_CORRELATION_ID: ProtocolIEID = ProtocolIEID(183);
     pub const ID_SIPTO_L_GW_TRANSPORT_LAYER_ADDRESS: ProtocolIEID = ProtocolIEID(184);
@@ -343,7 +362,10 @@ pub mod s1_ap_constants {
     pub const ID_SECONDARY_RATDATA_USAGE_REPORT_LIST: ProtocolIEID = ProtocolIEID(264);
     pub const ID_SECONDARY_RATDATA_USAGE_REQUEST: ProtocolIEID = ProtocolIEID(268);
     pub const ID_SECURITY_CONTEXT: ProtocolIEID = ProtocolIEID(40);
+    pub const ID_SECURITY_INDICATION: ProtocolIEID = ProtocolIEID(332);
     pub const ID_SECURITY_KEY: ProtocolIEID = ProtocolIEID(73);
+    pub const ID_SECURITY_RESULT: ProtocolIEID = ProtocolIEID(333);
+    pub const ID_SENSOR_MEASUREMENT_CONFIGURATION: ProtocolIEID = ProtocolIEID(345);
     pub const ID_SERIAL_NUMBER: ProtocolIEID = ProtocolIEID(112);
     pub const ID_SERVED_DCNS: ProtocolIEID = ProtocolIEID(247);
     pub const ID_SERVED_GUMMEIS: ProtocolIEID = ProtocolIEID(105);
@@ -355,6 +377,9 @@ pub mod s1_ap_constants {
     pub const ID_SOURCE_MME_GUMMEI: ProtocolIEID = ProtocolIEID(157);
     pub const ID_SOURCE_MME_UE_S1_AP_ID: ProtocolIEID = ProtocolIEID(88);
     pub const ID_SOURCE_NODE_ID: ProtocolIEID = ProtocolIEID(312);
+    pub const ID_SOURCE_NODE_TRANSPORT_LAYER_ADDRESS: ProtocolIEID = ProtocolIEID(340);
+    pub const ID_SOURCE_SNID: ProtocolIEID = ProtocolIEID(343);
+    pub const ID_SOURCE_TRANSPORT_LAYER_ADDRESS: ProtocolIEID = ProtocolIEID(328);
     pub const ID_SUBSCRIBER_PROFILE_IDFOR_RFP: ProtocolIEID = ProtocolIEID(106);
     pub const ID_SUBSCRIPTION_BASED_UE_DIFFERENTIATION_INFO: ProtocolIEID = ProtocolIEID(278);
     pub const ID_SUPPORTED_TAS: ProtocolIEID = ProtocolIEID(64);
@@ -368,6 +393,8 @@ pub mod s1_ap_constants {
     pub const ID_TARGET_ID: ProtocolIEID = ProtocolIEID(4);
     pub const ID_TIME_SYNCHRONISATION_INFO: ProtocolIEID = ProtocolIEID(149);
     pub const ID_TIME_UE_STAYED_IN_CELL_ENHANCED_GRANULARITY: ProtocolIEID = ProtocolIEID(167);
+    pub const ID_TIME_BASED_HANDOVER_INFORMATION: ProtocolIEID = ProtocolIEID(350);
+    pub const ID_TIME_REF_DISTRIBUTION: ProtocolIEID = ProtocolIEID(355);
     pub const ID_TIME_SINCE_SECONDARY_NODE_RELEASE: ProtocolIEID = ProtocolIEID(297);
     pub const ID_TIME_TO_WAIT: ProtocolIEID = ProtocolIEID(65);
     pub const ID_TRACE_ACTIVATION: ProtocolIEID = ProtocolIEID(25);
@@ -390,6 +417,7 @@ pub mod s1_ap_constants {
     pub const ID_UECAPABILITY_INFO_REQUEST: ProtocolIEID = ProtocolIEID(275);
     pub const ID_UECONTEXT_MODIFICATION: ProcedureCode = ProcedureCode(21);
     pub const ID_UECONTEXT_MODIFICATION_INDICATION: ProcedureCode = ProcedureCode(53);
+    pub const ID_UECONTEXT_REFERENCEAT_SOURCEE_NB: ProtocolIEID = ProtocolIEID(337);
     pub const ID_UECONTEXT_RELEASE: ProcedureCode = ProcedureCode(23);
     pub const ID_UECONTEXT_RELEASE_REQUEST: ProcedureCode = ProcedureCode(18);
     pub const ID_UECONTEXT_RESUME: ProcedureCode = ProcedureCode(56);
@@ -400,6 +428,7 @@ pub mod s1_ap_constants {
     pub const ID_UERADIO_CAPABILITY: ProtocolIEID = ProtocolIEID(74);
     pub const ID_UERADIO_CAPABILITY_NR_FORMAT: ProtocolIEID = ProtocolIEID(315);
     pub const ID_UERADIO_CAPABILITY_FOR_PAGING: ProtocolIEID = ProtocolIEID(198);
+    pub const ID_UERADIO_CAPABILITY_FOR_PAGING_NR_FORMAT: ProtocolIEID = ProtocolIEID(327);
     pub const ID_UERADIO_CAPABILITY_ID: ProtocolIEID = ProtocolIEID(314);
     pub const ID_UERADIO_CAPABILITY_IDMAPPING: ProcedureCode = ProcedureCode(63);
     pub const ID_UERADIO_CAPABILITY_MATCH: ProcedureCode = ProcedureCode(48);
@@ -453,6 +482,7 @@ pub mod s1_ap_constants {
     pub const ID_EXTENDED_U_EAGGREGATE_MAXIMUM_BIT_RATE_DL: ProtocolIEID = ProtocolIEID(259);
     pub const ID_EXTENDED_U_EAGGREGATE_MAXIMUM_BIT_RATE_UL: ProtocolIEID = ProtocolIEID(260);
     pub const ID_INITIAL_UEMESSAGE: ProcedureCode = ProcedureCode(12);
+    pub const ID_LAST_VISITED_PSCELL_LIST: ProtocolIEID = ProtocolIEID(329);
     pub const ID_PAGING_DRX: ProtocolIEID = ProtocolIEID(44);
     pub const ID_SERVICE_TYPE: ProtocolIEID = ProtocolIEID(276);
     pub const ID_U_E_HISTORY_INFORMATION_FROM_THE_UE: ProtocolIEID = ProtocolIEID(194);
@@ -462,7 +492,7 @@ pub mod s1_ap_constants {
     pub const ID_UPLINK_UEASSOCIATED_LPPA_TRANSPORT: ProcedureCode = ProcedureCode(45);
     pub const ID_X2_TNLCONFIGURATION_INFO: ProtocolIEID = ProtocolIEID(152);
     pub static MAX_EARFCN: LazyLock<Integer> = LazyLock::new(|| Integer::from(262143i128));
-    pub static MAX_NARFCN: LazyLock<Integer> = LazyLock::new(|| Integer::from(32i128));
+    pub static MAX_NARFCN: LazyLock<Integer> = LazyLock::new(|| Integer::from(3279165i128));
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Extension constants"]
@@ -511,6 +541,8 @@ pub mod s1_ap_constants {
     pub static MAXNOOF_PC5_QO_SFLOWS: LazyLock<Integer> = LazyLock::new(|| Integer::from(2048i128));
     pub static MAXNOOF_PLMNFOR_QMC: LazyLock<Integer> = LazyLock::new(|| Integer::from(16i128));
     pub static MAXNOOF_PLMNS_PER_MME: LazyLock<Integer> = LazyLock::new(|| Integer::from(32i128));
+    pub static MAXNOOF_PSCELLS_PER_PRIMARY_CELLIN_UEHISTORY_INFO: LazyLock<Integer> =
+        LazyLock::new(|| Integer::from(8i128));
     pub static MAXNOOF_RATS: LazyLock<Integer> = LazyLock::new(|| Integer::from(8i128));
     pub static MAXNOOF_RECOMMENDED_CELLS: LazyLock<Integer> =
         LazyLock::new(|| Integer::from(16i128));
@@ -519,7 +551,9 @@ pub mod s1_ap_constants {
     pub static MAXNOOF_RESTART_EMERGENCY_AREA_IDS: LazyLock<Integer> =
         LazyLock::new(|| Integer::from(256i128));
     pub static MAXNOOF_RESTART_TAIS: LazyLock<Integer> = LazyLock::new(|| Integer::from(2048i128));
+    pub static MAXNOOF_SENSOR_NAME: LazyLock<Integer> = LazyLock::new(|| Integer::from(3i128));
     pub static MAXNOOF_TACS: LazyLock<Integer> = LazyLock::new(|| Integer::from(256i128));
+    pub static MAXNOOF_TACS_IN_NTN: LazyLock<Integer> = LazyLock::new(|| Integer::from(12i128));
     pub static MAXNOOF_TAIFOR_WARNING: LazyLock<Integer> =
         LazyLock::new(|| Integer::from(65535i128));
     pub static MAXNOOF_TAIS: LazyLock<Integer> = LazyLock::new(|| Integer::from(256i128));
@@ -563,45 +597,55 @@ pub mod s1_ap_ies {
     };
     use super::s1_ap_common_data_types::{Presence, ProtocolExtensionID};
     use super::s1_ap_constants::{
-        ID_ADDITIONAL_RRMPRIORITY_INDEX, ID_BEARERS_SUBJECT_TO_EARLY_STATUS_TRANSFER_ITEM,
+        ID_ADDITIONAL_RRMPRIORITY_INDEX, ID_BEARERS_SUBJECT_TO_DLDISCARDING_ITEM,
+        ID_BEARERS_SUBJECT_TO_DLDISCARDING_LIST, ID_BEARERS_SUBJECT_TO_EARLY_STATUS_TRANSFER_ITEM,
         ID_BEARERS_SUBJECT_TO_STATUS_TRANSFER_ITEM, ID_BLUETOOTH_MEASUREMENT_CONFIGURATION,
         ID_CNTYPE_RESTRICTIONS, ID_CONTEXTAT_SOURCE, ID_DAPSREQUEST_INFO,
-        ID_DAPSRESPONSE_INFO_ITEM, ID_DAPSRESPONSE_INFO_LIST, ID_DLCOUNTVALUE_EXTENDED,
+        ID_DAPSRESPONSE_INFO_ITEM, ID_DAPSRESPONSE_INFO_LIST,
+        ID_DIRECT_FORWARDING_PATH_AVAILABILITY, ID_DLCOUNTVALUE_EXTENDED,
         ID_DLCOUNTVALUE_PDCP_SNLENGTH18, ID_DOWNLINK_PACKET_LOSS_RATE,
         ID_E_NBINDIRECT_X2_TRANSPORT_LAYER_ADDRESSES, ID_E_NBX2_EXTENDED_TRANSPORT_LAYER_ADDRESSES,
-        ID_E_RABINFORMATION_LIST_ITEM, ID_E_RABITEM, ID_E_RABUSAGE_REPORT_ITEM,
-        ID_EMERGENCY_INDICATOR, ID_EXTENDED_E_RAB_GUARANTEED_BITRATE_DL,
-        ID_EXTENDED_E_RAB_GUARANTEED_BITRATE_UL, ID_EXTENDED_E_RAB_MAXIMUM_BITRATE_DL,
-        ID_EXTENDED_E_RAB_MAXIMUM_BITRATE_UL, ID_EXTENDED_U_EAGGREGATE_MAXIMUM_BIT_RATE_DL,
-        ID_EXTENDED_U_EAGGREGATE_MAXIMUM_BIT_RATE_UL, ID_GUMMEITYPE, ID_HO_CAUSE,
-        ID_IMSVOICE_EPSFALLBACKFROM5_G, ID_INTERSYSTEM_MEASUREMENT_CONFIGURATION,
-        ID_LAST_NG_RANPLMNIDENTITY, ID_LOGGED_MBSFNMDT, ID_M3_CONFIGURATION, ID_M4_CONFIGURATION,
-        ID_M5_CONFIGURATION, ID_M6_CONFIGURATION, ID_M7_CONFIGURATION, ID_MDT_LOCATION_INFO,
-        ID_MDTCONFIGURATION, ID_MDTCONFIGURATION_NR, ID_MOBILITY_INFORMATION,
-        ID_MUTING_AVAILABILITY_INDICATION, ID_MUTING_PATTERN_INFORMATION,
-        ID_NB_IO_T_RLF_REPORT_CONTAINER, ID_NRRESTRICTIONIN_EPSAS_SECONDARY_RAT,
-        ID_NRRESTRICTIONIN5_GS, ID_PRO_SE_UETO_NETWORK_RELAYING, ID_PSCELL_INFORMATION,
-        ID_RAT_TYPE, ID_RECEIVE_STATUS_OF_ULPDCPSDUS_EXTENDED,
+        ID_E_RABINFORMATION_LIST_ITEM, ID_E_RABITEM, ID_E_RABSECURITY_RESULT_ITEM,
+        ID_E_RABSECURITY_RESULT_LIST, ID_E_RABUSAGE_REPORT_ITEM, ID_EMERGENCY_INDICATOR,
+        ID_EXTENDED_E_RAB_GUARANTEED_BITRATE_DL, ID_EXTENDED_E_RAB_GUARANTEED_BITRATE_UL,
+        ID_EXTENDED_E_RAB_MAXIMUM_BITRATE_DL, ID_EXTENDED_E_RAB_MAXIMUM_BITRATE_UL,
+        ID_EXTENDED_U_EAGGREGATE_MAXIMUM_BIT_RATE_DL, ID_EXTENDED_U_EAGGREGATE_MAXIMUM_BIT_RATE_UL,
+        ID_GUMMEITYPE, ID_HO_CAUSE, ID_IMSVOICE_EPSFALLBACKFROM5_G,
+        ID_INTERSYSTEM_MEASUREMENT_CONFIGURATION, ID_LAST_NG_RANPLMNIDENTITY,
+        ID_LAST_VISITED_PSCELL_LIST, ID_LOGGED_MBSFNMDT, ID_LOGGED_MDTTRIGGER,
+        ID_LTE_NTN_TAI_INFORMATION, ID_M3_CONFIGURATION, ID_M4_CONFIGURATION, ID_M4_REPORT_AMOUNT,
+        ID_M5_CONFIGURATION, ID_M5_REPORT_AMOUNT, ID_M6_CONFIGURATION, ID_M6_REPORT_AMOUNT,
+        ID_M7_CONFIGURATION, ID_M7_REPORT_AMOUNT, ID_MDT_LOCATION_INFO, ID_MDTCONFIGURATION,
+        ID_MDTCONFIGURATION_NR, ID_MOBILITY_INFORMATION, ID_MUTING_AVAILABILITY_INDICATION,
+        ID_MUTING_PATTERN_INFORMATION, ID_NB_IO_T_RLF_REPORT_CONTAINER,
+        ID_NRRESTRICTIONIN_EPSAS_SECONDARY_RAT, ID_NRRESTRICTIONIN5_GS,
+        ID_PRO_SE_UETO_NETWORK_RELAYING, ID_PSCELL_INFORMATION, ID_RACSINDICATION,
+        ID_RAT_RESTRICTIONS, ID_RAT_TYPE, ID_RECEIVE_STATUS_OF_ULPDCPSDUS_EXTENDED,
         ID_RECEIVE_STATUS_OF_ULPDCPSDUS_PDCP_SNLENGTH18, ID_RECOMMENDED_CELL_ITEM,
-        ID_RECOMMENDED_ENBITEM, ID_REQUEST_TYPE_ADDITIONAL_INFO,
-        ID_SECONDARY_RATDATA_USAGE_REPORT_ITEM, ID_SERVICE_TYPE, ID_SIGNALLING_BASED_MDTPLMNLIST,
-        ID_SON_INFORMATION_REPORT, ID_SOURCE_NODE_ID, ID_SYNCHRONISATION_INFORMATION,
-        ID_TIME_SYNCHRONISATION_INFO, ID_TIME_UE_STAYED_IN_CELL_ENHANCED_GRANULARITY,
-        ID_TRACE_COLLECTION_ENTITY_URI, ID_U_E_HISTORY_INFORMATION_FROM_THE_UE,
-        ID_UEAPP_LAYER_MEAS_CONFIG, ID_ULCOUNTVALUE_EXTENDED, ID_ULCOUNTVALUE_PDCP_SNLENGTH18,
-        ID_UNLICENSED_SPECTRUM_RESTRICTION, ID_UPLINK_PACKET_LOSS_RATE,
-        ID_WLANMEASUREMENT_CONFIGURATION, ID_X2_TNLCONFIGURATION_INFO, MAX_EARFCN, MAX_NARFCN,
-        MAX_RS_INDEX_CELL_QUAL, MAXNOOF_BLUETOOTH_NAME, MAXNOOF_BPLMNS, MAXNOOF_CELL_ID,
-        MAXNOOF_CELL_IDFOR_MDT, MAXNOOF_CELL_IDFOR_QMC, MAXNOOF_CELLIN_EAI, MAXNOOF_CELLIN_TAI,
-        MAXNOOF_CELLSFOR_RESTART, MAXNOOF_CELLSIN_UEHISTORY_INFO, MAXNOOF_CELLSINE_NB,
-        MAXNOOF_CONNECTEDENG_NBS, MAXNOOF_CSGS, MAXNOOF_DCNS, MAXNOOF_E_RABS,
+        ID_RECOMMENDED_ENBITEM, ID_REQUEST_TYPE_ADDITIONAL_INFO, ID_REQUESTED_TNLINFO,
+        ID_SECONDARY_RATDATA_USAGE_REPORT_ITEM, ID_SECURITY_INDICATION,
+        ID_SENSOR_MEASUREMENT_CONFIGURATION, ID_SERVICE_TYPE, ID_SIGNALLING_BASED_MDTPLMNLIST,
+        ID_SON_INFORMATION_REPORT, ID_SOURCE_NODE_ID, ID_SOURCE_NODE_TRANSPORT_LAYER_ADDRESS,
+        ID_SOURCE_SNID, ID_SOURCE_TRANSPORT_LAYER_ADDRESS, ID_SYNCHRONISATION_INFORMATION,
+        ID_TIME_BASED_HANDOVER_INFORMATION, ID_TIME_REF_DISTRIBUTION, ID_TIME_SYNCHRONISATION_INFO,
+        ID_TIME_UE_STAYED_IN_CELL_ENHANCED_GRANULARITY, ID_TRACE_COLLECTION_ENTITY_URI,
+        ID_U_E_HISTORY_INFORMATION_FROM_THE_UE, ID_UEAPP_LAYER_MEAS_CONFIG,
+        ID_UECONTEXT_REFERENCEAT_SOURCEE_NB, ID_ULCOUNTVALUE_EXTENDED,
+        ID_ULCOUNTVALUE_PDCP_SNLENGTH18, ID_UNLICENSED_SPECTRUM_RESTRICTION,
+        ID_UPLINK_PACKET_LOSS_RATE, ID_WLANMEASUREMENT_CONFIGURATION, ID_X2_TNLCONFIGURATION_INFO,
+        MAX_EARFCN, MAX_NARFCN, MAX_RS_INDEX_CELL_QUAL, MAXNOOF_BLUETOOTH_NAME, MAXNOOF_BPLMNS,
+        MAXNOOF_CELL_ID, MAXNOOF_CELL_IDFOR_MDT, MAXNOOF_CELL_IDFOR_QMC, MAXNOOF_CELLIN_EAI,
+        MAXNOOF_CELLIN_TAI, MAXNOOF_CELLSFOR_RESTART, MAXNOOF_CELLSIN_UEHISTORY_INFO,
+        MAXNOOF_CELLSINE_NB, MAXNOOF_CONNECTEDENG_NBS, MAXNOOF_CSGS, MAXNOOF_DCNS, MAXNOOF_E_RABS,
         MAXNOOF_EMERGENCY_AREA_ID, MAXNOOF_EPLMNS, MAXNOOF_EPLMNS_PLUS_ONE, MAXNOOF_ERRORS,
         MAXNOOF_FORB_LACS, MAXNOOF_FORB_TACS, MAXNOOF_GROUP_IDS, MAXNOOF_MBSFNAREA_MDT,
         MAXNOOF_MDTPLMNS, MAXNOOF_MMECS, MAXNOOF_PC5_QO_SFLOWS, MAXNOOF_PLMNFOR_QMC,
-        MAXNOOF_PLMNS_PER_MME, MAXNOOF_RATS, MAXNOOF_RECOMMENDED_CELLS, MAXNOOF_RECOMMENDED_ENBS,
-        MAXNOOF_RESTART_EMERGENCY_AREA_IDS, MAXNOOF_RESTART_TAIS, MAXNOOF_TACS, MAXNOOF_TAFOR_MDT,
-        MAXNOOF_TAFOR_QMC, MAXNOOF_TAIFOR_WARNING, MAXNOOF_WLANNAME, MAXNOOFE_NBX2_EXT_TLAS,
-        MAXNOOFE_NBX2_GTPTLAS, MAXNOOFE_NBX2_TLAS, MAXNOOFFREQUENCIES, MAXNOOFTIMEPERIODS,
+        MAXNOOF_PLMNS_PER_MME, MAXNOOF_PSCELLS_PER_PRIMARY_CELLIN_UEHISTORY_INFO, MAXNOOF_RATS,
+        MAXNOOF_RECOMMENDED_CELLS, MAXNOOF_RECOMMENDED_ENBS, MAXNOOF_RESTART_EMERGENCY_AREA_IDS,
+        MAXNOOF_RESTART_TAIS, MAXNOOF_SENSOR_NAME, MAXNOOF_TACS, MAXNOOF_TACS_IN_NTN,
+        MAXNOOF_TAFOR_MDT, MAXNOOF_TAFOR_QMC, MAXNOOF_TAIFOR_WARNING, MAXNOOF_WLANNAME,
+        MAXNOOFE_NBX2_EXT_TLAS, MAXNOOFE_NBX2_GTPTLAS, MAXNOOFE_NBX2_TLAS, MAXNOOFFREQUENCIES,
+        MAXNOOFTIMEPERIODS,
     };
     use core::borrow::Borrow;
     use rasn::prelude::*;
@@ -1308,6 +1352,209 @@ pub mod s1_ap_ies {
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
+    pub enum AnonymousBearersSubjectToDLDiscardingItemIEExtensionsCriticality {
+        reject = 0,
+        ignore = 1,
+        notify = 2,
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousBearersSubjectToDLDiscardingItemIEExtensions {
+        #[rasn(value("0..=65535"))]
+        pub id: u16,
+        pub criticality: AnonymousBearersSubjectToDLDiscardingItemIEExtensionsCriticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousBearersSubjectToDLDiscardingItemIEExtensions {
+        pub fn new(
+            id: u16,
+            criticality: AnonymousBearersSubjectToDLDiscardingItemIEExtensionsCriticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct BearersSubjectToDLDiscardingItemIEExtensions(
+        pub SequenceOf<AnonymousBearersSubjectToDLDiscardingItemIEExtensions>,
+    );
+    impl Encode for BearersSubjectToDLDiscardingItemIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for BearersSubjectToDLDiscardingItemIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousBearersSubjectToDLDiscardingItemIEExtensions>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values
+                    .push(AnonymousBearersSubjectToDLDiscardingItemIEExtensions::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "Bearers-SubjectToDLDiscarding-Item")]
+    #[non_exhaustive]
+    pub struct BearersSubjectToDLDiscardingItem {
+        #[rasn(identifier = "e-RAB-ID")]
+        pub e_rab_id: ERABID,
+        #[rasn(identifier = "dL-Discarding")]
+        pub d_l_discarding: DLDiscarding,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<BearersSubjectToDLDiscardingItemIEExtensions>,
+    }
+    impl BearersSubjectToDLDiscardingItem {
+        pub fn new(
+            e_rab_id: ERABID,
+            d_l_discarding: DLDiscarding,
+            i_e_extensions: Option<BearersSubjectToDLDiscardingItemIEExtensions>,
+        ) -> Self {
+            Self {
+                e_rab_id,
+                d_l_discarding,
+                i_e_extensions,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    pub enum AnonymousBearersSubjectToDLDiscardingListCriticality {
+        reject = 0,
+        ignore = 1,
+        notify = 2,
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousBearersSubjectToDLDiscardingList {
+        #[rasn(value("0..=65535"))]
+        pub id: u16,
+        pub criticality: AnonymousBearersSubjectToDLDiscardingListCriticality,
+        pub value: Any,
+    }
+    impl AnonymousBearersSubjectToDLDiscardingList {
+        pub fn new(
+            id: u16,
+            criticality: AnonymousBearersSubjectToDLDiscardingListCriticality,
+            value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                value,
+            }
+        }
+    }
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(
+        delegate,
+        size("1..=256"),
+        identifier = "Bearers-SubjectToDLDiscardingList"
+    )]
+    pub struct BearersSubjectToDLDiscardingList(
+        pub SequenceOf<AnonymousBearersSubjectToDLDiscardingList>,
+    );
+    impl Encode for BearersSubjectToDLDiscardingList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for BearersSubjectToDLDiscardingList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousBearersSubjectToDLDiscardingList>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousBearersSubjectToDLDiscardingList::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
     pub enum AnonymousBearersSubjectToEarlyStatusTransferItemIEExtensionsCriticality {
         reject = 0,
         ignore = 1,
@@ -1980,7 +2227,6 @@ pub mod s1_ap_ies {
     pub enum CEModeBSupportIndicator {
         supported = 0,
     }
-    #[doc = " Coverage Enhancement level encoded according to TS 36.331 (reference 16) "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct CELevel(pub OctetString);
@@ -3175,6 +3421,10 @@ pub mod s1_ap_ies {
         unspecified = 3,
         #[rasn(extension_addition, identifier = "csg-subscription-expiry")]
         csg_subscription_expiry = 4,
+        #[rasn(extension_addition, identifier = "uE-not-in-PLMN-serving-area")]
+        uE_not_in_PLMN_serving_area = 5,
+        #[rasn(extension_addition, identifier = "iab-not-authorized")]
+        iab_not_authorized = 6,
     }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -3281,6 +3531,21 @@ pub mod s1_ap_ies {
         n26_interface_not_available = 40,
         #[rasn(extension_addition, identifier = "insufficient-ue-capabilities")]
         insufficient_ue_capabilities = 41,
+        #[rasn(
+            extension_addition,
+            identifier = "maximum-bearer-pre-emption-rate-exceeded"
+        )]
+        maximum_bearer_pre_emption_rate_exceeded = 42,
+        #[rasn(
+            extension_addition,
+            identifier = "up-integrity-protection-not-possible"
+        )]
+        up_integrity_protection_not_possible = 43,
+        #[rasn(
+            extension_addition,
+            identifier = "release-due-to-discontinuous-coverage"
+        )]
+        release_due_to_discontinuous_coverage = 44,
     }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -4303,6 +4568,16 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(delegate)]
+    pub struct CoarseUELocation(pub OctetString);
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
+    pub enum CoarseUELocationRequested {
+        #[rasn(identifier = "true")]
+        R_true = 0,
     }
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=65535"))]
@@ -5769,6 +6044,32 @@ pub mod s1_ap_ies {
             Self::dLCOUNTValuePDCP_SNlength18(value)
         }
     }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(choice, automatic_tags)]
+    #[non_exhaustive]
+    pub enum DLDiscarding {
+        #[rasn(identifier = "discardDLCOUNTValuePDCP-SNlength12")]
+        discardDLCOUNTValuePDCP_SNlength12(COUNTvalue),
+        #[rasn(identifier = "discardDLCOUNTValuePDCP-SNlength15")]
+        discardDLCOUNTValuePDCP_SNlength15(COUNTValueExtended),
+        #[rasn(identifier = "discardDLCOUNTValuePDCP-SNlength18")]
+        discardDLCOUNTValuePDCP_SNlength18(COUNTvaluePDCPSNlength18),
+    }
+    impl From<COUNTvalue> for DLDiscarding {
+        fn from(value: COUNTvalue) -> Self {
+            Self::discardDLCOUNTValuePDCP_SNlength12(value)
+        }
+    }
+    impl From<COUNTValueExtended> for DLDiscarding {
+        fn from(value: COUNTValueExtended) -> Self {
+            Self::discardDLCOUNTValuePDCP_SNlength15(value)
+        }
+    }
+    impl From<COUNTvaluePDCPSNlength18> for DLDiscarding {
+        fn from(value: COUNTvaluePDCPSNlength18) -> Self {
+            Self::discardDLCOUNTValuePDCP_SNlength18(value)
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
     #[non_exhaustive]
@@ -6289,6 +6590,201 @@ pub mod s1_ap_ies {
             let mut values = Vec::new();
             for _ in 0..length {
                 values.push(AnonymousERABList::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    pub enum AnonymousERABSecurityResultItemIEExtensionsCriticality {
+        reject = 0,
+        ignore = 1,
+        notify = 2,
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousERABSecurityResultItemIEExtensions {
+        #[rasn(value("0..=65535"))]
+        pub id: u16,
+        pub criticality: AnonymousERABSecurityResultItemIEExtensionsCriticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousERABSecurityResultItemIEExtensions {
+        pub fn new(
+            id: u16,
+            criticality: AnonymousERABSecurityResultItemIEExtensionsCriticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct ERABSecurityResultItemIEExtensions(
+        pub SequenceOf<AnonymousERABSecurityResultItemIEExtensions>,
+    );
+    impl Encode for ERABSecurityResultItemIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABSecurityResultItemIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABSecurityResultItemIEExtensions>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABSecurityResultItemIEExtensions::decode(
+                    decoder,
+                )?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "E-RABSecurityResultItem")]
+    #[non_exhaustive]
+    pub struct ERABSecurityResultItem {
+        #[rasn(identifier = "e-RAB-ID")]
+        pub e_rab_id: ERABID,
+        #[rasn(identifier = "securityResult")]
+        pub security_result: SecurityResult,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<ERABSecurityResultItemIEExtensions>,
+    }
+    impl ERABSecurityResultItem {
+        pub fn new(
+            e_rab_id: ERABID,
+            security_result: SecurityResult,
+            i_e_extensions: Option<ERABSecurityResultItemIEExtensions>,
+        ) -> Self {
+            Self {
+                e_rab_id,
+                security_result,
+                i_e_extensions,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    pub enum AnonymousERABSecurityResultListCriticality {
+        reject = 0,
+        ignore = 1,
+        notify = 2,
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousERABSecurityResultList {
+        #[rasn(value("0..=65535"))]
+        pub id: u16,
+        pub criticality: AnonymousERABSecurityResultListCriticality,
+        pub value: Any,
+    }
+    impl AnonymousERABSecurityResultList {
+        pub fn new(
+            id: u16,
+            criticality: AnonymousERABSecurityResultListCriticality,
+            value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                value,
+            }
+        }
+    }
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=256"), identifier = "E-RABSecurityResultList")]
+    pub struct ERABSecurityResultList(pub SequenceOf<AnonymousERABSecurityResultList>);
+    impl Encode for ERABSecurityResultList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABSecurityResultList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABSecurityResultList>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABSecurityResultList::decode(decoder)?);
             }
             Ok(Self(values))
         }
@@ -8441,6 +8937,184 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "true")]
         R_true = 0,
     }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    pub enum AnonymousEventL1LoggedMDTConfigIEExtensionsCriticality {
+        reject = 0,
+        ignore = 1,
+        notify = 2,
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousEventL1LoggedMDTConfigIEExtensions {
+        #[rasn(value("0..=65535"))]
+        pub id: u16,
+        pub criticality: AnonymousEventL1LoggedMDTConfigIEExtensionsCriticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousEventL1LoggedMDTConfigIEExtensions {
+        pub fn new(
+            id: u16,
+            criticality: AnonymousEventL1LoggedMDTConfigIEExtensionsCriticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct EventL1LoggedMDTConfigIEExtensions(
+        pub SequenceOf<AnonymousEventL1LoggedMDTConfigIEExtensions>,
+    );
+    impl Encode for EventL1LoggedMDTConfigIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for EventL1LoggedMDTConfigIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousEventL1LoggedMDTConfigIEExtensions>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousEventL1LoggedMDTConfigIEExtensions::decode(
+                    decoder,
+                )?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    #[non_exhaustive]
+    pub struct EventL1LoggedMDTConfig {
+        #[rasn(identifier = "l1Threshold")]
+        pub l1_threshold: MeasurementThresholdL1LoggedMDT,
+        pub hysteresis: Hysteresis,
+        #[rasn(identifier = "timeToTrigger")]
+        pub time_to_trigger: TimeToTrigger,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<EventL1LoggedMDTConfigIEExtensions>,
+    }
+    impl EventL1LoggedMDTConfig {
+        pub fn new(
+            l1_threshold: MeasurementThresholdL1LoggedMDT,
+            hysteresis: Hysteresis,
+            time_to_trigger: TimeToTrigger,
+            i_e_extensions: Option<EventL1LoggedMDTConfigIEExtensions>,
+        ) -> Self {
+            Self {
+                l1_threshold,
+                hysteresis,
+                time_to_trigger,
+                i_e_extensions,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
+    pub enum EventTriggerOutOfCoverage {
+        #[rasn(identifier = "true")]
+        R_true = 0,
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    pub enum EventTriggerChoiceExtensionsCriticality {
+        reject = 0,
+        ignore = 1,
+        notify = 2,
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    pub struct EventTriggerChoiceExtensions {
+        #[rasn(value("0..=65535"))]
+        pub id: u16,
+        pub criticality: EventTriggerChoiceExtensionsCriticality,
+        pub value: Any,
+    }
+    impl EventTriggerChoiceExtensions {
+        pub fn new(
+            id: u16,
+            criticality: EventTriggerChoiceExtensionsCriticality,
+            value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                value,
+            }
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(choice, automatic_tags)]
+    pub enum EventTrigger {
+        outOfCoverage(EventTriggerOutOfCoverage),
+        eventL1LoggedMDTConfig(EventL1LoggedMDTConfig),
+        #[rasn(identifier = "choice-Extensions")]
+        choice_Extensions(EventTriggerChoiceExtensions),
+    }
+    impl From<EventTriggerOutOfCoverage> for EventTrigger {
+        fn from(value: EventTriggerOutOfCoverage) -> Self {
+            Self::outOfCoverage(value)
+        }
+    }
+    impl From<EventL1LoggedMDTConfig> for EventTrigger {
+        fn from(value: EventL1LoggedMDTConfig) -> Self {
+            Self::eventL1LoggedMDTConfig(value)
+        }
+    }
+    impl From<EventTriggerChoiceExtensions> for EventTrigger {
+        fn from(value: EventTriggerChoiceExtensions) -> Self {
+            Self::choice_Extensions(value)
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
     #[non_exhaustive]
@@ -10280,6 +10954,15 @@ pub mod s1_ap_ies {
         #[rasn(extension_addition, identifier = "fivegs-to-eps")]
         fivegs_to_eps = 6,
     }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(delegate, value("1..=6000"))]
+    pub struct HandoverWindowDuration(pub u16);
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(delegate, value("0..=1048575"))]
+    pub struct HandoverWindowStart(pub u32);
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(delegate, value("0..=30"))]
+    pub struct Hysteresis(pub u8);
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated, identifier = "IAB-Authorized")]
     #[non_exhaustive]
@@ -10544,6 +11227,23 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("16", extensible))]
     pub struct IntegrityProtectionAlgorithms(pub BitString);
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
+    pub enum IntegrityProtectionIndication {
+        required = 0,
+        preferred = 1,
+        #[rasn(identifier = "not-needed")]
+        not_needed = 2,
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
+    pub enum IntegrityProtectionResult {
+        performed = 0,
+        #[rasn(identifier = "not-performed")]
+        not_performed = 1,
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, value("1..=16", extensible))]
     pub struct IntendedNumberOfPagingAttempts(pub Integer);
@@ -10557,6 +11257,10 @@ pub mod s1_ap_ies {
         kHz60 = 2,
         kHz120 = 3,
         kHz240 = 4,
+        #[rasn(extension_addition)]
+        kHz480 = 5,
+        #[rasn(extension_addition)]
+        kHz960 = 6,
     }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
@@ -10653,8 +11357,8 @@ pub mod s1_ap_ies {
     pub struct InterSystemMeasurementItem {
         #[rasn(value("1..=1024"), identifier = "freqBandIndicatorNR")]
         pub freq_band_indicator_nr: u16,
-        #[rasn(value("0..=32"), identifier = "sSBfrequencies")]
-        pub s_sbfrequencies: u8,
+        #[rasn(value("0..=3279165"), identifier = "sSBfrequencies")]
+        pub s_sbfrequencies: u32,
         #[rasn(identifier = "subcarrierSpacingSSB")]
         pub subcarrier_spacing_ssb: InterSystemMeasurementItemSubcarrierSpacingSSB,
         #[rasn(value("1..=16"), identifier = "maxRSIndexCellQual")]
@@ -10669,15 +11373,15 @@ pub mod s1_ap_ies {
         pub s_srssimeasurement: Option<OctetString>,
         #[rasn(identifier = "quantityConfigNR-R15")]
         pub quantity_config_nr_r15: Option<OctetString>,
-        #[rasn(identifier = "blackCellsToAddModList")]
-        pub black_cells_to_add_mod_list: Option<OctetString>,
+        #[rasn(identifier = "excludedCellsToAddModList")]
+        pub excluded_cells_to_add_mod_list: Option<OctetString>,
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<InterSystemMeasurementItemIEExtensions>,
     }
     impl InterSystemMeasurementItem {
         pub fn new(
             freq_band_indicator_nr: u16,
-            s_sbfrequencies: u8,
+            s_sbfrequencies: u32,
             subcarrier_spacing_ssb: InterSystemMeasurementItemSubcarrierSpacingSSB,
             max_rsindex_cell_qual: Option<u8>,
             s_mtc: Option<OctetString>,
@@ -10685,7 +11389,7 @@ pub mod s1_ap_ies {
             s_sbto_measure: Option<OctetString>,
             s_srssimeasurement: Option<OctetString>,
             quantity_config_nr_r15: Option<OctetString>,
-            black_cells_to_add_mod_list: Option<OctetString>,
+            excluded_cells_to_add_mod_list: Option<OctetString>,
             i_e_extensions: Option<InterSystemMeasurementItemIEExtensions>,
         ) -> Self {
             Self {
@@ -10698,7 +11402,7 @@ pub mod s1_ap_ies {
                 s_sbto_measure,
                 s_srssimeasurement,
                 quantity_config_nr_r15,
-                black_cells_to_add_mod_list,
+                excluded_cells_to_add_mod_list,
                 i_e_extensions,
             }
         }
@@ -11131,6 +11835,122 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "lte-m")]
         lte_m = 0,
     }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    pub enum AnonymousLTENTNTAIInformationIEExtensionsCriticality {
+        reject = 0,
+        ignore = 1,
+        notify = 2,
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousLTENTNTAIInformationIEExtensions {
+        #[rasn(value("0..=65535"))]
+        pub id: u16,
+        pub criticality: AnonymousLTENTNTAIInformationIEExtensionsCriticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousLTENTNTAIInformationIEExtensions {
+        pub fn new(
+            id: u16,
+            criticality: AnonymousLTENTNTAIInformationIEExtensionsCriticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct LTENTNTAIInformationIEExtensions(
+        pub SequenceOf<AnonymousLTENTNTAIInformationIEExtensions>,
+    );
+    impl Encode for LTENTNTAIInformationIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for LTENTNTAIInformationIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousLTENTNTAIInformationIEExtensions>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousLTENTNTAIInformationIEExtensions::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "LTE-NTN-TAI-Information")]
+    #[non_exhaustive]
+    pub struct LTENTNTAIInformation {
+        #[rasn(identifier = "servingPLMN")]
+        pub serving_plmn: PLMNidentity,
+        #[rasn(identifier = "tACList-In-LTE-NTN")]
+        pub t_aclist_in_lte_ntn: TACListInLTENTN,
+        #[rasn(identifier = "uE-Location-Derived-TAC")]
+        pub u_e_location_derived_tac: Option<TAC>,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<LTENTNTAIInformationIEExtensions>,
+    }
+    impl LTENTNTAIInformation {
+        pub fn new(
+            serving_plmn: PLMNidentity,
+            t_aclist_in_lte_ntn: TACListInLTENTN,
+            u_e_location_derived_tac: Option<TAC>,
+            i_e_extensions: Option<LTENTNTAIInformationIEExtensions>,
+        ) -> Self {
+            Self {
+                serving_plmn,
+                t_aclist_in_lte_ntn,
+                u_e_location_derived_tac,
+                i_e_extensions,
+            }
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(choice, automatic_tags, identifier = "LastVisitedCell-Item")]
     #[non_exhaustive]
@@ -11295,6 +12115,171 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct LastVisitedNGRANCellInformation(pub OctetString);
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    pub enum AnonymousLastVisitedPSCellInformationIEExtensionsCriticality {
+        reject = 0,
+        ignore = 1,
+        notify = 2,
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousLastVisitedPSCellInformationIEExtensions {
+        #[rasn(value("0..=65535"))]
+        pub id: u16,
+        pub criticality: AnonymousLastVisitedPSCellInformationIEExtensionsCriticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousLastVisitedPSCellInformationIEExtensions {
+        pub fn new(
+            id: u16,
+            criticality: AnonymousLastVisitedPSCellInformationIEExtensionsCriticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct LastVisitedPSCellInformationIEExtensions(
+        pub SequenceOf<AnonymousLastVisitedPSCellInformationIEExtensions>,
+    );
+    impl Encode for LastVisitedPSCellInformationIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for LastVisitedPSCellInformationIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousLastVisitedPSCellInformationIEExtensions>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousLastVisitedPSCellInformationIEExtensions::decode(
+                    decoder,
+                )?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    #[non_exhaustive]
+    pub struct LastVisitedPSCellInformation {
+        #[rasn(identifier = "pSCellID")]
+        pub p_scell_id: Option<PSCellInformation>,
+        #[rasn(value("0..=40950"), identifier = "timeStay")]
+        pub time_stay: u16,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<LastVisitedPSCellInformationIEExtensions>,
+    }
+    impl LastVisitedPSCellInformation {
+        pub fn new(
+            p_scell_id: Option<PSCellInformation>,
+            time_stay: u16,
+            i_e_extensions: Option<LastVisitedPSCellInformationIEExtensions>,
+        ) -> Self {
+            Self {
+                p_scell_id,
+                time_stay,
+                i_e_extensions,
+            }
+        }
+    }
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=8"))]
+    pub struct LastVisitedPSCellList(pub SequenceOf<LastVisitedPSCellInformation>);
+    impl Encode for LastVisitedPSCellList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 8));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for LastVisitedPSCellList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<LastVisitedPSCellInformation>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 8));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(LastVisitedPSCellInformation::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct LastVisitedUTRANCellInformation(pub OctetString);
@@ -11649,6 +12634,23 @@ pub mod s1_ap_ies {
             }
         }
     }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(choice, automatic_tags)]
+    #[non_exhaustive]
+    pub enum LoggedMDTTrigger {
+        periodical(()),
+        eventTrigger(EventTrigger),
+    }
+    impl From<()> for LoggedMDTTrigger {
+        fn from(value: ()) -> Self {
+            Self::periodical(value)
+        }
+    }
+    impl From<EventTrigger> for LoggedMDTTrigger {
+        fn from(value: EventTrigger) -> Self {
+            Self::eventTrigger(value)
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
     pub enum LoggingDuration {
@@ -11662,14 +12664,14 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
     pub enum LoggingInterval {
-        ms128 = 0,
-        ms256 = 1,
-        ms512 = 2,
-        ms1024 = 3,
-        ms2048 = 4,
-        ms3072 = 5,
-        ms4096 = 6,
-        ms6144 = 7,
+        ms1280 = 0,
+        ms2560 = 1,
+        ms5120 = 2,
+        ms10240 = 3,
+        ms20480 = 4,
+        ms30720 = 5,
+        ms40960 = 6,
+        ms61440 = 7,
     }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "M-TMSI")]
@@ -12135,6 +13137,19 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
     #[non_exhaustive]
+    pub enum M4ReportAmountMDT {
+        r1 = 0,
+        r2 = 1,
+        r4 = 2,
+        r8 = 3,
+        r16 = 4,
+        r32 = 5,
+        r64 = 6,
+        infinity = 7,
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
     pub enum M4period {
         ms1024 = 0,
         ms2048 = 1,
@@ -12247,6 +13262,19 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
+    pub enum M5ReportAmountMDT {
+        r1 = 0,
+        r2 = 1,
+        r4 = 2,
+        r8 = 3,
+        r16 = 4,
+        r32 = 5,
+        r64 = 6,
+        infinity = 7,
     }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -12368,6 +13396,19 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
+    pub enum M6ReportAmountMDT {
+        r1 = 0,
+        r2 = 1,
+        r4 = 2,
+        r8 = 3,
+        r16 = 4,
+        r32 = 5,
+        r64 = 6,
+        infinity = 7,
     }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated, identifier = "M6delay-threshold")]
@@ -12500,6 +13541,19 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
+    pub enum M7ReportAmountMDT {
+        r1 = 0,
+        r2 = 1,
+        r4 = 2,
+        r8 = 3,
+        r16 = 4,
+        r32 = 5,
+        r64 = 6,
+        infinity = 7,
     }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, value("1..=60", extensible))]
@@ -12967,6 +14021,61 @@ pub mod s1_ap_ies {
     impl From<ThresholdRSRQ> for MeasurementThresholdA2 {
         fn from(value: ThresholdRSRQ) -> Self {
             Self::threshold_RSRQ(value)
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    pub enum MeasurementThresholdL1LoggedMDTChoiceExtensionsCriticality {
+        reject = 0,
+        ignore = 1,
+        notify = 2,
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    pub struct MeasurementThresholdL1LoggedMDTChoiceExtensions {
+        #[rasn(value("0..=65535"))]
+        pub id: u16,
+        pub criticality: MeasurementThresholdL1LoggedMDTChoiceExtensionsCriticality,
+        pub value: Any,
+    }
+    impl MeasurementThresholdL1LoggedMDTChoiceExtensions {
+        pub fn new(
+            id: u16,
+            criticality: MeasurementThresholdL1LoggedMDTChoiceExtensionsCriticality,
+            value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                value,
+            }
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(choice, automatic_tags)]
+    pub enum MeasurementThresholdL1LoggedMDT {
+        #[rasn(identifier = "threshold-RSRP")]
+        threshold_RSRP(ThresholdRSRP),
+        #[rasn(identifier = "threshold-RSRQ")]
+        threshold_RSRQ(ThresholdRSRQ),
+        #[rasn(identifier = "choice-Extensions")]
+        choice_Extensions(MeasurementThresholdL1LoggedMDTChoiceExtensions),
+    }
+    impl From<ThresholdRSRP> for MeasurementThresholdL1LoggedMDT {
+        fn from(value: ThresholdRSRP) -> Self {
+            Self::threshold_RSRP(value)
+        }
+    }
+    impl From<ThresholdRSRQ> for MeasurementThresholdL1LoggedMDT {
+        fn from(value: ThresholdRSRQ) -> Self {
+            Self::threshold_RSRQ(value)
+        }
+    }
+    impl From<MeasurementThresholdL1LoggedMDTChoiceExtensions> for MeasurementThresholdL1LoggedMDT {
+        fn from(value: MeasurementThresholdL1LoggedMDTChoiceExtensions) -> Self {
+            Self::choice_Extensions(value)
         }
     }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
@@ -14893,6 +16002,12 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
     #[non_exhaustive]
+    pub enum PagingCause {
+        voice = 0,
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
     pub enum PagingDRX {
         v32 = 0,
         v64 = 1,
@@ -15144,14 +16259,191 @@ pub mod s1_ap_ies {
     #[rasn(delegate)]
     pub struct RAC(pub FixedOctetString<1usize>);
     #[doc = " R"]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
+    pub enum RACSIndication {
+        #[rasn(identifier = "true")]
+        R_true = 0,
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "RAN-UE-NGAP-ID", value("0..=4294967295"))]
     pub struct RANUENGAPID(pub u32);
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=16"), identifier = "RAT-Restrictions")]
+    pub struct RATRestrictions(pub SequenceOf<RATRestrictionsItem>);
+    impl Encode for RATRestrictions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 16));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for RATRestrictions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<RATRestrictionsItem>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 16));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(RATRestrictionsItem::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousRATRestrictionsItemIEExtensions {
+        pub id: ProtocolExtensionID,
+        pub criticality: Criticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousRATRestrictionsItemIEExtensions {
+        pub fn new(
+            id: ProtocolExtensionID,
+            criticality: Criticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct RATRestrictionsItemIEExtensions(
+        pub SequenceOf<AnonymousRATRestrictionsItemIEExtensions>,
+    );
+    impl Encode for RATRestrictionsItemIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for RATRestrictionsItemIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousRATRestrictionsItemIEExtensions>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousRATRestrictionsItemIEExtensions::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "RAT-RestrictionsItem")]
+    #[non_exhaustive]
+    pub struct RATRestrictionsItem {
+        #[rasn(identifier = "pLMNidentity")]
+        pub p_lmnidentity: PLMNidentity,
+        #[rasn(size("8", extensible), identifier = "rAT-RestrictionInformation")]
+        pub r_at_restriction_information: BitString,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<RATRestrictionsItemIEExtensions>,
+    }
+    impl RATRestrictionsItem {
+        pub fn new(
+            p_lmnidentity: PLMNidentity,
+            r_at_restriction_information: BitString,
+            i_e_extensions: Option<RATRestrictionsItemIEExtensions>,
+        ) -> Self {
+            Self {
+                p_lmnidentity,
+                r_at_restriction_information,
+                i_e_extensions,
+            }
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated, identifier = "RAT-Type")]
     #[non_exhaustive]
     pub enum RATType {
         nbiot = 0,
+        #[rasn(extension_addition, identifier = "nbiot-leo")]
+        nbiot_leo = 1,
+        #[rasn(extension_addition, identifier = "nbiot-meo")]
+        nbiot_meo = 2,
+        #[rasn(extension_addition, identifier = "nbiot-geo")]
+        nbiot_geo = 3,
+        #[rasn(extension_addition, identifier = "nbiot-othersat")]
+        nbiot_othersat = 4,
+        #[rasn(extension_addition, identifier = "eutran-leo")]
+        eutran_leo = 5,
+        #[rasn(extension_addition, identifier = "eutran-meo")]
+        eutran_meo = 6,
+        #[rasn(extension_addition, identifier = "eutran-geo")]
+        eutran_geo = 7,
+        #[rasn(extension_addition, identifier = "eutran-othersat")]
+        eutran_othersat = 8,
     }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
@@ -16127,6 +17419,100 @@ pub mod s1_ap_ies {
     pub enum RequestTypeAdditionalInfo {
         includePSCell = 0,
     }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousRequestedTNLInfoIEExtensions {
+        pub id: ProtocolExtensionID,
+        pub criticality: Criticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousRequestedTNLInfoIEExtensions {
+        pub fn new(
+            id: ProtocolExtensionID,
+            criticality: Criticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct RequestedTNLInfoIEExtensions(pub SequenceOf<AnonymousRequestedTNLInfoIEExtensions>);
+    impl Encode for RequestedTNLInfoIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for RequestedTNLInfoIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousRequestedTNLInfoIEExtensions>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousRequestedTNLInfoIEExtensions::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    #[non_exhaustive]
+    pub struct RequestedTNLInfo {
+        #[rasn(identifier = "pLMNidentity")]
+        pub p_lmnidentity: PLMNidentity,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<RequestedTNLInfoIEExtensions>,
+    }
+    impl RequestedTNLInfo {
+        pub fn new(
+            p_lmnidentity: PLMNidentity,
+            i_e_extensions: Option<RequestedTNLInfoIEExtensions>,
+        ) -> Self {
+            Self {
+                p_lmnidentity,
+                i_e_extensions,
+            }
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "Routing-ID", value("0..=255"))]
     pub struct RoutingID(pub u8);
@@ -16920,10 +18306,505 @@ pub mod s1_ap_ies {
             }
         }
     }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousSecurityIndicationIEExtensions {
+        pub id: ProtocolExtensionID,
+        pub criticality: Criticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousSecurityIndicationIEExtensions {
+        pub fn new(
+            id: ProtocolExtensionID,
+            criticality: Criticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct SecurityIndicationIEExtensions(
+        pub SequenceOf<AnonymousSecurityIndicationIEExtensions>,
+    );
+    impl Encode for SecurityIndicationIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for SecurityIndicationIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousSecurityIndicationIEExtensions>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousSecurityIndicationIEExtensions::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    #[non_exhaustive]
+    pub struct SecurityIndication {
+        #[rasn(identifier = "integrityProtectionIndication")]
+        pub integrity_protection_indication: IntegrityProtectionIndication,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<SecurityIndicationIEExtensions>,
+    }
+    impl SecurityIndication {
+        pub fn new(
+            integrity_protection_indication: IntegrityProtectionIndication,
+            i_e_extensions: Option<SecurityIndicationIEExtensions>,
+        ) -> Self {
+            Self {
+                integrity_protection_indication,
+                i_e_extensions,
+            }
+        }
+    }
     #[doc = " S"]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct SecurityKey(pub FixedBitString<256usize>);
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousSecurityResultIEExtensions {
+        pub id: ProtocolExtensionID,
+        pub criticality: Criticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousSecurityResultIEExtensions {
+        pub fn new(
+            id: ProtocolExtensionID,
+            criticality: Criticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct SecurityResultIEExtensions(pub SequenceOf<AnonymousSecurityResultIEExtensions>);
+    impl Encode for SecurityResultIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for SecurityResultIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousSecurityResultIEExtensions>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousSecurityResultIEExtensions::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    #[non_exhaustive]
+    pub struct SecurityResult {
+        #[rasn(identifier = "integrityProtectionResult")]
+        pub integrity_protection_result: IntegrityProtectionResult,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<SecurityResultIEExtensions>,
+    }
+    impl SecurityResult {
+        pub fn new(
+            integrity_protection_result: IntegrityProtectionResult,
+            i_e_extensions: Option<SecurityResultIEExtensions>,
+        ) -> Self {
+            Self {
+                integrity_protection_result,
+                i_e_extensions,
+            }
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
+    pub enum SensorMeasConfig {
+        setup = 0,
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousSensorMeasConfigNameItemIEExtensions {
+        pub id: ProtocolExtensionID,
+        pub criticality: Criticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousSensorMeasConfigNameItemIEExtensions {
+        pub fn new(
+            id: ProtocolExtensionID,
+            criticality: Criticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct SensorMeasConfigNameItemIEExtensions(
+        pub SequenceOf<AnonymousSensorMeasConfigNameItemIEExtensions>,
+    );
+    impl Encode for SensorMeasConfigNameItemIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for SensorMeasConfigNameItemIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousSensorMeasConfigNameItemIEExtensions>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousSensorMeasConfigNameItemIEExtensions::decode(
+                    decoder,
+                )?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    #[non_exhaustive]
+    pub struct SensorMeasConfigNameItem {
+        #[rasn(identifier = "sensorNameConfig")]
+        pub sensor_name_config: SensorNameConfig,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<SensorMeasConfigNameItemIEExtensions>,
+    }
+    impl SensorMeasConfigNameItem {
+        pub fn new(
+            sensor_name_config: SensorNameConfig,
+            i_e_extensions: Option<SensorMeasConfigNameItemIEExtensions>,
+        ) -> Self {
+            Self {
+                sensor_name_config,
+                i_e_extensions,
+            }
+        }
+    }
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=3"))]
+    pub struct SensorMeasConfigNameList(pub SequenceOf<SensorMeasConfigNameItem>);
+    impl Encode for SensorMeasConfigNameList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 3));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for SensorMeasConfigNameList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<SensorMeasConfigNameItem>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 3));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(SensorMeasConfigNameItem::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousSensorMeasurementConfigurationIEExtensions {
+        pub id: ProtocolExtensionID,
+        pub criticality: Criticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousSensorMeasurementConfigurationIEExtensions {
+        pub fn new(
+            id: ProtocolExtensionID,
+            criticality: Criticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct SensorMeasurementConfigurationIEExtensions(
+        pub SequenceOf<AnonymousSensorMeasurementConfigurationIEExtensions>,
+    );
+    impl Encode for SensorMeasurementConfigurationIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for SensorMeasurementConfigurationIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousSensorMeasurementConfigurationIEExtensions>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousSensorMeasurementConfigurationIEExtensions::decode(
+                    decoder,
+                )?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    #[non_exhaustive]
+    pub struct SensorMeasurementConfiguration {
+        #[rasn(identifier = "sensorMeasConfig")]
+        pub sensor_meas_config: SensorMeasConfig,
+        #[rasn(identifier = "sensorMeasConfigNameList")]
+        pub sensor_meas_config_name_list: Option<SensorMeasConfigNameList>,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<SensorMeasurementConfigurationIEExtensions>,
+    }
+    impl SensorMeasurementConfiguration {
+        pub fn new(
+            sensor_meas_config: SensorMeasConfig,
+            sensor_meas_config_name_list: Option<SensorMeasConfigNameList>,
+            i_e_extensions: Option<SensorMeasurementConfigurationIEExtensions>,
+        ) -> Self {
+            Self {
+                sensor_meas_config,
+                sensor_meas_config_name_list,
+                i_e_extensions,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
+    pub enum SensorNameConfigUncompensatedBarometricConfig {
+        #[rasn(identifier = "true")]
+        R_true = 0,
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    pub struct SensorNameConfigChoiceExtensions {
+        pub id: ProtocolIEID,
+        pub criticality: Criticality,
+        pub value: Any,
+    }
+    impl SensorNameConfigChoiceExtensions {
+        pub fn new(id: ProtocolIEID, criticality: Criticality, value: Any) -> Self {
+            Self {
+                id,
+                criticality,
+                value,
+            }
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(choice, automatic_tags)]
+    pub enum SensorNameConfig {
+        uncompensatedBarometricConfig(SensorNameConfigUncompensatedBarometricConfig),
+        #[rasn(identifier = "choice-Extensions")]
+        choice_Extensions(SensorNameConfigChoiceExtensions),
+    }
+    impl From<SensorNameConfigUncompensatedBarometricConfig> for SensorNameConfig {
+        fn from(value: SensorNameConfigUncompensatedBarometricConfig) -> Self {
+            Self::uncompensatedBarometricConfig(value)
+        }
+    }
+    impl From<SensorNameConfigChoiceExtensions> for SensorNameConfig {
+        fn from(value: SensorNameConfigChoiceExtensions) -> Self {
+            Self::choice_Extensions(value)
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct SerialNumber(pub FixedBitString<16usize>);
@@ -18399,6 +20280,57 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct TAC(pub FixedOctetString<2usize>);
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=12"), identifier = "TACList-In-LTE-NTN")]
+    pub struct TACListInLTENTN(pub SequenceOf<TAC>);
+    impl Encode for TACListInLTENTN {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 12));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for TACListInLTENTN {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<TAC>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 12));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(TAC::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
     #[doc = " Anonymous SEQUENCE OF member "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "SEQUENCE")]
@@ -19764,6 +21696,118 @@ pub mod s1_ap_ies {
         value("0..=40950")
     )]
     pub struct TimeUEStayedInCellEnhancedGranularity(pub u16);
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousTimeBasedHandoverInformationIEExtensions {
+        pub id: ProtocolExtensionID,
+        pub criticality: Criticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousTimeBasedHandoverInformationIEExtensions {
+        pub fn new(
+            id: ProtocolExtensionID,
+            criticality: Criticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct TimeBasedHandoverInformationIEExtensions(
+        pub SequenceOf<AnonymousTimeBasedHandoverInformationIEExtensions>,
+    );
+    impl Encode for TimeBasedHandoverInformationIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for TimeBasedHandoverInformationIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousTimeBasedHandoverInformationIEExtensions>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousTimeBasedHandoverInformationIEExtensions::decode(
+                    decoder,
+                )?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    #[non_exhaustive]
+    pub struct TimeBasedHandoverInformation {
+        #[rasn(identifier = "hOWindowStart")]
+        pub h_owindow_start: HandoverWindowStart,
+        #[rasn(identifier = "hOWindowDuration")]
+        pub h_owindow_duration: HandoverWindowDuration,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<TimeBasedHandoverInformationIEExtensions>,
+    }
+    impl TimeBasedHandoverInformation {
+        pub fn new(
+            h_owindow_start: HandoverWindowStart,
+            h_owindow_duration: HandoverWindowDuration,
+            i_e_extensions: Option<TimeBasedHandoverInformationIEExtensions>,
+        ) -> Self {
+            Self {
+                h_owindow_start,
+                h_owindow_duration,
+                i_e_extensions,
+            }
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    #[non_exhaustive]
+    pub enum TimeRefDistribution {
+        #[rasn(identifier = "true")]
+        R_true = 0,
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct TimeSinceSecondaryNodeRelease(pub FixedOctetString<4usize>);
@@ -19871,6 +21915,26 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    pub enum TimeToTrigger {
+        ms0 = 0,
+        ms40 = 1,
+        ms64 = 2,
+        ms80 = 3,
+        ms100 = 4,
+        ms128 = 5,
+        ms160 = 6,
+        ms256 = 7,
+        ms320 = 8,
+        ms480 = 9,
+        ms512 = 10,
+        ms640 = 11,
+        ms1024 = 12,
+        ms1280 = 13,
+        ms2560 = 14,
+        ms5120 = 15,
     }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -20191,7 +22255,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "UE-RLF-Report-Container")]
     pub struct UERLFReportContainer(pub OctetString);
-    #[doc = " This IE is a transparent container and shall be encoded as the rlf-Report-r9 field contained in the UEInformationResponse message as defined in TS 36.331 (reference 16)"]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "UE-RLF-Report-Container-for-extended-bands")]
     pub struct UERLFReportContainerForExtendedBands(pub OctetString);
@@ -20645,7 +22708,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct UEIdentityIndexValue(pub FixedBitString<10usize>);
-    #[doc = " This IE is a transparent container and shall be encoded as the VisitedCellInfoList field contained in the UEInformationResponse message as defined in TS 36.331 (reference 16)"]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(choice, automatic_tags)]
     #[non_exhaustive]
@@ -20754,7 +22816,6 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[doc = " This IE is a transparent container and shall be encoded as the rlf-Report-v9e0 contained in the UEInformationResponse message as defined in TS 36.331 (reference 16)"]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -21681,15 +23742,15 @@ pub mod s1_ap_pdu_contents {
         ID_CDMA2000_HOREQUIRED_INDICATION, ID_CDMA2000_HOSTATUS, ID_CDMA2000_ONE_XRAND,
         ID_CDMA2000_ONE_XSRVCCINFO, ID_CDMA2000_PDU, ID_CDMA2000_RATTYPE, ID_CDMA2000_SECTOR_ID,
         ID_CE_MODE_B_SUPPORT_INDICATOR, ID_CE_MODE_BRESTRICTED, ID_CELL_ACCESS_MODE,
-        ID_CELL_IDENTIFIER_AND_CELEVEL_FOR_CECAPABLE_UES, ID_CNDOMAIN,
-        ID_CONCURRENT_WARNING_MESSAGE_INDICATOR, ID_CONNECTEDENG_NBLIST,
-        ID_CONNECTEDENG_NBTO_ADD_LIST, ID_CONNECTEDENG_NBTO_REMOVE_LIST, ID_CORRELATION_ID,
-        ID_COVERAGE_LEVEL, ID_CRITICALITY_DIAGNOSTICS, ID_CSFALLBACK_INDICATOR, ID_CSG_ID,
-        ID_CSG_ID_LIST, ID_CSGMEMBERSHIP_INFO, ID_CSGMEMBERSHIP_STATUS, ID_DATA_CODING_SCHEME,
-        ID_DATA_FORWARDING_NOT_POSSIBLE, ID_DATA_SIZE, ID_DCN_ID, ID_DEFAULT_PAGING_DRX,
-        ID_DIRECT_FORWARDING_PATH_AVAILABILITY, ID_DL_CP_SECURITY_INFORMATION,
-        ID_DLNASPDUDELIVERY_ACK_REQUEST, ID_DOWNLINK_PACKET_LOSS_RATE,
-        ID_E_NB_EARLY_STATUS_TRANSFER_TRANSPARENT_CONTAINER,
+        ID_CELL_IDENTIFIER_AND_CELEVEL_FOR_CECAPABLE_UES, ID_CNDOMAIN, ID_COARSE_UELOCATION,
+        ID_COARSE_UELOCATION_REQUESTED, ID_CONCURRENT_WARNING_MESSAGE_INDICATOR,
+        ID_CONNECTEDENG_NBLIST, ID_CONNECTEDENG_NBTO_ADD_LIST, ID_CONNECTEDENG_NBTO_REMOVE_LIST,
+        ID_CORRELATION_ID, ID_COVERAGE_LEVEL, ID_CRITICALITY_DIAGNOSTICS, ID_CSFALLBACK_INDICATOR,
+        ID_CSG_ID, ID_CSG_ID_LIST, ID_CSGMEMBERSHIP_INFO, ID_CSGMEMBERSHIP_STATUS,
+        ID_DATA_CODING_SCHEME, ID_DATA_FORWARDING_NOT_POSSIBLE, ID_DATA_SIZE, ID_DCN_ID,
+        ID_DEFAULT_PAGING_DRX, ID_DIRECT_FORWARDING_PATH_AVAILABILITY,
+        ID_DL_CP_SECURITY_INFORMATION, ID_DLNASPDUDELIVERY_ACK_REQUEST,
+        ID_DOWNLINK_PACKET_LOSS_RATE, ID_E_NB_EARLY_STATUS_TRANSFER_TRANSPARENT_CONTAINER,
         ID_E_NB_STATUS_TRANSFER_TRANSPARENT_CONTAINER, ID_E_NB_UE_S1_AP_ID, ID_E_NBNAME,
         ID_E_RABADMITTED_ITEM, ID_E_RABADMITTED_LIST, ID_E_RABDATA_FORWARDING_ITEM,
         ID_E_RABFAILED_TO_BE_RELEASED_LIST, ID_E_RABFAILED_TO_MODIFY_LIST,
@@ -21714,8 +23775,9 @@ pub mod s1_ap_pdu_contents {
         ID_E_RABTO_BE_SETUP_LIST_BEARER_SUREQ, ID_E_RABTO_BE_SETUP_LIST_CTXT_SUREQ,
         ID_E_RABTO_BE_SETUP_LIST_HOREQ, ID_E_RABTO_BE_SWITCHED_DLITEM,
         ID_E_RABTO_BE_SWITCHED_DLLIST, ID_E_RABTO_BE_SWITCHED_ULITEM,
-        ID_E_RABTO_BE_SWITCHED_ULLIST, ID_E_RABTO_RELEASE_LIST_HOCMD, ID_E_UTRAN_TRACE_ID,
-        ID_ECGILIST_FOR_RESTART, ID_EDT_SESSION, ID_EMERGENCY_AREA_IDLIST_FOR_RESTART,
+        ID_E_RABTO_BE_SWITCHED_ULLIST, ID_E_RABTO_BE_UPDATED_ITEM, ID_E_RABTO_BE_UPDATED_LIST,
+        ID_E_RABTO_RELEASE_LIST_HOCMD, ID_E_UTRAN_TRACE_ID, ID_ECGILIST_FOR_RESTART,
+        ID_EDT_SESSION, ID_EMERGENCY_AREA_IDLIST_FOR_RESTART,
         ID_EN_DCSONCONFIGURATION_TRANSFER_ECT, ID_EN_DCSONCONFIGURATION_TRANSFER_MCT,
         ID_END_INDICATION, ID_ENHANCED_COVERAGE_RESTRICTED, ID_ETHERNET_TYPE, ID_EUTRAN_CGI,
         ID_EUTRANROUND_TRIP_DELAY_ESTIMATION_INFO, ID_EXPECTED_UEBEHAVIOUR,
@@ -21729,15 +23791,16 @@ pub mod s1_ap_pdu_contents {
         ID_INTER_SYSTEM_INFORMATION_TRANSFER_TYPE_MDT,
         ID_INTERSYSTEM_SONCONFIGURATION_TRANSFER_ECT, ID_INTERSYSTEM_SONCONFIGURATION_TRANSFER_MCT,
         ID_KILL_ALL_WARNING_MESSAGES, ID_LHN_ID, ID_LPPA_PDU, ID_LTE_M_INDICATION,
-        ID_MANAGEMENT_BASED_MDTALLOWED, ID_MANAGEMENT_BASED_MDTPLMNLIST, ID_MASKED_IMEISV,
-        ID_MDTCONFIGURATION_NR, ID_MESSAGE_IDENTIFIER, ID_MME_GROUP_ID, ID_MME_UE_S1_AP_ID,
-        ID_MME_UE_S1_AP_ID_2, ID_MMENAME, ID_MMERELAY_SUPPORT_INDICATOR, ID_MSCLASSMARK2,
-        ID_MSCLASSMARK3, ID_NAS_DOWNLINK_COUNT, ID_NAS_PDU, ID_NASSECURITY_PARAMETERSFROM_E_UTRAN,
+        ID_LTE_NTN_TAI_INFORMATION, ID_MANAGEMENT_BASED_MDTALLOWED,
+        ID_MANAGEMENT_BASED_MDTPLMNLIST, ID_MASKED_IMEISV, ID_MDTCONFIGURATION_NR,
+        ID_MESSAGE_IDENTIFIER, ID_MME_GROUP_ID, ID_MME_UE_S1_AP_ID, ID_MME_UE_S1_AP_ID_2,
+        ID_MMENAME, ID_MMERELAY_SUPPORT_INDICATOR, ID_MSCLASSMARK2, ID_MSCLASSMARK3,
+        ID_NAS_DOWNLINK_COUNT, ID_NAS_PDU, ID_NASSECURITY_PARAMETERSFROM_E_UTRAN,
         ID_NASSECURITY_PARAMETERSTO_E_UTRAN, ID_NB_IO_T_DEFAULT_PAGING_DRX, ID_NB_IO_T_PAGING_DRX,
         ID_NB_IO_T_PAGING_E_DRXINFORMATION, ID_NB_IO_T_UEIDENTITY_INDEX_VALUE,
         ID_NOTIFY_SOURCEE_NB, ID_NRUESECURITY_CAPABILITIES,
         ID_NRUESIDELINK_AGGREGATE_MAXIMUM_BITRATE, ID_NRV2_XSERVICES_AUTHORIZED,
-        ID_NUMBEROF_BROADCAST_REQUEST, ID_OVERLOAD_RESPONSE, ID_PAGING_DRX,
+        ID_NUMBEROF_BROADCAST_REQUEST, ID_OVERLOAD_RESPONSE, ID_PAGING_CAUSE, ID_PAGING_DRX,
         ID_PAGING_E_DRXINFORMATION, ID_PAGING_PRIORITY, ID_PC5_QO_SPARAMETERS,
         ID_PENDING_DATA_INDICATION, ID_PRIVACY_INDICATOR, ID_PRO_SE_AUTHORIZED,
         ID_PS_SERVICE_NOT_AVAILABLE, ID_PSCELL_INFORMATION, ID_PWSFAILED_ECGILIST,
@@ -21745,25 +23808,27 @@ pub mod s1_ap_pdu_contents {
         ID_RELAY_NODE_INDICATOR, ID_REPETITION_PERIOD, ID_REQUEST_TYPE, ID_RESET_TYPE,
         ID_ROUTING_ID, ID_RRC_ESTABLISHMENT_CAUSE, ID_RRC_RESUME_CAUSE, ID_S_TMSI, ID_S1_MESSAGE,
         ID_SECONDARY_RATDATA_USAGE_REPORT_LIST, ID_SECONDARY_RATDATA_USAGE_REQUEST,
-        ID_SECURITY_CONTEXT, ID_SECURITY_KEY, ID_SERIAL_NUMBER, ID_SERVED_DCNS, ID_SERVED_GUMMEIS,
-        ID_SIPTO_CORRELATION_ID, ID_SIPTO_L_GW_TRANSPORT_LAYER_ADDRESS,
-        ID_SONCONFIGURATION_TRANSFER_ECT, ID_SONCONFIGURATION_TRANSFER_MCT, ID_SOURCE_MME_GUMMEI,
-        ID_SOURCE_MME_UE_S1_AP_ID, ID_SOURCE_TO_TARGET_TRANSPARENT_CONTAINER,
+        ID_SECURITY_CONTEXT, ID_SECURITY_INDICATION, ID_SECURITY_KEY, ID_SECURITY_RESULT,
+        ID_SERIAL_NUMBER, ID_SERVED_DCNS, ID_SERVED_GUMMEIS, ID_SIPTO_CORRELATION_ID,
+        ID_SIPTO_L_GW_TRANSPORT_LAYER_ADDRESS, ID_SONCONFIGURATION_TRANSFER_ECT,
+        ID_SONCONFIGURATION_TRANSFER_MCT, ID_SOURCE_MME_GUMMEI, ID_SOURCE_MME_UE_S1_AP_ID,
+        ID_SOURCE_TO_TARGET_TRANSPARENT_CONTAINER,
         ID_SOURCE_TO_TARGET_TRANSPARENT_CONTAINER_SECONDARY, ID_SRVCCHOINDICATION,
         ID_SRVCCOPERATION_NOT_POSSIBLE, ID_SRVCCOPERATION_POSSIBLE,
         ID_SUBSCRIBER_PROFILE_IDFOR_RFP, ID_SUBSCRIPTION_BASED_UE_DIFFERENTIATION_INFO,
         ID_SUPPORTED_TAS, ID_TAI, ID_TAIITEM, ID_TAILIST, ID_TAILIST_FOR_RESTART, ID_TARGET_ID,
         ID_TARGET_TO_SOURCE_TRANSPARENT_CONTAINER,
-        ID_TARGET_TO_SOURCE_TRANSPARENT_CONTAINER_SECONDARY, ID_TIME_SINCE_SECONDARY_NODE_RELEASE,
-        ID_TIME_TO_WAIT, ID_TRACE_ACTIVATION, ID_TRACE_COLLECTION_ENTITY_IPADDRESS,
-        ID_TRAFFIC_LOAD_REDUCTION_INDICATION, ID_TRANSPORT_INFORMATION,
-        ID_TUNNEL_INFORMATION_FOR_BBF, ID_U_EAGGREGATE_MAXIMUM_BITRATE,
+        ID_TARGET_TO_SOURCE_TRANSPARENT_CONTAINER_SECONDARY, ID_TIME_REF_DISTRIBUTION,
+        ID_TIME_SINCE_SECONDARY_NODE_RELEASE, ID_TIME_TO_WAIT, ID_TRACE_ACTIVATION,
+        ID_TRACE_COLLECTION_ENTITY_IPADDRESS, ID_TRAFFIC_LOAD_REDUCTION_INDICATION,
+        ID_TRANSPORT_INFORMATION, ID_TUNNEL_INFORMATION_FOR_BBF, ID_U_EAGGREGATE_MAXIMUM_BITRATE,
         ID_UE_APPLICATION_LAYER_MEASUREMENT_CAPABILITY,
         ID_UE_ASSOCIATED_LOGICAL_S1_CONNECTION_ITEM,
         ID_UE_ASSOCIATED_LOGICAL_S1_CONNECTION_LIST_RES_ACK, ID_UE_LEVEL_QO_S_PARAMETERS,
         ID_UE_RETENTION_INFORMATION, ID_UE_S1_AP_IDS, ID_UE_USAGE_TYPE,
         ID_UECAPABILITY_INFO_REQUEST, ID_UEIDENTITY_INDEX_VALUE, ID_UEPAGING_ID,
-        ID_UERADIO_CAPABILITY, ID_UERADIO_CAPABILITY_FOR_PAGING, ID_UERADIO_CAPABILITY_ID,
+        ID_UERADIO_CAPABILITY, ID_UERADIO_CAPABILITY_FOR_PAGING,
+        ID_UERADIO_CAPABILITY_FOR_PAGING_NR_FORMAT, ID_UERADIO_CAPABILITY_ID,
         ID_UERADIO_CAPABILITY_NR_FORMAT, ID_UESECURITY_CAPABILITIES,
         ID_UESIDELINK_AGGREGATE_MAXIMUM_BITRATE, ID_UEUSER_PLANE_CIO_TSUPPORT_INDICATOR,
         ID_UL_CP_SECURITY_INFORMATION, ID_UPLINK_PACKET_LOSS_RATE, ID_USER_LOCATION_INFORMATION,
@@ -27164,6 +29229,199 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
+    pub enum AnonymousERABToBeUpdatedItemIEExtensionsCriticality {
+        reject = 0,
+        ignore = 1,
+        notify = 2,
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousERABToBeUpdatedItemIEExtensions {
+        #[rasn(value("0..=65535"))]
+        pub id: u16,
+        pub criticality: AnonymousERABToBeUpdatedItemIEExtensionsCriticality,
+        #[rasn(identifier = "extensionValue")]
+        pub extension_value: Any,
+    }
+    impl AnonymousERABToBeUpdatedItemIEExtensions {
+        pub fn new(
+            id: u16,
+            criticality: AnonymousERABToBeUpdatedItemIEExtensionsCriticality,
+            extension_value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                extension_value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=65535"))]
+    pub struct ERABToBeUpdatedItemIEExtensions(
+        pub SequenceOf<AnonymousERABToBeUpdatedItemIEExtensions>,
+    );
+    impl Encode for ERABToBeUpdatedItemIEExtensions {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABToBeUpdatedItemIEExtensions {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABToBeUpdatedItemIEExtensions>(
+                        tag,
+                        constraints,
+                    )
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABToBeUpdatedItemIEExtensions::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "E-RABToBeUpdatedItem")]
+    #[non_exhaustive]
+    pub struct ERABToBeUpdatedItem {
+        #[rasn(identifier = "e-RAB-ID")]
+        pub e_rab_id: ERABID,
+        #[rasn(identifier = "securityIndication")]
+        pub security_indication: Option<SecurityIndication>,
+        #[rasn(identifier = "iE-Extensions")]
+        pub i_e_extensions: Option<ERABToBeUpdatedItemIEExtensions>,
+    }
+    impl ERABToBeUpdatedItem {
+        pub fn new(
+            e_rab_id: ERABID,
+            security_indication: Option<SecurityIndication>,
+            i_e_extensions: Option<ERABToBeUpdatedItemIEExtensions>,
+        ) -> Self {
+            Self {
+                e_rab_id,
+                security_indication,
+                i_e_extensions,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
+    pub enum AnonymousERABToBeUpdatedListCriticality {
+        reject = 0,
+        ignore = 1,
+        notify = 2,
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousERABToBeUpdatedList {
+        #[rasn(value("0..=65535"))]
+        pub id: u16,
+        pub criticality: AnonymousERABToBeUpdatedListCriticality,
+        pub value: Any,
+    }
+    impl AnonymousERABToBeUpdatedList {
+        pub fn new(
+            id: u16,
+            criticality: AnonymousERABToBeUpdatedListCriticality,
+            value: Any,
+        ) -> Self {
+            Self {
+                id,
+                criticality,
+                value,
+            }
+        }
+    }
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("1..=256"), identifier = "E-RABToBeUpdatedList")]
+    pub struct ERABToBeUpdatedList(pub SequenceOf<AnonymousERABToBeUpdatedList>);
+    impl Encode for ERABToBeUpdatedList {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for ERABToBeUpdatedList {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousERABToBeUpdatedList>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(1, 256));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousERABToBeUpdatedList::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
+    #[rasn(enumerated)]
     pub enum AnonymousENBCPRelocationIndicationProtocolIEsCriticality {
         reject = 0,
         ignore = 1,
@@ -32314,6 +34572,269 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Anonymous SEQUENCE OF member "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousS1RemovalFailureProtocolIEs {
+        pub id: ProtocolIEID,
+        pub criticality: Criticality,
+        pub value: Any,
+    }
+    impl AnonymousS1RemovalFailureProtocolIEs {
+        pub fn new(id: ProtocolIEID, criticality: Criticality, value: Any) -> Self {
+            Self {
+                id,
+                criticality,
+                value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("0..=65535"))]
+    pub struct S1RemovalFailureProtocolIEs(pub SequenceOf<AnonymousS1RemovalFailureProtocolIEs>);
+    impl Encode for S1RemovalFailureProtocolIEs {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(0, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for S1RemovalFailureProtocolIEs {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousS1RemovalFailureProtocolIEs>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(0, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousS1RemovalFailureProtocolIEs::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[doc = " **************************************************************"]
+    #[doc = ""]
+    #[doc = " S1 Removal Failure"]
+    #[doc = ""]
+    #[doc = " **************************************************************"]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    #[non_exhaustive]
+    pub struct S1RemovalFailure {
+        #[rasn(identifier = "protocolIEs")]
+        pub protocol_ies: S1RemovalFailureProtocolIEs,
+    }
+    impl S1RemovalFailure {
+        pub fn new(protocol_ies: S1RemovalFailureProtocolIEs) -> Self {
+            Self { protocol_ies }
+        }
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousS1RemovalRequestProtocolIEs {
+        pub id: ProtocolIEID,
+        pub criticality: Criticality,
+        pub value: Any,
+    }
+    impl AnonymousS1RemovalRequestProtocolIEs {
+        pub fn new(id: ProtocolIEID, criticality: Criticality, value: Any) -> Self {
+            Self {
+                id,
+                criticality,
+                value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("0..=65535"))]
+    pub struct S1RemovalRequestProtocolIEs(pub SequenceOf<AnonymousS1RemovalRequestProtocolIEs>);
+    impl Encode for S1RemovalRequestProtocolIEs {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(0, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for S1RemovalRequestProtocolIEs {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousS1RemovalRequestProtocolIEs>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(0, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousS1RemovalRequestProtocolIEs::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[doc = " **************************************************************"]
+    #[doc = ""]
+    #[doc = " S1 REMOVAL ELEMENTARY PROCEDURE"]
+    #[doc = ""]
+    #[doc = " **************************************************************"]
+    #[doc = " **************************************************************"]
+    #[doc = ""]
+    #[doc = " S1 Removal Request"]
+    #[doc = ""]
+    #[doc = " **************************************************************"]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    #[non_exhaustive]
+    pub struct S1RemovalRequest {
+        #[rasn(identifier = "protocolIEs")]
+        pub protocol_ies: S1RemovalRequestProtocolIEs,
+    }
+    impl S1RemovalRequest {
+        pub fn new(protocol_ies: S1RemovalRequestProtocolIEs) -> Self {
+            Self { protocol_ies }
+        }
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
+    pub struct AnonymousS1RemovalResponseProtocolIEs {
+        pub id: ProtocolIEID,
+        pub criticality: Criticality,
+        pub value: Any,
+    }
+    impl AnonymousS1RemovalResponseProtocolIEs {
+        pub fn new(id: ProtocolIEID, criticality: Criticality, value: Any) -> Self {
+            Self {
+                id,
+                criticality,
+                value,
+            }
+        }
+    }
+    #[doc = " Inner type "]
+    #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
+    #[rasn(delegate, size("0..=65535"))]
+    pub struct S1RemovalResponseProtocolIEs(pub SequenceOf<AnonymousS1RemovalResponseProtocolIEs>);
+    impl Encode for S1RemovalResponseProtocolIEs {
+        fn encode_with_tag_and_constraints<'b, E: Encoder<'b>>(
+            &self,
+            encoder: &mut E,
+            tag: Tag,
+            constraints: Constraints,
+            identifier: Identifier,
+        ) -> Result<(), E::Error> {
+            if encoder.codec() != rasn::Codec::Aper {
+                return encoder
+                    .encode_sequence_of(tag, &self.0, constraints, identifier)
+                    .map(drop);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(0, 65535));
+            let _ = encoder.encode_integer(
+                Tag::INTEGER,
+                LENGTH_CONSTRAINTS,
+                &self.0.len(),
+                Identifier::EMPTY,
+            )?;
+            for value in &self.0 {
+                value.encode(encoder)?;
+            }
+            Ok(())
+        }
+    }
+    impl Decode for S1RemovalResponseProtocolIEs {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return decoder
+                    .decode_sequence_of::<AnonymousS1RemovalResponseProtocolIEs>(tag, constraints)
+                    .map(Self);
+            }
+            const LENGTH_CONSTRAINTS: Constraints =
+                rasn::constraints!(rasn::value_constraint!(0, 65535));
+            let length = decoder.decode_integer::<usize>(Tag::INTEGER, LENGTH_CONSTRAINTS)?;
+            let mut values = Vec::new();
+            for _ in 0..length {
+                values.push(AnonymousS1RemovalResponseProtocolIEs::decode(decoder)?);
+            }
+            Ok(Self(values))
+        }
+    }
+    #[doc = " **************************************************************"]
+    #[doc = ""]
+    #[doc = " S1 Removal Response"]
+    #[doc = ""]
+    #[doc = " **************************************************************"]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags)]
+    #[non_exhaustive]
+    pub struct S1RemovalResponse {
+        #[rasn(identifier = "protocolIEs")]
+        pub protocol_ies: S1RemovalResponseProtocolIEs,
+    }
+    impl S1RemovalResponse {
+        pub fn new(protocol_ies: S1RemovalResponseProtocolIEs) -> Self {
+            Self { protocol_ies }
+        }
+    }
+    #[doc = " Anonymous SEQUENCE OF member "]
+    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[rasn(automatic_tags, identifier = "SEQUENCE")]
     pub struct AnonymousS1SetupFailureProtocolIEs {
         pub id: ProtocolIEID,
         pub criticality: Criticality,
@@ -35554,7 +38075,7 @@ pub mod s1_ap_pdu_descriptions {
         ID_NASDELIVERY_INDICATION, ID_NASNON_DELIVERY_INDICATION, ID_OVERLOAD_START,
         ID_OVERLOAD_STOP, ID_PAGING, ID_PATH_SWITCH_REQUEST, ID_PRIVATE_MESSAGE,
         ID_PWSFAILURE_INDICATION, ID_PWSRESTART_INDICATION, ID_REROUTE_NASREQUEST, ID_RESET,
-        ID_RETRIEVE_UEINFORMATION, ID_S1_SETUP, ID_SECONDARY_RATDATA_USAGE_REPORT,
+        ID_RETRIEVE_UEINFORMATION, ID_S1_REMOVAL, ID_S1_SETUP, ID_SECONDARY_RATDATA_USAGE_REPORT,
         ID_TRACE_FAILURE_INDICATION, ID_TRACE_START, ID_UECAPABILITY_INFO_INDICATION,
         ID_UECONTEXT_MODIFICATION, ID_UECONTEXT_MODIFICATION_INDICATION, ID_UECONTEXT_RELEASE,
         ID_UECONTEXT_RELEASE_REQUEST, ID_UECONTEXT_RESUME, ID_UECONTEXT_SUSPEND,
@@ -35582,8 +38103,9 @@ pub mod s1_ap_pdu_descriptions {
         NASDeliveryIndication, NASNonDeliveryIndication, OverloadStart, OverloadStop,
         PWSFailureIndication, PWSRestartIndication, Paging, PathSwitchRequest,
         PathSwitchRequestAcknowledge, PathSwitchRequestFailure, PrivateMessage, RerouteNASRequest,
-        Reset, ResetAcknowledge, RetrieveUEInformation, S1SetupFailure, S1SetupRequest,
-        S1SetupResponse, SecondaryRATDataUsageReport, TraceFailureIndication, TraceStart,
+        Reset, ResetAcknowledge, RetrieveUEInformation, S1RemovalFailure, S1RemovalRequest,
+        S1RemovalResponse, S1SetupFailure, S1SetupRequest, S1SetupResponse,
+        SecondaryRATDataUsageReport, TraceFailureIndication, TraceStart,
         UECapabilityInfoIndication, UEContextModificationConfirm, UEContextModificationFailure,
         UEContextModificationIndication, UEContextModificationRequest,
         UEContextModificationResponse, UEContextReleaseCommand, UEContextReleaseComplete,
@@ -35897,6 +38419,16 @@ impl From<SequenceOf<AnonymousCellTypeIEExtensions>> for CellTypeIEExtensions {
         Self(value)
     }
 }
+impl From<OctetString> for CoarseUELocation {
+    fn from(value: OctetString) -> Self {
+        Self(value)
+    }
+}
+impl From<Vec<u8>> for CoarseUELocation {
+    fn from(value: Vec<u8>) -> Self {
+        Self(value.into())
+    }
+}
 impl From<SequenceOf<CompletedCellinEAIItem>> for CompletedCellinEAI {
     fn from(value: SequenceOf<CompletedCellinEAIItem>) -> Self {
         Self(value)
@@ -36087,6 +38619,11 @@ impl From<SequenceOf<AnonymousERABReleaseListBearerRelComp>> for ERABReleaseList
         Self(value)
     }
 }
+impl From<SequenceOf<AnonymousERABSecurityResultList>> for ERABSecurityResultList {
+    fn from(value: SequenceOf<AnonymousERABSecurityResultList>) -> Self {
+        Self(value)
+    }
+}
 impl From<SequenceOf<AnonymousERABSetupListBearerSURes>> for ERABSetupListBearerSURes {
     fn from(value: SequenceOf<AnonymousERABSetupListBearerSURes>) -> Self {
         Self(value)
@@ -36129,6 +38666,11 @@ impl From<SequenceOf<AnonymousERABToBeSwitchedDLList>> for ERABToBeSwitchedDLLis
 }
 impl From<SequenceOf<AnonymousERABToBeSwitchedULList>> for ERABToBeSwitchedULList {
     fn from(value: SequenceOf<AnonymousERABToBeSwitchedULList>) -> Self {
+        Self(value)
+    }
+}
+impl From<SequenceOf<AnonymousERABToBeUpdatedList>> for ERABToBeUpdatedList {
+    fn from(value: SequenceOf<AnonymousERABToBeUpdatedList>) -> Self {
         Self(value)
     }
 }
@@ -36382,6 +38924,21 @@ impl From<SequenceOf<AnonymousHandoverSuccessProtocolIEs>> for HandoverSuccessPr
         Self(value)
     }
 }
+impl From<u16> for HandoverWindowDuration {
+    fn from(value: u16) -> Self {
+        Self(value)
+    }
+}
+impl From<u32> for HandoverWindowStart {
+    fn from(value: u32) -> Self {
+        Self(value)
+    }
+}
+impl From<u8> for Hysteresis {
+    fn from(value: u8) -> Self {
+        Self(value)
+    }
+}
 impl From<OctetString> for IMSI {
     fn from(value: OctetString) -> Self {
         Self(value)
@@ -36495,6 +39052,11 @@ impl From<OctetString> for LastVisitedNGRANCellInformation {
 impl From<Vec<u8>> for LastVisitedNGRANCellInformation {
     fn from(value: Vec<u8>) -> Self {
         Self(value.into())
+    }
+}
+impl From<SequenceOf<LastVisitedPSCellInformation>> for LastVisitedPSCellList {
+    fn from(value: SequenceOf<LastVisitedPSCellInformation>) -> Self {
+        Self(value)
     }
 }
 impl From<OctetString> for LastVisitedUTRANCellInformation {
@@ -36902,6 +39464,11 @@ impl From<u32> for RANUENGAPID {
         Self(value)
     }
 }
+impl From<SequenceOf<RATRestrictionsItem>> for RATRestrictions {
+    fn from(value: SequenceOf<RATRestrictionsItem>) -> Self {
+        Self(value)
+    }
+}
 impl From<OctetString> for RIMInformation {
     fn from(value: OctetString) -> Self {
         Self(value)
@@ -36972,6 +39539,11 @@ impl From<SequenceOf<AnonymousRequestTypeIEExtensions>> for RequestTypeIEExtensi
         Self(value)
     }
 }
+impl From<SequenceOf<AnonymousRequestedTNLInfoIEExtensions>> for RequestedTNLInfoIEExtensions {
+    fn from(value: SequenceOf<AnonymousRequestedTNLInfoIEExtensions>) -> Self {
+        Self(value)
+    }
+}
 impl From<SequenceOf<AnonymousRerouteNASRequestProtocolIEs>> for RerouteNASRequestProtocolIEs {
     fn from(value: SequenceOf<AnonymousRerouteNASRequestProtocolIEs>) -> Self {
         Self(value)
@@ -36989,6 +39561,21 @@ impl From<SequenceOf<AnonymousResetProtocolIEs>> for ResetProtocolIEs {
 }
 impl From<u8> for RoutingID {
     fn from(value: u8) -> Self {
+        Self(value)
+    }
+}
+impl From<SequenceOf<AnonymousS1RemovalFailureProtocolIEs>> for S1RemovalFailureProtocolIEs {
+    fn from(value: SequenceOf<AnonymousS1RemovalFailureProtocolIEs>) -> Self {
+        Self(value)
+    }
+}
+impl From<SequenceOf<AnonymousS1RemovalRequestProtocolIEs>> for S1RemovalRequestProtocolIEs {
+    fn from(value: SequenceOf<AnonymousS1RemovalRequestProtocolIEs>) -> Self {
+        Self(value)
+    }
+}
+impl From<SequenceOf<AnonymousS1RemovalResponseProtocolIEs>> for S1RemovalResponseProtocolIEs {
+    fn from(value: SequenceOf<AnonymousS1RemovalResponseProtocolIEs>) -> Self {
         Self(value)
     }
 }
@@ -37019,6 +39606,16 @@ impl From<SequenceOf<AnonymousSecurityContextIEExtensions>> for SecurityContextI
 }
 impl From<FixedBitString<256usize>> for SecurityKey {
     fn from(value: FixedBitString<256usize>) -> Self {
+        Self(value)
+    }
+}
+impl From<SequenceOf<AnonymousSecurityResultIEExtensions>> for SecurityResultIEExtensions {
+    fn from(value: SequenceOf<AnonymousSecurityResultIEExtensions>) -> Self {
+        Self(value)
+    }
+}
+impl From<SequenceOf<SensorMeasConfigNameItem>> for SensorMeasConfigNameList {
+    fn from(value: SequenceOf<SensorMeasConfigNameItem>) -> Self {
         Self(value)
     }
 }
@@ -37140,6 +39737,11 @@ impl From<FixedOctetString<2usize>> for TAC {
 impl From<[u8; 2usize]> for TAC {
     fn from(value: [u8; 2usize]) -> Self {
         Self(value.into())
+    }
+}
+impl From<SequenceOf<TAC>> for TACListInLTENTN {
+    fn from(value: SequenceOf<TAC>) -> Self {
+        Self(value)
     }
 }
 impl From<SequenceOf<AnonymousTAIBasedMDTIEExtensions>> for TAIBasedMDTIEExtensions {
@@ -37503,11 +40105,17 @@ macro_rules! __s1ap_ie_id {
     (AssistanceDataForPaging) => {
         211u16
     };
+    (BearersSubjectToDLDiscardingItem) => {
+        351u16
+    };
     (BearersSubjectToEarlyStatusTransferItem) => {
         322u16
     };
     (BearersSubjectToStatusTransferItem) => {
         89u16
+    };
+    (Bearers_SubjectToDLDiscarding_Item) => {
+        351u16
     };
     (Bearers_SubjectToEarlyStatusTransfer_Item) => {
         322u16
@@ -37586,6 +40194,12 @@ macro_rules! __s1ap_ie_id {
     };
     (CellIdentifierAndCELevelForCECapableUEs) => {
         212u16
+    };
+    (CoarseUELocation) => {
+        354u16
+    };
+    (CoarseUELocationRequested) => {
+        353u16
     };
     (ConcurrentWarningMessageIndicator) => {
         142u16
@@ -37734,6 +40348,9 @@ macro_rules! __s1ap_ie_id {
     (ERABReleaseListBearerRelComp) => {
         69u16
     };
+    (ERABSecurityResultItem) => {
+        334u16
+    };
     (ERABSetupItemBearerSURes) => {
         39u16
     };
@@ -37790,6 +40407,12 @@ macro_rules! __s1ap_ie_id {
     };
     (ERABToBeSwitchedULList) => {
         95u16
+    };
+    (ERABToBeUpdatedItem) => {
+        342u16
+    };
+    (ERABToBeUpdatedList) => {
+        341u16
     };
     (ERABUsageReportItem) => {
         267u16
@@ -37881,6 +40504,9 @@ macro_rules! __s1ap_ie_id {
     (E_RABReleasedList) => {
         110u16
     };
+    (E_RABSecurityResultItem) => {
+        334u16
+    };
     (E_RABSetupItemBearerSURes) => {
         39u16
     };
@@ -37944,6 +40570,12 @@ macro_rules! __s1ap_ie_id {
     (E_RABToBeSwitchedULList) => {
         95u16
     };
+    (E_RABToBeUpdatedItem) => {
+        342u16
+    };
+    (E_RABToBeUpdatedList) => {
+        341u16
+    };
     (E_RABUsageReportItem) => {
         267u16
     };
@@ -37967,9 +40599,6 @@ macro_rules! __s1ap_ie_id {
     };
     (ExtendedRepetitionPeriod) => {
         144u16
-    };
-    (ExtendedUEIdentityIndexValue) => {
-        231u16
     };
     (GUMMEI) => {
         75u16
@@ -38064,8 +40693,14 @@ macro_rules! __s1ap_ie_id {
     (LTEMIndication) => {
         272u16
     };
+    (LTENTNTAIInformation) => {
+        339u16
+    };
     (LTE_M_Indication) => {
         272u16
+    };
+    (LTE_NTN_TAI_Information) => {
+        339u16
     };
     (LoggedMBSFNMDT) => {
         197u16
@@ -38189,6 +40824,9 @@ macro_rules! __s1ap_ie_id {
     };
     (PWSfailedECGIList) => {
         222u16
+    };
+    (PagingCause) => {
+        331u16
     };
     (PagingDRX) => {
         44u16
@@ -38364,6 +41002,9 @@ macro_rules! __s1ap_ie_id {
     (Target_ToSource_TransparentContainer_Secondary) => {
         139u16
     };
+    (TimeRefDistribution) => {
+        355u16
+    };
     (TimeSinceSecondaryNodeRelease) => {
         297u16
     };
@@ -38414,6 +41055,9 @@ macro_rules! __s1ap_ie_id {
     };
     (UERadioCapabilityForPaging) => {
         198u16
+    };
+    (UERadioCapabilityForPaging_NR_Format) => {
+        327u16
     };
     (UERadioCapabilityID) => {
         314u16
@@ -38529,9 +41173,6 @@ macro_rules! __s1ap_ie_id {
     (eNBname) => {
         60u16
     };
-    (extended_UEIdentityIndexValue) => {
-        231u16
-    };
     (pagingDRX) => {
         44u16
     };
@@ -38566,12 +41207,20 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::AssistanceDataForPaging = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
+    (BearersSubjectToDLDiscardingItem, $value:expr) => {{
+        let value: $crate::s1ap::BearersSubjectToDLDiscardingItem = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
     (BearersSubjectToEarlyStatusTransferItem, $value:expr) => {{
         let value: $crate::s1ap::BearersSubjectToEarlyStatusTransferItem = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (BearersSubjectToStatusTransferItem, $value:expr) => {{
         let value: $crate::s1ap::BearersSubjectToStatusTransferItem = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
+    (Bearers_SubjectToDLDiscarding_Item, $value:expr) => {{
+        let value: $crate::s1ap::BearersSubjectToDLDiscardingItem = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (Bearers_SubjectToEarlyStatusTransfer_Item, $value:expr) => {{
@@ -38676,6 +41325,14 @@ macro_rules! __s1ap_encode_ie {
     }};
     (CellIdentifierAndCELevelForCECapableUEs, $value:expr) => {{
         let value: $crate::s1ap::CellIdentifierAndCELevelForCECapableUEs = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
+    (CoarseUELocation, $value:expr) => {{
+        let value: $crate::s1ap::CoarseUELocation = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
+    (CoarseUELocationRequested, $value:expr) => {{
+        let value: $crate::s1ap::CoarseUELocationRequested = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (ConcurrentWarningMessageIndicator, $value:expr) => {{
@@ -38874,6 +41531,10 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::ERABReleaseListBearerRelComp = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
+    (ERABSecurityResultItem, $value:expr) => {{
+        let value: $crate::s1ap::ERABSecurityResultItem = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
     (ERABSetupItemBearerSURes, $value:expr) => {{
         let value: $crate::s1ap::ERABSetupItemBearerSURes = ($value).into();
         $crate::s1ap::encode_open_type(&value)
@@ -38948,6 +41609,14 @@ macro_rules! __s1ap_encode_ie {
     }};
     (ERABToBeSwitchedULList, $value:expr) => {{
         let value: $crate::s1ap::ERABToBeSwitchedULList = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
+    (ERABToBeUpdatedItem, $value:expr) => {{
+        let value: $crate::s1ap::ERABToBeUpdatedItem = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
+    (ERABToBeUpdatedList, $value:expr) => {{
+        let value: $crate::s1ap::ERABToBeUpdatedList = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (ERABUsageReportItem, $value:expr) => {{
@@ -39070,6 +41739,10 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::ERABList = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
+    (E_RABSecurityResultItem, $value:expr) => {{
+        let value: $crate::s1ap::ERABSecurityResultItem = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
     (E_RABSetupItemBearerSURes, $value:expr) => {{
         let value: $crate::s1ap::ERABSetupItemBearerSURes = ($value).into();
         $crate::s1ap::encode_open_type(&value)
@@ -39154,6 +41827,14 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::ERABToBeSwitchedULList = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
+    (E_RABToBeUpdatedItem, $value:expr) => {{
+        let value: $crate::s1ap::ERABToBeUpdatedItem = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
+    (E_RABToBeUpdatedList, $value:expr) => {{
+        let value: $crate::s1ap::ERABToBeUpdatedList = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
     (E_RABUsageReportItem, $value:expr) => {{
         let value: $crate::s1ap::ERABUsageReportItem = ($value).into();
         $crate::s1ap::encode_open_type(&value)
@@ -39184,10 +41865,6 @@ macro_rules! __s1ap_encode_ie {
     }};
     (ExtendedRepetitionPeriod, $value:expr) => {{
         let value: $crate::s1ap::ExtendedRepetitionPeriod = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
-    (ExtendedUEIdentityIndexValue, $value:expr) => {{
-        let value: $crate::s1ap::ExtendedUEIdentityIndexValue = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (GUMMEI, $value:expr) => {{
@@ -39314,8 +41991,16 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::LTEMIndication = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
+    (LTENTNTAIInformation, $value:expr) => {{
+        let value: $crate::s1ap::LTENTNTAIInformation = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
     (LTE_M_Indication, $value:expr) => {{
         let value: $crate::s1ap::LTEMIndication = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
+    (LTE_NTN_TAI_Information, $value:expr) => {{
+        let value: $crate::s1ap::LTENTNTAIInformation = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (LoggedMBSFNMDT, $value:expr) => {{
@@ -39480,6 +42165,10 @@ macro_rules! __s1ap_encode_ie {
     }};
     (PWSfailedECGIList, $value:expr) => {{
         let value: $crate::s1ap::PWSfailedECGIList = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
+    (PagingCause, $value:expr) => {{
+        let value: $crate::s1ap::PagingCause = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (PagingDRX, $value:expr) => {{
@@ -39714,6 +42403,10 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::TargetToSourceTransparentContainer = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
+    (TimeRefDistribution, $value:expr) => {{
+        let value: $crate::s1ap::TimeRefDistribution = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
     (TimeSinceSecondaryNodeRelease, $value:expr) => {{
         let value: $crate::s1ap::TimeSinceSecondaryNodeRelease = ($value).into();
         $crate::s1ap::encode_open_type(&value)
@@ -39779,6 +42472,10 @@ macro_rules! __s1ap_encode_ie {
         $crate::s1ap::encode_open_type(&value)
     }};
     (UERadioCapabilityForPaging, $value:expr) => {{
+        let value: $crate::s1ap::UERadioCapabilityForPaging = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
+    (UERadioCapabilityForPaging_NR_Format, $value:expr) => {{
         let value: $crate::s1ap::UERadioCapabilityForPaging = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
@@ -39934,10 +42631,6 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::ENBname = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
-    (extended_UEIdentityIndexValue, $value:expr) => {{
-        let value: $crate::s1ap::ExtendedUEIdentityIndexValue = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
     (pagingDRX, $value:expr) => {{
         let value: $crate::s1ap::PagingDRX = ($value).into();
         $crate::s1ap::encode_open_type(&value)
@@ -39956,8 +42649,10 @@ macro_rules! __s1ap_decode_ie {
     (Additional_GUTI, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::AdditionalGUTI>($value) };
     (AerialUEsubscriptionInformation, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::AerialUEsubscriptionInformation>($value) };
     (AssistanceDataForPaging, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::AssistanceDataForPaging>($value) };
+    (BearersSubjectToDLDiscardingItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::BearersSubjectToDLDiscardingItem>($value) };
     (BearersSubjectToEarlyStatusTransferItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::BearersSubjectToEarlyStatusTransferItem>($value) };
     (BearersSubjectToStatusTransferItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::BearersSubjectToStatusTransferItem>($value) };
+    (Bearers_SubjectToDLDiscarding_Item, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::BearersSubjectToDLDiscardingItem>($value) };
     (Bearers_SubjectToEarlyStatusTransfer_Item, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::BearersSubjectToEarlyStatusTransferItem>($value) };
     (Bearers_SubjectToStatusTransfer_Item, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::BearersSubjectToStatusTransferItem>($value) };
     (BroadcastCancelledAreaList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::BroadcastCancelledAreaList>($value) };
@@ -39984,6 +42679,8 @@ macro_rules! __s1ap_decode_ie {
     (Cdma2000SectorID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::Cdma2000SectorID>($value) };
     (CellAccessMode, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::CellAccessMode>($value) };
     (CellIdentifierAndCELevelForCECapableUEs, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::CellIdentifierAndCELevelForCECapableUEs>($value) };
+    (CoarseUELocation, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::CoarseUELocation>($value) };
+    (CoarseUELocationRequested, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::CoarseUELocationRequested>($value) };
     (ConcurrentWarningMessageIndicator, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ConcurrentWarningMessageIndicator>($value) };
     (ConnectedengNBList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ConnectedengNBList>($value) };
     (ConnectedengNBToAddList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ConnectedengNBList>($value) };
@@ -40033,6 +42730,7 @@ macro_rules! __s1ap_decode_ie {
     (ERABNotToBeModifiedListBearerModInd, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABNotToBeModifiedListBearerModInd>($value) };
     (ERABReleaseItemBearerRelComp, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABReleaseItemBearerRelComp>($value) };
     (ERABReleaseListBearerRelComp, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABReleaseListBearerRelComp>($value) };
+    (ERABSecurityResultItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABSecurityResultItem>($value) };
     (ERABSetupItemBearerSURes, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABSetupItemBearerSURes>($value) };
     (ERABSetupItemCtxtSURes, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABSetupItemCtxtSURes>($value) };
     (ERABSetupListBearerSURes, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABSetupListBearerSURes>($value) };
@@ -40052,6 +42750,8 @@ macro_rules! __s1ap_decode_ie {
     (ERABToBeSwitchedDLList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABToBeSwitchedDLList>($value) };
     (ERABToBeSwitchedULItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABToBeSwitchedULItem>($value) };
     (ERABToBeSwitchedULList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABToBeSwitchedULList>($value) };
+    (ERABToBeUpdatedItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABToBeUpdatedItem>($value) };
+    (ERABToBeUpdatedList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABToBeUpdatedList>($value) };
     (ERABUsageReportItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABUsageReportItem>($value) };
     (EUTRANCGI, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::EUTRANCGI>($value) };
     (EUTRANRoundTripDelayEstimationInfo, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::EUTRANRoundTripDelayEstimationInfo>($value) };
@@ -40082,6 +42782,7 @@ macro_rules! __s1ap_decode_ie {
     (E_RABReleaseItemBearerRelComp, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABReleaseItemBearerRelComp>($value) };
     (E_RABReleaseListBearerRelComp, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABReleaseListBearerRelComp>($value) };
     (E_RABReleasedList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABList>($value) };
+    (E_RABSecurityResultItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABSecurityResultItem>($value) };
     (E_RABSetupItemBearerSURes, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABSetupItemBearerSURes>($value) };
     (E_RABSetupItemCtxtSURes, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABSetupItemCtxtSURes>($value) };
     (E_RABSetupListBearerSURes, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABSetupListBearerSURes>($value) };
@@ -40103,6 +42804,8 @@ macro_rules! __s1ap_decode_ie {
     (E_RABToBeSwitchedDLList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABToBeSwitchedDLList>($value) };
     (E_RABToBeSwitchedULItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABToBeSwitchedULItem>($value) };
     (E_RABToBeSwitchedULList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABToBeSwitchedULList>($value) };
+    (E_RABToBeUpdatedItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABToBeUpdatedItem>($value) };
+    (E_RABToBeUpdatedList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABToBeUpdatedList>($value) };
     (E_RABUsageReportItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABUsageReportItem>($value) };
     (E_RABtoReleaseListHOCmd, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABList>($value) };
     (E_UTRAN_Trace_ID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::EUTRANTraceID>($value) };
@@ -40111,7 +42814,6 @@ macro_rules! __s1ap_decode_ie {
     (EnhancedCoverageRestricted, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::EnhancedCoverageRestricted>($value) };
     (ExpectedUEBehaviour, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ExpectedUEBehaviour>($value) };
     (ExtendedRepetitionPeriod, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ExtendedRepetitionPeriod>($value) };
-    (ExtendedUEIdentityIndexValue, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ExtendedUEIdentityIndexValue>($value) };
     (GUMMEI, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::GUMMEI>($value) };
     (GUMMEIList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::GUMMEIList>($value) };
     (GUMMEIType, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::GUMMEIType>($value) };
@@ -40143,7 +42845,9 @@ macro_rules! __s1ap_decode_ie {
     (LPPaPDU, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::LPPaPDU>($value) };
     (LPPa_PDU, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::LPPaPDU>($value) };
     (LTEMIndication, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::LTEMIndication>($value) };
+    (LTENTNTAIInformation, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::LTENTNTAIInformation>($value) };
     (LTE_M_Indication, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::LTEMIndication>($value) };
+    (LTE_NTN_TAI_Information, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::LTENTNTAIInformation>($value) };
     (LoggedMBSFNMDT, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::LoggedMBSFNMDT>($value) };
     (MDTPLMNList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::MDTPLMNList>($value) };
     (MMEGroupID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::MMEGroupID>($value) };
@@ -40185,6 +42889,7 @@ macro_rules! __s1ap_decode_ie {
     (PSServiceNotAvailable, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PSServiceNotAvailable>($value) };
     (PS_ServiceNotAvailable, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PSServiceNotAvailable>($value) };
     (PWSfailedECGIList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PWSfailedECGIList>($value) };
+    (PagingCause, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PagingCause>($value) };
     (PagingDRX, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PagingDRX>($value) };
     (PagingEDRXInformation, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PagingEDRXInformation>($value) };
     (PagingPriority, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PagingPriority>($value) };
@@ -40243,6 +42948,7 @@ macro_rules! __s1ap_decode_ie {
     (TargetToSourceTransparentContainer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TargetToSourceTransparentContainer>($value) };
     (Target_ToSource_TransparentContainer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TargetToSourceTransparentContainer>($value) };
     (Target_ToSource_TransparentContainer_Secondary, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TargetToSourceTransparentContainer>($value) };
+    (TimeRefDistribution, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TimeRefDistribution>($value) };
     (TimeSinceSecondaryNodeRelease, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TimeSinceSecondaryNodeRelease>($value) };
     (TimeToWait, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TimeToWait>($value) };
     (TraceActivation, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TraceActivation>($value) };
@@ -40260,6 +42966,7 @@ macro_rules! __s1ap_decode_ie {
     (UEPagingID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::UEPagingID>($value) };
     (UERadioCapability, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::UERadioCapability>($value) };
     (UERadioCapabilityForPaging, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::UERadioCapabilityForPaging>($value) };
+    (UERadioCapabilityForPaging_NR_Format, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::UERadioCapabilityForPaging>($value) };
     (UERadioCapabilityID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::UERadioCapabilityID>($value) };
     (UERadioCapability_NR_Format, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::UERadioCapability>($value) };
     (UERetentionInformation, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::UERetentionInformation>($value) };
@@ -40298,7 +43005,6 @@ macro_rules! __s1ap_decode_ie {
     (eNB_StatusTransfer_TransparentContainer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENBStatusTransferTransparentContainer>($value) };
     (eNB_UE_S1AP_ID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENBUES1APID>($value) };
     (eNBname, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENBname>($value) };
-    (extended_UEIdentityIndexValue, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ExtendedUEIdentityIndexValue>($value) };
     (pagingDRX, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PagingDRX>($value) };
     (uEaggregateMaximumBitrate, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::UEAggregateMaximumBitrate>($value) };
 }
@@ -40421,6 +43127,9 @@ macro_rules! __s1ap_proc_code {
     };
     (RetrieveUEInformation) => {
         58u8
+    };
+    (S1Removal) => {
+        67u8
     };
     (S1Setup) => {
         17u8
@@ -40550,6 +43259,7 @@ pub enum S1apPduKind {
     Initiating_RerouteNASRequest,
     Initiating_Reset,
     Initiating_RetrieveUEInformation,
+    Initiating_S1Removal,
     Initiating_S1Setup,
     Initiating_SecondaryRATDataUsageReport,
     Initiating_TraceFailureIndication,
@@ -40591,6 +43301,7 @@ pub enum S1apPduKind {
     Successful_MMEConfigurationUpdate,
     Successful_PathSwitchRequest,
     Successful_Reset,
+    Successful_S1Removal,
     Successful_S1Setup,
     Successful_UEContextModification,
     Successful_UEContextModificationIndication,
@@ -40606,6 +43317,7 @@ pub enum S1apPduKind {
     Unsuccessful_InitialContextSetup,
     Unsuccessful_MMEConfigurationUpdate,
     Unsuccessful_PathSwitchRequest,
+    Unsuccessful_S1Removal,
     Unsuccessful_S1Setup,
     Unsuccessful_UEContextModification,
     Unsuccessful_UEContextResume,
@@ -40702,6 +43414,7 @@ impl S1APPDU {
             52 => "RerouteNASRequest",
             14 => "Reset",
             58 => "RetrieveUEInformation",
+            67 => "S1Removal",
             17 => "S1Setup",
             62 => "SecondaryRATDataUsageReport",
             28 => "TraceFailureIndication",
@@ -40777,6 +43490,7 @@ impl S1APPDU {
                 52 => S1apPduKind::Initiating_RerouteNASRequest,
                 14 => S1apPduKind::Initiating_Reset,
                 58 => S1apPduKind::Initiating_RetrieveUEInformation,
+                67 => S1apPduKind::Initiating_S1Removal,
                 17 => S1apPduKind::Initiating_S1Setup,
                 62 => S1apPduKind::Initiating_SecondaryRATDataUsageReport,
                 28 => S1apPduKind::Initiating_TraceFailureIndication,
@@ -40824,6 +43538,7 @@ impl S1APPDU {
                 30 => S1apPduKind::Successful_MMEConfigurationUpdate,
                 3 => S1apPduKind::Successful_PathSwitchRequest,
                 14 => S1apPduKind::Successful_Reset,
+                67 => S1apPduKind::Successful_S1Removal,
                 17 => S1apPduKind::Successful_S1Setup,
                 21 => S1apPduKind::Successful_UEContextModification,
                 53 => S1apPduKind::Successful_UEContextModificationIndication,
@@ -40845,6 +43560,7 @@ impl S1APPDU {
                 9 => S1apPduKind::Unsuccessful_InitialContextSetup,
                 30 => S1apPduKind::Unsuccessful_MMEConfigurationUpdate,
                 3 => S1apPduKind::Unsuccessful_PathSwitchRequest,
+                67 => S1apPduKind::Unsuccessful_S1Removal,
                 17 => S1apPduKind::Unsuccessful_S1Setup,
                 21 => S1apPduKind::Unsuccessful_UEContextModification,
                 56 => S1apPduKind::Unsuccessful_UEContextResume,
@@ -40899,6 +43615,7 @@ impl S1apPduKind {
             S1apPduKind::Initiating_RerouteNASRequest => 52,
             S1apPduKind::Initiating_Reset => 14,
             S1apPduKind::Initiating_RetrieveUEInformation => 58,
+            S1apPduKind::Initiating_S1Removal => 67,
             S1apPduKind::Initiating_S1Setup => 17,
             S1apPduKind::Initiating_SecondaryRATDataUsageReport => 62,
             S1apPduKind::Initiating_TraceFailureIndication => 28,
@@ -40940,6 +43657,7 @@ impl S1apPduKind {
             S1apPduKind::Successful_MMEConfigurationUpdate => 30,
             S1apPduKind::Successful_PathSwitchRequest => 3,
             S1apPduKind::Successful_Reset => 14,
+            S1apPduKind::Successful_S1Removal => 67,
             S1apPduKind::Successful_S1Setup => 17,
             S1apPduKind::Successful_UEContextModification => 21,
             S1apPduKind::Successful_UEContextModificationIndication => 53,
@@ -40955,6 +43673,7 @@ impl S1apPduKind {
             S1apPduKind::Unsuccessful_InitialContextSetup => 9,
             S1apPduKind::Unsuccessful_MMEConfigurationUpdate => 30,
             S1apPduKind::Unsuccessful_PathSwitchRequest => 3,
+            S1apPduKind::Unsuccessful_S1Removal => 67,
             S1apPduKind::Unsuccessful_S1Setup => 17,
             S1apPduKind::Unsuccessful_UEContextModification => 21,
             S1apPduKind::Unsuccessful_UEContextResume => 56,
