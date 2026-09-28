@@ -43,6 +43,26 @@
 //! );
 //! ```
 //!
+//! IEs are named after their `id-` constant. The name of a type is an alias
+//! only for the one IE of that type: the type of both id-GUMMEI-ID and
+//! id-SourceMME-GUMMEI is addressed by the IE names.
+//!
+//! ```
+//! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
+//!
+//! fn source(gummei: GUMMEI) -> AnonymousPathSwitchRequestProtocolIEs {
+//!     build_s1ap_ie!(PathSwitchRequest, IGNORE SourceMME_GUMMEI(gummei))
+//! }
+//! ```
+//!
+//! ```compile_fail
+//! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
+//!
+//! fn source(gummei: GUMMEI) -> AnonymousPathSwitchRequestProtocolIEs {
+//!     build_s1ap_ie!(PathSwitchRequest, IGNORE GUMMEI(gummei))
+//! }
+//! ```
+//!
 //! # Extraction macro
 //!
 //! ## `extract_s1ap_ies!` — extract IEs from a decoded S1AP message
@@ -119,8 +139,14 @@ macro_rules! extract_s1ap_ies {
         for _ie in &$msg_var.protocol_ies.0 {
             $(
                 if _ie.id.0 == $crate::__s1ap_ie_id!($ie_name) {
-                    if let Ok($bind) = $crate::__s1ap_decode_ie!($ie_name, &_ie.value) {
-                        $name = Some($crate::extract_s1ap_ies!(@val $bind $(, $expr)?));
+                    // `$bind` is out of scope where `$name` is assigned, as
+                    // both may have the same name.
+                    let _value: Option<$ty> = match $crate::__s1ap_decode_ie!($ie_name, &_ie.value) {
+                        Ok($bind) => Some($crate::extract_s1ap_ies!(@val $bind $(, $expr)?)),
+                        Err(_) => None,
+                    };
+                    if _value.is_some() {
+                        $name = _value;
                     }
                 }
             )+
@@ -170,6 +196,11 @@ macro_rules! with_s1ap_ie_mut {
 }
 
 /// Build a complete `S1AP_PDU` from a direction, procedure, message, and IEs.
+///
+/// # Panics
+///
+/// Panics if a value cannot be APER-encoded into its open type, such as an
+/// integer outside its constraint.
 #[macro_export]
 macro_rules! build_s1ap {
     ($direction:ident, $proc:ident,
@@ -221,6 +252,10 @@ macro_rules! build_s1ap {
 }
 
 /// Build one S1AP Protocol IE entry for a message type.
+///
+/// # Panics
+///
+/// Panics if the value cannot be APER-encoded into its open type.
 #[macro_export]
 macro_rules! build_s1ap_ie {
     ($msg:ident, $criticality:ident $ie_name:ident ($($value:tt)+)) => {

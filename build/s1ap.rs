@@ -70,6 +70,9 @@ fn post_process(path: &Path, asn_files: &[PathBuf]) -> Result<()> {
 
     generated = constrain_container_lists(&generated, asn_files)?;
     generated = crate::aper_fix::fix_constrained_sequences(&generated)?;
+    generated = crate::aper_fix::fix_utf8_strings(&generated)?;
+    generated = crate::aper_fix::fix_fixed_bit_strings(&generated)?;
+    generated = crate::aper_fix::fix_long_inline_strings(&generated)?;
 
     // The concrete private/extension containers below use these common types,
     // but rasn-compiler omits both from the generated module import list.
@@ -192,17 +195,18 @@ fn generate_support(generated: &str, asn_files: &[PathBuf]) -> Result<String> {
         }
     }
 
-    let ie_constant = Regex::new(r"(?m)^(id-[A-Za-z][A-Za-z0-9-]*)\s+ProtocolIE-ID\s+::=\s+(\d+)")?;
+    let ie_constant =
+        Regex::new(r"(?m)^\s*(id-[A-Za-z][A-Za-z0-9-]*)\s+ProtocolIE-ID\s+::=\s+(\d+)")?;
     let ie_constants: BTreeMap<String, u16> = ie_constant
         .captures_iter(&asn)
         .map(|captures| Ok((captures[1].to_string(), captures[2].parse()?)))
         .collect::<Result<_>>()?;
 
     let ie_object = Regex::new(
-        r"(?s)\{\s*ID\s+(id-[A-Za-z][A-Za-z0-9-]*)\s+CRITICALITY\s+[A-Za-z-]+\s+TYPE\s+(OCTET STRING|[A-Za-z][A-Za-z0-9-]*)\s+PRESENCE",
+        r"(?s)\{\s*ID\s+(id-[A-Za-z][A-Za-z0-9-]*)\s+CRITICALITY\s+[A-Za-z-]+\s+TYPE\s+(OCTET\s+STRING|[A-Za-z][A-Za-z0-9-]*)\s+PRESENCE",
     )?;
     let mut ies: BTreeMap<String, (u16, String)> = BTreeMap::new();
-    let mut type_aliases = Vec::new();
+    let mut type_aliases: BTreeMap<String, BTreeSet<u16>> = BTreeMap::new();
     for captures in ie_object.captures_iter(&asn) {
         let id_name = &captures[1];
         let asn_type = &captures[2];
@@ -212,7 +216,7 @@ fn generate_support(generated: &str, asn_files: &[PathBuf]) -> Result<String> {
         let ie_name = macro_ident(id_name.trim_start_matches("id-"));
         // id-S1-Message has the inline type OCTET STRING, which has neither a
         // generated type nor an alias.
-        if asn_type == "OCTET STRING" {
+        if asn_type.starts_with("OCTET") {
             ies.entry(ie_name)
                 .or_insert((id, "$crate::__rasn::types::OctetString".into()));
             continue;
@@ -223,18 +227,31 @@ fn generate_support(generated: &str, asn_files: &[PathBuf]) -> Result<String> {
 
         // The IE-name spelling used by TS 36.413 names its own IE. The rasn
         // type name is a concise alias, added below, unless an IE has that
-        // name: id-OldAMF is an AMFName, but `AMFName` names id-AMFName.
+        // name: id-UERadioCapability-NR-Format is a UERadioCapability, but
+        // `UERadioCapability` names id-UERadioCapability.
         ies.entry(ie_name)
             .or_insert((id, format!("$crate::s1ap::{rust_type}")));
-        type_aliases.push((rust_type, id));
+        type_aliases.entry(rust_type).or_default().insert(id);
     }
-    for (rust_type, id) in type_aliases {
-        ies.entry(rust_type.clone())
-            .or_insert((id, format!("$crate::s1ap::{rust_type}")));
+    // A type name is an alias only for the one IE of that type: the type of
+    // id-SourceMME-GUMMEI and id-GUMMEI-ID could otherwise address either.
+    // Nor is it one when an IE outside the macros' reach, an extension IE,
+    // has that name.
+    let ie_names: BTreeSet<String> = ie_constants
+        .keys()
+        .map(|id_name| macro_ident(id_name.trim_start_matches("id-")))
+        .collect();
+    for (rust_type, ids) in type_aliases {
+        if let [id] = ids.into_iter().collect::<Vec<_>>()[..]
+            && !ie_names.contains(&rust_type)
+        {
+            ies.entry(rust_type.clone())
+                .or_insert((id, format!("$crate::s1ap::{rust_type}")));
+        }
     }
 
     let procedure_constant =
-        Regex::new(r"(?m)^(id-[A-Za-z][A-Za-z0-9-]*)\s+ProcedureCode\s+::=\s+(\d+)")?;
+        Regex::new(r"(?m)^\s*(id-[A-Za-z][A-Za-z0-9-]*)\s+ProcedureCode\s+::=\s+(\d+)")?;
     let mut procedures = BTreeMap::new();
     let mut procedure_ids = BTreeMap::new();
     for captures in procedure_constant.captures_iter(&asn) {
@@ -557,7 +574,10 @@ fn generate_support(generated: &str, asn_files: &[PathBuf]) -> Result<String> {
         out,
         "/// An open type holds a complete encoding, in which an empty encoding"
     )?;
-    writeln!(out, "/// becomes one zero octet (X.691 §11.1.4, §11.2.1).")?;
+    writeln!(
+        out,
+        "/// becomes one zero octet (X.691 (07/2002) §10.1.4, §10.2.1)."
+    )?;
     writeln!(
         out,
         "pub fn encode_open_type<T: rasn::Encode>(value: &T) -> Result<rasn::types::Any, rasn::error::EncodeError> {{"

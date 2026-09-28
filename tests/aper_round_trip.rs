@@ -213,3 +213,24 @@ fn reroute_nas_request_carries_the_s1_message_ie() -> Result<(), MissingIeError>
     assert_eq!(s1_message, message);
     Ok(())
 }
+
+/// An extracted field and its binding may share a name.
+#[test]
+fn extraction_binding_may_share_the_field_name() -> Result<(), MissingIeError> {
+    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(42u32),
+        IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+    );
+    let request: UEContextReleaseRequest = pdu.decode_value().expect("decode message");
+    extract_s1ap_ies!(&request, UEContextReleaseRequest,
+        req mme_ue_s1ap_id: u32 = MME_UE_S1AP_ID(mme_ue_s1ap_id),
+        opt cause: Cause = Cause(cause) => cause,
+    );
+    assert_eq!(mme_ue_s1ap_id, 42);
+    assert_eq!(
+        cause,
+        Some(Cause::radioNetwork(CauseRadioNetwork::user_inactivity))
+    );
+    Ok(())
+}

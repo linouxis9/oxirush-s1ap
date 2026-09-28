@@ -39,6 +39,10 @@ fn fixed_bit_string<const N: usize>(value: u64) -> FixedBitString<N> {
 /// Encode MCC/MNC as a 3-octet TBCD `PLMNidentity`.
 ///
 /// MCC must contain three decimal digits; MNC must contain two or three.
+///
+/// # Panics
+///
+/// Panics if `mcc` is not three ASCII digits or `mnc` not two or three.
 pub fn plmn(mcc: &str, mnc: &str) -> PLMNidentity {
     assert!(
         mcc.len() == 3 && mcc.bytes().all(|byte| byte.is_ascii_digit()),
@@ -124,6 +128,11 @@ pub fn global_enb_id(plmn_identity: PLMNidentity, enb_id: u32) -> GlobalENBID {
 }
 
 /// Build LTE UE security capabilities from encryption and integrity octets.
+///
+/// Each octet is the first octet of an S1AP bitmap, whose leading bit is
+/// 128-EEA1 or 128-EIA1 (TS 36.413 §9.2.1.40). The octets of the NAS UE
+/// network capability IE lead with EEA0 and EIA0 (TS 24.301 §9.9.3.34), so
+/// shift them left by one bit first.
 pub fn ue_security_capabilities(capabilities: &[u8]) -> UESecurityCapabilities {
     let encryption = capabilities.first().copied().unwrap_or(0);
     let integrity = capabilities.get(1).copied().unwrap_or(0);
@@ -143,6 +152,21 @@ pub fn ue_security_capabilities(capabilities: &[u8]) -> UESecurityCapabilities {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn security_capability_octets_lead_with_the_first_algorithm() {
+        // 128-EEA1 and 128-EEA2; 128-EIA2.
+        let capabilities = ue_security_capabilities(&[0xC0, 0x40]);
+        let leading = |bits: &BitString| bits.iter().take(3).map(|bit| *bit).collect::<Vec<_>>();
+        assert_eq!(
+            leading(&capabilities.encryption_algorithms.0),
+            [true, true, false]
+        );
+        assert_eq!(
+            leading(&capabilities.integrity_protection_algorithms.0),
+            [false, true, false]
+        );
+    }
     use crate::build_s1ap;
 
     #[test]
@@ -161,13 +185,19 @@ mod tests {
     #[test]
     fn common_identifiers_have_the_required_widths() {
         let plmn = plmn("208", "93");
-        let cgi = eutran_cgi(plmn.clone(), 1, 1);
-        assert_eq!(cgi.cell_id.0[..28].len(), 28);
-        let enb = global_enb_id(plmn, 1);
+        // The 20-bit eNB ID and the 8-bit cell: a 28-bit cell identity,
+        // octet-aligned after the PLMN (X.691 (07/2002) §15.10).
+        let cgi = eutran_cgi(plmn.clone(), 0x12345, 0x67);
+        assert_eq!(cgi.cell_id.0[..28], int_to_bitvec(0x123_4567, 28)[..]);
+        assert_eq!(
+            rasn::aper::encode(&cgi).unwrap(),
+            [0x00, 0x02, 0xf8, 0x39, 0x12, 0x34, 0x56, 0x70]
+        );
+        let enb = global_enb_id(plmn, 0x12345);
         let ENBID::macroENB_ID(bits) = enb.e_nb_id else {
             panic!("expected macro eNB ID");
         };
-        assert_eq!(bits.len(), 20);
+        assert_eq!(bits, int_to_bitvec(0x12345, 20));
     }
 
     #[test]

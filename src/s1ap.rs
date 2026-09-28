@@ -766,9 +766,33 @@ pub mod s1_ap_ies {
         no_restriction = 0,
         restriction = 1,
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct AdditionalRRMPriorityIndex(pub FixedBitString<32usize>);
+    impl Decode for AdditionalRRMPriorityIndex {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return FixedBitString::<32usize>::decode_with_tag_and_constraints(
+                    decoder,
+                    tag,
+                    constraints,
+                )
+                .map(Self);
+            }
+            const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+            const REST: Constraints = rasn::constraints!(rasn::size_constraint!(24));
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let mut bits = BitString::from_element(first);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            let mut value = FixedBitString::<32usize>::ZERO;
+            value[..32].copy_from_bitslice(&bits);
+            Ok(Self(value))
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
     #[non_exhaustive]
@@ -2866,9 +2890,33 @@ pub mod s1_ap_ies {
         #[rasn(extension_addition, identifier = "cs-fallback-high-priority")]
         cs_fallback_high_priority = 1,
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "CSG-Id")]
     pub struct CSGId(pub FixedBitString<27usize>);
+    impl Decode for CSGId {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return FixedBitString::<27usize>::decode_with_tag_and_constraints(
+                    decoder,
+                    tag,
+                    constraints,
+                )
+                .map(Self);
+            }
+            const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+            const REST: Constraints = rasn::constraints!(rasn::size_constraint!(19));
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let mut bits = BitString::from_element(first);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            let mut value = FixedBitString::<27usize>::ZERO;
+            value[..27].copy_from_bitslice(&bits);
+            Ok(Self(value))
+        }
+    }
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "CSG-IdList")]
     pub struct CSGIdList(pub SequenceOf<CSGIdListItem>);
@@ -4466,9 +4514,33 @@ pub mod s1_ap_ies {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct CellIdentity(pub FixedBitString<28usize>);
+    impl Decode for CellIdentity {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return FixedBitString::<28usize>::decode_with_tag_and_constraints(
+                    decoder,
+                    tag,
+                    constraints,
+                )
+                .map(Self);
+            }
+            const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+            const REST: Constraints = rasn::constraints!(rasn::size_constraint!(20));
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let mut bits = BitString::from_element(first);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            let mut value = FixedBitString::<28usize>::ZERO;
+            value[..28].copy_from_bitslice(&bits);
+            Ok(Self(value))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -7869,7 +7941,7 @@ pub mod s1_ap_ies {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(choice, automatic_tags, identifier = "ENB-ID")]
     #[non_exhaustive]
     pub enum ENBID {
@@ -7881,6 +7953,75 @@ pub mod s1_ap_ies {
         short_macroENB_ID(BitString),
         #[rasn(extension_addition, size("21"), identifier = "long-macroENB-ID")]
         long_macroENB_ID(BitString),
+    }
+    impl rasn::types::DecodeChoice for ENBID {
+        fn from_tag<D: Decoder>(decoder: &mut D, tag: Tag) -> Result<Self, D::Error> {
+            if tag == Tag::new(Class::Context, 0) {
+                const SIZE: Constraints = rasn::constraints!(rasn::size_constraint!(20));
+                if decoder.codec() != rasn::Codec::Aper {
+                    return BitString::decode_with_tag_and_constraints(decoder, tag, SIZE)
+                        .map(Self::macroENB_ID);
+                }
+                const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+                const REST: Constraints = rasn::constraints!(rasn::size_constraint!(12));
+                let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+                let mut bits = BitString::from_element(first);
+                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+                return Ok(Self::macroENB_ID(bits));
+            }
+            if tag == Tag::new(Class::Context, 1) {
+                const SIZE: Constraints = rasn::constraints!(rasn::size_constraint!(28));
+                if decoder.codec() != rasn::Codec::Aper {
+                    return BitString::decode_with_tag_and_constraints(decoder, tag, SIZE)
+                        .map(Self::homeENB_ID);
+                }
+                const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+                const REST: Constraints = rasn::constraints!(rasn::size_constraint!(20));
+                let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+                let mut bits = BitString::from_element(first);
+                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+                return Ok(Self::homeENB_ID(bits));
+            }
+            if tag == Tag::new(Class::Context, 2) {
+                const SIZE: Constraints = rasn::constraints!(rasn::size_constraint!(18));
+                if decoder.codec() != rasn::Codec::Aper {
+                    return BitString::decode_with_tag_and_constraints(decoder, tag, SIZE)
+                        .map(Self::short_macroENB_ID);
+                }
+                const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+                const REST: Constraints = rasn::constraints!(rasn::size_constraint!(10));
+                let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+                let mut bits = BitString::from_element(first);
+                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+                return Ok(Self::short_macroENB_ID(bits));
+            }
+            if tag == Tag::new(Class::Context, 3) {
+                const SIZE: Constraints = rasn::constraints!(rasn::size_constraint!(21));
+                if decoder.codec() != rasn::Codec::Aper {
+                    return BitString::decode_with_tag_and_constraints(decoder, tag, SIZE)
+                        .map(Self::long_macroENB_ID);
+                }
+                const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+                const REST: Constraints = rasn::constraints!(rasn::size_constraint!(13));
+                let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+                let mut bits = BitString::from_element(first);
+                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+                return Ok(Self::long_macroENB_ID(bits));
+            }
+            Err(rasn::de::Error::no_valid_choice("ENBID", decoder.codec()))
+        }
+    }
+    impl Decode for ENBID {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            _: Constraints,
+        ) -> Result<Self, D::Error> {
+            decoder.decode_explicit_prefix(tag)
+        }
+        fn decode<D: Decoder>(decoder: &mut D) -> Result<Self, D::Error> {
+            decoder.decode_choice(Self::CONSTRAINTS)
+        }
     }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
@@ -14001,9 +14142,33 @@ pub mod s1_ap_ies {
         allowed = 0,
     }
     #[doc = " I"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "Masked-IMEISV")]
     pub struct MaskedIMEISV(pub FixedBitString<64usize>);
+    impl Decode for MaskedIMEISV {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return FixedBitString::<64usize>::decode_with_tag_and_constraints(
+                    decoder,
+                    tag,
+                    constraints,
+                )
+                .map(Self);
+            }
+            const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+            const REST: Constraints = rasn::constraints!(rasn::size_constraint!(56));
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let mut bits = BitString::from_element(first);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            let mut value = FixedBitString::<64usize>::ZERO;
+            value[..64].copy_from_bitslice(&bits);
+            Ok(Self(value))
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(choice, automatic_tags)]
     #[non_exhaustive]
@@ -14084,9 +14249,33 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct MessageIdentifier(pub FixedBitString<16usize>);
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct MobilityInformation(pub FixedBitString<32usize>);
+    impl Decode for MobilityInformation {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return FixedBitString::<32usize>::decode_with_tag_and_constraints(
+                    decoder,
+                    tag,
+                    constraints,
+                )
+                .map(Self);
+            }
+            const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+            const REST: Constraints = rasn::constraints!(rasn::size_constraint!(24));
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let mut bits = BitString::from_element(first);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            let mut value = FixedBitString::<32usize>::ZERO;
+            value[..32].copy_from_bitslice(&bits);
+            Ok(Self(value))
+        }
+    }
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
     #[non_exhaustive]
@@ -14619,9 +14808,33 @@ pub mod s1_ap_ies {
             }
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct NRCellIdentity(pub FixedBitString<36usize>);
+    impl Decode for NRCellIdentity {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return FixedBitString::<36usize>::decode_with_tag_and_constraints(
+                    decoder,
+                    tag,
+                    constraints,
+                )
+                .map(Self);
+            }
+            const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+            const REST: Constraints = rasn::constraints!(rasn::size_constraint!(28));
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let mut bits = BitString::from_element(first);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            let mut value = FixedBitString::<36usize>::ZERO;
+            value[..36].copy_from_bitslice(&bits);
+            Ok(Self(value))
+        }
+    }
     #[doc = " Inner type "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
@@ -16727,9 +16940,33 @@ pub mod s1_ap_ies {
         size("1..=131072")
     )]
     pub struct ReceiveStatusOfULPDCPSDUsPDCPSNlength18(pub BitString);
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct ReceiveStatusofULPDCPSDUs(pub FixedBitString<4096usize>);
+    impl Decode for ReceiveStatusofULPDCPSDUs {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return FixedBitString::<4096usize>::decode_with_tag_and_constraints(
+                    decoder,
+                    tag,
+                    constraints,
+                )
+                .map(Self);
+            }
+            const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+            const REST: Constraints = rasn::constraints!(rasn::size_constraint!(4088));
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let mut bits = BitString::from_element(first);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            let mut value = FixedBitString::<4096usize>::ZERO;
+            value[..4096].copy_from_bitslice(&bits);
+            Ok(Self(value))
+        }
+    }
     #[doc = " Anonymous SEQUENCE OF member "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "SEQUENCE")]
@@ -18403,9 +18640,33 @@ pub mod s1_ap_ies {
         }
     }
     #[doc = " S"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct SecurityKey(pub FixedBitString<256usize>);
+    impl Decode for SecurityKey {
+        fn decode_with_tag_and_constraints<D: Decoder>(
+            decoder: &mut D,
+            tag: Tag,
+            constraints: Constraints,
+        ) -> Result<Self, D::Error> {
+            if decoder.codec() != rasn::Codec::Aper {
+                return FixedBitString::<256usize>::decode_with_tag_and_constraints(
+                    decoder,
+                    tag,
+                    constraints,
+                )
+                .map(Self);
+            }
+            const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
+            const REST: Constraints = rasn::constraints!(rasn::size_constraint!(248));
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let mut bits = BitString::from_element(first);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            let mut value = FixedBitString::<256usize>::ZERO;
+            value[..256].copy_from_bitslice(&bits);
+            Ok(Self(value))
+        }
+    }
     #[doc = " Anonymous SEQUENCE OF member "]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "SEQUENCE")]
@@ -22679,8 +22940,8 @@ pub mod s1_ap_ies {
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEAppLayerMeasConfig {
-        #[rasn(size("1..=1000"), identifier = "containerForAppLayerMeasConfig")]
-        pub container_for_app_layer_meas_config: OctetString,
+        #[rasn(identifier = "containerForAppLayerMeasConfig")]
+        pub container_for_app_layer_meas_config: crate::sized::SizedOctetString<1, 1000>,
         #[rasn(identifier = "areaScopeOfQMC")]
         pub area_scope_of_qmc: AreaScopeOfQMC,
         #[rasn(identifier = "iE-Extensions")]
@@ -22688,7 +22949,7 @@ pub mod s1_ap_ies {
     }
     impl UEAppLayerMeasConfig {
         pub fn new(
-            container_for_app_layer_meas_config: OctetString,
+            container_for_app_layer_meas_config: crate::sized::SizedOctetString<1, 1000>,
             area_scope_of_qmc: AreaScopeOfQMC,
             i_e_extensions: Option<UEAppLayerMeasConfigIEExtensions>,
         ) -> Self {
@@ -40276,9 +40537,6 @@ macro_rules! __s1ap_ie_id {
     (ENBname) => {
         60u16
     };
-    (ENDCSONConfigurationTransfer) => {
-        294u16
-    };
     (EN_DCSONConfigurationTransfer_ECT) => {
         294u16
     };
@@ -40320,9 +40578,6 @@ macro_rules! __s1ap_ie_id {
     };
     (ERABLevelQoSParameters) => {
         252u16
-    };
-    (ERABList) => {
-        13u16
     };
     (ERABModifyItemBearerModConf) => {
         204u16
@@ -40600,8 +40855,8 @@ macro_rules! __s1ap_ie_id {
     (ExtendedRepetitionPeriod) => {
         144u16
     };
-    (GUMMEI) => {
-        75u16
+    (ExtendedUEIdentityIndexValue) => {
+        231u16
     };
     (GUMMEIList) => {
         154u16
@@ -40654,17 +40909,11 @@ macro_rules! __s1ap_ie_id {
     (InformationOnRecommendedCellsAndENBsForPaging) => {
         213u16
     };
-    (InterSystemInformationTransferType) => {
-        121u16
-    };
     (Inter_SystemInformationTransferTypeEDT) => {
         121u16
     };
     (Inter_SystemInformationTransferTypeMDT) => {
         122u16
-    };
-    (IntersystemSONConfigurationTransfer) => {
-        310u16
     };
     (IntersystemSONConfigurationTransferECT) => {
         310u16
@@ -40713,9 +40962,6 @@ macro_rules! __s1ap_ie_id {
     };
     (MMERelaySupportIndicator) => {
         163u16
-    };
-    (MMEUES1APID) => {
-        0u16
     };
     (MME_Group_ID) => {
         223u16
@@ -40828,9 +41074,6 @@ macro_rules! __s1ap_ie_id {
     (PagingCause) => {
         331u16
     };
-    (PagingDRX) => {
-        44u16
-    };
     (PagingEDRXInformation) => {
         227u16
     };
@@ -40848,9 +41091,6 @@ macro_rules! __s1ap_ie_id {
     };
     (ProSeAuthorized) => {
         195u16
-    };
-    (RRCEstablishmentCause) => {
-        245u16
     };
     (RRC_Establishment_Cause) => {
         134u16
@@ -40896,9 +41136,6 @@ macro_rules! __s1ap_ie_id {
     };
     (SIPTO_L_GW_TransportLayerAddress) => {
         184u16
-    };
-    (SONConfigurationTransfer) => {
-        129u16
     };
     (SONConfigurationTransferECT) => {
         129u16
@@ -40957,9 +41194,6 @@ macro_rules! __s1ap_ie_id {
     (SourceMME_UE_S1AP_ID) => {
         88u16
     };
-    (SourceToTargetTransparentContainer) => {
-        104u16
-    };
     (Source_ToTarget_TransparentContainer) => {
         104u16
     };
@@ -40993,9 +41227,6 @@ macro_rules! __s1ap_ie_id {
     (TargetID) => {
         4u16
     };
-    (TargetToSourceTransparentContainer) => {
-        123u16
-    };
     (Target_ToSource_TransparentContainer) => {
         123u16
     };
@@ -41019,9 +41250,6 @@ macro_rules! __s1ap_ie_id {
     };
     (TrafficLoadReductionIndication) => {
         161u16
-    };
-    (TransportLayerAddress) => {
-        155u16
     };
     (TunnelInformation) => {
         176u16
@@ -41172,6 +41400,9 @@ macro_rules! __s1ap_ie_id {
     };
     (eNBname) => {
         60u16
+    };
+    (extended_UEIdentityIndexValue) => {
+        231u16
     };
     (pagingDRX) => {
         44u16
@@ -41435,10 +41666,6 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::ENBname = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
-    (ENDCSONConfigurationTransfer, $value:expr) => {{
-        let value: $crate::s1ap::ENDCSONConfigurationTransfer = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
     (EN_DCSONConfigurationTransfer_ECT, $value:expr) => {{
         let value: $crate::s1ap::ENDCSONConfigurationTransfer = ($value).into();
         $crate::s1ap::encode_open_type(&value)
@@ -41493,10 +41720,6 @@ macro_rules! __s1ap_encode_ie {
     }};
     (ERABLevelQoSParameters, $value:expr) => {{
         let value: $crate::s1ap::ERABLevelQoSParameters = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
-    (ERABList, $value:expr) => {{
-        let value: $crate::s1ap::ERABList = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (ERABModifyItemBearerModConf, $value:expr) => {{
@@ -41867,8 +42090,8 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::ExtendedRepetitionPeriod = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
-    (GUMMEI, $value:expr) => {{
-        let value: $crate::s1ap::GUMMEI = ($value).into();
+    (ExtendedUEIdentityIndexValue, $value:expr) => {{
+        let value: $crate::s1ap::ExtendedUEIdentityIndexValue = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (GUMMEIList, $value:expr) => {{
@@ -41939,20 +42162,12 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::InformationOnRecommendedCellsAndENBsForPaging = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
-    (InterSystemInformationTransferType, $value:expr) => {{
-        let value: $crate::s1ap::InterSystemInformationTransferType = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
     (Inter_SystemInformationTransferTypeEDT, $value:expr) => {{
         let value: $crate::s1ap::InterSystemInformationTransferType = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (Inter_SystemInformationTransferTypeMDT, $value:expr) => {{
         let value: $crate::s1ap::InterSystemInformationTransferType = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
-    (IntersystemSONConfigurationTransfer, $value:expr) => {{
-        let value: $crate::s1ap::IntersystemSONConfigurationTransfer = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (IntersystemSONConfigurationTransferECT, $value:expr) => {{
@@ -42017,10 +42232,6 @@ macro_rules! __s1ap_encode_ie {
     }};
     (MMERelaySupportIndicator, $value:expr) => {{
         let value: $crate::s1ap::MMERelaySupportIndicator = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
-    (MMEUES1APID, $value:expr) => {{
-        let value: $crate::s1ap::MMEUES1APID = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (MME_Group_ID, $value:expr) => {{
@@ -42171,10 +42382,6 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::PagingCause = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
-    (PagingDRX, $value:expr) => {{
-        let value: $crate::s1ap::PagingDRX = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
     (PagingEDRXInformation, $value:expr) => {{
         let value: $crate::s1ap::PagingEDRXInformation = ($value).into();
         $crate::s1ap::encode_open_type(&value)
@@ -42197,10 +42404,6 @@ macro_rules! __s1ap_encode_ie {
     }};
     (ProSeAuthorized, $value:expr) => {{
         let value: $crate::s1ap::ProSeAuthorized = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
-    (RRCEstablishmentCause, $value:expr) => {{
-        let value: $crate::s1ap::RRCEstablishmentCause = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (RRC_Establishment_Cause, $value:expr) => {{
@@ -42261,10 +42464,6 @@ macro_rules! __s1ap_encode_ie {
     }};
     (SIPTO_L_GW_TransportLayerAddress, $value:expr) => {{
         let value: $crate::s1ap::TransportLayerAddress = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
-    (SONConfigurationTransfer, $value:expr) => {{
-        let value: $crate::s1ap::SONConfigurationTransfer = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (SONConfigurationTransferECT, $value:expr) => {{
@@ -42343,10 +42542,6 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::MMEUES1APID = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
-    (SourceToTargetTransparentContainer, $value:expr) => {{
-        let value: $crate::s1ap::SourceToTargetTransparentContainer = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
     (Source_ToTarget_TransparentContainer, $value:expr) => {{
         let value: $crate::s1ap::SourceToTargetTransparentContainer = ($value).into();
         $crate::s1ap::encode_open_type(&value)
@@ -42391,10 +42586,6 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::TargetID = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
-    (TargetToSourceTransparentContainer, $value:expr) => {{
-        let value: $crate::s1ap::TargetToSourceTransparentContainer = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
     (Target_ToSource_TransparentContainer, $value:expr) => {{
         let value: $crate::s1ap::TargetToSourceTransparentContainer = ($value).into();
         $crate::s1ap::encode_open_type(&value)
@@ -42425,10 +42616,6 @@ macro_rules! __s1ap_encode_ie {
     }};
     (TrafficLoadReductionIndication, $value:expr) => {{
         let value: $crate::s1ap::TrafficLoadReductionIndication = ($value).into();
-        $crate::s1ap::encode_open_type(&value)
-    }};
-    (TransportLayerAddress, $value:expr) => {{
-        let value: $crate::s1ap::TransportLayerAddress = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
     (TunnelInformation, $value:expr) => {{
@@ -42631,6 +42818,10 @@ macro_rules! __s1ap_encode_ie {
         let value: $crate::s1ap::ENBname = ($value).into();
         $crate::s1ap::encode_open_type(&value)
     }};
+    (extended_UEIdentityIndexValue, $value:expr) => {{
+        let value: $crate::s1ap::ExtendedUEIdentityIndexValue = ($value).into();
+        $crate::s1ap::encode_open_type(&value)
+    }};
     (pagingDRX, $value:expr) => {{
         let value: $crate::s1ap::PagingDRX = ($value).into();
         $crate::s1ap::encode_open_type(&value)
@@ -42706,7 +42897,6 @@ macro_rules! __s1ap_decode_ie {
     (ENBStatusTransferTransparentContainer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENBStatusTransferTransparentContainer>($value) };
     (ENBUES1APID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENBUES1APID>($value) };
     (ENBname, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENBname>($value) };
-    (ENDCSONConfigurationTransfer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENDCSONConfigurationTransfer>($value) };
     (EN_DCSONConfigurationTransfer_ECT, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENDCSONConfigurationTransfer>($value) };
     (EN_DCSONConfigurationTransfer_MCT, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENDCSONConfigurationTransfer>($value) };
     (ERABAdmittedItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABAdmittedItem>($value) };
@@ -42721,7 +42911,6 @@ macro_rules! __s1ap_decode_ie {
     (ERABInformationListItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABInformationListItem>($value) };
     (ERABItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABItem>($value) };
     (ERABLevelQoSParameters, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABLevelQoSParameters>($value) };
-    (ERABList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABList>($value) };
     (ERABModifyItemBearerModConf, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABModifyItemBearerModConf>($value) };
     (ERABModifyItemBearerModRes, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABModifyItemBearerModRes>($value) };
     (ERABModifyListBearerModConf, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ERABModifyListBearerModConf>($value) };
@@ -42814,7 +43003,7 @@ macro_rules! __s1ap_decode_ie {
     (EnhancedCoverageRestricted, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::EnhancedCoverageRestricted>($value) };
     (ExpectedUEBehaviour, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ExpectedUEBehaviour>($value) };
     (ExtendedRepetitionPeriod, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ExtendedRepetitionPeriod>($value) };
-    (GUMMEI, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::GUMMEI>($value) };
+    (ExtendedUEIdentityIndexValue, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ExtendedUEIdentityIndexValue>($value) };
     (GUMMEIList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::GUMMEIList>($value) };
     (GUMMEIType, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::GUMMEIType>($value) };
     (GUMMEI_ID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::GUMMEI>($value) };
@@ -42832,10 +43021,8 @@ macro_rules! __s1ap_decode_ie {
     (IAB_Node_Indication, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::IABNodeIndication>($value) };
     (IAB_Supported, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::IABSupported>($value) };
     (InformationOnRecommendedCellsAndENBsForPaging, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::InformationOnRecommendedCellsAndENBsForPaging>($value) };
-    (InterSystemInformationTransferType, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::InterSystemInformationTransferType>($value) };
     (Inter_SystemInformationTransferTypeEDT, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::InterSystemInformationTransferType>($value) };
     (Inter_SystemInformationTransferTypeMDT, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::InterSystemInformationTransferType>($value) };
-    (IntersystemSONConfigurationTransfer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::IntersystemSONConfigurationTransfer>($value) };
     (IntersystemSONConfigurationTransferECT, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::IntersystemSONConfigurationTransfer>($value) };
     (IntersystemSONConfigurationTransferMCT, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::IntersystemSONConfigurationTransfer>($value) };
     (KillAllWarningMessages, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::KillAllWarningMessages>($value) };
@@ -42852,7 +43039,6 @@ macro_rules! __s1ap_decode_ie {
     (MDTPLMNList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::MDTPLMNList>($value) };
     (MMEGroupID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::MMEGroupID>($value) };
     (MMERelaySupportIndicator, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::MMERelaySupportIndicator>($value) };
-    (MMEUES1APID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::MMEUES1APID>($value) };
     (MME_Group_ID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::MMEGroupID>($value) };
     (MME_UE_S1AP_ID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::MMEUES1APID>($value) };
     (MME_UE_S1AP_ID_2, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::MMEUES1APID>($value) };
@@ -42890,14 +43076,12 @@ macro_rules! __s1ap_decode_ie {
     (PS_ServiceNotAvailable, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PSServiceNotAvailable>($value) };
     (PWSfailedECGIList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PWSfailedECGIList>($value) };
     (PagingCause, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PagingCause>($value) };
-    (PagingDRX, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PagingDRX>($value) };
     (PagingEDRXInformation, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PagingEDRXInformation>($value) };
     (PagingPriority, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PagingPriority>($value) };
     (Paging_eDRXInformation, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PagingEDRXInformation>($value) };
     (PendingDataIndication, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PendingDataIndication>($value) };
     (PrivacyIndicator, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PrivacyIndicator>($value) };
     (ProSeAuthorized, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ProSeAuthorized>($value) };
-    (RRCEstablishmentCause, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::RRCEstablishmentCause>($value) };
     (RRC_Establishment_Cause, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::RRCEstablishmentCause>($value) };
     (RRC_Resume_Cause, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::RRCEstablishmentCause>($value) };
     (RecommendedCellItem, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::RecommendedCellItem>($value) };
@@ -42913,7 +43097,6 @@ macro_rules! __s1ap_decode_ie {
     (Routing_ID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::RoutingID>($value) };
     (S1_Message, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::__rasn::types::OctetString>($value) };
     (SIPTO_L_GW_TransportLayerAddress, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TransportLayerAddress>($value) };
-    (SONConfigurationTransfer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::SONConfigurationTransfer>($value) };
     (SONConfigurationTransferECT, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::SONConfigurationTransfer>($value) };
     (SONConfigurationTransferMCT, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::SONConfigurationTransfer>($value) };
     (SONInformationReport, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::SONInformationReport>($value) };
@@ -42933,7 +43116,6 @@ macro_rules! __s1ap_decode_ie {
     (ServedGUMMEIs, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ServedGUMMEIs>($value) };
     (SourceMME_GUMMEI, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::GUMMEI>($value) };
     (SourceMME_UE_S1AP_ID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::MMEUES1APID>($value) };
-    (SourceToTargetTransparentContainer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::SourceToTargetTransparentContainer>($value) };
     (Source_ToTarget_TransparentContainer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::SourceToTargetTransparentContainer>($value) };
     (Source_ToTarget_TransparentContainer_Secondary, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::SourceToTargetTransparentContainer>($value) };
     (SubscriberProfileIDforRFP, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::SubscriberProfileIDforRFP>($value) };
@@ -42945,7 +43127,6 @@ macro_rules! __s1ap_decode_ie {
     (TAIList, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TAIList>($value) };
     (TAIListForRestart, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TAIListForRestart>($value) };
     (TargetID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TargetID>($value) };
-    (TargetToSourceTransparentContainer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TargetToSourceTransparentContainer>($value) };
     (Target_ToSource_TransparentContainer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TargetToSourceTransparentContainer>($value) };
     (Target_ToSource_TransparentContainer_Secondary, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TargetToSourceTransparentContainer>($value) };
     (TimeRefDistribution, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TimeRefDistribution>($value) };
@@ -42954,7 +43135,6 @@ macro_rules! __s1ap_decode_ie {
     (TraceActivation, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TraceActivation>($value) };
     (TraceCollectionEntityIPAddress, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TransportLayerAddress>($value) };
     (TrafficLoadReductionIndication, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TrafficLoadReductionIndication>($value) };
-    (TransportLayerAddress, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TransportLayerAddress>($value) };
     (TunnelInformation, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TunnelInformation>($value) };
     (Tunnel_Information_for_BBF, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::TunnelInformation>($value) };
     (UEAggregateMaximumBitrate, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::UEAggregateMaximumBitrate>($value) };
@@ -43005,6 +43185,7 @@ macro_rules! __s1ap_decode_ie {
     (eNB_StatusTransfer_TransparentContainer, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENBStatusTransferTransparentContainer>($value) };
     (eNB_UE_S1AP_ID, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENBUES1APID>($value) };
     (eNBname, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ENBname>($value) };
+    (extended_UEIdentityIndexValue, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::ExtendedUEIdentityIndexValue>($value) };
     (pagingDRX, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::PagingDRX>($value) };
     (uEaggregateMaximumBitrate, $value:expr) => { $crate::s1ap::decode_open_type::<$crate::s1ap::UEAggregateMaximumBitrate>($value) };
 }
@@ -43695,7 +43876,7 @@ impl std::fmt::Display for S1APPDU {
 /// Encode a typed ASN.1 value for an S1AP open type using APER.
 ///
 /// An open type holds a complete encoding, in which an empty encoding
-/// becomes one zero octet (X.691 §11.1.4, §11.2.1).
+/// becomes one zero octet (X.691 (07/2002) §10.1.4, §10.2.1).
 pub fn encode_open_type<T: rasn::Encode>(
     value: &T,
 ) -> Result<rasn::types::Any, rasn::error::EncodeError> {
