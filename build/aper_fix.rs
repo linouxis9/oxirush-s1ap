@@ -94,6 +94,88 @@ pub fn fix_constrained_sequences(generated: &str) -> Result<String> {
     Ok(generated)
 }
 
+/// Decode unknown extension additions before returning an extensible SEQUENCE.
+///
+/// rasn 0.28 leaves them unread when the type has no known additions. All
+/// current S1AP SEQUENCE additions are empty; the protocol's named extension
+/// containers remain ordinary root fields. Preserve their root field tokens
+/// and constraints in the decoder macro, and fail if a future ASN.1 version
+/// defines additions that need a different decoder.
+pub fn fix_extensible_sequences(generated: &str) -> Result<String> {
+    let sequence = Regex::new(
+        r#"(?ms)(    #\[derive\(AsnType, Debug, Clone, )Decode, (Encode, PartialEq, Eq, Hash\)\]
+    #\[rasn\(\s*automatic_tags(?:,\s*identifier = "([^"]+)")?,?\s*\)\]
+    #\[non_exhaustive\]
+    pub struct ([A-Za-z0-9_]+) \{
+(.*?)^    \})"#,
+    )?;
+    let field = Regex::new(r"(?m)^        pub ([a-z0-9_]+):\s*")?;
+    let mut replacements = 0usize;
+    let mut failure = None;
+    let generated = sequence
+        .replace_all(generated, |captures: &Captures<'_>| {
+            let name = &captures[4];
+            let identifier = captures.get(3).map_or(name, |value| value.as_str());
+            let fields = &captures[5];
+            if fields.contains("extension_addition") {
+                failure.get_or_insert_with(|| format!("defined SEQUENCE additions in {name}"));
+                return captures[0].to_string();
+            }
+            let mut arguments = String::new();
+            let mut rest = 0;
+            for member in field.captures_iter(fields) {
+                let whole = member.get(0).expect("field declaration");
+                let start = whole.end();
+                let mut depth = 0usize;
+                let end = fields[start..].char_indices().find_map(|(offset, character)| {
+                    match character {
+                        '<' | '[' | '(' => depth += 1,
+                        '>' | ']' | ')' => depth -= 1,
+                        ',' if depth == 0 => return Some(start + offset),
+                        _ => (),
+                    }
+                    None
+                });
+                let Some(end) = end else {
+                    failure.get_or_insert_with(|| format!("unterminated field in {name}"));
+                    return captures[0].to_string();
+                };
+                arguments.push_str(&fields[rest..whole.start()]);
+                // Raw token groups preserve Option<T> for rasn's derives;
+                // forwarding a macro `ty` would hide it behind a Type::Group.
+                write!(arguments, "        {}: [{}],", &member[1], &fields[start..end])
+                    .expect("write to String");
+                rest = end + 1;
+            }
+            arguments.push_str(&fields[rest..]);
+            if arguments.contains("pub ") {
+                failure.get_or_insert_with(|| format!("unrecognized root field in {name}"));
+                return captures[0].to_string();
+            }
+            replacements += 1;
+            let declaration = captures[0].replacen("Decode, Encode, ", "Encode, ", 1);
+            format!(
+                "{declaration}\n    crate::per::decode_extensible_sequence! {{ {name}, \"{identifier}\" {{\n{arguments}    }} }}"
+            )
+        })
+        .into_owned();
+    if let Some(failure) = failure {
+        bail!("extensible SEQUENCE: {failure}");
+    }
+    ensure!(
+        replacements > 0,
+        "no extensible SEQUENCE declarations found"
+    );
+    let unpatched = Regex::new(
+        r"(?ms)#\[derive\([^\]]*\bDecode\b[^\]]*\)\]\s*#\[rasn\([^\]]*\)\]\s*#\[non_exhaustive\]\s*pub struct",
+    )?;
+    ensure!(
+        !unpatched.is_match(&generated),
+        "an extensible SEQUENCE declaration still uses the derived decoder"
+    );
+    Ok(generated)
+}
+
 /// Work around rasn 0.28 APER decoding of size-constrained `UTF8String` values.
 ///
 /// A constraint on a character string type that is not a known-multiplier

@@ -734,7 +734,7 @@ pub mod s1_ap_ies {
         }
     }
     #[doc = " A"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Additional-GUTI")]
     #[non_exhaustive]
     pub struct AdditionalGUTI {
@@ -745,6 +745,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<AdditionalGUTIIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { AdditionalGUTI, "Additional-GUTI" {
+        #[rasn(identifier = "gUMMEI")]
+        g_ummei: [GUMMEI],
+        #[rasn(identifier = "m-TMSI")]
+        m_tmsi: [MTMSI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<AdditionalGUTIIEExtensions>],
+    } }
     impl AdditionalGUTI {
         pub fn new(
             g_ummei: GUMMEI,
@@ -891,7 +899,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct AllocationAndRetentionPriority {
@@ -904,6 +912,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<AllocationAndRetentionPriorityIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { AllocationAndRetentionPriority, "AllocationAndRetentionPriority" {
+        #[rasn(identifier = "priorityLevel")]
+        priority_level: [PriorityLevel],
+        #[rasn(identifier = "pre-emptionCapability")]
+        pre_emption_capability: [PreEmptionCapability],
+        #[rasn(identifier = "pre-emptionVulnerability")]
+        pre_emption_vulnerability: [PreEmptionVulnerability],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<AllocationAndRetentionPriorityIEExtensions>],
+    } }
     impl AllocationAndRetentionPriority {
         pub fn new(
             priority_level: PriorityLevel,
@@ -1068,7 +1086,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct AssistanceDataForCECapableUEs {
@@ -1077,6 +1095,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<AssistanceDataForCECapableUEsIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { AssistanceDataForCECapableUEs, "AssistanceDataForCECapableUEs" {
+        #[rasn(identifier = "cellIdentifierAndCELevelForCECapableUEs")]
+        cell_identifier_and_celevel_for_cecapable_ues: [CellIdentifierAndCELevelForCECapableUEs],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<AssistanceDataForCECapableUEsIEExtensions>],
+    } }
     impl AssistanceDataForCECapableUEs {
         pub fn new(
             cell_identifier_and_celevel_for_cecapable_ues: CellIdentifierAndCELevelForCECapableUEs,
@@ -1178,7 +1202,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct AssistanceDataForPaging {
@@ -1191,6 +1215,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<AssistanceDataForPagingIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { AssistanceDataForPaging, "AssistanceDataForPaging" {
+        #[rasn(identifier = "assistanceDataForRecommendedCells")]
+        assistance_data_for_recommended_cells: [Option<AssistanceDataForRecommendedCells>],
+        #[rasn(identifier = "assistanceDataForCECapableUEs")]
+        assistance_data_for_cecapable_ues: [Option<AssistanceDataForCECapableUEs>],
+        #[rasn(identifier = "pagingAttemptInformation")]
+        paging_attempt_information: [Option<PagingAttemptInformation>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<AssistanceDataForPagingIEExtensions>],
+    } }
     impl AssistanceDataForPaging {
         pub fn new(
             assistance_data_for_recommended_cells: Option<AssistanceDataForRecommendedCells>,
@@ -1295,7 +1329,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct AssistanceDataForRecommendedCells {
@@ -1304,6 +1338,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<AssistanceDataForRecommendedCellsIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { AssistanceDataForRecommendedCells, "AssistanceDataForRecommendedCells" {
+        #[rasn(identifier = "recommendedCellsForPaging")]
+        recommended_cells_for_paging: [RecommendedCellsForPaging],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<AssistanceDataForRecommendedCellsIEExtensions>],
+    } }
     impl AssistanceDataForRecommendedCells {
         pub fn new(
             recommended_cells_for_paging: RecommendedCellsForPaging,
@@ -1462,7 +1502,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Bearers-SubjectToDLDiscarding-Item")]
     #[non_exhaustive]
     pub struct BearersSubjectToDLDiscardingItem {
@@ -1473,6 +1513,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<BearersSubjectToDLDiscardingItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { BearersSubjectToDLDiscardingItem, "Bearers-SubjectToDLDiscarding-Item" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "dL-Discarding")]
+        d_l_discarding: [DLDiscarding],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<BearersSubjectToDLDiscardingItemIEExtensions>],
+    } }
     impl BearersSubjectToDLDiscardingItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -1663,7 +1711,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(
         automatic_tags,
         identifier = "Bearers-SubjectToEarlyStatusTransfer-Item"
@@ -1677,6 +1725,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<BearersSubjectToEarlyStatusTransferItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { BearersSubjectToEarlyStatusTransferItem, "Bearers-SubjectToEarlyStatusTransfer-Item" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "dLCOUNT-PDCP-SNlength")]
+        d_lcount_pdcp_snlength: [DLCOUNTPDCPSNlength],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<BearersSubjectToEarlyStatusTransferItemIEExtensions>],
+    } }
     impl BearersSubjectToEarlyStatusTransferItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -1872,7 +1928,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Bearers-SubjectToStatusTransfer-Item")]
     #[non_exhaustive]
     pub struct BearersSubjectToStatusTransferItem {
@@ -1887,6 +1943,18 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<BearersSubjectToStatusTransferItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { BearersSubjectToStatusTransferItem, "Bearers-SubjectToStatusTransfer-Item" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "uL-COUNTvalue")]
+        u_l_countvalue: [COUNTvalue],
+        #[rasn(identifier = "dL-COUNTvalue")]
+        d_l_countvalue: [COUNTvalue],
+        #[rasn(identifier = "receiveStatusofULPDCPSDUs")]
+        receive_statusof_ulpdcpsdus: [Option<ReceiveStatusofULPDCPSDUs>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<BearersSubjectToStatusTransferItemIEExtensions>],
+    } }
     impl BearersSubjectToStatusTransferItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -2154,7 +2222,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct BluetoothMeasurementConfiguration {
@@ -2167,6 +2235,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<BluetoothMeasurementConfigurationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { BluetoothMeasurementConfiguration, "BluetoothMeasurementConfiguration" {
+        #[rasn(identifier = "bluetoothMeasConfig")]
+        bluetooth_meas_config: [BluetoothMeasConfig],
+        #[rasn(identifier = "bluetoothMeasConfigNameList")]
+        bluetooth_meas_config_name_list: [Option<BluetoothMeasConfigNameList>],
+        #[rasn(identifier = "bt-rssi")]
+        bt_rssi: [Option<BluetoothMeasurementConfigurationBtRssi>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<BluetoothMeasurementConfigurationIEExtensions>],
+    } }
     impl BluetoothMeasurementConfiguration {
         pub fn new(
             bluetooth_meas_config: BluetoothMeasConfig,
@@ -2337,7 +2415,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct CGI {
@@ -2352,6 +2430,18 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CGIIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CGI, "CGI" {
+        #[rasn(identifier = "pLMNidentity")]
+        p_lmnidentity: [PLMNidentity],
+        #[rasn(identifier = "lAC")]
+        l_ac: [LAC],
+        #[rasn(identifier = "cI")]
+        c_i: [CI],
+        #[rasn(identifier = "rAC")]
+        r_ac: [Option<RAC>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CGIIEExtensions>],
+    } }
     impl CGI {
         pub fn new(
             p_lmnidentity: PLMNidentity,
@@ -2527,7 +2617,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CNTypeRestrictions-Item")]
     #[non_exhaustive]
     pub struct CNTypeRestrictionsItem {
@@ -2538,6 +2628,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CNTypeRestrictionsItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CNTypeRestrictionsItem, "CNTypeRestrictions-Item" {
+        #[rasn(identifier = "pLMN-Identity")]
+        p_lmn_identity: [PLMNidentity],
+        #[rasn(identifier = "cNType")]
+        c_ntype: [CNType],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CNTypeRestrictionsItemIEExtensions>],
+    } }
     impl CNTypeRestrictionsItem {
         pub fn new(
             p_lmn_identity: PLMNidentity,
@@ -2636,7 +2734,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct COUNTValueExtended {
@@ -2647,6 +2745,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<COUNTValueExtendedIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { COUNTValueExtended, "COUNTValueExtended" {
+        #[rasn(identifier = "pDCP-SNExtended")]
+        p_dcp_snextended: [PDCPSNExtended],
+        #[rasn(identifier = "hFNModified")]
+        h_fnmodified: [HFNModified],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<COUNTValueExtendedIEExtensions>],
+    } }
     impl COUNTValueExtended {
         pub fn new(
             p_dcp_snextended: PDCPSNExtended,
@@ -2743,7 +2849,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct COUNTvalue {
@@ -2754,6 +2860,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<COUNTvalueIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { COUNTvalue, "COUNTvalue" {
+        #[rasn(identifier = "pDCP-SN")]
+        p_dcp_sn: [PDCPSN],
+        #[rasn(identifier = "hFN")]
+        h_fn: [HFN],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<COUNTvalueIEExtensions>],
+    } }
     impl COUNTvalue {
         pub fn new(
             p_dcp_sn: PDCPSN,
@@ -2857,7 +2971,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "COUNTvaluePDCP-SNlength18")]
     #[non_exhaustive]
     pub struct COUNTvaluePDCPSNlength18 {
@@ -2868,6 +2982,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<COUNTvaluePDCPSNlength18IEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { COUNTvaluePDCPSNlength18, "COUNTvaluePDCP-SNlength18" {
+        #[rasn(identifier = "pDCP-SNlength18")]
+        p_dcp_snlength18: [PDCPSNlength18],
+        #[rasn(identifier = "hFNforPDCP-SNlength18")]
+        h_fnfor_pdcp_snlength18: [HFNforPDCPSNlength18],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<COUNTvaluePDCPSNlength18IEExtensions>],
+    } }
     impl COUNTvaluePDCPSNlength18 {
         pub fn new(
             p_dcp_snlength18: PDCPSNlength18,
@@ -3051,7 +3173,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CSG-IdList-Item")]
     #[non_exhaustive]
     pub struct CSGIdListItem {
@@ -3060,6 +3182,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CSGIdListItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CSGIdListItem, "CSG-IdList-Item" {
+        #[rasn(identifier = "cSG-Id")]
+        c_sg_id: [CSGId],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CSGIdListItemIEExtensions>],
+    } }
     impl CSGIdListItem {
         pub fn new(c_sg_id: CSGId, i_e_extensions: Option<CSGIdListItemIEExtensions>) -> Self {
             Self {
@@ -3217,7 +3345,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CancelledCellinEAI-Item")]
     #[non_exhaustive]
     pub struct CancelledCellinEAIItem {
@@ -3228,6 +3356,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CancelledCellinEAIItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CancelledCellinEAIItem, "CancelledCellinEAI-Item" {
+        #[rasn(identifier = "eCGI")]
+        e_cgi: [EUTRANCGI],
+        #[rasn(identifier = "numberOfBroadcasts")]
+        number_of_broadcasts: [NumberOfBroadcasts],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CancelledCellinEAIItemIEExtensions>],
+    } }
     impl CancelledCellinEAIItem {
         pub fn new(
             e_cgi: EUTRANCGI,
@@ -3382,7 +3518,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CancelledCellinTAI-Item")]
     #[non_exhaustive]
     pub struct CancelledCellinTAIItem {
@@ -3393,6 +3529,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CancelledCellinTAIItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CancelledCellinTAIItem, "CancelledCellinTAI-Item" {
+        #[rasn(identifier = "eCGI")]
+        e_cgi: [EUTRANCGI],
+        #[rasn(identifier = "numberOfBroadcasts")]
+        number_of_broadcasts: [NumberOfBroadcasts],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CancelledCellinTAIItemIEExtensions>],
+    } }
     impl CancelledCellinTAIItem {
         pub fn new(
             e_cgi: EUTRANCGI,
@@ -3717,7 +3861,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct Cdma2000OneXSRVCCInfo {
@@ -3730,6 +3874,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<Cdma2000OneXSRVCCInfoIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { Cdma2000OneXSRVCCInfo, "Cdma2000OneXSRVCCInfo" {
+        #[rasn(identifier = "cdma2000OneXMEID")]
+        cdma2000_one_xmeid: [Cdma2000OneXMEID],
+        #[rasn(identifier = "cdma2000OneXMSI")]
+        cdma2000_one_xmsi: [Cdma2000OneXMSI],
+        #[rasn(identifier = "cdma2000OneXPilot")]
+        cdma2000_one_xpilot: [Cdma2000OneXPilot],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<Cdma2000OneXSRVCCInfoIEExtensions>],
+    } }
     impl Cdma2000OneXSRVCCInfo {
         pub fn new(
             cdma2000_one_xmeid: Cdma2000OneXMEID,
@@ -3856,7 +4010,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct CellBasedMDT {
@@ -3865,6 +4019,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CellBasedMDTIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CellBasedMDT, "CellBasedMDT" {
+        #[rasn(identifier = "cellIdListforMDT")]
+        cell_id_listfor_mdt: [CellIdListforMDT],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CellBasedMDTIEExtensions>],
+    } }
     impl CellBasedMDT {
         pub fn new(
             cell_id_listfor_mdt: CellIdListforMDT,
@@ -3959,7 +4119,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct CellBasedQMC {
@@ -3968,6 +4128,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CellBasedQMCIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CellBasedQMC, "CellBasedQMC" {
+        #[rasn(identifier = "cellIdListforQMC")]
+        cell_id_listfor_qmc: [CellIdListforQMC],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CellBasedQMCIEExtensions>],
+    } }
     impl CellBasedQMC {
         pub fn new(
             cell_id_listfor_qmc: CellIdListforQMC,
@@ -4118,7 +4284,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CellID-Broadcast-Item")]
     #[non_exhaustive]
     pub struct CellIDBroadcastItem {
@@ -4127,6 +4293,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CellIDBroadcastItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CellIDBroadcastItem, "CellID-Broadcast-Item" {
+        #[rasn(identifier = "eCGI")]
+        e_cgi: [EUTRANCGI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CellIDBroadcastItemIEExtensions>],
+    } }
     impl CellIDBroadcastItem {
         pub fn new(
             e_cgi: EUTRANCGI,
@@ -4277,7 +4449,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CellID-Cancelled-Item")]
     #[non_exhaustive]
     pub struct CellIDCancelledItem {
@@ -4288,6 +4460,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CellIDCancelledItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CellIDCancelledItem, "CellID-Cancelled-Item" {
+        #[rasn(identifier = "eCGI")]
+        e_cgi: [EUTRANCGI],
+        #[rasn(identifier = "numberOfBroadcasts")]
+        number_of_broadcasts: [NumberOfBroadcasts],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CellIDCancelledItemIEExtensions>],
+    } }
     impl CellIDCancelledItem {
         pub fn new(
             e_cgi: EUTRANCGI,
@@ -4490,7 +4670,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct CellIdentifierAndCELevelForCECapableUEs {
@@ -4501,6 +4681,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CellIdentifierAndCELevelForCECapableUEsIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CellIdentifierAndCELevelForCECapableUEs, "CellIdentifierAndCELevelForCECapableUEs" {
+        #[rasn(identifier = "global-Cell-ID")]
+        global_cell_id: [EUTRANCGI],
+        #[rasn(identifier = "cELevel")]
+        c_elevel: [CELevel],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CellIdentifierAndCELevelForCECapableUEsIEExtensions>],
+    } }
     impl CellIdentifierAndCELevelForCECapableUEs {
         pub fn new(
             global_cell_id: EUTRANCGI,
@@ -4624,7 +4812,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct CellType {
@@ -4633,6 +4821,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CellTypeIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CellType, "CellType" {
+        #[rasn(identifier = "cell-Size")]
+        cell_size: [CellSize],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CellTypeIEExtensions>],
+    } }
     impl CellType {
         pub fn new(cell_size: CellSize, i_e_extensions: Option<CellTypeIEExtensions>) -> Self {
             Self {
@@ -4792,7 +4986,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CompletedCellinEAI-Item")]
     #[non_exhaustive]
     pub struct CompletedCellinEAIItem {
@@ -4801,6 +4995,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CompletedCellinEAIItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CompletedCellinEAIItem, "CompletedCellinEAI-Item" {
+        #[rasn(identifier = "eCGI")]
+        e_cgi: [EUTRANCGI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CompletedCellinEAIItemIEExtensions>],
+    } }
     impl CompletedCellinEAIItem {
         pub fn new(
             e_cgi: EUTRANCGI,
@@ -4953,7 +5153,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CompletedCellinTAI-Item")]
     #[non_exhaustive]
     pub struct CompletedCellinTAIItem {
@@ -4962,6 +5162,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CompletedCellinTAIItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CompletedCellinTAIItem, "CompletedCellinTAI-Item" {
+        #[rasn(identifier = "eCGI")]
+        e_cgi: [EUTRANCGI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CompletedCellinTAIItemIEExtensions>],
+    } }
     impl CompletedCellinTAIItem {
         pub fn new(
             e_cgi: EUTRANCGI,
@@ -5064,7 +5270,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ConnectedengNBItem {
@@ -5075,6 +5281,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ConnectedengNBItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ConnectedengNBItem, "ConnectedengNBItem" {
+        #[rasn(identifier = "en-gNB-ID")]
+        en_g_nb_id: [EnGNBID],
+        #[rasn(identifier = "supportedTAs")]
+        supported_tas: [SupportedTAs],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ConnectedengNBItemIEExtensions>],
+    } }
     impl ConnectedengNBItem {
         pub fn new(
             en_g_nb_id: EnGNBID,
@@ -5222,7 +5436,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ContextatSource {
@@ -5233,6 +5447,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ContextatSourceIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ContextatSource, "ContextatSource" {
+        #[rasn(identifier = "sourceNG-RAN-node-ID")]
+        source_ng_ran_node_id: [GlobalRANNODEID],
+        #[rasn(identifier = "rAN-UE-NGAP-ID")]
+        r_an_ue_ngap_id: [RANUENGAPID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ContextatSourceIEExtensions>],
+    } }
     impl ContextatSource {
         pub fn new(
             source_ng_ran_node_id: GlobalRANNODEID,
@@ -5345,7 +5567,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct CriticalityDiagnostics {
@@ -5360,6 +5582,18 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CriticalityDiagnosticsIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CriticalityDiagnostics, "CriticalityDiagnostics" {
+        #[rasn(identifier = "procedureCode")]
+        procedure_code: [Option<ProcedureCode>],
+        #[rasn(identifier = "triggeringMessage")]
+        triggering_message: [Option<TriggeringMessage>],
+        #[rasn(identifier = "procedureCriticality")]
+        procedure_criticality: [Option<Criticality>],
+        #[rasn(identifier = "iEsCriticalityDiagnostics")]
+        i_es_criticality_diagnostics: [Option<CriticalityDiagnosticsIEList>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CriticalityDiagnosticsIEExtensions>],
+    } }
     impl CriticalityDiagnostics {
         pub fn new(
             procedure_code: Option<ProcedureCode>,
@@ -5467,7 +5701,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CriticalityDiagnostics-IE-Item")]
     #[non_exhaustive]
     pub struct CriticalityDiagnosticsIEItem {
@@ -5480,6 +5714,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CriticalityDiagnosticsIEItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CriticalityDiagnosticsIEItem, "CriticalityDiagnostics-IE-Item" {
+        #[rasn(identifier = "iECriticality")]
+        i_ecriticality: [Criticality],
+        #[rasn(identifier = "iE-ID")]
+        i_e_id: [ProtocolIEID],
+        #[rasn(identifier = "typeOfError")]
+        type_of_error: [TypeOfError],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CriticalityDiagnosticsIEItemIEExtensions>],
+    } }
     impl CriticalityDiagnosticsIEItem {
         pub fn new(
             i_ecriticality: Criticality,
@@ -5642,7 +5886,7 @@ pub mod s1_ap_ies {
         }
     }
     #[doc = " D"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct DAPSRequestInfo {
@@ -5651,6 +5895,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<DAPSRequestInfoIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { DAPSRequestInfo, "DAPSRequestInfo" {
+        #[rasn(identifier = "dAPSIndicator")]
+        d_apsindicator: [DAPSRequestInfoDAPSIndicator],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<DAPSRequestInfoIEExtensions>],
+    } }
     impl DAPSRequestInfo {
         pub fn new(
             d_apsindicator: DAPSRequestInfoDAPSIndicator,
@@ -5755,7 +6005,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct DAPSResponseInfo {
@@ -5763,6 +6013,11 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<DAPSResponseInfoIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { DAPSResponseInfo, "DAPSResponseInfo" {
+        dapsresponseindicator: [DAPSResponseInfoDapsresponseindicator],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<DAPSResponseInfoIEExtensions>],
+    } }
     impl DAPSResponseInfo {
         pub fn new(
             dapsresponseindicator: DAPSResponseInfoDapsresponseindicator,
@@ -5862,7 +6117,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct DAPSResponseInfoItem {
@@ -5873,6 +6128,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<DAPSResponseInfoItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { DAPSResponseInfoItem, "DAPSResponseInfoItem" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "dAPSResponseInfo")]
+        d_apsresponse_info: [DAPSResponseInfo],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<DAPSResponseInfoItemIEExtensions>],
+    } }
     impl DAPSResponseInfoItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -6060,7 +6323,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "DL-CP-SecurityInformation")]
     #[non_exhaustive]
     pub struct DLCPSecurityInformation {
@@ -6069,6 +6332,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<DLCPSecurityInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { DLCPSecurityInformation, "DL-CP-SecurityInformation" {
+        #[rasn(identifier = "dl-NAS-MAC")]
+        dl_nas_mac: [DLNASMAC],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<DLCPSecurityInformationIEExtensions>],
+    } }
     impl DLCPSecurityInformation {
         pub fn new(
             dl_nas_mac: DLNASMAC,
@@ -6341,7 +6610,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABInformationListItem")]
     #[non_exhaustive]
     pub struct ERABInformationListItem {
@@ -6352,6 +6621,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABInformationListItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABInformationListItem, "E-RABInformationListItem" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "dL-Forwarding")]
+        d_l_forwarding: [Option<DLForwarding>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABInformationListItemIEExtensions>],
+    } }
     impl ERABInformationListItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -6448,7 +6725,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABItem")]
     #[non_exhaustive]
     pub struct ERABItem {
@@ -6458,6 +6735,13 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABItem, "E-RABItem" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        cause: [Cause],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABItemIEExtensions>],
+    } }
     impl ERABItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -6561,7 +6845,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABLevelQoSParameters")]
     #[non_exhaustive]
     pub struct ERABLevelQoSParameters {
@@ -6574,6 +6858,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABLevelQoSParametersIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABLevelQoSParameters, "E-RABLevelQoSParameters" {
+        #[rasn(identifier = "qCI")]
+        q_ci: [QCI],
+        #[rasn(identifier = "allocationRetentionPriority")]
+        allocation_retention_priority: [AllocationAndRetentionPriority],
+        #[rasn(identifier = "gbrQosInformation")]
+        gbr_qos_information: [Option<GBRQosInformation>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABLevelQoSParametersIEExtensions>],
+    } }
     impl ERABLevelQoSParameters {
         pub fn new(
             q_ci: QCI,
@@ -6756,7 +7050,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABSecurityResultItem")]
     #[non_exhaustive]
     pub struct ERABSecurityResultItem {
@@ -6767,6 +7061,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABSecurityResultItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABSecurityResultItem, "E-RABSecurityResultItem" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "securityResult")]
+        security_result: [SecurityResult],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABSecurityResultItemIEExtensions>],
+    } }
     impl ERABSecurityResultItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -6949,7 +7251,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABUsageReportItem")]
     #[non_exhaustive]
     pub struct ERABUsageReportItem {
@@ -6964,6 +7266,18 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABUsageReportItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABUsageReportItem, "E-RABUsageReportItem" {
+        #[rasn(size("4"), identifier = "startTimestamp")]
+        start_timestamp: [OctetString],
+        #[rasn(size("4"), identifier = "endTimestamp")]
+        end_timestamp: [OctetString],
+        #[rasn(value("0..=18446744073709551615"), identifier = "usageCountUL")]
+        usage_count_ul: [u64],
+        #[rasn(value("0..=18446744073709551615"), identifier = "usageCountDL")]
+        usage_count_dl: [u64],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABUsageReportItemIEExtensions>],
+    } }
     impl ERABUsageReportItem {
         pub fn new(
             start_timestamp: OctetString,
@@ -7319,7 +7633,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EN-DCSONConfigurationTransfer")]
     #[non_exhaustive]
     pub struct ENDCSONConfigurationTransfer {
@@ -7331,6 +7645,15 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ENDCSONConfigurationTransferIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ENDCSONConfigurationTransfer, "EN-DCSONConfigurationTransfer" {
+        transfertype: [ENDCSONTransferType],
+        #[rasn(identifier = "sONInformation")]
+        s_oninformation: [SONInformation],
+        #[rasn(identifier = "x2TNLConfigInfo")]
+        x2_tnlconfig_info: [Option<X2TNLConfigurationInfo>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ENDCSONConfigurationTransferIEExtensions>],
+    } }
     impl ENDCSONConfigurationTransfer {
         pub fn new(
             transfertype: ENDCSONTransferType,
@@ -7453,7 +7776,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EN-DCSONeNBIdentification")]
     #[non_exhaustive]
     pub struct ENDCSONeNBIdentification {
@@ -7464,6 +7787,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ENDCSONeNBIdentificationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ENDCSONeNBIdentification, "EN-DCSONeNBIdentification" {
+        #[rasn(identifier = "globaleNBID")]
+        globale_nbid: [GlobalENBID],
+        #[rasn(identifier = "selectedTAI")]
+        selected_tai: [TAI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ENDCSONeNBIdentificationIEExtensions>],
+    } }
     impl ENDCSONeNBIdentification {
         pub fn new(
             globale_nbid: GlobalENBID,
@@ -7567,7 +7898,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EN-DCSONengNBIdentification")]
     #[non_exhaustive]
     pub struct ENDCSONengNBIdentification {
@@ -7578,6 +7909,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ENDCSONengNBIdentificationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ENDCSONengNBIdentification, "EN-DCSONengNBIdentification" {
+        #[rasn(identifier = "globalengNBID")]
+        globaleng_nbid: [GlobalEnGNBID],
+        #[rasn(identifier = "selectedTAI")]
+        selected_tai: [TAI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ENDCSONengNBIdentificationIEExtensions>],
+    } }
     impl ENDCSONengNBIdentification {
         pub fn new(
             globaleng_nbid: GlobalEnGNBID,
@@ -7679,7 +8018,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EN-DCTransferTypeReply")]
     #[non_exhaustive]
     pub struct ENDCTransferTypeReply {
@@ -7690,6 +8029,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ENDCTransferTypeReplyIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ENDCTransferTypeReply, "EN-DCTransferTypeReply" {
+        #[rasn(identifier = "sourceengNB")]
+        sourceeng_nb: [ENDCSONengNBIdentification],
+        #[rasn(identifier = "targeteNB")]
+        targete_nb: [ENDCSONeNBIdentification],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ENDCTransferTypeReplyIEExtensions>],
+    } }
     impl ENDCTransferTypeReply {
         pub fn new(
             sourceeng_nb: ENDCSONengNBIdentification,
@@ -7793,7 +8140,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EN-DCTransferTypeRequest")]
     #[non_exhaustive]
     pub struct ENDCTransferTypeRequest {
@@ -7810,6 +8157,20 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ENDCTransferTypeRequestIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ENDCTransferTypeRequest, "EN-DCTransferTypeRequest" {
+        #[rasn(identifier = "sourceeNB")]
+        sourcee_nb: [ENDCSONeNBIdentification],
+        #[rasn(identifier = "targetengNB")]
+        targeteng_nb: [ENDCSONengNBIdentification],
+        #[rasn(identifier = "targeteNB")]
+        targete_nb: [Option<ENDCSONeNBIdentification>],
+        #[rasn(identifier = "associatedTAI")]
+        associated_tai: [Option<TAI>],
+        #[rasn(identifier = "broadcast5GSTAI")]
+        broadcast5_gstai: [Option<FiveGSTAI>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ENDCTransferTypeRequestIEExtensions>],
+    } }
     impl ENDCTransferTypeRequest {
         pub fn new(
             sourcee_nb: ENDCSONeNBIdentification,
@@ -7918,7 +8279,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(
         automatic_tags,
         identifier = "ENB-EarlyStatusTransfer-TransparentContainer"
@@ -7930,6 +8291,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ENBEarlyStatusTransferTransparentContainerIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ENBEarlyStatusTransferTransparentContainer, "ENB-EarlyStatusTransfer-TransparentContainer" {
+        #[rasn(identifier = "bearers-SubjectToEarlyStatusTransferList")]
+        bearers_subject_to_early_status_transfer_list: [BearersSubjectToEarlyStatusTransferList],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ENBEarlyStatusTransferTransparentContainerIEExtensions>],
+    } }
     impl ENBEarlyStatusTransferTransparentContainer {
         pub fn new(
             bearers_subject_to_early_status_transfer_list: BearersSubjectToEarlyStatusTransferList,
@@ -8110,7 +8477,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "ENB-StatusTransfer-TransparentContainer")]
     #[non_exhaustive]
     pub struct ENBStatusTransferTransparentContainer {
@@ -8119,6 +8486,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ENBStatusTransferTransparentContainerIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ENBStatusTransferTransparentContainer, "ENB-StatusTransfer-TransparentContainer" {
+        #[rasn(identifier = "bearers-SubjectToStatusTransferList")]
+        bearers_subject_to_status_transfer_list: [BearersSubjectToStatusTransferList],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ENBStatusTransferTransparentContainerIEExtensions>],
+    } }
     impl ENBStatusTransferTransparentContainer {
         pub fn new(
             bearers_subject_to_status_transfer_list: BearersSubjectToStatusTransferList,
@@ -8267,7 +8640,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ENBX2ExtTLA {
@@ -8278,6 +8651,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ENBX2ExtTLAIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ENBX2ExtTLA, "ENBX2ExtTLA" {
+        #[rasn(identifier = "iPsecTLA")]
+        i_psec_tla: [Option<TransportLayerAddress>],
+        #[rasn(identifier = "gTPTLAa")]
+        g_tptlaa: [Option<ENBX2GTPTLAs>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ENBX2ExtTLAIEExtensions>],
+    } }
     impl ENBX2ExtTLA {
         pub fn new(
             i_psec_tla: Option<TransportLayerAddress>,
@@ -8581,7 +8962,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EUTRAN-CGI")]
     #[non_exhaustive]
     pub struct EUTRANCGI {
@@ -8592,6 +8973,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<EUTRANCGIIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { EUTRANCGI, "EUTRAN-CGI" {
+        #[rasn(identifier = "pLMNidentity")]
+        p_lmnidentity: [PLMNidentity],
+        #[rasn(identifier = "cell-ID")]
+        cell_id: [CellIdentity],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<EUTRANCGIIEExtensions>],
+    } }
     impl EUTRANCGI {
         pub fn new(
             p_lmnidentity: PLMNidentity,
@@ -8752,7 +9141,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EmergencyAreaID-Broadcast-Item")]
     #[non_exhaustive]
     pub struct EmergencyAreaIDBroadcastItem {
@@ -8763,6 +9152,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<EmergencyAreaIDBroadcastItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { EmergencyAreaIDBroadcastItem, "EmergencyAreaID-Broadcast-Item" {
+        #[rasn(identifier = "emergencyAreaID")]
+        emergency_area_id: [EmergencyAreaID],
+        #[rasn(identifier = "completedCellinEAI")]
+        completed_cellin_eai: [CompletedCellinEAI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<EmergencyAreaIDBroadcastItemIEExtensions>],
+    } }
     impl EmergencyAreaIDBroadcastItem {
         pub fn new(
             emergency_area_id: EmergencyAreaID,
@@ -8917,7 +9314,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EmergencyAreaID-Cancelled-Item")]
     #[non_exhaustive]
     pub struct EmergencyAreaIDCancelledItem {
@@ -8928,6 +9325,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<EmergencyAreaIDCancelledItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { EmergencyAreaIDCancelledItem, "EmergencyAreaID-Cancelled-Item" {
+        #[rasn(identifier = "emergencyAreaID")]
+        emergency_area_id: [EmergencyAreaID],
+        #[rasn(identifier = "cancelledCellinEAI")]
+        cancelled_cellin_eai: [CancelledCellinEAI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<EmergencyAreaIDCancelledItemIEExtensions>],
+    } }
     impl EmergencyAreaIDCancelledItem {
         pub fn new(
             emergency_area_id: EmergencyAreaID,
@@ -9168,7 +9573,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct EventL1LoggedMDTConfig {
@@ -9180,6 +9585,15 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<EventL1LoggedMDTConfigIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { EventL1LoggedMDTConfig, "EventL1LoggedMDTConfig" {
+        #[rasn(identifier = "l1Threshold")]
+        l1_threshold: [MeasurementThresholdL1LoggedMDT],
+        hysteresis: [Hysteresis],
+        #[rasn(identifier = "timeToTrigger")]
+        time_to_trigger: [TimeToTrigger],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<EventL1LoggedMDTConfigIEExtensions>],
+    } }
     impl EventL1LoggedMDTConfig {
         pub fn new(
             l1_threshold: MeasurementThresholdL1LoggedMDT,
@@ -9375,7 +9789,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ExpectedUEActivityBehaviour {
@@ -9389,6 +9803,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ExpectedUEActivityBehaviourIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ExpectedUEActivityBehaviour, "ExpectedUEActivityBehaviour" {
+        #[rasn(identifier = "expectedActivityPeriod")]
+        expected_activity_period: [Option<ExpectedActivityPeriod>],
+        #[rasn(identifier = "expectedIdlePeriod")]
+        expected_idle_period: [Option<ExpectedIdlePeriod>],
+        #[rasn(identifier = "sourceofUEActivityBehaviourInformation")]
+        sourceof_ueactivity_behaviour_information: [Option<SourceOfUEActivityBehaviourInformation>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ExpectedUEActivityBehaviourIEExtensions>],
+    } }
     impl ExpectedUEActivityBehaviour {
         pub fn new(
             expected_activity_period: Option<ExpectedActivityPeriod>,
@@ -9494,7 +9918,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ExpectedUEBehaviour {
@@ -9505,6 +9929,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ExpectedUEBehaviourIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ExpectedUEBehaviour, "ExpectedUEBehaviour" {
+        #[rasn(identifier = "expectedActivity")]
+        expected_activity: [Option<ExpectedUEActivityBehaviour>],
+        #[rasn(identifier = "expectedHOInterval")]
+        expected_hointerval: [Option<ExpectedHOInterval>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ExpectedUEBehaviourIEExtensions>],
+    } }
     impl ExpectedUEBehaviour {
         pub fn new(
             expected_activity: Option<ExpectedUEActivityBehaviour>,
@@ -9617,7 +10049,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct FiveGSTAI {
@@ -9628,6 +10060,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<FiveGSTAIIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { FiveGSTAI, "FiveGSTAI" {
+        #[rasn(identifier = "pLMNidentity")]
+        p_lmnidentity: [PLMNidentity],
+        #[rasn(identifier = "fiveGSTAC")]
+        five_gstac: [FiveGSTAC],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<FiveGSTAIIEExtensions>],
+    } }
     impl FiveGSTAI {
         pub fn new(
             p_lmnidentity: PLMNidentity,
@@ -9842,7 +10282,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "ForbiddenLAs-Item")]
     #[non_exhaustive]
     pub struct ForbiddenLAsItem {
@@ -9853,6 +10293,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ForbiddenLAsItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ForbiddenLAsItem, "ForbiddenLAs-Item" {
+        #[rasn(identifier = "pLMN-Identity")]
+        p_lmn_identity: [PLMNidentity],
+        #[rasn(identifier = "forbiddenLACs")]
+        forbidden_lacs: [ForbiddenLACs],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ForbiddenLAsItemIEExtensions>],
+    } }
     impl ForbiddenLAsItem {
         pub fn new(
             p_lmn_identity: PLMNidentity,
@@ -10051,7 +10499,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "ForbiddenTAs-Item")]
     #[non_exhaustive]
     pub struct ForbiddenTAsItem {
@@ -10062,6 +10510,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ForbiddenTAsItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ForbiddenTAsItem, "ForbiddenTAs-Item" {
+        #[rasn(identifier = "pLMN-Identity")]
+        p_lmn_identity: [PLMNidentity],
+        #[rasn(identifier = "forbiddenTACs")]
+        forbidden_tacs: [ForbiddenTACs],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ForbiddenTAsItemIEExtensions>],
+    } }
     impl ForbiddenTAsItem {
         pub fn new(
             p_lmn_identity: PLMNidentity,
@@ -10161,7 +10617,7 @@ pub mod s1_ap_ies {
         }
     }
     #[doc = " G"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "GBR-QosInformation")]
     #[non_exhaustive]
     pub struct GBRQosInformation {
@@ -10176,6 +10632,18 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<GBRQosInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { GBRQosInformation, "GBR-QosInformation" {
+        #[rasn(identifier = "e-RAB-MaximumBitrateDL")]
+        e_rab_maximum_bitrate_dl: [BitRate],
+        #[rasn(identifier = "e-RAB-MaximumBitrateUL")]
+        e_rab_maximum_bitrate_ul: [BitRate],
+        #[rasn(identifier = "e-RAB-GuaranteedBitrateDL")]
+        e_rab_guaranteed_bitrate_dl: [BitRate],
+        #[rasn(identifier = "e-RAB-GuaranteedBitrateUL")]
+        e_rab_guaranteed_bitrate_ul: [BitRate],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<GBRQosInformationIEExtensions>],
+    } }
     impl GBRQosInformation {
         pub fn new(
             e_rab_maximum_bitrate_dl: BitRate,
@@ -10276,7 +10744,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "GERAN-Cell-ID")]
     #[non_exhaustive]
     pub struct GERANCellID {
@@ -10289,6 +10757,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<GERANCellIDIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { GERANCellID, "GERAN-Cell-ID" {
+        #[rasn(identifier = "lAI")]
+        l_ai: [LAI],
+        #[rasn(identifier = "rAC")]
+        r_ac: [RAC],
+        #[rasn(identifier = "cI")]
+        c_i: [CI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<GERANCellIDIEExtensions>],
+    } }
     impl GERANCellID {
         pub fn new(
             l_ai: LAI,
@@ -10387,7 +10865,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct GNB {
@@ -10396,6 +10874,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<GNBIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { GNB, "GNB" {
+        #[rasn(identifier = "global-gNB-ID")]
+        global_g_nb_id: [GlobalGNBID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<GNBIEExtensions>],
+    } }
     impl GNB {
         pub fn new(global_g_nb_id: GlobalGNBID, i_e_extensions: Option<GNBIEExtensions>) -> Self {
             Self {
@@ -10505,7 +10989,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct GUMMEI {
@@ -10518,6 +11002,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<GUMMEIIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { GUMMEI, "GUMMEI" {
+        #[rasn(identifier = "pLMN-Identity")]
+        p_lmn_identity: [PLMNidentity],
+        #[rasn(identifier = "mME-Group-ID")]
+        m_me_group_id: [MMEGroupID],
+        #[rasn(identifier = "mME-Code")]
+        m_me_code: [MMECode],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<GUMMEIIEExtensions>],
+    } }
     impl GUMMEI {
         pub fn new(
             p_lmn_identity: PLMNidentity,
@@ -10683,7 +11177,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Global-ENB-ID")]
     #[non_exhaustive]
     pub struct GlobalENBID {
@@ -10694,6 +11188,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<GlobalENBIDIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { GlobalENBID, "Global-ENB-ID" {
+        #[rasn(identifier = "pLMNidentity")]
+        p_lmnidentity: [PLMNidentity],
+        #[rasn(identifier = "eNB-ID")]
+        e_nb_id: [ENBID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<GlobalENBIDIEExtensions>],
+    } }
     impl GlobalENBID {
         pub fn new(
             p_lmnidentity: PLMNidentity,
@@ -10790,7 +11292,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Global-GNB-ID")]
     #[non_exhaustive]
     pub struct GlobalGNBID {
@@ -10801,6 +11303,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<GlobalGNBIDIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { GlobalGNBID, "Global-GNB-ID" {
+        #[rasn(identifier = "pLMN-Identity")]
+        p_lmn_identity: [PLMNidentity],
+        #[rasn(identifier = "gNB-ID")]
+        g_nb_id: [GNBIdentity],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<GlobalGNBIDIEExtensions>],
+    } }
     impl GlobalGNBID {
         pub fn new(
             p_lmn_identity: PLMNidentity,
@@ -10915,7 +11425,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Global-en-gNB-ID")]
     #[non_exhaustive]
     pub struct GlobalEnGNBID {
@@ -10926,6 +11436,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<GlobalEnGNBIDIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { GlobalEnGNBID, "Global-en-gNB-ID" {
+        #[rasn(identifier = "pLMNidentity")]
+        p_lmnidentity: [PLMNidentity],
+        #[rasn(identifier = "en-gNB-ID")]
+        en_g_nb_id: [EnGNBID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<GlobalEnGNBIDIEExtensions>],
+    } }
     impl GlobalEnGNBID {
         pub fn new(
             p_lmnidentity: PLMNidentity,
@@ -11045,7 +11563,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct HandoverRestrictionList {
@@ -11062,6 +11580,20 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<HandoverRestrictionListIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { HandoverRestrictionList, "HandoverRestrictionList" {
+        #[rasn(identifier = "servingPLMN")]
+        serving_plmn: [PLMNidentity],
+        #[rasn(identifier = "equivalentPLMNs")]
+        equivalent_plmns: [Option<EPLMNs>],
+        #[rasn(identifier = "forbiddenTAs")]
+        forbidden_tas: [Option<ForbiddenTAs>],
+        #[rasn(identifier = "forbiddenLAs")]
+        forbidden_las: [Option<ForbiddenLAs>],
+        #[rasn(identifier = "forbiddenInterRATs")]
+        forbidden_inter_rats: [Option<ForbiddenInterRATs>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<HandoverRestrictionListIEExtensions>],
+    } }
     impl HandoverRestrictionList {
         pub fn new(
             serving_plmn: PLMNidentity,
@@ -11219,7 +11751,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ImmediateMDT {
@@ -11234,6 +11766,18 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ImmediateMDTIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ImmediateMDT, "ImmediateMDT" {
+        #[rasn(identifier = "measurementsToActivate")]
+        measurements_to_activate: [MeasurementsToActivate],
+        #[rasn(identifier = "m1reportingTrigger")]
+        m1reporting_trigger: [M1ReportingTrigger],
+        #[rasn(identifier = "m1thresholdeventA2")]
+        m1thresholdevent_a2: [Option<M1ThresholdEventA2>],
+        #[rasn(identifier = "m1periodicReporting")]
+        m1periodic_reporting: [Option<M1PeriodicReporting>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ImmediateMDTIEExtensions>],
+    } }
     impl ImmediateMDT {
         pub fn new(
             measurements_to_activate: MeasurementsToActivate,
@@ -11341,7 +11885,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct InformationOnRecommendedCellsAndENBsForPaging {
@@ -11352,6 +11896,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<InformationOnRecommendedCellsAndENBsForPagingIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { InformationOnRecommendedCellsAndENBsForPaging, "InformationOnRecommendedCellsAndENBsForPaging" {
+        #[rasn(identifier = "recommendedCellsForPaging")]
+        recommended_cells_for_paging: [RecommendedCellsForPaging],
+        #[rasn(identifier = "recommendENBsForPaging")]
+        recommend_enbs_for_paging: [RecommendedENBsForPaging],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<InformationOnRecommendedCellsAndENBsForPagingIEExtensions>],
+    } }
     impl InformationOnRecommendedCellsAndENBsForPaging {
         pub fn new(
             recommended_cells_for_paging: RecommendedCellsForPaging,
@@ -11688,7 +12240,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct InterSystemMeasurementParameters {
@@ -11699,6 +12251,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<InterSystemMeasurementParametersIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { InterSystemMeasurementParameters, "InterSystemMeasurementParameters" {
+        #[rasn(value("1..=100"), identifier = "measurementDuration")]
+        measurement_duration: [u8],
+        #[rasn(identifier = "interSystemMeasurementList")]
+        inter_system_measurement_list: [Option<InterSystemMeasurementList>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<InterSystemMeasurementParametersIEExtensions>],
+    } }
     impl InterSystemMeasurementParameters {
         pub fn new(
             measurement_duration: u8,
@@ -11805,7 +12365,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct IntersystemMeasurementConfiguration {
@@ -11820,6 +12380,18 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<IntersystemMeasurementConfigurationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { IntersystemMeasurementConfiguration, "IntersystemMeasurementConfiguration" {
+        #[rasn(value("0..=127"), identifier = "rSRP")]
+        r_srp: [Option<u8>],
+        #[rasn(value("0..=127"), identifier = "rSRQ")]
+        r_srq: [Option<u8>],
+        #[rasn(value("0..=127"), identifier = "sINR")]
+        s_inr: [Option<u8>],
+        #[rasn(identifier = "interSystemMeasurementParameters")]
+        inter_system_measurement_parameters: [InterSystemMeasurementParameters],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<IntersystemMeasurementConfigurationIEExtensions>],
+    } }
     impl IntersystemMeasurementConfiguration {
         pub fn new(
             r_srp: Option<u8>,
@@ -11938,7 +12510,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct LAI {
@@ -11949,6 +12521,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<LAIIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { LAI, "LAI" {
+        #[rasn(identifier = "pLMNidentity")]
+        p_lmnidentity: [PLMNidentity],
+        #[rasn(identifier = "lAC")]
+        l_ac: [LAC],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<LAIIEExtensions>],
+    } }
     impl LAI {
         pub fn new(
             p_lmnidentity: PLMNidentity,
@@ -12064,7 +12644,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "LTE-NTN-TAI-Information")]
     #[non_exhaustive]
     pub struct LTENTNTAIInformation {
@@ -12077,6 +12657,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<LTENTNTAIInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { LTENTNTAIInformation, "LTE-NTN-TAI-Information" {
+        #[rasn(identifier = "servingPLMN")]
+        serving_plmn: [PLMNidentity],
+        #[rasn(identifier = "tACList-In-LTE-NTN")]
+        t_aclist_in_lte_ntn: [TACListInLTENTN],
+        #[rasn(identifier = "uE-Location-Derived-TAC")]
+        u_e_location_derived_tac: [Option<TAC>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<LTENTNTAIInformationIEExtensions>],
+    } }
     impl LTENTNTAIInformation {
         pub fn new(
             serving_plmn: PLMNidentity,
@@ -12214,7 +12804,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct LastVisitedEUTRANCellInformation {
@@ -12227,6 +12817,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<LastVisitedEUTRANCellInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { LastVisitedEUTRANCellInformation, "LastVisitedEUTRANCellInformation" {
+        #[rasn(identifier = "global-Cell-ID")]
+        global_cell_id: [EUTRANCGI],
+        #[rasn(identifier = "cellType")]
+        cell_type: [CellType],
+        #[rasn(identifier = "time-UE-StayedInCell")]
+        time_ue_stayed_in_cell: [TimeUEStayedInCell],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<LastVisitedEUTRANCellInformationIEExtensions>],
+    } }
     impl LastVisitedEUTRANCellInformation {
         pub fn new(
             global_cell_id: EUTRANCGI,
@@ -12346,7 +12946,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct LastVisitedPSCellInformation {
@@ -12357,6 +12957,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<LastVisitedPSCellInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { LastVisitedPSCellInformation, "LastVisitedPSCellInformation" {
+        #[rasn(identifier = "pSCellID")]
+        p_scell_id: [Option<PSCellInformation>],
+        #[rasn(value("0..=40950"), identifier = "timeStay")]
+        time_stay: [u16],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<LastVisitedPSCellInformationIEExtensions>],
+    } }
     impl LastVisitedPSCellInformation {
         pub fn new(
             p_scell_id: Option<PSCellInformation>,
@@ -12533,7 +13141,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ListeningSubframePattern {
@@ -12544,6 +13152,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ListeningSubframePatternIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ListeningSubframePattern, "ListeningSubframePattern" {
+        #[rasn(identifier = "pattern-period")]
+        pattern_period: [ListeningSubframePatternPatternPeriod],
+        #[rasn(value("0..=10239", extensible), identifier = "pattern-offset")]
+        pattern_offset: [Integer],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ListeningSubframePatternIEExtensions>],
+    } }
     impl ListeningSubframePattern {
         pub fn new(
             pattern_period: ListeningSubframePatternPatternPeriod,
@@ -12640,7 +13256,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct LoggedMBSFNMDT {
@@ -12653,6 +13269,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<LoggedMBSFNMDTIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { LoggedMBSFNMDT, "LoggedMBSFNMDT" {
+        #[rasn(identifier = "loggingInterval")]
+        logging_interval: [LoggingInterval],
+        #[rasn(identifier = "loggingDuration")]
+        logging_duration: [LoggingDuration],
+        #[rasn(identifier = "mBSFN-ResultToLog")]
+        m_bsfn_result_to_log: [Option<MBSFNResultToLog>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<LoggedMBSFNMDTIEExtensions>],
+    } }
     impl LoggedMBSFNMDT {
         pub fn new(
             logging_interval: LoggingInterval,
@@ -12751,7 +13377,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct LoggedMDT {
@@ -12762,6 +13388,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<LoggedMDTIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { LoggedMDT, "LoggedMDT" {
+        #[rasn(identifier = "loggingInterval")]
+        logging_interval: [LoggingInterval],
+        #[rasn(identifier = "loggingDuration")]
+        logging_duration: [LoggingDuration],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<LoggedMDTIEExtensions>],
+    } }
     impl LoggedMDT {
         pub fn new(
             logging_interval: LoggingInterval,
@@ -12905,7 +13539,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct M1PeriodicReporting {
@@ -12916,6 +13550,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<M1PeriodicReportingIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { M1PeriodicReporting, "M1PeriodicReporting" {
+        #[rasn(identifier = "reportInterval")]
+        report_interval: [ReportIntervalMDT],
+        #[rasn(identifier = "reportAmount")]
+        report_amount: [ReportAmountMDT],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<M1PeriodicReportingIEExtensions>],
+    } }
     impl M1PeriodicReporting {
         pub fn new(
             report_interval: ReportIntervalMDT,
@@ -13024,7 +13666,7 @@ pub mod s1_ap_ies {
         }
     }
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct M1ThresholdEventA2 {
@@ -13033,6 +13675,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<M1ThresholdEventA2IEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { M1ThresholdEventA2, "M1ThresholdEventA2" {
+        #[rasn(identifier = "measurementThreshold")]
+        measurement_threshold: [MeasurementThresholdA2],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<M1ThresholdEventA2IEExtensions>],
+    } }
     impl M1ThresholdEventA2 {
         pub fn new(
             measurement_threshold: MeasurementThresholdA2,
@@ -13128,7 +13776,7 @@ pub mod s1_ap_ies {
         }
     }
     #[doc = " M"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct M3Configuration {
@@ -13136,6 +13784,11 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<M3ConfigurationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { M3Configuration, "M3Configuration" {
+        m3period: [M3period],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<M3ConfigurationIEExtensions>],
+    } }
     impl M3Configuration {
         pub fn new(
             m3period: M3period,
@@ -13252,7 +13905,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct M4Configuration {
@@ -13262,6 +13915,13 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<M4ConfigurationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { M4Configuration, "M4Configuration" {
+        m4period: [M4period],
+        #[rasn(identifier = "m4-links-to-log")]
+        m4_links_to_log: [LinksToLog],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<M4ConfigurationIEExtensions>],
+    } }
     impl M4Configuration {
         pub fn new(
             m4period: M4period,
@@ -13381,7 +14041,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct M5Configuration {
@@ -13391,6 +14051,13 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<M5ConfigurationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { M5Configuration, "M5Configuration" {
+        m5period: [M5period],
+        #[rasn(identifier = "m5-links-to-log")]
+        m5_links_to_log: [LinksToLog],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<M5ConfigurationIEExtensions>],
+    } }
     impl M5Configuration {
         pub fn new(
             m5period: M5period,
@@ -13510,7 +14177,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct M6Configuration {
@@ -13523,6 +14190,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<M6ConfigurationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { M6Configuration, "M6Configuration" {
+        #[rasn(identifier = "m6report-Interval")]
+        m6report_interval: [M6reportInterval],
+        #[rasn(identifier = "m6delay-threshold")]
+        m6delay_threshold: [Option<M6delayThreshold>],
+        #[rasn(identifier = "m6-links-to-log")]
+        m6_links_to_log: [LinksToLog],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<M6ConfigurationIEExtensions>],
+    } }
     impl M6Configuration {
         pub fn new(
             m6report_interval: M6reportInterval,
@@ -13660,7 +14337,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct M7Configuration {
@@ -13670,6 +14347,13 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<M7ConfigurationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { M7Configuration, "M7Configuration" {
+        m7period: [M7period],
+        #[rasn(identifier = "m7-links-to-log")]
+        m7_links_to_log: [LinksToLog],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<M7ConfigurationIEExtensions>],
+    } }
     impl M7Configuration {
         pub fn new(
             m7period: M7period,
@@ -13838,7 +14522,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "MBSFN-ResultToLogInfo")]
     #[non_exhaustive]
     pub struct MBSFNResultToLogInfo {
@@ -13849,6 +14533,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<MBSFNResultToLogInfoIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { MBSFNResultToLogInfo, "MBSFN-ResultToLogInfo" {
+        #[rasn(value("0..=255"), identifier = "mBSFN-AreaId")]
+        m_bsfn_area_id: [Option<u8>],
+        #[rasn(identifier = "carrierFreq")]
+        carrier_freq: [EARFCN],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<MBSFNResultToLogInfoIEExtensions>],
+    } }
     impl MBSFNResultToLogInfo {
         pub fn new(
             m_bsfn_area_id: Option<u8>,
@@ -13958,7 +14650,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "MDT-Configuration")]
     #[non_exhaustive]
     pub struct MDTConfiguration {
@@ -13971,6 +14663,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<MDTConfigurationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { MDTConfiguration, "MDT-Configuration" {
+        #[rasn(identifier = "mdt-Activation")]
+        mdt_activation: [MDTActivation],
+        #[rasn(identifier = "areaScopeOfMDT")]
+        area_scope_of_mdt: [AreaScopeOfMDT],
+        #[rasn(identifier = "mDTMode")]
+        m_dtmode: [MDTMode],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<MDTConfigurationIEExtensions>],
+    } }
     impl MDTConfiguration {
         pub fn new(
             mdt_activation: MDTActivation,
@@ -14384,7 +15086,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct MutingPatternInformation {
@@ -14395,6 +15097,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<MutingPatternInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { MutingPatternInformation, "MutingPatternInformation" {
+        #[rasn(identifier = "muting-pattern-period")]
+        muting_pattern_period: [MutingPatternInformationMutingPatternPeriod],
+        #[rasn(value("0..=10239", extensible), identifier = "muting-pattern-offset")]
+        muting_pattern_offset: [Option<Integer>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<MutingPatternInformationIEExtensions>],
+    } }
     impl MutingPatternInformation {
         pub fn new(
             muting_pattern_period: MutingPatternInformationMutingPatternPeriod,
@@ -14536,7 +15246,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "NB-IoT-Paging-eDRXInformation")]
     #[non_exhaustive]
     pub struct NBIoTPagingEDRXInformation {
@@ -14547,6 +15257,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<NBIoTPagingEDRXInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { NBIoTPagingEDRXInformation, "NB-IoT-Paging-eDRXInformation" {
+        #[rasn(identifier = "nB-IoT-paging-eDRX-Cycle")]
+        n_b_io_t_paging_e_drx_cycle: [NBIoTPagingEDRXCycle],
+        #[rasn(identifier = "nB-IoT-pagingTimeWindow")]
+        n_b_io_t_paging_time_window: [Option<NBIoTPagingTimeWindow>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<NBIoTPagingEDRXInformationIEExtensions>],
+    } }
     impl NBIoTPagingEDRXInformation {
         pub fn new(
             n_b_io_t_paging_e_drx_cycle: NBIoTPagingEDRXCycle,
@@ -14681,7 +15399,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "NG-eNB")]
     #[non_exhaustive]
     pub struct NGENB {
@@ -14690,6 +15408,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<NGENBIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { NGENB, "NG-eNB" {
+        #[rasn(identifier = "global-ng-eNB-ID")]
+        global_ng_e_nb_id: [GlobalENBID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<NGENBIEExtensions>],
+    } }
     impl NGENB {
         pub fn new(
             global_ng_e_nb_id: GlobalENBID,
@@ -14784,7 +15508,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "NR-CGI")]
     #[non_exhaustive]
     pub struct NRCGI {
@@ -14795,6 +15519,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<NRCGIIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { NRCGI, "NR-CGI" {
+        #[rasn(identifier = "pLMNIdentity")]
+        p_lmnidentity: [PLMNidentity],
+        #[rasn(identifier = "nRCellIdentity")]
+        n_rcell_identity: [NRCellIdentity],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<NRCGIIEExtensions>],
+    } }
     impl NRCGI {
         pub fn new(
             p_lmnidentity: PLMNidentity,
@@ -14925,7 +15657,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct NRUESecurityCapabilities {
@@ -14936,6 +15668,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<NRUESecurityCapabilitiesIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { NRUESecurityCapabilities, "NRUESecurityCapabilities" {
+        #[rasn(identifier = "nRencryptionAlgorithms")]
+        n_rencryption_algorithms: [NRencryptionAlgorithms],
+        #[rasn(identifier = "nRintegrityProtectionAlgorithms")]
+        n_rintegrity_protection_algorithms: [NRintegrityProtectionAlgorithms],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<NRUESecurityCapabilitiesIEExtensions>],
+    } }
     impl NRUESecurityCapabilities {
         pub fn new(
             n_rencryption_algorithms: NRencryptionAlgorithms,
@@ -15039,7 +15779,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct NRUESidelinkAggregateMaximumBitrate {
@@ -15048,6 +15788,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<NRUESidelinkAggregateMaximumBitrateIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { NRUESidelinkAggregateMaximumBitrate, "NRUESidelinkAggregateMaximumBitrate" {
+        #[rasn(identifier = "uEaggregateMaximumBitRate")]
+        u_eaggregate_maximum_bit_rate: [BitRate],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<NRUESidelinkAggregateMaximumBitrateIEExtensions>],
+    } }
     impl NRUESidelinkAggregateMaximumBitrate {
         pub fn new(
             u_eaggregate_maximum_bit_rate: BitRate,
@@ -15149,7 +15895,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct NRV2XServicesAuthorized {
@@ -15160,6 +15906,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<NRV2XServicesAuthorizedIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { NRV2XServicesAuthorized, "NRV2XServicesAuthorized" {
+        #[rasn(identifier = "vehicleUE")]
+        vehicle_ue: [Option<VehicleUE>],
+        #[rasn(identifier = "pedestrianUE")]
+        pedestrian_ue: [Option<PedestrianUE>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<NRV2XServicesAuthorizedIEExtensions>],
+    } }
     impl NRV2XServicesAuthorized {
         pub fn new(
             vehicle_ue: Option<VehicleUE>,
@@ -15338,7 +16092,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PC5FlowBitRates {
@@ -15349,6 +16103,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<PC5FlowBitRatesIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { PC5FlowBitRates, "PC5FlowBitRates" {
+        #[rasn(identifier = "guaranteedFlowBitRate")]
+        guaranteed_flow_bit_rate: [BitRate],
+        #[rasn(identifier = "maximumFlowBitRate")]
+        maximum_flow_bit_rate: [BitRate],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<PC5FlowBitRatesIEExtensions>],
+    } }
     impl PC5FlowBitRates {
         pub fn new(
             guaranteed_flow_bit_rate: BitRate,
@@ -15445,7 +16207,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PC5QoSFlowItem {
@@ -15457,6 +16219,15 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<PC5QoSFlowItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { PC5QoSFlowItem, "PC5QoSFlowItem" {
+        #[rasn(identifier = "pQI")]
+        p_qi: [FiveQI],
+        #[rasn(identifier = "pc5FlowBitRates")]
+        pc5_flow_bit_rates: [Option<PC5FlowBitRates>],
+        range: [Option<Range>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<PC5QoSFlowItemIEExtensions>],
+    } }
     impl PC5QoSFlowItem {
         pub fn new(
             p_qi: FiveQI,
@@ -15606,7 +16377,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PC5QoSParameters {
@@ -15617,6 +16388,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<PC5QoSParametersIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { PC5QoSParameters, "PC5QoSParameters" {
+        #[rasn(identifier = "pc5QoSFlowList")]
+        pc5_qo_sflow_list: [PC5QoSFlowList],
+        #[rasn(identifier = "pc5LinkAggregatedBitRates")]
+        pc5_link_aggregated_bit_rates: [Option<BitRate>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<PC5QoSParametersIEExtensions>],
+    } }
     impl PC5QoSParameters {
         pub fn new(
             pc5_qo_sflow_list: PC5QoSFlowList,
@@ -15722,7 +16501,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PLMNAreaBasedQMC {
@@ -15731,6 +16510,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<PLMNAreaBasedQMCIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { PLMNAreaBasedQMC, "PLMNAreaBasedQMC" {
+        #[rasn(identifier = "plmnListforQMC")]
+        plmn_listfor_qmc: [PLMNListforQMC],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<PLMNAreaBasedQMCIEExtensions>],
+    } }
     impl PLMNAreaBasedQMC {
         pub fn new(
             plmn_listfor_qmc: PLMNListforQMC,
@@ -15888,7 +16673,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PSCellInformation {
@@ -15897,6 +16682,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<PSCellInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { PSCellInformation, "PSCellInformation" {
+        #[rasn(identifier = "nCGI")]
+        n_cgi: [NRCGI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<PSCellInformationIEExtensions>],
+    } }
     impl PSCellInformation {
         pub fn new(n_cgi: NRCGI, i_e_extensions: Option<PSCellInformationIEExtensions>) -> Self {
             Self {
@@ -16067,7 +16858,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Paging-eDRXInformation")]
     #[non_exhaustive]
     pub struct PagingEDRXInformation {
@@ -16078,6 +16869,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<PagingEDRXInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { PagingEDRXInformation, "Paging-eDRXInformation" {
+        #[rasn(identifier = "paging-eDRX-Cycle")]
+        paging_e_drx_cycle: [PagingEDRXCycle],
+        #[rasn(identifier = "pagingTimeWindow")]
+        paging_time_window: [Option<PagingTimeWindow>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<PagingEDRXInformationIEExtensions>],
+    } }
     impl PagingEDRXInformation {
         pub fn new(
             paging_e_drx_cycle: PagingEDRXCycle,
@@ -16184,7 +16983,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PagingAttemptInformation {
@@ -16197,6 +16996,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<PagingAttemptInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { PagingAttemptInformation, "PagingAttemptInformation" {
+        #[rasn(identifier = "pagingAttemptCount")]
+        paging_attempt_count: [PagingAttemptCount],
+        #[rasn(identifier = "intendedNumberOfPagingAttempts")]
+        intended_number_of_paging_attempts: [IntendedNumberOfPagingAttempts],
+        #[rasn(identifier = "nextPagingAreaScope")]
+        next_paging_area_scope: [Option<NextPagingAreaScope>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<PagingAttemptInformationIEExtensions>],
+    } }
     impl PagingAttemptInformation {
         pub fn new(
             paging_attempt_count: PagingAttemptCount,
@@ -16416,7 +17225,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ProSeAuthorized {
@@ -16427,6 +17236,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ProSeAuthorizedIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ProSeAuthorized, "ProSeAuthorized" {
+        #[rasn(identifier = "proSeDirectDiscovery")]
+        pro_se_direct_discovery: [Option<ProSeDirectDiscovery>],
+        #[rasn(identifier = "proSeDirectCommunication")]
+        pro_se_direct_communication: [Option<ProSeDirectCommunication>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ProSeAuthorizedIEExtensions>],
+    } }
     impl ProSeAuthorized {
         pub fn new(
             pro_se_direct_discovery: Option<ProSeDirectDiscovery>,
@@ -16612,7 +17429,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "RAT-RestrictionsItem")]
     #[non_exhaustive]
     pub struct RATRestrictionsItem {
@@ -16623,6 +17440,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<RATRestrictionsItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { RATRestrictionsItem, "RAT-RestrictionsItem" {
+        #[rasn(identifier = "pLMNidentity")]
+        p_lmnidentity: [PLMNidentity],
+        #[rasn(size("8", extensible), identifier = "rAT-RestrictionInformation")]
+        r_at_restriction_information: [BitString],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<RATRestrictionsItemIEExtensions>],
+    } }
     impl RATRestrictionsItem {
         pub fn new(
             p_lmnidentity: PLMNidentity,
@@ -16761,7 +17586,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct RIMTransfer {
@@ -16772,6 +17597,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<RIMTransferIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { RIMTransfer, "RIMTransfer" {
+        #[rasn(identifier = "rIMInformation")]
+        r_iminformation: [RIMInformation],
+        #[rasn(identifier = "rIMRoutingAddress")]
+        r_imrouting_address: [Option<RIMRoutingAddress>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<RIMTransferIEExtensions>],
+    } }
     impl RIMTransfer {
         pub fn new(
             r_iminformation: RIMInformation,
@@ -16864,7 +17697,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct RLFReportInformation {
@@ -16876,6 +17709,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<RLFReportInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { RLFReportInformation, "RLFReportInformation" {
+        #[rasn(identifier = "uE-RLF-Report-Container")]
+        u_e_rlf_report_container: [UERLFReportContainer],
+        #[rasn(identifier = "uE-RLF-Report-Container-for-extended-bands")]
+        u_e_rlf_report_container_for_extended_bands: [Option<UERLFReportContainerForExtendedBands>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<RLFReportInformationIEExtensions>],
+    } }
     impl RLFReportInformation {
         pub fn new(
             u_e_rlf_report_container: UERLFReportContainer,
@@ -17046,7 +17887,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct RecommendedCellItem {
@@ -17057,6 +17898,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<RecommendedCellItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { RecommendedCellItem, "RecommendedCellItem" {
+        #[rasn(identifier = "eUTRAN-CGI")]
+        e_utran_cgi: [EUTRANCGI],
+        #[rasn(value("0..=4095"), identifier = "timeStayedInCell")]
+        time_stayed_in_cell: [Option<u16>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<RecommendedCellItemIEExtensions>],
+    } }
     impl RecommendedCellItem {
         pub fn new(
             e_utran_cgi: EUTRANCGI,
@@ -17219,7 +18068,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct RecommendedCellsForPaging {
@@ -17228,6 +18077,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<RecommendedCellsForPagingIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { RecommendedCellsForPaging, "RecommendedCellsForPaging" {
+        #[rasn(identifier = "recommendedCellList")]
+        recommended_cell_list: [RecommendedCellList],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<RecommendedCellsForPagingIEExtensions>],
+    } }
     impl RecommendedCellsForPaging {
         pub fn new(
             recommended_cell_list: RecommendedCellList,
@@ -17315,7 +18170,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct RecommendedENBItem {
@@ -17324,6 +18179,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<RecommendedENBItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { RecommendedENBItem, "RecommendedENBItem" {
+        #[rasn(identifier = "mMEPagingTarget")]
+        m_mepaging_target: [MMEPagingTarget],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<RecommendedENBItemIEExtensions>],
+    } }
     impl RecommendedENBItem {
         pub fn new(
             m_mepaging_target: MMEPagingTarget,
@@ -17484,7 +18345,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct RecommendedENBsForPaging {
@@ -17493,6 +18354,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<RecommendedENBsForPagingIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { RecommendedENBsForPaging, "RecommendedENBsForPaging" {
+        #[rasn(identifier = "recommendedENBList")]
+        recommended_enblist: [RecommendedENBList],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<RecommendedENBsForPagingIEExtensions>],
+    } }
     impl RecommendedENBsForPaging {
         pub fn new(
             recommended_enblist: RecommendedENBList,
@@ -17626,7 +18493,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct RequestType {
@@ -17637,6 +18504,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<RequestTypeIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { RequestType, "RequestType" {
+        #[rasn(identifier = "eventType")]
+        event_type: [EventType],
+        #[rasn(identifier = "reportArea")]
+        report_area: [ReportArea],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<RequestTypeIEExtensions>],
+    } }
     impl RequestType {
         pub fn new(
             event_type: EventType,
@@ -17730,7 +18605,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct RequestedTNLInfo {
@@ -17739,6 +18614,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<RequestedTNLInfoIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { RequestedTNLInfo, "RequestedTNLInfo" {
+        #[rasn(identifier = "pLMNidentity")]
+        p_lmnidentity: [PLMNidentity],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<RequestedTNLInfoIEExtensions>],
+    } }
     impl RequestedTNLInfo {
         pub fn new(
             p_lmnidentity: PLMNidentity,
@@ -17827,7 +18708,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "S-TMSI")]
     #[non_exhaustive]
     pub struct STMSI {
@@ -17838,6 +18719,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<STMSIIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { STMSI, "S-TMSI" {
+        #[rasn(identifier = "mMEC")]
+        m_mec: [MMECode],
+        #[rasn(identifier = "m-TMSI")]
+        m_tmsi: [MTMSI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<STMSIIEExtensions>],
+    } }
     impl STMSI {
         pub fn new(
             m_mec: MMECode,
@@ -17932,7 +18821,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct SONConfigurationTransfer {
@@ -17945,6 +18834,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SONConfigurationTransferIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SONConfigurationTransfer, "SONConfigurationTransfer" {
+        #[rasn(identifier = "targeteNB-ID")]
+        targete_nb_id: [TargeteNBID],
+        #[rasn(identifier = "sourceeNB-ID")]
+        sourcee_nb_id: [SourceeNBID],
+        #[rasn(identifier = "sONInformation")]
+        s_oninformation: [SONInformation],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SONConfigurationTransferIEExtensions>],
+    } }
     impl SONConfigurationTransfer {
         pub fn new(
             targete_nb_id: TargeteNBID,
@@ -18079,7 +18978,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct SONInformationReply {
@@ -18088,6 +18987,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SONInformationReplyIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SONInformationReply, "SONInformationReply" {
+        #[rasn(identifier = "x2TNLConfigurationInfo")]
+        x2_tnlconfiguration_info: [Option<X2TNLConfigurationInfo>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SONInformationReplyIEExtensions>],
+    } }
     impl SONInformationReply {
         pub fn new(
             x2_tnlconfiguration_info: Option<X2TNLConfigurationInfo>,
@@ -18223,7 +19128,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ScheduledCommunicationTime {
@@ -18236,6 +19141,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ScheduledCommunicationTimeIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ScheduledCommunicationTime, "ScheduledCommunicationTime" {
+        #[rasn(size("7"), identifier = "dayofWeek")]
+        dayof_week: [Option<BitString>],
+        #[rasn(value("0..=86399", extensible), identifier = "timeofDayStart")]
+        timeof_day_start: [Option<Integer>],
+        #[rasn(value("0..=86399", extensible), identifier = "timeofDayEnd")]
+        timeof_day_end: [Option<Integer>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ScheduledCommunicationTimeIEExtensions>],
+    } }
     impl ScheduledCommunicationTime {
         pub fn new(
             dayof_week: Option<BitString>,
@@ -18330,7 +19245,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct SecondaryRATDataUsageReportItem {
@@ -18343,6 +19258,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SecondaryRATDataUsageReportItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SecondaryRATDataUsageReportItem, "SecondaryRATDataUsageReportItem" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "secondaryRATType")]
+        secondary_rattype: [SecondaryRATType],
+        #[rasn(identifier = "e-RABUsageReportList")]
+        e_rabusage_report_list: [ERABUsageReportList],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SecondaryRATDataUsageReportItemIEExtensions>],
+    } }
     impl SecondaryRATDataUsageReportItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -18519,7 +19444,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct SecurityContext {
@@ -18530,6 +19455,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SecurityContextIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SecurityContext, "SecurityContext" {
+        #[rasn(value("0..=7"), identifier = "nextHopChainingCount")]
+        next_hop_chaining_count: [u8],
+        #[rasn(identifier = "nextHopParameter")]
+        next_hop_parameter: [SecurityKey],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SecurityContextIEExtensions>],
+    } }
     impl SecurityContext {
         pub fn new(
             next_hop_chaining_count: u8,
@@ -18619,7 +19552,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct SecurityIndication {
@@ -18628,6 +19561,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SecurityIndicationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SecurityIndication, "SecurityIndication" {
+        #[rasn(identifier = "integrityProtectionIndication")]
+        integrity_protection_indication: [IntegrityProtectionIndication],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SecurityIndicationIEExtensions>],
+    } }
     impl SecurityIndication {
         pub fn new(
             integrity_protection_indication: IntegrityProtectionIndication,
@@ -18741,7 +19680,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct SecurityResult {
@@ -18750,6 +19689,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SecurityResultIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SecurityResult, "SecurityResult" {
+        #[rasn(identifier = "integrityProtectionResult")]
+        integrity_protection_result: [IntegrityProtectionResult],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SecurityResultIEExtensions>],
+    } }
     impl SecurityResult {
         pub fn new(
             integrity_protection_result: IntegrityProtectionResult,
@@ -18848,7 +19793,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct SensorMeasConfigNameItem {
@@ -18857,6 +19802,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SensorMeasConfigNameItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SensorMeasConfigNameItem, "SensorMeasConfigNameItem" {
+        #[rasn(identifier = "sensorNameConfig")]
+        sensor_name_config: [SensorNameConfig],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SensorMeasConfigNameItemIEExtensions>],
+    } }
     impl SensorMeasConfigNameItem {
         pub fn new(
             sensor_name_config: SensorNameConfig,
@@ -19000,7 +19951,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct SensorMeasurementConfiguration {
@@ -19011,6 +19962,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SensorMeasurementConfigurationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SensorMeasurementConfiguration, "SensorMeasurementConfiguration" {
+        #[rasn(identifier = "sensorMeasConfig")]
+        sensor_meas_config: [SensorMeasConfig],
+        #[rasn(identifier = "sensorMeasConfigNameList")]
+        sensor_meas_config_name_list: [Option<SensorMeasConfigNameList>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SensorMeasurementConfigurationIEExtensions>],
+    } }
     impl SensorMeasurementConfiguration {
         pub fn new(
             sensor_meas_config: SensorMeasConfig,
@@ -19194,7 +20153,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ServedDCNsItem {
@@ -19205,6 +20164,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ServedDCNsItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ServedDCNsItem, "ServedDCNsItem" {
+        #[rasn(identifier = "dCN-ID")]
+        d_cn_id: [DCNID],
+        #[rasn(identifier = "relativeDCNCapacity")]
+        relative_dcncapacity: [RelativeMMECapacity],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ServedDCNsItemIEExtensions>],
+    } }
     impl ServedDCNsItem {
         pub fn new(
             d_cn_id: DCNID,
@@ -19346,7 +20313,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ServedGUMMEIsItem {
@@ -19359,6 +20326,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ServedGUMMEIsItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ServedGUMMEIsItem, "ServedGUMMEIsItem" {
+        #[rasn(identifier = "servedPLMNs")]
+        served_plmns: [ServedPLMNs],
+        #[rasn(identifier = "servedGroupIDs")]
+        served_group_ids: [ServedGroupIDs],
+        #[rasn(identifier = "servedMMECs")]
+        served_mmecs: [ServedMMECs],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ServedGUMMEIsItemIEExtensions>],
+    } }
     impl ServedGUMMEIsItem {
         pub fn new(
             served_plmns: ServedPLMNs,
@@ -19620,7 +20597,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "SourceNgRanNode-ID")]
     #[non_exhaustive]
     pub struct SourceNgRanNodeID {
@@ -19631,6 +20608,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SourceNgRanNodeIDIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SourceNgRanNodeID, "SourceNgRanNode-ID" {
+        #[rasn(identifier = "global-RAN-NODE-ID")]
+        global_ran_node_id: [GlobalRANNODEID],
+        #[rasn(identifier = "selected-TAI")]
+        selected_tai: [FiveGSTAI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SourceNgRanNodeIDIEExtensions>],
+    } }
     impl SourceNgRanNodeID {
         pub fn new(
             global_ran_node_id: GlobalRANNODEID,
@@ -19872,7 +20857,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(
         automatic_tags,
         identifier = "SourceeNB-ToTargeteNB-TransparentContainer"
@@ -19892,6 +20877,20 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SourceeNBToTargeteNBTransparentContainerIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SourceeNBToTargeteNBTransparentContainer, "SourceeNB-ToTargeteNB-TransparentContainer" {
+        #[rasn(identifier = "rRC-Container")]
+        r_rc_container: [RRCContainer],
+        #[rasn(identifier = "e-RABInformationList")]
+        e_rabinformation_list: [Option<ERABInformationList>],
+        #[rasn(identifier = "targetCell-ID")]
+        target_cell_id: [EUTRANCGI],
+        #[rasn(identifier = "subscriberProfileIDforRFP")]
+        subscriber_profile_idfor_rfp: [Option<SubscriberProfileIDforRFP>],
+        #[rasn(identifier = "uE-HistoryInformation")]
+        u_e_history_information: [UEHistoryInformation],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SourceeNBToTargeteNBTransparentContainerIEExtensions>],
+    } }
     impl SourceeNBToTargeteNBTransparentContainer {
         pub fn new(
             r_rc_container: RRCContainer,
@@ -20035,7 +21034,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(
         automatic_tags,
         identifier = "Subscription-Based-UE-DifferentiationInfo"
@@ -20059,6 +21058,22 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SubscriptionBasedUEDifferentiationInfoIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SubscriptionBasedUEDifferentiationInfo, "Subscription-Based-UE-DifferentiationInfo" {
+        #[rasn(identifier = "periodicCommunicationIndicator")]
+        periodic_communication_indicator: [Option<SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator>],
+        #[rasn(value("1..=3600", extensible), identifier = "periodicTime")]
+        periodic_time: [Option<Integer>],
+        #[rasn(identifier = "scheduledCommunicationTime")]
+        scheduled_communication_time: [Option<ScheduledCommunicationTime>],
+        #[rasn(identifier = "stationaryIndication")]
+        stationary_indication: [Option<SubscriptionBasedUEDifferentiationInfoStationaryIndication>],
+        #[rasn(identifier = "trafficProfile")]
+        traffic_profile: [Option<SubscriptionBasedUEDifferentiationInfoTrafficProfile>],
+        #[rasn(identifier = "batteryIndication")]
+        battery_indication: [Option<SubscriptionBasedUEDifferentiationInfoBatteryIndication>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SubscriptionBasedUEDifferentiationInfoIEExtensions>],
+    } }
     impl SubscriptionBasedUEDifferentiationInfo {
         pub fn new(
             periodic_communication_indicator: Option<
@@ -20209,7 +21224,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "SupportedTAs-Item")]
     #[non_exhaustive]
     pub struct SupportedTAsItem {
@@ -20220,6 +21235,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SupportedTAsItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SupportedTAsItem, "SupportedTAs-Item" {
+        #[rasn(identifier = "tAC")]
+        t_ac: [TAC],
+        #[rasn(identifier = "broadcastPLMNs")]
+        broadcast_plmns: [BPLMNs],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SupportedTAsItemIEExtensions>],
+    } }
     impl SupportedTAsItem {
         pub fn new(
             t_ac: TAC,
@@ -20314,7 +21337,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct SynchronisationInformation {
@@ -20327,6 +21350,16 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<SynchronisationInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { SynchronisationInformation, "SynchronisationInformation" {
+        #[rasn(identifier = "sourceStratumLevel")]
+        source_stratum_level: [Option<StratumLevel>],
+        #[rasn(identifier = "listeningSubframePattern")]
+        listening_subframe_pattern: [Option<ListeningSubframePattern>],
+        #[rasn(identifier = "aggressoreCGI-List")]
+        aggressore_cgi_list: [Option<ECGI_List>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<SynchronisationInformationIEExtensions>],
+    } }
     impl SynchronisationInformation {
         pub fn new(
             source_stratum_level: Option<StratumLevel>,
@@ -20423,7 +21456,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TABasedMDT {
@@ -20432,6 +21465,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TABasedMDTIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TABasedMDT, "TABasedMDT" {
+        #[rasn(identifier = "tAListforMDT")]
+        t_alistfor_mdt: [TAListforMDT],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TABasedMDTIEExtensions>],
+    } }
     impl TABasedMDT {
         pub fn new(
             t_alistfor_mdt: TAListforMDT,
@@ -20517,7 +21556,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TABasedQMC {
@@ -20526,6 +21565,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TABasedQMCIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TABasedQMC, "TABasedQMC" {
+        #[rasn(identifier = "tAListforQMC")]
+        t_alistfor_qmc: [TAListforQMC],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TABasedQMCIEExtensions>],
+    } }
     impl TABasedQMC {
         pub fn new(
             t_alistfor_qmc: TAListforQMC,
@@ -20666,7 +21711,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TAI {
@@ -20677,6 +21722,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TAIIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TAI, "TAI" {
+        #[rasn(identifier = "pLMNidentity")]
+        p_lmnidentity: [PLMNidentity],
+        #[rasn(identifier = "tAC")]
+        t_ac: [TAC],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TAIIEExtensions>],
+    } }
     impl TAI {
         pub fn new(
             p_lmnidentity: PLMNidentity,
@@ -20815,7 +21868,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "TAI-Broadcast-Item")]
     #[non_exhaustive]
     pub struct TAIBroadcastItem {
@@ -20826,6 +21879,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TAIBroadcastItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TAIBroadcastItem, "TAI-Broadcast-Item" {
+        #[rasn(identifier = "tAI")]
+        t_ai: [TAI],
+        #[rasn(identifier = "completedCellinTAI")]
+        completed_cellin_tai: [CompletedCellinTAI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TAIBroadcastItemIEExtensions>],
+    } }
     impl TAIBroadcastItem {
         pub fn new(
             t_ai: TAI,
@@ -20964,7 +22025,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "TAI-Cancelled-Item")]
     #[non_exhaustive]
     pub struct TAICancelledItem {
@@ -20975,6 +22036,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TAICancelledItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TAICancelledItem, "TAI-Cancelled-Item" {
+        #[rasn(identifier = "tAI")]
+        t_ai: [TAI],
+        #[rasn(identifier = "cancelledCellinTAI")]
+        cancelled_cellin_tai: [CancelledCellinTAI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TAICancelledItemIEExtensions>],
+    } }
     impl TAICancelledItem {
         pub fn new(
             t_ai: TAI,
@@ -21062,7 +22131,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TAIBasedMDT {
@@ -21071,6 +22140,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TAIBasedMDTIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TAIBasedMDT, "TAIBasedMDT" {
+        #[rasn(identifier = "tAIListforMDT")]
+        t_ailistfor_mdt: [TAIListforMDT],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TAIBasedMDTIEExtensions>],
+    } }
     impl TAIBasedMDT {
         pub fn new(
             t_ailistfor_mdt: TAIListforMDT,
@@ -21156,7 +22231,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TAIBasedQMC {
@@ -21165,6 +22240,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TAIBasedQMCIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TAIBasedQMC, "TAIBasedQMC" {
+        #[rasn(identifier = "tAIListforQMC")]
+        t_ailistfor_qmc: [TAIListforQMC],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TAIBasedQMCIEExtensions>],
+    } }
     impl TAIBasedQMC {
         pub fn new(
             t_ailistfor_qmc: TAIListforQMC,
@@ -21600,7 +22681,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "TargetNgRanNode-ID")]
     #[non_exhaustive]
     pub struct TargetNgRanNodeID {
@@ -21611,6 +22692,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TargetNgRanNodeIDIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TargetNgRanNodeID, "TargetNgRanNode-ID" {
+        #[rasn(identifier = "global-RAN-NODE-ID")]
+        global_ran_node_id: [GlobalRANNODEID],
+        #[rasn(identifier = "selected-TAI")]
+        selected_tai: [FiveGSTAI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TargetNgRanNodeIDIEExtensions>],
+    } }
     impl TargetNgRanNodeID {
         pub fn new(
             global_ran_node_id: GlobalRANNODEID,
@@ -21705,7 +22794,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "TargetRNC-ID")]
     #[non_exhaustive]
     pub struct TargetRNCID {
@@ -21720,6 +22809,18 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TargetRNCIDIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TargetRNCID, "TargetRNC-ID" {
+        #[rasn(identifier = "lAI")]
+        l_ai: [LAI],
+        #[rasn(identifier = "rAC")]
+        r_ac: [Option<RAC>],
+        #[rasn(identifier = "rNC-ID")]
+        r_nc_id: [RNCID],
+        #[rasn(identifier = "extendedRNC-ID")]
+        extended_rnc_id: [Option<ExtendedRNCID>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TargetRNCIDIEExtensions>],
+    } }
     impl TargetRNCID {
         pub fn new(
             l_ai: LAI,
@@ -21816,7 +22917,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "TargeteNB-ID")]
     #[non_exhaustive]
     pub struct TargeteNBID {
@@ -21827,6 +22928,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TargeteNBIDIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TargeteNBID, "TargeteNB-ID" {
+        #[rasn(identifier = "global-ENB-ID")]
+        global_enb_id: [GlobalENBID],
+        #[rasn(identifier = "selected-TAI")]
+        selected_tai: [TAI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TargeteNBIDIEExtensions>],
+    } }
     impl TargeteNBID {
         pub fn new(
             global_enb_id: GlobalENBID,
@@ -21918,7 +23027,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(
         automatic_tags,
         identifier = "TargeteNB-ToSourceeNB-TransparentContainer"
@@ -21930,6 +23039,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TargeteNBToSourceeNBTransparentContainerIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TargeteNBToSourceeNBTransparentContainer, "TargeteNB-ToSourceeNB-TransparentContainer" {
+        #[rasn(identifier = "rRC-Container")]
+        r_rc_container: [RRCContainer],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TargeteNBToSourceeNBTransparentContainerIEExtensions>],
+    } }
     impl TargeteNBToSourceeNBTransparentContainer {
         pub fn new(
             r_rc_container: RRCContainer,
@@ -22038,7 +23153,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TimeBasedHandoverInformation {
@@ -22049,6 +23164,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TimeBasedHandoverInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TimeBasedHandoverInformation, "TimeBasedHandoverInformation" {
+        #[rasn(identifier = "hOWindowStart")]
+        h_owindow_start: [HandoverWindowStart],
+        #[rasn(identifier = "hOWindowDuration")]
+        h_owindow_duration: [HandoverWindowDuration],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TimeBasedHandoverInformationIEExtensions>],
+    } }
     impl TimeBasedHandoverInformation {
         pub fn new(
             h_owindow_start: HandoverWindowStart,
@@ -22153,7 +23276,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TimeSynchronisationInfo {
@@ -22164,6 +23287,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TimeSynchronisationInfoIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TimeSynchronisationInfo, "TimeSynchronisationInfo" {
+        #[rasn(identifier = "stratumLevel")]
+        stratum_level: [StratumLevel],
+        #[rasn(identifier = "synchronisationStatus")]
+        synchronisation_status: [SynchronisationStatus],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TimeSynchronisationInfoIEExtensions>],
+    } }
     impl TimeSynchronisationInfo {
         pub fn new(
             stratum_level: StratumLevel,
@@ -22282,7 +23413,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TraceActivation {
@@ -22297,6 +23428,18 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TraceActivationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TraceActivation, "TraceActivation" {
+        #[rasn(identifier = "e-UTRAN-Trace-ID")]
+        e_utran_trace_id: [EUTRANTraceID],
+        #[rasn(identifier = "interfacesToTrace")]
+        interfaces_to_trace: [InterfacesToTrace],
+        #[rasn(identifier = "traceDepth")]
+        trace_depth: [TraceDepth],
+        #[rasn(identifier = "traceCollectionEntityIPAddress")]
+        trace_collection_entity_ipaddress: [TransportLayerAddress],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TraceActivationIEExtensions>],
+    } }
     impl TraceActivation {
         pub fn new(
             e_utran_trace_id: EUTRANTraceID,
@@ -22328,7 +23471,7 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, value("1..=99"))]
     pub struct TrafficLoadReductionIndication(pub u8);
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TransportInformation {
@@ -22337,6 +23480,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "uL-GTP-TEID")]
         pub u_l_gtp_teid: GTPTEID,
     }
+    crate::per::decode_extensible_sequence! { TransportInformation, "TransportInformation" {
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "uL-GTP-TEID")]
+        u_l_gtp_teid: [GTPTEID],
+    } }
     impl TransportInformation {
         pub fn new(transport_layer_address: TransportLayerAddress, u_l_gtp_teid: GTPTEID) -> Self {
             Self {
@@ -22424,7 +23573,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TunnelInformation {
@@ -22435,6 +23584,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TunnelInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TunnelInformation, "TunnelInformation" {
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "uDP-Port-Number")]
+        u_dp_port_number: [Option<PortNumber>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TunnelInformationIEExtensions>],
+    } }
     impl TunnelInformation {
         pub fn new(
             transport_layer_address: TransportLayerAddress,
@@ -22600,7 +23757,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "UE-S1AP-ID-pair")]
     #[non_exhaustive]
     pub struct UES1APIDPair {
@@ -22611,6 +23768,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<UES1APIDPairIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { UES1APIDPair, "UE-S1AP-ID-pair" {
+        #[rasn(identifier = "mME-UE-S1AP-ID")]
+        m_me_ue_s1_ap_id: [MMEUES1APID],
+        #[rasn(identifier = "eNB-UE-S1AP-ID")]
+        e_nb_ue_s1_ap_id: [ENBUES1APID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<UES1APIDPairIEExtensions>],
+    } }
     impl UES1APIDPair {
         pub fn new(
             m_me_ue_s1_ap_id: MMEUES1APID,
@@ -22727,7 +23892,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "UE-associatedLogicalS1-ConnectionItem")]
     #[non_exhaustive]
     pub struct UEAssociatedLogicalS1ConnectionItem {
@@ -22738,6 +23903,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<UEAssociatedLogicalS1ConnectionItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { UEAssociatedLogicalS1ConnectionItem, "UE-associatedLogicalS1-ConnectionItem" {
+        #[rasn(identifier = "mME-UE-S1AP-ID")]
+        m_me_ue_s1_ap_id: [Option<MMEUES1APID>],
+        #[rasn(identifier = "eNB-UE-S1AP-ID")]
+        e_nb_ue_s1_ap_id: [Option<ENBUES1APID>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<UEAssociatedLogicalS1ConnectionItemIEExtensions>],
+    } }
     impl UEAssociatedLogicalS1ConnectionItem {
         pub fn new(
             m_me_ue_s1_ap_id: Option<MMEUES1APID>,
@@ -22833,7 +24006,7 @@ pub mod s1_ap_ies {
         }
     }
     #[doc = " U"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEAggregateMaximumBitrate {
@@ -22844,6 +24017,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<UEAggregateMaximumBitrateIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { UEAggregateMaximumBitrate, "UEAggregateMaximumBitrate" {
+        #[rasn(identifier = "uEaggregateMaximumBitRateDL")]
+        u_eaggregate_maximum_bit_rate_dl: [BitRate],
+        #[rasn(identifier = "uEaggregateMaximumBitRateUL")]
+        u_eaggregate_maximum_bit_rate_ul: [BitRate],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<UEAggregateMaximumBitrateIEExtensions>],
+    } }
     impl UEAggregateMaximumBitrate {
         pub fn new(
             u_eaggregate_maximum_bit_rate_dl: BitRate,
@@ -22936,7 +24117,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEAppLayerMeasConfig {
@@ -22947,6 +24128,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<UEAppLayerMeasConfigIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { UEAppLayerMeasConfig, "UEAppLayerMeasConfig" {
+        #[rasn(identifier = "containerForAppLayerMeasConfig")]
+        container_for_app_layer_meas_config: [crate::sized::SizedOctetString<1, 1000>],
+        #[rasn(identifier = "areaScopeOfQMC")]
+        area_scope_of_qmc: [AreaScopeOfQMC],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<UEAppLayerMeasConfigIEExtensions>],
+    } }
     impl UEAppLayerMeasConfig {
         pub fn new(
             container_for_app_layer_meas_config: crate::sized::SizedOctetString<1, 1000>,
@@ -23077,7 +24266,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UESecurityCapabilities {
@@ -23088,6 +24277,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<UESecurityCapabilitiesIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { UESecurityCapabilities, "UESecurityCapabilities" {
+        #[rasn(identifier = "encryptionAlgorithms")]
+        encryption_algorithms: [EncryptionAlgorithms],
+        #[rasn(identifier = "integrityProtectionAlgorithms")]
+        integrity_protection_algorithms: [IntegrityProtectionAlgorithms],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<UESecurityCapabilitiesIEExtensions>],
+    } }
     impl UESecurityCapabilities {
         pub fn new(
             encryption_algorithms: EncryptionAlgorithms,
@@ -23181,7 +24378,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UESidelinkAggregateMaximumBitrate {
@@ -23190,6 +24387,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<UESidelinkAggregateMaximumBitrateIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { UESidelinkAggregateMaximumBitrate, "UESidelinkAggregateMaximumBitrate" {
+        #[rasn(identifier = "uESidelinkAggregateMaximumBitRate")]
+        u_esidelink_aggregate_maximum_bit_rate: [BitRate],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<UESidelinkAggregateMaximumBitrateIEExtensions>],
+    } }
     impl UESidelinkAggregateMaximumBitrate {
         pub fn new(
             u_esidelink_aggregate_maximum_bit_rate: BitRate,
@@ -23288,7 +24491,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "UL-CP-SecurityInformation")]
     #[non_exhaustive]
     pub struct ULCPSecurityInformation {
@@ -23299,6 +24502,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ULCPSecurityInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ULCPSecurityInformation, "UL-CP-SecurityInformation" {
+        #[rasn(identifier = "ul-NAS-MAC")]
+        ul_nas_mac: [ULNASMAC],
+        #[rasn(identifier = "ul-NAS-Count")]
+        ul_nas_count: [ULNASCount],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ULCPSecurityInformationIEExtensions>],
+    } }
     impl ULCPSecurityInformation {
         pub fn new(
             ul_nas_mac: ULNASMAC,
@@ -23409,7 +24620,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UserLocationInformation {
@@ -23419,6 +24630,13 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<UserLocationInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { UserLocationInformation, "UserLocationInformation" {
+        #[rasn(identifier = "eutran-cgi")]
+        eutran_cgi: [EUTRANCGI],
+        tai: [TAI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<UserLocationInformationIEExtensions>],
+    } }
     impl UserLocationInformation {
         pub fn new(
             eutran_cgi: EUTRANCGI,
@@ -23511,7 +24729,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct V2XServicesAuthorized {
@@ -23522,6 +24740,14 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<V2XServicesAuthorizedIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { V2XServicesAuthorized, "V2XServicesAuthorized" {
+        #[rasn(identifier = "vehicleUE")]
+        vehicle_ue: [Option<VehicleUE>],
+        #[rasn(identifier = "pedestrianUE")]
+        pedestrian_ue: [Option<PedestrianUE>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<V2XServicesAuthorizedIEExtensions>],
+    } }
     impl V2XServicesAuthorized {
         pub fn new(
             vehicle_ue: Option<VehicleUE>,
@@ -23709,7 +24935,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct WLANMeasurementConfiguration {
@@ -23724,6 +24950,18 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<WLANMeasurementConfigurationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { WLANMeasurementConfiguration, "WLANMeasurementConfiguration" {
+        #[rasn(identifier = "wlanMeasConfig")]
+        wlan_meas_config: [WLANMeasConfig],
+        #[rasn(identifier = "wlanMeasConfigNameList")]
+        wlan_meas_config_name_list: [Option<WLANMeasConfigNameList>],
+        #[rasn(identifier = "wlan-rssi")]
+        wlan_rssi: [Option<WLANMeasurementConfigurationWlanRssi>],
+        #[rasn(identifier = "wlan-rtt")]
+        wlan_rtt: [Option<WLANMeasurementConfigurationWlanRtt>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<WLANMeasurementConfigurationIEExtensions>],
+    } }
     impl WLANMeasurementConfiguration {
         pub fn new(
             wlan_meas_config: WLANMeasConfig,
@@ -23825,7 +25063,7 @@ pub mod s1_ap_ies {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "WUS-Assistance-Information")]
     #[non_exhaustive]
     pub struct WUSAssistanceInformation {
@@ -23834,6 +25072,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<WUSAssistanceInformationIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { WUSAssistanceInformation, "WUS-Assistance-Information" {
+        #[rasn(identifier = "pagingProbabilityInformation")]
+        paging_probability_information: [PagingProbabilityInformation],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<WUSAssistanceInformationIEExtensions>],
+    } }
     impl WUSAssistanceInformation {
         pub fn new(
             paging_probability_information: PagingProbabilityInformation,
@@ -23963,7 +25207,7 @@ pub mod s1_ap_ies {
         }
     }
     #[doc = " X"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct X2TNLConfigurationInfo {
@@ -23972,6 +25216,12 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<X2TNLConfigurationInfoIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { X2TNLConfigurationInfo, "X2TNLConfigurationInfo" {
+        #[rasn(identifier = "eNBX2TransportLayerAddresses")]
+        e_nbx2_transport_layer_addresses: [ENBX2TLAs],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<X2TNLConfigurationInfoIEExtensions>],
+    } }
     impl X2TNLConfigurationInfo {
         pub fn new(
             e_nbx2_transport_layer_addresses: ENBX2TLAs,
@@ -24189,7 +25439,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct CSGMembershipInfo {
@@ -24204,6 +25454,18 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<CSGMembershipInfoIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { CSGMembershipInfo, "CSGMembershipInfo" {
+        #[rasn(identifier = "cSGMembershipStatus")]
+        c_sgmembership_status: [CSGMembershipStatus],
+        #[rasn(identifier = "cSG-Id")]
+        c_sg_id: [CSGId],
+        #[rasn(identifier = "cellAccessMode")]
+        cell_access_mode: [Option<CellAccessMode>],
+        #[rasn(identifier = "pLMNidentity")]
+        p_lmnidentity: [Option<PLMNidentity>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<CSGMembershipInfoIEExtensions>],
+    } }
     impl CSGMembershipInfo {
         pub fn new(
             c_sgmembership_status: CSGMembershipStatus,
@@ -24309,13 +25571,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Cell Traffic Trace"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct CellTrafficTrace {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: CellTrafficTraceProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { CellTrafficTrace, "CellTrafficTrace" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [CellTrafficTraceProtocolIEs],
+    } }
     impl CellTrafficTrace {
         pub fn new(protocol_ies: CellTrafficTraceProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -24410,13 +25676,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Connection Establishment Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ConnectionEstablishmentIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ConnectionEstablishmentIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ConnectionEstablishmentIndication, "ConnectionEstablishmentIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ConnectionEstablishmentIndicationProtocolIEs],
+    } }
     impl ConnectionEstablishmentIndication {
         pub fn new(protocol_ies: ConnectionEstablishmentIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -24510,13 +25780,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Deactivate Trace"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct DeactivateTrace {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: DeactivateTraceProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { DeactivateTrace, "DeactivateTrace" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [DeactivateTraceProtocolIEs],
+    } }
     impl DeactivateTrace {
         pub fn new(protocol_ies: DeactivateTraceProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -24615,13 +25889,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " DOWNLINK NAS TRANSPORT"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct DownlinkNASTransport {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: DownlinkNASTransportProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { DownlinkNASTransport, "DownlinkNASTransport" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [DownlinkNASTransportProtocolIEs],
+    } }
     impl DownlinkNASTransport {
         pub fn new(protocol_ies: DownlinkNASTransportProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -24717,13 +25995,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " DOWNLINK NON UE ASSOCIATED LPPA TRANSPORT"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct DownlinkNonUEAssociatedLPPaTransport {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: DownlinkNonUEAssociatedLPPaTransportProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { DownlinkNonUEAssociatedLPPaTransport, "DownlinkNonUEAssociatedLPPaTransport" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [DownlinkNonUEAssociatedLPPaTransportProtocolIEs],
+    } }
     impl DownlinkNonUEAssociatedLPPaTransport {
         pub fn new(protocol_ies: DownlinkNonUEAssociatedLPPaTransportProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -24824,13 +26106,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Downlink S1 CDMA2000 Tunnelling"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct DownlinkS1cdma2000tunnelling {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: DownlinkS1cdma2000tunnellingProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { DownlinkS1cdma2000tunnelling, "DownlinkS1cdma2000tunnelling" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [DownlinkS1cdma2000tunnellingProtocolIEs],
+    } }
     impl DownlinkS1cdma2000tunnelling {
         pub fn new(protocol_ies: DownlinkS1cdma2000tunnellingProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -24930,13 +26216,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " DOWNLINK UE ASSOCIATED LPPA TRANSPORT"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct DownlinkUEAssociatedLPPaTransport {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: DownlinkUEAssociatedLPPaTransportProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { DownlinkUEAssociatedLPPaTransport, "DownlinkUEAssociatedLPPaTransport" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [DownlinkUEAssociatedLPPaTransportProtocolIEs],
+    } }
     impl DownlinkUEAssociatedLPPaTransport {
         pub fn new(protocol_ies: DownlinkUEAssociatedLPPaTransportProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -25025,7 +26315,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABAdmittedItem")]
     #[non_exhaustive]
     pub struct ERABAdmittedItem {
@@ -25046,6 +26336,24 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABAdmittedItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABAdmittedItem, "E-RABAdmittedItem" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "gTP-TEID")]
+        g_tp_teid: [GTPTEID],
+        #[rasn(identifier = "dL-transportLayerAddress")]
+        d_l_transport_layer_address: [Option<TransportLayerAddress>],
+        #[rasn(identifier = "dL-gTP-TEID")]
+        d_l_g_tp_teid: [Option<GTPTEID>],
+        #[rasn(identifier = "uL-TransportLayerAddress")]
+        u_l_transport_layer_address: [Option<TransportLayerAddress>],
+        #[rasn(identifier = "uL-GTP-TEID")]
+        u_l_gtp_teid: [Option<GTPTEID>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABAdmittedItemIEExtensions>],
+    } }
     impl ERABAdmittedItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -25236,7 +26544,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABDataForwardingItem")]
     #[non_exhaustive]
     pub struct ERABDataForwardingItem {
@@ -25253,6 +26561,20 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABDataForwardingItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABDataForwardingItem, "E-RABDataForwardingItem" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "dL-transportLayerAddress")]
+        d_l_transport_layer_address: [Option<TransportLayerAddress>],
+        #[rasn(identifier = "dL-gTP-TEID")]
+        d_l_g_tp_teid: [Option<GTPTEID>],
+        #[rasn(identifier = "uL-TransportLayerAddress")]
+        u_l_transport_layer_address: [Option<TransportLayerAddress>],
+        #[rasn(identifier = "uL-GTP-TEID")]
+        u_l_gtp_teid: [Option<GTPTEID>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABDataForwardingItemIEExtensions>],
+    } }
     impl ERABDataForwardingItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -25360,7 +26682,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABFailedToResumeItemResumeReq")]
     #[non_exhaustive]
     pub struct ERABFailedToResumeItemResumeReq {
@@ -25370,6 +26692,13 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABFailedToResumeItemResumeReqIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABFailedToResumeItemResumeReq, "E-RABFailedToResumeItemResumeReq" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        cause: [Cause],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABFailedToResumeItemResumeReqIEExtensions>],
+    } }
     impl ERABFailedToResumeItemResumeReq {
         pub fn new(
             e_rab_id: ERABID,
@@ -25471,7 +26800,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABFailedToResumeItemResumeRes")]
     #[non_exhaustive]
     pub struct ERABFailedToResumeItemResumeRes {
@@ -25481,6 +26810,13 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABFailedToResumeItemResumeResIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABFailedToResumeItemResumeRes, "E-RABFailedToResumeItemResumeRes" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        cause: [Cause],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABFailedToResumeItemResumeResIEExtensions>],
+    } }
     impl ERABFailedToResumeItemResumeRes {
         pub fn new(
             e_rab_id: ERABID,
@@ -25764,7 +27100,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABFailedToSetupItemHOReqAck")]
     #[non_exhaustive]
     pub struct ERABFailedToSetupItemHOReqAck {
@@ -25774,6 +27110,13 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABFailedToSetupItemHOReqAckIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABFailedToSetupItemHOReqAck, "E-RABFailedToSetupItemHOReqAck" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        cause: [Cause],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABFailedToSetupItemHOReqAckIEExtensions>],
+    } }
     impl ERABFailedToSetupItemHOReqAck {
         pub fn new(
             e_rab_id: ERABID,
@@ -25964,13 +27307,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " E-RAB Modification Confirm"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABModificationConfirm")]
     #[non_exhaustive]
     pub struct ERABModificationConfirm {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ERABModificationConfirmProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ERABModificationConfirm, "E-RABModificationConfirm" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ERABModificationConfirmProtocolIEs],
+    } }
     impl ERABModificationConfirm {
         pub fn new(protocol_ies: ERABModificationConfirmProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -26071,13 +27418,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " E-RAB Modification Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABModificationIndication")]
     #[non_exhaustive]
     pub struct ERABModificationIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ERABModificationIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ERABModificationIndication, "E-RABModificationIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ERABModificationIndicationProtocolIEs],
+    } }
     impl ERABModificationIndication {
         pub fn new(protocol_ies: ERABModificationIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -26173,7 +27524,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABModifyItemBearerModConf")]
     #[non_exhaustive]
     pub struct ERABModifyItemBearerModConf {
@@ -26182,6 +27533,12 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABModifyItemBearerModConfIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABModifyItemBearerModConf, "E-RABModifyItemBearerModConf" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABModifyItemBearerModConfIEExtensions>],
+    } }
     impl ERABModifyItemBearerModConf {
         pub fn new(
             e_rab_id: ERABID,
@@ -26283,7 +27640,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABModifyItemBearerModRes")]
     #[non_exhaustive]
     pub struct ERABModifyItemBearerModRes {
@@ -26292,6 +27649,12 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABModifyItemBearerModResIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABModifyItemBearerModRes, "E-RABModifyItemBearerModRes" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABModifyItemBearerModResIEExtensions>],
+    } }
     impl ERABModifyItemBearerModRes {
         pub fn new(
             e_rab_id: ERABID,
@@ -26553,13 +27916,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " E-RAB Modify Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABModifyRequest")]
     #[non_exhaustive]
     pub struct ERABModifyRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ERABModifyRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ERABModifyRequest, "E-RABModifyRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ERABModifyRequestProtocolIEs],
+    } }
     impl ERABModifyRequest {
         pub fn new(protocol_ies: ERABModifyRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -26650,13 +28017,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " E-RAB Modify Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABModifyResponse")]
     #[non_exhaustive]
     pub struct ERABModifyResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ERABModifyResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ERABModifyResponse, "E-RABModifyResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ERABModifyResponseProtocolIEs],
+    } }
     impl ERABModifyResponse {
         pub fn new(protocol_ies: ERABModifyResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -26752,7 +28123,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABNotToBeModifiedItemBearerModInd")]
     #[non_exhaustive]
     pub struct ERABNotToBeModifiedItemBearerModInd {
@@ -26765,6 +28136,16 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABNotToBeModifiedItemBearerModIndIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABNotToBeModifiedItemBearerModInd, "E-RABNotToBeModifiedItemBearerModInd" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "dL-GTP-TEID")]
+        d_l_gtp_teid: [GTPTEID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABNotToBeModifiedItemBearerModIndIEExtensions>],
+    } }
     impl ERABNotToBeModifiedItemBearerModInd {
         pub fn new(
             e_rab_id: ERABID,
@@ -26962,13 +28343,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " E-RAB Release Command"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABReleaseCommand")]
     #[non_exhaustive]
     pub struct ERABReleaseCommand {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ERABReleaseCommandProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ERABReleaseCommand, "E-RABReleaseCommand" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ERABReleaseCommandProtocolIEs],
+    } }
     impl ERABReleaseCommand {
         pub fn new(protocol_ies: ERABReleaseCommandProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -27067,13 +28452,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " E-RAB Release Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABReleaseIndication")]
     #[non_exhaustive]
     pub struct ERABReleaseIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ERABReleaseIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ERABReleaseIndication, "E-RABReleaseIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ERABReleaseIndicationProtocolIEs],
+    } }
     impl ERABReleaseIndication {
         pub fn new(protocol_ies: ERABReleaseIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -27169,7 +28558,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABReleaseItemBearerRelComp")]
     #[non_exhaustive]
     pub struct ERABReleaseItemBearerRelComp {
@@ -27178,6 +28567,12 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABReleaseItemBearerRelCompIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABReleaseItemBearerRelComp, "E-RABReleaseItemBearerRelComp" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABReleaseItemBearerRelCompIEExtensions>],
+    } }
     impl ERABReleaseItemBearerRelComp {
         pub fn new(
             e_rab_id: ERABID,
@@ -27359,13 +28754,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " E-RAB Release Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABReleaseResponse")]
     #[non_exhaustive]
     pub struct ERABReleaseResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ERABReleaseResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ERABReleaseResponse, "E-RABReleaseResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ERABReleaseResponseProtocolIEs],
+    } }
     impl ERABReleaseResponse {
         pub fn new(protocol_ies: ERABReleaseResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -27461,7 +28860,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABSetupItemBearerSURes")]
     #[non_exhaustive]
     pub struct ERABSetupItemBearerSURes {
@@ -27474,6 +28873,16 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABSetupItemBearerSUResIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABSetupItemBearerSURes, "E-RABSetupItemBearerSURes" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "gTP-TEID")]
+        g_tp_teid: [GTPTEID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABSetupItemBearerSUResIEExtensions>],
+    } }
     impl ERABSetupItemBearerSURes {
         pub fn new(
             e_rab_id: ERABID,
@@ -27579,7 +28988,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABSetupItemCtxtSURes")]
     #[non_exhaustive]
     pub struct ERABSetupItemCtxtSURes {
@@ -27592,6 +29001,16 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABSetupItemCtxtSUResIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABSetupItemCtxtSURes, "E-RABSetupItemCtxtSURes" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "gTP-TEID")]
+        g_tp_teid: [GTPTEID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABSetupItemCtxtSUResIEExtensions>],
+    } }
     impl ERABSetupItemCtxtSURes {
         pub fn new(
             e_rab_id: ERABID,
@@ -27857,13 +29276,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " E-RAB Setup Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABSetupRequest")]
     #[non_exhaustive]
     pub struct ERABSetupRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ERABSetupRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ERABSetupRequest, "E-RABSetupRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ERABSetupRequestProtocolIEs],
+    } }
     impl ERABSetupRequest {
         pub fn new(protocol_ies: ERABSetupRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -27952,13 +29375,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " E-RAB Setup Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABSetupResponse")]
     #[non_exhaustive]
     pub struct ERABSetupResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ERABSetupResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ERABSetupResponse, "E-RABSetupResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ERABSetupResponseProtocolIEs],
+    } }
     impl ERABSetupResponse {
         pub fn new(protocol_ies: ERABSetupResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -28143,7 +29570,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeModifiedItemBearerModInd")]
     #[non_exhaustive]
     pub struct ERABToBeModifiedItemBearerModInd {
@@ -28156,6 +29583,16 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABToBeModifiedItemBearerModIndIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABToBeModifiedItemBearerModInd, "E-RABToBeModifiedItemBearerModInd" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "dL-GTP-TEID")]
+        d_l_gtp_teid: [GTPTEID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABToBeModifiedItemBearerModIndIEExtensions>],
+    } }
     impl ERABToBeModifiedItemBearerModInd {
         pub fn new(
             e_rab_id: ERABID,
@@ -28260,7 +29697,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeModifiedItemBearerModReq")]
     #[non_exhaustive]
     pub struct ERABToBeModifiedItemBearerModReq {
@@ -28273,6 +29710,16 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABToBeModifiedItemBearerModReqIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABToBeModifiedItemBearerModReq, "E-RABToBeModifiedItemBearerModReq" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "e-RABLevelQoSParameters")]
+        e_rablevel_qo_sparameters: [ERABLevelQoSParameters],
+        #[rasn(identifier = "nAS-PDU")]
+        n_as_pdu: [NASPDU],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABToBeModifiedItemBearerModReqIEExtensions>],
+    } }
     impl ERABToBeModifiedItemBearerModReq {
         pub fn new(
             e_rab_id: ERABID,
@@ -28558,7 +30005,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeSetupItemBearerSUReq")]
     #[non_exhaustive]
     pub struct ERABToBeSetupItemBearerSUReq {
@@ -28575,6 +30022,20 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABToBeSetupItemBearerSUReqIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABToBeSetupItemBearerSUReq, "E-RABToBeSetupItemBearerSUReq" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "e-RABlevelQoSParameters")]
+        e_rablevel_qo_sparameters: [ERABLevelQoSParameters],
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "gTP-TEID")]
+        g_tp_teid: [GTPTEID],
+        #[rasn(identifier = "nAS-PDU")]
+        n_as_pdu: [NASPDU],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABToBeSetupItemBearerSUReqIEExtensions>],
+    } }
     impl ERABToBeSetupItemBearerSUReq {
         pub fn new(
             e_rab_id: ERABID,
@@ -28684,7 +30145,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeSetupItemCtxtSUReq")]
     #[non_exhaustive]
     pub struct ERABToBeSetupItemCtxtSUReq {
@@ -28701,6 +30162,20 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABToBeSetupItemCtxtSUReqIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABToBeSetupItemCtxtSUReq, "E-RABToBeSetupItemCtxtSUReq" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "e-RABlevelQoSParameters")]
+        e_rablevel_qo_sparameters: [ERABLevelQoSParameters],
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "gTP-TEID")]
+        g_tp_teid: [GTPTEID],
+        #[rasn(identifier = "nAS-PDU")]
+        n_as_pdu: [Option<NASPDU>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABToBeSetupItemCtxtSUReqIEExtensions>],
+    } }
     impl ERABToBeSetupItemCtxtSUReq {
         pub fn new(
             e_rab_id: ERABID,
@@ -28810,7 +30285,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeSetupItemHOReq")]
     #[non_exhaustive]
     pub struct ERABToBeSetupItemHOReq {
@@ -28825,6 +30300,18 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABToBeSetupItemHOReqIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABToBeSetupItemHOReq, "E-RABToBeSetupItemHOReq" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "gTP-TEID")]
+        g_tp_teid: [GTPTEID],
+        #[rasn(identifier = "e-RABlevelQosParameters")]
+        e_rablevel_qos_parameters: [ERABLevelQoSParameters],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABToBeSetupItemHOReqIEExtensions>],
+    } }
     impl ERABToBeSetupItemHOReq {
         pub fn new(
             e_rab_id: ERABID,
@@ -29179,7 +30666,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeSwitchedDLItem")]
     #[non_exhaustive]
     pub struct ERABToBeSwitchedDLItem {
@@ -29192,6 +30679,16 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABToBeSwitchedDLItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABToBeSwitchedDLItem, "E-RABToBeSwitchedDLItem" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "gTP-TEID")]
+        g_tp_teid: [GTPTEID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABToBeSwitchedDLItemIEExtensions>],
+    } }
     impl ERABToBeSwitchedDLItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -29378,7 +30875,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeSwitchedULItem")]
     #[non_exhaustive]
     pub struct ERABToBeSwitchedULItem {
@@ -29391,6 +30888,16 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABToBeSwitchedULItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABToBeSwitchedULItem, "E-RABToBeSwitchedULItem" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "transportLayerAddress")]
+        transport_layer_address: [TransportLayerAddress],
+        #[rasn(identifier = "gTP-TEID")]
+        g_tp_teid: [GTPTEID],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABToBeSwitchedULItemIEExtensions>],
+    } }
     impl ERABToBeSwitchedULItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -29575,7 +31082,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeUpdatedItem")]
     #[non_exhaustive]
     pub struct ERABToBeUpdatedItem {
@@ -29586,6 +31093,14 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<ERABToBeUpdatedItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { ERABToBeUpdatedItem, "E-RABToBeUpdatedItem" {
+        #[rasn(identifier = "e-RAB-ID")]
+        e_rab_id: [ERABID],
+        #[rasn(identifier = "securityIndication")]
+        security_indication: [Option<SecurityIndication>],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<ERABToBeUpdatedItemIEExtensions>],
+    } }
     impl ERABToBeUpdatedItem {
         pub fn new(
             e_rab_id: ERABID,
@@ -29770,13 +31285,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " eNB CP Relocation Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ENBCPRelocationIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ENBCPRelocationIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ENBCPRelocationIndication, "ENBCPRelocationIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ENBCPRelocationIndicationProtocolIEs],
+    } }
     impl ENBCPRelocationIndication {
         pub fn new(protocol_ies: ENBCPRelocationIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -29877,13 +31396,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " eNB Configuration Transfer"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ENBConfigurationTransfer {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ENBConfigurationTransferProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ENBConfigurationTransfer, "ENBConfigurationTransfer" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ENBConfigurationTransferProtocolIEs],
+    } }
     impl ENBConfigurationTransfer {
         pub fn new(protocol_ies: ENBConfigurationTransferProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -29982,13 +31505,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " eNB Configuration Update"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ENBConfigurationUpdate {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ENBConfigurationUpdateProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ENBConfigurationUpdate, "ENBConfigurationUpdate" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ENBConfigurationUpdateProtocolIEs],
+    } }
     impl ENBConfigurationUpdate {
         pub fn new(protocol_ies: ENBConfigurationUpdateProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -30083,13 +31610,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " eNB Configuration Update Acknowledge"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ENBConfigurationUpdateAcknowledge {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ENBConfigurationUpdateAcknowledgeProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ENBConfigurationUpdateAcknowledge, "ENBConfigurationUpdateAcknowledge" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ENBConfigurationUpdateAcknowledgeProtocolIEs],
+    } }
     impl ENBConfigurationUpdateAcknowledge {
         pub fn new(protocol_ies: ENBConfigurationUpdateAcknowledgeProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -30185,13 +31716,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " eNB Configuration Update Failure"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ENBConfigurationUpdateFailure {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ENBConfigurationUpdateFailureProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ENBConfigurationUpdateFailure, "ENBConfigurationUpdateFailure" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ENBConfigurationUpdateFailureProtocolIEs],
+    } }
     impl ENBConfigurationUpdateFailure {
         pub fn new(protocol_ies: ENBConfigurationUpdateFailureProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -30292,13 +31827,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " eNB Direct Information Transfer"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ENBDirectInformationTransfer {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ENBDirectInformationTransferProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ENBDirectInformationTransfer, "ENBDirectInformationTransfer" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ENBDirectInformationTransferProtocolIEs],
+    } }
     impl ENBDirectInformationTransfer {
         pub fn new(protocol_ies: ENBDirectInformationTransferProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -30397,13 +31936,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " eNB Early Status Transfer"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ENBEarlyStatusTransfer {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ENBEarlyStatusTransferProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ENBEarlyStatusTransfer, "ENBEarlyStatusTransfer" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ENBEarlyStatusTransferProtocolIEs],
+    } }
     impl ENBEarlyStatusTransfer {
         pub fn new(protocol_ies: ENBEarlyStatusTransferProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -30497,13 +32040,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " eNB Status Transfer"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ENBStatusTransfer {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ENBStatusTransferProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ENBStatusTransfer, "ENBStatusTransfer" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ENBStatusTransferProtocolIEs],
+    } }
     impl ENBStatusTransfer {
         pub fn new(protocol_ies: ENBStatusTransferProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -30597,13 +32144,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Error Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ErrorIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ErrorIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ErrorIndication, "ErrorIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ErrorIndicationProtocolIEs],
+    } }
     impl ErrorIndication {
         pub fn new(protocol_ies: ErrorIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -30697,13 +32248,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Handover Cancel"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct HandoverCancel {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: HandoverCancelProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { HandoverCancel, "HandoverCancel" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [HandoverCancelProtocolIEs],
+    } }
     impl HandoverCancel {
         pub fn new(protocol_ies: HandoverCancelProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -30799,13 +32354,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Handover Cancel Request Acknowledge"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct HandoverCancelAcknowledge {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: HandoverCancelAcknowledgeProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { HandoverCancelAcknowledge, "HandoverCancelAcknowledge" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [HandoverCancelAcknowledgeProtocolIEs],
+    } }
     impl HandoverCancelAcknowledge {
         pub fn new(protocol_ies: HandoverCancelAcknowledgeProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -30894,13 +32453,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Handover Command"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct HandoverCommand {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: HandoverCommandProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { HandoverCommand, "HandoverCommand" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [HandoverCommandProtocolIEs],
+    } }
     impl HandoverCommand {
         pub fn new(protocol_ies: HandoverCommandProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -30989,13 +32552,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Handover Failure"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct HandoverFailure {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: HandoverFailureProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { HandoverFailure, "HandoverFailure" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [HandoverFailureProtocolIEs],
+    } }
     impl HandoverFailure {
         pub fn new(protocol_ies: HandoverFailureProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -31089,13 +32656,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Handover Notify"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct HandoverNotify {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: HandoverNotifyProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { HandoverNotify, "HandoverNotify" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [HandoverNotifyProtocolIEs],
+    } }
     impl HandoverNotify {
         pub fn new(protocol_ies: HandoverNotifyProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -31191,13 +32762,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Handover Preparation Failure"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct HandoverPreparationFailure {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: HandoverPreparationFailureProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { HandoverPreparationFailure, "HandoverPreparationFailure" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [HandoverPreparationFailureProtocolIEs],
+    } }
     impl HandoverPreparationFailure {
         pub fn new(protocol_ies: HandoverPreparationFailureProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -31291,13 +32866,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Handover Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct HandoverRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: HandoverRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { HandoverRequest, "HandoverRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [HandoverRequestProtocolIEs],
+    } }
     impl HandoverRequest {
         pub fn new(protocol_ies: HandoverRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -31393,13 +32972,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Handover Request Acknowledge"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct HandoverRequestAcknowledge {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: HandoverRequestAcknowledgeProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { HandoverRequestAcknowledge, "HandoverRequestAcknowledge" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [HandoverRequestAcknowledgeProtocolIEs],
+    } }
     impl HandoverRequestAcknowledge {
         pub fn new(protocol_ies: HandoverRequestAcknowledgeProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -31493,13 +33076,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Handover Required"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct HandoverRequired {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: HandoverRequiredProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { HandoverRequired, "HandoverRequired" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [HandoverRequiredProtocolIEs],
+    } }
     impl HandoverRequired {
         pub fn new(protocol_ies: HandoverRequiredProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -31593,13 +33180,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Handover Success"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct HandoverSuccess {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: HandoverSuccessProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { HandoverSuccess, "HandoverSuccess" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [HandoverSuccessProtocolIEs],
+    } }
     impl HandoverSuccess {
         pub fn new(protocol_ies: HandoverSuccessProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -31695,13 +33286,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Initial Context Setup Failure"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct InitialContextSetupFailure {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: InitialContextSetupFailureProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { InitialContextSetupFailure, "InitialContextSetupFailure" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [InitialContextSetupFailureProtocolIEs],
+    } }
     impl InitialContextSetupFailure {
         pub fn new(protocol_ies: InitialContextSetupFailureProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -31802,13 +33397,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Initial Context Setup Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct InitialContextSetupRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: InitialContextSetupRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { InitialContextSetupRequest, "InitialContextSetupRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [InitialContextSetupRequestProtocolIEs],
+    } }
     impl InitialContextSetupRequest {
         pub fn new(protocol_ies: InitialContextSetupRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -31904,13 +33503,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Initial Context Setup Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct InitialContextSetupResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: InitialContextSetupResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { InitialContextSetupResponse, "InitialContextSetupResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [InitialContextSetupResponseProtocolIEs],
+    } }
     impl InitialContextSetupResponse {
         pub fn new(protocol_ies: InitialContextSetupResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -31999,13 +33602,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " INITIAL UE MESSAGE"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct InitialUEMessage {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: InitialUEMessageProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { InitialUEMessage, "InitialUEMessage" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [InitialUEMessageProtocolIEs],
+    } }
     impl InitialUEMessage {
         pub fn new(protocol_ies: InitialUEMessageProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -32114,13 +33721,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Kill Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct KillRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: KillRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { KillRequest, "KillRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [KillRequestProtocolIEs],
+    } }
     impl KillRequest {
         pub fn new(protocol_ies: KillRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -32209,13 +33820,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Kill Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct KillResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: KillResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { KillResponse, "KillResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [KillResponseProtocolIEs],
+    } }
     impl KillResponse {
         pub fn new(protocol_ies: KillResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -32304,13 +33919,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Location Report"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct LocationReport {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: LocationReportProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { LocationReport, "LocationReport" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [LocationReportProtocolIEs],
+    } }
     impl LocationReport {
         pub fn new(protocol_ies: LocationReportProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -32411,13 +34030,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Location Reporting Control"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct LocationReportingControl {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: LocationReportingControlProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { LocationReportingControl, "LocationReportingControl" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [LocationReportingControlProtocolIEs],
+    } }
     impl LocationReportingControl {
         pub fn new(protocol_ies: LocationReportingControlProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -32512,13 +34135,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Location Report Failure Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct LocationReportingFailureIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: LocationReportingFailureIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { LocationReportingFailureIndication, "LocationReportingFailureIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [LocationReportingFailureIndicationProtocolIEs],
+    } }
     impl LocationReportingFailureIndication {
         pub fn new(protocol_ies: LocationReportingFailureIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -32614,13 +34241,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " MME CP Relocation Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct MMECPRelocationIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: MMECPRelocationIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { MMECPRelocationIndication, "MMECPRelocationIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [MMECPRelocationIndicationProtocolIEs],
+    } }
     impl MMECPRelocationIndication {
         pub fn new(protocol_ies: MMECPRelocationIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -32721,13 +34352,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " MME Configuration Transfer"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct MMEConfigurationTransfer {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: MMEConfigurationTransferProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { MMEConfigurationTransfer, "MMEConfigurationTransfer" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [MMEConfigurationTransferProtocolIEs],
+    } }
     impl MMEConfigurationTransfer {
         pub fn new(protocol_ies: MMEConfigurationTransferProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -32826,13 +34461,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " MME Configuration Update"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct MMEConfigurationUpdate {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: MMEConfigurationUpdateProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { MMEConfigurationUpdate, "MMEConfigurationUpdate" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [MMEConfigurationUpdateProtocolIEs],
+    } }
     impl MMEConfigurationUpdate {
         pub fn new(protocol_ies: MMEConfigurationUpdateProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -32927,13 +34566,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " MME Configuration Update Acknowledge"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct MMEConfigurationUpdateAcknowledge {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: MMEConfigurationUpdateAcknowledgeProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { MMEConfigurationUpdateAcknowledge, "MMEConfigurationUpdateAcknowledge" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [MMEConfigurationUpdateAcknowledgeProtocolIEs],
+    } }
     impl MMEConfigurationUpdateAcknowledge {
         pub fn new(protocol_ies: MMEConfigurationUpdateAcknowledgeProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -33029,13 +34672,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " MME Configuration Update Failure"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct MMEConfigurationUpdateFailure {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: MMEConfigurationUpdateFailureProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { MMEConfigurationUpdateFailure, "MMEConfigurationUpdateFailure" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [MMEConfigurationUpdateFailureProtocolIEs],
+    } }
     impl MMEConfigurationUpdateFailure {
         pub fn new(protocol_ies: MMEConfigurationUpdateFailureProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -33136,13 +34783,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " MME Direct Information Transfer"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct MMEDirectInformationTransfer {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: MMEDirectInformationTransferProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { MMEDirectInformationTransfer, "MMEDirectInformationTransfer" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [MMEDirectInformationTransferProtocolIEs],
+    } }
     impl MMEDirectInformationTransfer {
         pub fn new(protocol_ies: MMEDirectInformationTransferProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -33241,13 +34892,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " MME Early Status Transfer"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct MMEEarlyStatusTransfer {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: MMEEarlyStatusTransferProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { MMEEarlyStatusTransfer, "MMEEarlyStatusTransfer" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [MMEEarlyStatusTransferProtocolIEs],
+    } }
     impl MMEEarlyStatusTransfer {
         pub fn new(protocol_ies: MMEEarlyStatusTransferProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -33341,13 +34996,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " MME Status Transfer"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct MMEStatusTransfer {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: MMEStatusTransferProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { MMEStatusTransfer, "MMEStatusTransfer" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [MMEStatusTransferProtocolIEs],
+    } }
     impl MMEStatusTransfer {
         pub fn new(protocol_ies: MMEStatusTransferProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -33441,13 +35100,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " NAS DELIVERY INDICATION"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct NASDeliveryIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: NASDeliveryIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { NASDeliveryIndication, "NASDeliveryIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [NASDeliveryIndicationProtocolIEs],
+    } }
     impl NASDeliveryIndication {
         pub fn new(protocol_ies: NASDeliveryIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -33543,13 +35206,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " NAS NON DELIVERY INDICATION"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct NASNonDeliveryIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: NASNonDeliveryIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { NASNonDeliveryIndication, "NASNonDeliveryIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [NASNonDeliveryIndicationProtocolIEs],
+    } }
     impl NASNonDeliveryIndication {
         pub fn new(protocol_ies: NASNonDeliveryIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -33643,13 +35310,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Overload Start"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct OverloadStart {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: OverloadStartProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { OverloadStart, "OverloadStart" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [OverloadStartProtocolIEs],
+    } }
     impl OverloadStart {
         pub fn new(protocol_ies: OverloadStartProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -33738,13 +35409,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Overload Stop"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct OverloadStop {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: OverloadStopProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { OverloadStop, "OverloadStop" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [OverloadStopProtocolIEs],
+    } }
     impl OverloadStop {
         pub fn new(protocol_ies: OverloadStopProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -33838,13 +35513,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " PWS Failure Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PWSFailureIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: PWSFailureIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { PWSFailureIndication, "PWSFailureIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [PWSFailureIndicationProtocolIEs],
+    } }
     impl PWSFailureIndication {
         pub fn new(protocol_ies: PWSFailureIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -33943,13 +35622,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " PWS Restart Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PWSRestartIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: PWSRestartIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { PWSRestartIndication, "PWSRestartIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [PWSRestartIndicationProtocolIEs],
+    } }
     impl PWSRestartIndication {
         pub fn new(protocol_ies: PWSRestartIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -34043,13 +35726,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Paging"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct Paging {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: PagingProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { Paging, "Paging" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [PagingProtocolIEs],
+    } }
     impl Paging {
         pub fn new(protocol_ies: PagingProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -34143,13 +35830,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Path Switch Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PathSwitchRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: PathSwitchRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { PathSwitchRequest, "PathSwitchRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [PathSwitchRequestProtocolIEs],
+    } }
     impl PathSwitchRequest {
         pub fn new(protocol_ies: PathSwitchRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -34245,13 +35936,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Path Switch Request Acknowledge"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PathSwitchRequestAcknowledge {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: PathSwitchRequestAcknowledgeProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { PathSwitchRequestAcknowledge, "PathSwitchRequestAcknowledge" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [PathSwitchRequestAcknowledgeProtocolIEs],
+    } }
     impl PathSwitchRequestAcknowledge {
         pub fn new(protocol_ies: PathSwitchRequestAcknowledgeProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -34347,13 +36042,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Path Switch Request Failure"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PathSwitchRequestFailure {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: PathSwitchRequestFailureProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { PathSwitchRequestFailure, "PathSwitchRequestFailure" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [PathSwitchRequestFailureProtocolIEs],
+    } }
     impl PathSwitchRequestFailure {
         pub fn new(protocol_ies: PathSwitchRequestFailureProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -34438,13 +36137,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Private Message"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct PrivateMessage {
         #[rasn(identifier = "privateIEs")]
         pub private_ies: PrivateMessagePrivateIEs,
     }
+    crate::per::decode_extensible_sequence! { PrivateMessage, "PrivateMessage" {
+        #[rasn(identifier = "privateIEs")]
+        private_ies: [PrivateMessagePrivateIEs],
+    } }
     impl PrivateMessage {
         pub fn new(private_ies: PrivateMessagePrivateIEs) -> Self {
             Self { private_ies }
@@ -34524,13 +36227,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " REROUTE NAS REQUEST"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct RerouteNASRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: RerouteNASRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { RerouteNASRequest, "RerouteNASRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [RerouteNASRequestProtocolIEs],
+    } }
     impl RerouteNASRequest {
         pub fn new(protocol_ies: RerouteNASRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -34615,13 +36322,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Reset"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct Reset {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ResetProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { Reset, "Reset" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ResetProtocolIEs],
+    } }
     impl Reset {
         pub fn new(protocol_ies: ResetProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -34701,13 +36412,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Reset Acknowledge"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct ResetAcknowledge {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: ResetAcknowledgeProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { ResetAcknowledge, "ResetAcknowledge" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [ResetAcknowledgeProtocolIEs],
+    } }
     impl ResetAcknowledge {
         pub fn new(protocol_ies: ResetAcknowledgeProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -34818,13 +36533,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Retrieve UE Information"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct RetrieveUEInformation {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: RetrieveUEInformationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { RetrieveUEInformation, "RetrieveUEInformation" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [RetrieveUEInformationProtocolIEs],
+    } }
     impl RetrieveUEInformation {
         pub fn new(protocol_ies: RetrieveUEInformationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -34904,13 +36623,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " S1 Removal Failure"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct S1RemovalFailure {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: S1RemovalFailureProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { S1RemovalFailure, "S1RemovalFailure" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [S1RemovalFailureProtocolIEs],
+    } }
     impl S1RemovalFailure {
         pub fn new(protocol_ies: S1RemovalFailureProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -34995,13 +36718,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " S1 Removal Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct S1RemovalRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: S1RemovalRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { S1RemovalRequest, "S1RemovalRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [S1RemovalRequestProtocolIEs],
+    } }
     impl S1RemovalRequest {
         pub fn new(protocol_ies: S1RemovalRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -35081,13 +36808,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " S1 Removal Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct S1RemovalResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: S1RemovalResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { S1RemovalResponse, "S1RemovalResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [S1RemovalResponseProtocolIEs],
+    } }
     impl S1RemovalResponse {
         pub fn new(protocol_ies: S1RemovalResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -35167,13 +36898,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " S1 Setup Failure"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct S1SetupFailure {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: S1SetupFailureProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { S1SetupFailure, "S1SetupFailure" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [S1SetupFailureProtocolIEs],
+    } }
     impl S1SetupFailure {
         pub fn new(protocol_ies: S1SetupFailureProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -35258,13 +36993,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " S1 Setup Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct S1SetupRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: S1SetupRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { S1SetupRequest, "S1SetupRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [S1SetupRequestProtocolIEs],
+    } }
     impl S1SetupRequest {
         pub fn new(protocol_ies: S1SetupRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -35344,13 +37083,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " S1 Setup Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct S1SetupResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: S1SetupResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { S1SetupResponse, "S1SetupResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [S1SetupResponseProtocolIEs],
+    } }
     impl S1SetupResponse {
         pub fn new(protocol_ies: S1SetupResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -35437,13 +37180,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Secondary RAT Data Usage Report"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct SecondaryRATDataUsageReport {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: SecondaryRATDataUsageReportProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { SecondaryRATDataUsageReport, "SecondaryRATDataUsageReport" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [SecondaryRATDataUsageReportProtocolIEs],
+    } }
     impl SecondaryRATDataUsageReport {
         pub fn new(protocol_ies: SecondaryRATDataUsageReportProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -35523,7 +37270,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self(values))
         }
     }
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TAIItem {
@@ -35532,6 +37279,12 @@ pub mod s1_ap_pdu_contents {
         #[rasn(identifier = "iE-Extensions")]
         pub i_e_extensions: Option<TAIItemIEExtensions>,
     }
+    crate::per::decode_extensible_sequence! { TAIItem, "TAIItem" {
+        #[rasn(identifier = "tAI")]
+        t_ai: [TAI],
+        #[rasn(identifier = "iE-Extensions")]
+        i_e_extensions: [Option<TAIItemIEExtensions>],
+    } }
     impl TAIItem {
         pub fn new(t_ai: TAI, i_e_extensions: Option<TAIItemIEExtensions>) -> Self {
             Self {
@@ -35687,13 +37440,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Trace Failure Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TraceFailureIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: TraceFailureIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { TraceFailureIndication, "TraceFailureIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [TraceFailureIndicationProtocolIEs],
+    } }
     impl TraceFailureIndication {
         pub fn new(protocol_ies: TraceFailureIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -35778,13 +37535,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Trace Start"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct TraceStart {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: TraceStartProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { TraceStart, "TraceStart" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [TraceStartProtocolIEs],
+    } }
     impl TraceStart {
         pub fn new(protocol_ies: TraceStartProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -36034,13 +37795,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Capability Info Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UECapabilityInfoIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UECapabilityInfoIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UECapabilityInfoIndication, "UECapabilityInfoIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UECapabilityInfoIndicationProtocolIEs],
+    } }
     impl UECapabilityInfoIndication {
         pub fn new(protocol_ies: UECapabilityInfoIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -36127,13 +37892,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Modification Confirm"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextModificationConfirm {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextModificationConfirmProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextModificationConfirm, "UEContextModificationConfirm" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextModificationConfirmProtocolIEs],
+    } }
     impl UEContextModificationConfirm {
         pub fn new(protocol_ies: UEContextModificationConfirmProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -36220,13 +37989,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Modification Failure"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextModificationFailure {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextModificationFailureProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextModificationFailure, "UEContextModificationFailure" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextModificationFailureProtocolIEs],
+    } }
     impl UEContextModificationFailure {
         pub fn new(protocol_ies: UEContextModificationFailureProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -36318,13 +38091,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Modification Indication"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextModificationIndication {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextModificationIndicationProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextModificationIndication, "UEContextModificationIndication" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextModificationIndicationProtocolIEs],
+    } }
     impl UEContextModificationIndication {
         pub fn new(protocol_ies: UEContextModificationIndicationProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -36416,13 +38193,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Modification Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextModificationRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextModificationRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextModificationRequest, "UEContextModificationRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextModificationRequestProtocolIEs],
+    } }
     impl UEContextModificationRequest {
         pub fn new(protocol_ies: UEContextModificationRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -36509,13 +38290,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Modification Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextModificationResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextModificationResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextModificationResponse, "UEContextModificationResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextModificationResponseProtocolIEs],
+    } }
     impl UEContextModificationResponse {
         pub fn new(protocol_ies: UEContextModificationResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -36602,13 +38387,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Release Command"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextReleaseCommand {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextReleaseCommandProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextReleaseCommand, "UEContextReleaseCommand" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextReleaseCommandProtocolIEs],
+    } }
     impl UEContextReleaseCommand {
         pub fn new(protocol_ies: UEContextReleaseCommandProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -36695,13 +38484,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Release Complete"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextReleaseComplete {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextReleaseCompleteProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextReleaseComplete, "UEContextReleaseComplete" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextReleaseCompleteProtocolIEs],
+    } }
     impl UEContextReleaseComplete {
         pub fn new(protocol_ies: UEContextReleaseCompleteProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -36793,13 +38586,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Release Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextReleaseRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextReleaseRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextReleaseRequest, "UEContextReleaseRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextReleaseRequestProtocolIEs],
+    } }
     impl UEContextReleaseRequest {
         pub fn new(protocol_ies: UEContextReleaseRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -36884,13 +38681,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Resume Failure"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextResumeFailure {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextResumeFailureProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextResumeFailure, "UEContextResumeFailure" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextResumeFailureProtocolIEs],
+    } }
     impl UEContextResumeFailure {
         pub fn new(protocol_ies: UEContextResumeFailureProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -36980,13 +38781,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Resume Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextResumeRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextResumeRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextResumeRequest, "UEContextResumeRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextResumeRequestProtocolIEs],
+    } }
     impl UEContextResumeRequest {
         pub fn new(protocol_ies: UEContextResumeRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -37073,13 +38878,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Resume Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextResumeResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextResumeResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextResumeResponse, "UEContextResumeResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextResumeResponseProtocolIEs],
+    } }
     impl UEContextResumeResponse {
         pub fn new(protocol_ies: UEContextResumeResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -37171,13 +38980,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Suspend Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextSuspendRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextSuspendRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextSuspendRequest, "UEContextSuspendRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextSuspendRequestProtocolIEs],
+    } }
     impl UEContextSuspendRequest {
         pub fn new(protocol_ies: UEContextSuspendRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -37264,13 +39077,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Context Suspend Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEContextSuspendResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEContextSuspendResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEContextSuspendResponse, "UEContextSuspendResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEContextSuspendResponseProtocolIEs],
+    } }
     impl UEContextSuspendResponse {
         pub fn new(protocol_ies: UEContextSuspendResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -37354,13 +39171,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Information Transfer"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UEInformationTransfer {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UEInformationTransferProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UEInformationTransfer, "UEInformationTransfer" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UEInformationTransferProtocolIEs],
+    } }
     impl UEInformationTransfer {
         pub fn new(protocol_ies: UEInformationTransferProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -37451,13 +39272,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Radio Capability ID Mapping Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UERadioCapabilityIDMappingRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UERadioCapabilityIDMappingRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UERadioCapabilityIDMappingRequest, "UERadioCapabilityIDMappingRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UERadioCapabilityIDMappingRequestProtocolIEs],
+    } }
     impl UERadioCapabilityIDMappingRequest {
         pub fn new(protocol_ies: UERadioCapabilityIDMappingRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -37543,13 +39368,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Radio Capability ID Mapping Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UERadioCapabilityIDMappingResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UERadioCapabilityIDMappingResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UERadioCapabilityIDMappingResponse, "UERadioCapabilityIDMappingResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UERadioCapabilityIDMappingResponseProtocolIEs],
+    } }
     impl UERadioCapabilityIDMappingResponse {
         pub fn new(protocol_ies: UERadioCapabilityIDMappingResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -37641,13 +39470,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Radio Capability Match Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UERadioCapabilityMatchRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UERadioCapabilityMatchRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UERadioCapabilityMatchRequest, "UERadioCapabilityMatchRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UERadioCapabilityMatchRequestProtocolIEs],
+    } }
     impl UERadioCapabilityMatchRequest {
         pub fn new(protocol_ies: UERadioCapabilityMatchRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -37734,13 +39567,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UE Radio Capability Match Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UERadioCapabilityMatchResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UERadioCapabilityMatchResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UERadioCapabilityMatchResponse, "UERadioCapabilityMatchResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UERadioCapabilityMatchResponseProtocolIEs],
+    } }
     impl UERadioCapabilityMatchResponse {
         pub fn new(protocol_ies: UERadioCapabilityMatchResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -37822,13 +39659,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UPLINK NAS TRANSPORT"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UplinkNASTransport {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UplinkNASTransportProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UplinkNASTransport, "UplinkNASTransport" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UplinkNASTransportProtocolIEs],
+    } }
     impl UplinkNASTransport {
         pub fn new(protocol_ies: UplinkNASTransportProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -37914,13 +39755,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UPLINK NON UE ASSOCIATED LPPA TRANSPORT"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UplinkNonUEAssociatedLPPaTransport {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UplinkNonUEAssociatedLPPaTransportProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UplinkNonUEAssociatedLPPaTransport, "UplinkNonUEAssociatedLPPaTransport" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UplinkNonUEAssociatedLPPaTransportProtocolIEs],
+    } }
     impl UplinkNonUEAssociatedLPPaTransport {
         pub fn new(protocol_ies: UplinkNonUEAssociatedLPPaTransportProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -38012,13 +39857,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Uplink S1 CDMA2000 Tunnelling"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UplinkS1cdma2000tunnelling {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UplinkS1cdma2000tunnellingProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UplinkS1cdma2000tunnelling, "UplinkS1cdma2000tunnelling" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UplinkS1cdma2000tunnellingProtocolIEs],
+    } }
     impl UplinkS1cdma2000tunnelling {
         pub fn new(protocol_ies: UplinkS1cdma2000tunnellingProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -38105,13 +39954,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " UPLINK UE ASSOCIATED LPPA TRANSPORT"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct UplinkUEAssociatedLPPaTransport {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: UplinkUEAssociatedLPPaTransportProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { UplinkUEAssociatedLPPaTransport, "UplinkUEAssociatedLPPaTransport" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [UplinkUEAssociatedLPPaTransportProtocolIEs],
+    } }
     impl UplinkUEAssociatedLPPaTransport {
         pub fn new(protocol_ies: UplinkUEAssociatedLPPaTransportProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -38203,13 +40056,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Write-Replace Warning Request"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct WriteReplaceWarningRequest {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: WriteReplaceWarningRequestProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { WriteReplaceWarningRequest, "WriteReplaceWarningRequest" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [WriteReplaceWarningRequestProtocolIEs],
+    } }
     impl WriteReplaceWarningRequest {
         pub fn new(protocol_ies: WriteReplaceWarningRequestProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -38296,13 +40153,17 @@ pub mod s1_ap_pdu_contents {
     #[doc = " Write-Replace Warning Response"]
     #[doc = ""]
     #[doc = " **************************************************************"]
-    #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
+    #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
     pub struct WriteReplaceWarningResponse {
         #[rasn(identifier = "protocolIEs")]
         pub protocol_ies: WriteReplaceWarningResponseProtocolIEs,
     }
+    crate::per::decode_extensible_sequence! { WriteReplaceWarningResponse, "WriteReplaceWarningResponse" {
+        #[rasn(identifier = "protocolIEs")]
+        protocol_ies: [WriteReplaceWarningResponseProtocolIEs],
+    } }
     impl WriteReplaceWarningResponse {
         pub fn new(protocol_ies: WriteReplaceWarningResponseProtocolIEs) -> Self {
             Self { protocol_ies }
@@ -43514,7 +45375,7 @@ impl S1APPDU {
     }
     /// Decode an S1AP PDU from Aligned PER bytes.
     pub fn decode(bytes: &[u8]) -> Result<Self, rasn::error::DecodeError> {
-        rasn::aper::decode(bytes)
+        decode_complete(bytes)
     }
     /// Decode the typed message held by this PDU's open type.
     pub fn decode_value<T: rasn::Decode>(&self) -> Result<T, rasn::error::DecodeError> {
@@ -43523,7 +45384,7 @@ impl S1APPDU {
             S1APPDU::successfulOutcome(message) => &message.value,
             S1APPDU::unsuccessfulOutcome(message) => &message.value,
         };
-        rasn::aper::decode(value.as_bytes())
+        decode_open_type(value)
     }
     /// Return the procedure code of this PDU.
     pub fn procedure_code(&self) -> u8 {
@@ -43890,5 +45751,23 @@ pub fn encode_open_type<T: rasn::Encode>(
 pub fn decode_open_type<T: rasn::Decode>(
     value: &rasn::types::Any,
 ) -> Result<T, rasn::error::DecodeError> {
-    rasn::aper::decode(value.as_bytes())
+    decode_complete(value.as_bytes())
+}
+fn decode_complete<T: rasn::Decode>(bytes: &[u8]) -> Result<T, rasn::error::DecodeError> {
+    if bytes.is_empty() {
+        return Err(<rasn::error::DecodeError as rasn::de::Error>::custom(
+            "APER value must contain a complete encoding",
+            rasn::Codec::Aper,
+        ));
+    }
+    let (decoded, remainder) = rasn::aper::decode_with_remainder(bytes)?;
+    // A zero-bit field-list has exactly one zero octet as its complete encoding.
+    let zero_bit_encoding = bytes == [0] && remainder == bytes;
+    if !remainder.is_empty() && !zero_bit_encoding {
+        return Err(<rasn::error::DecodeError as rasn::de::Error>::custom(
+            "APER complete encoding has trailing whole octets",
+            rasn::Codec::Aper,
+        ));
+    }
+    Ok(decoded)
 }
