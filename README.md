@@ -37,6 +37,8 @@ shape, macros, generated-source release model, and example workflow for TS 38.41
 oxirush-s1ap = "0.3"
 ```
 
+The minimum supported Rust version is 1.88.
+
 ```rust
 use oxirush_s1ap::{build_s1ap, s1ap::*};
 
@@ -133,9 +135,17 @@ public codec traits:
 - fixed-size `BIT STRING` values longer than 16 bits, which are
   octet-aligned;
 - `OCTET STRING` and `BIT STRING` components and alternatives with a
-  two-octet length determinant, which take the types of the `sized` module.
+  two-octet length determinant, which take the types of the `sized` module;
+- extensible `SEQUENCE` values, whose decoders consume and skip unknown
+  future additions.
 
 All other values use rasn-derived codecs unchanged.
+
+`S1AP_PDU::decode`, `decode_value`, and typed IE extraction reject incomplete
+values and trailing whole octets. Outer PDUs retain opaque open-type bytes;
+decoding and re-encoding a typed value with unknown future `SEQUENCE`
+additions drops those additions. The codec does not enforce procedure state
+or all mandatory and conditional IE presence rules; callers enforce those.
 
 ## Key types
 
