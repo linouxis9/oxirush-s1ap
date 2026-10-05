@@ -28,6 +28,8 @@ shape, macros, generated-source release model, and example workflow for TS 38.41
   kinds.
 - Protocol helpers for PLMN, core-network, tracking-area, cell, and radio-node
   identities, plus bit strings and UE security capabilities.
+- Optional `inspect` feature: a decoded PDU as a JSON tree that can be edited
+  and encoded again. See [Inspection](#inspection).
 
 ## Quick start
 
@@ -98,10 +100,43 @@ let algorithm_mask = bytes_to_bitvec(&[0xe0]);
 let capabilities = ue_security_capabilities(&[0xe0, 0xe0]);
 ```
 
+## Inspection
+
+The `inspect` feature turns a decoded PDU into a `serde_json` tree in the
+ASN.1 JSON encoding (JER), and a tree into a PDU:
+
+```rust
+use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+
+fn edit(pdu: &S1AP_PDU) -> Result<S1AP_PDU, String> {
+    let mut tree = inspect::inspect_pdu(pdu)?;
+    tree["message"]["protocolIEs"][1]["value"] = 9.into();
+    inspect::encode_pdu(&tree)
+}
+```
+
+What is not edited keeps the octets received, and repeated IEs keep their
+order. An IE that is unknown or does not decode stays as its octets beside a
+`_decode_error`; a PDU whose message does not decode is an error. An edit is
+refused when the value around it does not encode back to the octets received,
+as with an unknown extension addition, and when it has a member that the ASN.1
+type does not have. The module documentation lists the members of the tree and
+the rules of an edit.
+
+Limits:
+
+- An IE with an integer of 2^63 or more stays as its octets, and one with an
+  extensible fixed-size `BIT STRING` of another size cannot be edited as a
+  typed value: rasn's JER does not represent them.
+- The feature compiles JER and APER code for every type of the protocol. A
+  debug build of the crate takes about three times as long as without it and
+  several gigabytes of memory.
+
 ## Code generation
 
-Cargo compiles the checked-in `src/s1ap.rs`. Normal builds, docs.rs, and
-crates.io package verification do not run a generator. The published crate excludes the generator and the ASN.1 inputs.
+Cargo compiles the checked-in `src/s1ap.rs` and `src/inspect_registry.rs`.
+Normal builds, docs.rs, and crates.io package verification do not run a
+generator. The published crate excludes the generator and the ASN.1 inputs.
 
 For maintainers, `build/` holds the generator, a package of its own whose
 lockfile pins `rasn-compiler`. It reads the six `.asn` modules in `s1ap/`,
@@ -112,13 +147,14 @@ the crate directory:
 
 ```sh
 CARGO="$(command -v cargo)" cargo run --locked --manifest-path build/Cargo.toml
-rustfmt --edition 2024 src/s1ap.rs
+rustfmt --edition 2024 src/s1ap.rs src/inspect_registry.rs
 ```
 
 `rasn-compiler` finds rustfmt through `CARGO`. To the compiler's output the
 generator adds the flat API, typed-open-type macros, procedure metadata,
-convenience methods, and `Display` implementation. Commit `src/s1ap.rs` after
-regenerating it. Do not edit it by hand.
+convenience methods, and `Display` implementation, and it writes the registry
+of the `inspect` feature. Commit both files after regenerating them. Do not
+edit them by hand.
 
 ## rasn integration
 
