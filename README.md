@@ -100,20 +100,25 @@ let capabilities = ue_security_capabilities(&[0xe0, 0xe0]);
 
 ## Code generation
 
-Cargo compiles the checked-in `src/s1ap.rs` module directly. Normal builds,
-docs.rs, and crates.io package verification do not run a generator. The
-published crate deliberately excludes both the generator and the raw ASN.1
-inputs.
+Cargo compiles the checked-in `src/s1ap.rs`. Normal builds, docs.rs, and
+crates.io package verification do not run a generator. The published crate excludes the generator and the ASN.1 inputs.
 
-For maintainers, `build/main.rs` contains the `rasn-compiler` generation
-pipeline. It reads the six locally supplied `.asn` modules in `s1ap/`, then
-adds the flat API, typed-open-type macros, procedure metadata, convenience
-methods, and `Display` implementation. The `.asn` and `.asn1` inputs are
-ignored by Git and must be obtained directly from the official 3GPP 36.413
-v19.2.0 (`36413-j20.zip`) archive before regeneration.
+For maintainers, `build/` holds the generator, a package of its own whose
+lockfile pins `rasn-compiler`. It reads the six `.asn` modules in `s1ap/`,
+which Git ignores: the ASN.1 of clause 9.3 of TS 36.413 v19.2.0, one file per
+module, taken out of the specification's document in the official
+`36413-j20.zip` archive. The repository has no step that extracts them. From
+the crate directory:
 
-Commit `src/s1ap.rs` after regenerating it. Do not edit generated bindings by
-hand.
+```sh
+CARGO="$(command -v cargo)" cargo run --locked --manifest-path build/Cargo.toml
+rustfmt --edition 2024 src/s1ap.rs
+```
+
+`rasn-compiler` finds rustfmt through `CARGO`. To the compiler's output the
+generator adds the flat API, typed-open-type macros, procedure metadata,
+convenience methods, and `Display` implementation. Commit `src/s1ap.rs` after
+regenerating it. Do not edit it by hand.
 
 ## rasn integration
 
