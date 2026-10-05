@@ -9,8 +9,7 @@ A complete LTE S1 Application Protocol (S1AP) APER codec generated from the
 [`rasn-compiler`](https://crates.io/crates/rasn-compiler) and encoded with
 [`rasn`](https://crates.io/crates/rasn).
 
-Part of [OxiRush](https://github.com/linouxis9/oxirush), a mobile-core testing
-framework. The 5G companion crate,
+The 5G companion crate,
 [`oxirush-ngap`](https://crates.io/crates/oxirush-ngap), exposes the same API
 shape, macros, generated-source release model, and example workflow for TS 38.413.
 
