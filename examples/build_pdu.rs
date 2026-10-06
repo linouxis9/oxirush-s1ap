@@ -127,18 +127,18 @@ fn main() {
     // Without macros, the same InitialContextSetupResponse (example 1) is:
     //
     //   let response = InitialContextSetupResponse::new(
-    //       InitialContextSetupResponseProtocolIEs(vec![
-    //           AnonymousInitialContextSetupResponseProtocolIEs::new(
+    //       ProtocolIEContainer(vec![
+    //           ProtocolIEField::new(
     //               ProtocolIEID(0),
     //               Criticality::ignore,
     //               encode_open_type(&MMEUES1APID(1))?,
     //           ),
-    //           AnonymousInitialContextSetupResponseProtocolIEs::new(
+    //           ProtocolIEField::new(
     //               ProtocolIEID(8),
     //               Criticality::ignore,
     //               encode_open_type(&ENBUES1APID(0))?,
     //           ),
-    //           AnonymousInitialContextSetupResponseProtocolIEs::new(
+    //           ProtocolIEField::new(
     //               ProtocolIEID(51),
     //               Criticality::ignore,
     //               encode_open_type(&erab_setup_list())?,
@@ -159,9 +159,9 @@ fn erab_setup_list() -> ERABSetupListCtxtSURes {
         GTPTEID::from([0, 0, 0, 2]),
         None,
     );
-    ERABSetupListCtxtSURes(vec![AnonymousERABSetupListCtxtSURes::new(
+    ERABSetupListCtxtSURes(vec![ProtocolIEField::new(
         ID_E_RABSETUP_ITEM_CTXT_SURES.0,
-        AnonymousERABSetupListCtxtSUResCriticality::ignore,
+        Criticality::ignore,
         encode_open_type(&item).expect("encode E-RAB setup item"),
     )])
 }
@@ -177,9 +177,9 @@ fn erab_admitted_list() -> ERABAdmittedList {
         None,
         None,
     );
-    ERABAdmittedList(vec![AnonymousERABAdmittedList::new(
+    ERABAdmittedList(vec![ProtocolIEField::new(
         ID_E_RABADMITTED_ITEM.0,
-        AnonymousERABAdmittedListCriticality::ignore,
+        Criticality::ignore,
         encode_open_type(&item).expect("encode admitted E-RAB item"),
     )])
 }
@@ -204,9 +204,9 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
         Some(NASPDU::from(nas)),
         None,
     );
-    ERABToBeSetupListCtxtSUReq(vec![AnonymousERABToBeSetupListCtxtSUReq::new(
+    ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField::new(
         ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ.0,
-        AnonymousERABToBeSetupListCtxtSUReqCriticality::reject,
+        Criticality::reject,
         encode_open_type(&item).expect("encode E-RAB item"),
     )])
 }

@@ -642,7 +642,6 @@ pub mod s1_ap_containers {
 )]
 pub mod s1_ap_ies {
     extern crate alloc;
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousAdditionalGUTIIEExtensionsCriticality;
     use super::s1_ap_common_data_types::{
         Criticality, ProcedureCode, ProtocolIEID, TriggeringMessage,
     };
@@ -698,8 +697,6 @@ pub mod s1_ap_ies {
         MAXNOOFE_NBX2_EXT_TLAS, MAXNOOFE_NBX2_GTPTLAS, MAXNOOFE_NBX2_TLAS, MAXNOOFFREQUENCIES,
         MAXNOOFTIMEPERIODS,
     };
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as AdditionalGUTIIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousAdditionalGUTIIEExtensions;
     use super::s1_ap_containers::*;
     use core::borrow::Borrow;
     use rasn::prelude::*;
@@ -780,9 +777,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "not-allowed")]
         not_allowed = 1,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousAllocationAndRetentionPriorityIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as AllocationAndRetentionPriorityIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousAllocationAndRetentionPriorityIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -880,9 +874,6 @@ pub mod s1_ap_ies {
             Self::pLMNAreaBased(value)
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousAssistanceDataForCECapableUEsIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as AssistanceDataForCECapableUEsIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousAssistanceDataForCECapableUEsIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -909,9 +900,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousAssistanceDataForPagingIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as AssistanceDataForPagingIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousAssistanceDataForPagingIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -950,9 +938,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousAssistanceDataForRecommendedCellsIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as AssistanceDataForRecommendedCellsIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousAssistanceDataForRecommendedCellsIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -990,9 +975,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "non-IP")]
         non_IP = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousBearersSubjectToDLDiscardingItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as BearersSubjectToDLDiscardingItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousBearersSubjectToDLDiscardingItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Bearers-SubjectToDLDiscarding-Item")]
     #[non_exhaustive]
@@ -1025,8 +1007,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousBearersSubjectToDLDiscardingListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousBearersSubjectToDLDiscardingList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -1035,9 +1015,6 @@ pub mod s1_ap_ies {
     )]
     pub struct BearersSubjectToDLDiscardingList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { BearersSubjectToDLDiscardingList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousBearersSubjectToEarlyStatusTransferItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as BearersSubjectToEarlyStatusTransferItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousBearersSubjectToEarlyStatusTransferItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(
         automatic_tags,
@@ -1073,8 +1050,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousBearersSubjectToEarlyStatusTransferListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousBearersSubjectToEarlyStatusTransferList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -1083,9 +1058,6 @@ pub mod s1_ap_ies {
     )]
     pub struct BearersSubjectToEarlyStatusTransferList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { BearersSubjectToEarlyStatusTransferList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousBearersSubjectToStatusTransferItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as BearersSubjectToStatusTransferItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousBearersSubjectToStatusTransferItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Bearers-SubjectToStatusTransfer-Item")]
     #[non_exhaustive]
@@ -1130,8 +1102,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousBearersSubjectToStatusTransferListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousBearersSubjectToStatusTransferList;
     #[doc = " B"]
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
@@ -1162,9 +1132,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "true")]
         R_true = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousBluetoothMeasurementConfigurationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as BluetoothMeasurementConfigurationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousBluetoothMeasurementConfigurationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -1275,9 +1242,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct CELevel(pub OctetString);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCGIIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CGIIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCGIIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -1343,9 +1307,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=16"))]
     pub struct CNTypeRestrictions(pub SequenceOf<CNTypeRestrictionsItem>);
     crate::per::sequence_of! { CNTypeRestrictions, 1, 16 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCNTypeRestrictionsItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CNTypeRestrictionsItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCNTypeRestrictionsItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CNTypeRestrictions-Item")]
     #[non_exhaustive]
@@ -1378,9 +1339,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCOUNTValueExtendedIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as COUNTValueExtendedIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCOUNTValueExtendedIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -1413,9 +1371,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCOUNTvalueIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as COUNTvalueIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCOUNTvalueIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -1448,9 +1403,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCOUNTvaluePDCPSNlength18IEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as COUNTvaluePDCPSNlength18IEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCOUNTvaluePDCPSNlength18IEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "COUNTvaluePDCP-SNlength18")]
     #[non_exhaustive]
@@ -1523,9 +1475,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=256"), identifier = "CSG-IdList")]
     pub struct CSGIdList(pub SequenceOf<CSGIdListItem>);
     crate::per::sequence_of! { CSGIdList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCSGIdListItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CSGIdListItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCSGIdListItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CSG-IdList-Item")]
     #[non_exhaustive]
@@ -1561,9 +1510,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=65535"))]
     pub struct CancelledCellinEAI(pub SequenceOf<CancelledCellinEAIItem>);
     crate::per::sequence_of! { CancelledCellinEAI, 1, 65535 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCancelledCellinEAIItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CancelledCellinEAIItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCancelledCellinEAIItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CancelledCellinEAI-Item")]
     #[non_exhaustive]
@@ -1600,9 +1546,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=65535"))]
     pub struct CancelledCellinTAI(pub SequenceOf<CancelledCellinTAIItem>);
     crate::per::sequence_of! { CancelledCellinTAI, 1, 65535 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCancelledCellinTAIItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CancelledCellinTAIItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCancelledCellinTAIItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CancelledCellinTAI-Item")]
     #[non_exhaustive]
@@ -1858,9 +1801,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct Cdma2000OneXRAND(pub OctetString);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCdma2000OneXSRVCCInfoIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as Cdma2000OneXSRVCCInfoIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCdma2000OneXSRVCCInfoIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -1927,9 +1867,6 @@ pub mod s1_ap_ies {
     pub enum CellAccessMode {
         hybrid = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCellBasedMDTIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CellBasedMDTIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCellBasedMDTIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -1956,9 +1893,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCellBasedQMCIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CellBasedQMCIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCellBasedQMCIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -1989,9 +1923,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=65535"), identifier = "CellID-Broadcast")]
     pub struct CellIDBroadcast(pub SequenceOf<CellIDBroadcastItem>);
     crate::per::sequence_of! { CellIDBroadcast, 1, 65535 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCellIDBroadcastItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CellIDBroadcastItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCellIDBroadcastItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CellID-Broadcast-Item")]
     #[non_exhaustive]
@@ -2019,9 +1950,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=65535"), identifier = "CellID-Cancelled")]
     pub struct CellIDCancelled(pub SequenceOf<CellIDCancelledItem>);
     crate::per::sequence_of! { CellIDCancelled, 1, 65535 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCellIDCancelledItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CellIDCancelledItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCellIDCancelledItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CellID-Cancelled-Item")]
     #[non_exhaustive]
@@ -2062,9 +1990,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=32"))]
     pub struct CellIdListforQMC(pub SequenceOf<EUTRANCGI>);
     crate::per::sequence_of! { CellIdListforQMC, 1, 32 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCellIdentifierAndCELevelForCECapableUEsIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CellIdentifierAndCELevelForCECapableUEsIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCellIdentifierAndCELevelForCECapableUEsIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -2124,9 +2049,6 @@ pub mod s1_ap_ies {
             Ok(Self(value))
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCellTypeIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CellTypeIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCellTypeIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -2167,9 +2089,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=65535"))]
     pub struct CompletedCellinEAI(pub SequenceOf<CompletedCellinEAIItem>);
     crate::per::sequence_of! { CompletedCellinEAI, 1, 65535 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCompletedCellinEAIItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CompletedCellinEAIItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCompletedCellinEAIItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CompletedCellinEAI-Item")]
     #[non_exhaustive]
@@ -2197,9 +2116,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=65535"))]
     pub struct CompletedCellinTAI(pub SequenceOf<CompletedCellinTAIItem>);
     crate::per::sequence_of! { CompletedCellinTAI, 1, 65535 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCompletedCellinTAIItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CompletedCellinTAIItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCompletedCellinTAIItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CompletedCellinTAI-Item")]
     #[non_exhaustive]
@@ -2229,9 +2145,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "true")]
         R_true = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousConnectedengNBItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ConnectedengNBItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousConnectedengNBItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -2268,9 +2181,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=256"))]
     pub struct ConnectedengNBList(pub SequenceOf<ConnectedengNBItem>);
     crate::per::sequence_of! { ConnectedengNBList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousContextatSourceIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ContextatSourceIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousContextatSourceIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -2312,9 +2222,6 @@ pub mod s1_ap_ies {
     pub enum CoverageLevel {
         extendedcoverage = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCriticalityDiagnosticsIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CriticalityDiagnosticsIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCriticalityDiagnosticsIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -2359,9 +2266,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCriticalityDiagnosticsIEItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CriticalityDiagnosticsIEItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCriticalityDiagnosticsIEItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "CriticalityDiagnostics-IE-Item")]
     #[non_exhaustive]
@@ -2416,9 +2320,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "dAPS-HO-required")]
         dAPS_HO_required = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousDAPSRequestInfoIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as DAPSRequestInfoIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousDAPSRequestInfoIEExtensions;
     #[doc = " D"]
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
@@ -2456,9 +2357,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "dAPS-HO-not-accepted")]
         dAPS_HO_not_accepted = 1,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousDAPSResponseInfoIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as DAPSResponseInfoIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousDAPSResponseInfoIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -2483,9 +2381,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousDAPSResponseInfoItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as DAPSResponseInfoItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousDAPSResponseInfoItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -2518,8 +2413,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousDAPSResponseInfoListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousDAPSResponseInfoList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"))]
     pub struct DAPSResponseInfoList(pub SequenceOf<ProtocolIEField>);
@@ -2527,9 +2420,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "DCN-ID", value("0..=65535"))]
     pub struct DCNID(pub u16);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousDLCPSecurityInformationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as DLCPSecurityInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousDLCPSecurityInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "DL-CP-SecurityInformation")]
     #[non_exhaustive]
@@ -2646,15 +2536,10 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "E-RAB-ID", value("0..=15", extensible))]
     pub struct ERABID(pub Integer);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABInformationListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABInformationList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABInformationList")]
     pub struct ERABInformationList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABInformationList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABInformationListItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABInformationListItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABInformationListItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABInformationListItem")]
     #[non_exhaustive]
@@ -2687,9 +2572,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABItem")]
     #[non_exhaustive]
@@ -2720,9 +2602,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABLevelQoSParametersIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABLevelQoSParametersIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABLevelQoSParametersIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABLevelQoSParameters")]
     #[non_exhaustive]
@@ -2761,15 +2640,10 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABList")]
     pub struct ERABList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABSecurityResultItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABSecurityResultItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABSecurityResultItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABSecurityResultItem")]
     #[non_exhaustive]
@@ -2802,15 +2676,10 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABSecurityResultListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABSecurityResultList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABSecurityResultList")]
     pub struct ERABSecurityResultList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABSecurityResultList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABUsageReportItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABUsageReportItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABUsageReportItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABUsageReportItem")]
     #[non_exhaustive]
@@ -2855,8 +2724,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABUsageReportListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABUsageReportList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=2"), identifier = "E-RABUsageReportList")]
     pub struct ERABUsageReportList(pub SequenceOf<ProtocolIEField>);
@@ -2887,9 +2754,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "true")]
         R_true = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENDCSONConfigurationTransferIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ENDCSONConfigurationTransferIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousENDCSONConfigurationTransferIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EN-DCSONConfigurationTransfer")]
     #[non_exhaustive]
@@ -2943,9 +2807,6 @@ pub mod s1_ap_ies {
             Self::reply(value)
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENDCSONeNBIdentificationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ENDCSONeNBIdentificationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousENDCSONeNBIdentificationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EN-DCSONeNBIdentification")]
     #[non_exhaustive]
@@ -2978,9 +2839,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENDCSONengNBIdentificationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ENDCSONengNBIdentificationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousENDCSONengNBIdentificationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EN-DCSONengNBIdentification")]
     #[non_exhaustive]
@@ -3013,9 +2871,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENDCTransferTypeReplyIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ENDCTransferTypeReplyIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousENDCTransferTypeReplyIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EN-DCTransferTypeReply")]
     #[non_exhaustive]
@@ -3048,9 +2903,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENDCTransferTypeRequestIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ENDCTransferTypeRequestIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousENDCTransferTypeRequestIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EN-DCTransferTypeRequest")]
     #[non_exhaustive]
@@ -3101,9 +2953,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENBEarlyStatusTransferTransparentContainerIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ENBEarlyStatusTransferTransparentContainerIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousENBEarlyStatusTransferTransparentContainerIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(
         automatic_tags,
@@ -3215,9 +3064,6 @@ pub mod s1_ap_ies {
             decoder.decode_choice(Self::CONSTRAINTS)
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENBStatusTransferTransparentContainerIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ENBStatusTransferTransparentContainerIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousENBStatusTransferTransparentContainerIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "ENB-StatusTransfer-TransparentContainer")]
     #[non_exhaustive]
@@ -3251,9 +3097,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=2"))]
     pub struct ENBIndirectX2TransportLayerAddresses(pub SequenceOf<TransportLayerAddress>);
     crate::per::sequence_of! { ENBIndirectX2TransportLayerAddresses, 1, 2 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENBX2ExtTLAIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ENBX2ExtTLAIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousENBX2ExtTLAIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -3305,9 +3148,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=15"))]
     pub struct EPLMNs(pub SequenceOf<PLMNidentity>);
     crate::per::sequence_of! { EPLMNs, 1, 15 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousEUTRANCGIIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as EUTRANCGIIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousEUTRANCGIIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EUTRAN-CGI")]
     #[non_exhaustive]
@@ -3350,9 +3190,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=65535"), identifier = "EmergencyAreaID-Broadcast")]
     pub struct EmergencyAreaIDBroadcast(pub SequenceOf<EmergencyAreaIDBroadcastItem>);
     crate::per::sequence_of! { EmergencyAreaIDBroadcast, 1, 65535 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousEmergencyAreaIDBroadcastItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as EmergencyAreaIDBroadcastItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousEmergencyAreaIDBroadcastItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EmergencyAreaID-Broadcast-Item")]
     #[non_exhaustive]
@@ -3389,9 +3226,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=65535"), identifier = "EmergencyAreaID-Cancelled")]
     pub struct EmergencyAreaIDCancelled(pub SequenceOf<EmergencyAreaIDCancelledItem>);
     crate::per::sequence_of! { EmergencyAreaIDCancelled, 1, 65535 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousEmergencyAreaIDCancelledItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as EmergencyAreaIDCancelledItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousEmergencyAreaIDCancelledItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "EmergencyAreaID-Cancelled-Item")]
     #[non_exhaustive]
@@ -3467,9 +3301,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "true")]
         R_true = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousEventL1LoggedMDTConfigIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as EventL1LoggedMDTConfigIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousEventL1LoggedMDTConfigIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -3514,8 +3345,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "true")]
         R_true = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as EventTriggerChoiceExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as EventTriggerChoiceExtensions;
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(choice, automatic_tags)]
     pub enum EventTrigger {
@@ -3568,9 +3397,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, value("1..=181", extensible))]
     pub struct ExpectedIdlePeriod(pub Integer);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousExpectedUEActivityBehaviourIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ExpectedUEActivityBehaviourIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousExpectedUEActivityBehaviourIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -3612,9 +3438,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousExpectedUEBehaviourIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ExpectedUEBehaviourIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousExpectedUEBehaviourIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -3663,9 +3486,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct FiveGSTAC(pub FixedOctetString<3usize>);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousFiveGSTAIIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as FiveGSTAIIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousFiveGSTAIIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -3722,9 +3542,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=16"))]
     pub struct ForbiddenLAs(pub SequenceOf<ForbiddenLAsItem>);
     crate::per::sequence_of! { ForbiddenLAs, 1, 16 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousForbiddenLAsItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ForbiddenLAsItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousForbiddenLAsItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "ForbiddenLAs-Item")]
     #[non_exhaustive]
@@ -3765,9 +3582,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=16"))]
     pub struct ForbiddenTAs(pub SequenceOf<ForbiddenTAsItem>);
     crate::per::sequence_of! { ForbiddenTAs, 1, 16 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousForbiddenTAsItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ForbiddenTAsItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousForbiddenTAsItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "ForbiddenTAs-Item")]
     #[non_exhaustive]
@@ -3800,9 +3614,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousGBRQosInformationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as GBRQosInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousGBRQosInformationIEExtensions;
     #[doc = " G"]
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "GBR-QosInformation")]
@@ -3848,9 +3659,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousGERANCellIDIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as GERANCellIDIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousGERANCellIDIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "GERAN-Cell-ID")]
     #[non_exhaustive]
@@ -3889,9 +3697,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousGNBIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as GNBIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousGNBIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -3936,9 +3741,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "GTP-TEID")]
     pub struct GTPTEID(pub FixedOctetString<4usize>);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousGUMMEIIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as GUMMEIIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousGUMMEIIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -3997,9 +3799,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "true")]
         R_true = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousGlobalENBIDIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as GlobalENBIDIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousGlobalENBIDIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Global-ENB-ID")]
     #[non_exhaustive]
@@ -4032,9 +3831,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousGlobalGNBIDIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as GlobalGNBIDIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousGlobalGNBIDIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Global-GNB-ID")]
     #[non_exhaustive]
@@ -4085,9 +3881,6 @@ pub mod s1_ap_ies {
             Self::ng_eNB(value)
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousGlobalEnGNBIDIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as GlobalEnGNBIDIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousGlobalEnGNBIDIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Global-en-gNB-ID")]
     #[non_exhaustive]
@@ -4136,9 +3929,6 @@ pub mod s1_ap_ies {
     pub enum HandoverFlag {
         handoverPreparation = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousHandoverRestrictionListIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as HandoverRestrictionListIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousHandoverRestrictionListIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4244,9 +4034,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "true")]
         R_true = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousImmediateMDTIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ImmediateMDTIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousImmediateMDTIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4291,9 +4078,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousInformationOnRecommendedCellsAndENBsForPagingIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as InformationOnRecommendedCellsAndENBsForPagingIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousInformationOnRecommendedCellsAndENBsForPagingIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4364,9 +4148,6 @@ pub mod s1_ap_ies {
         #[rasn(extension_addition)]
         kHz960 = 6,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousInterSystemMeasurementItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as InterSystemMeasurementItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousInterSystemMeasurementItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     pub struct InterSystemMeasurementItem {
@@ -4426,9 +4207,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=64"))]
     pub struct InterSystemMeasurementList(pub SequenceOf<InterSystemMeasurementItem>);
     crate::per::sequence_of! { InterSystemMeasurementList, 1, 64 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousInterSystemMeasurementParametersIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as InterSystemMeasurementParametersIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousInterSystemMeasurementParametersIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4464,9 +4242,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct InterfacesToTrace(pub FixedBitString<8usize>);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousIntersystemMeasurementConfigurationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as IntersystemMeasurementConfigurationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousIntersystemMeasurementConfigurationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4529,9 +4304,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct LAC(pub FixedOctetString<2usize>);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousLAIIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as LAIIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousLAIIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4578,9 +4350,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "lte-m")]
         lte_m = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousLTENTNTAIInformationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as LTENTNTAIInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousLTENTNTAIInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "LTE-NTN-TAI-Information")]
     #[non_exhaustive]
@@ -4652,9 +4421,6 @@ pub mod s1_ap_ies {
             Self::nG_RAN_Cell(value)
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousLastVisitedEUTRANCellInformationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as LastVisitedEUTRANCellInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousLastVisitedEUTRANCellInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4707,9 +4473,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct LastVisitedNGRANCellInformation(pub OctetString);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousLastVisitedPSCellInformationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as LastVisitedPSCellInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousLastVisitedPSCellInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4768,9 +4531,6 @@ pub mod s1_ap_ies {
         ms5120 = 2,
         ms10240 = 3,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousListeningSubframePatternIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ListeningSubframePatternIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousListeningSubframePatternIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4803,9 +4563,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousLoggedMBSFNMDTIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as LoggedMBSFNMDTIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousLoggedMBSFNMDTIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4844,9 +4601,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousLoggedMDTIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as LoggedMDTIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousLoggedMDTIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4921,9 +4675,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "M-TMSI")]
     pub struct MTMSI(pub FixedOctetString<4usize>);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousM1PeriodicReportingIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as M1PeriodicReportingIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousM1PeriodicReportingIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -4965,9 +4716,6 @@ pub mod s1_ap_ies {
         #[rasn(extension_addition, identifier = "a2eventtriggered-periodic")]
         a2eventtriggered_periodic = 2,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousM1ThresholdEventA2IEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as M1ThresholdEventA2IEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousM1ThresholdEventA2IEExtensions;
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
@@ -4995,9 +4743,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousM3ConfigurationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as M3ConfigurationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousM3ConfigurationIEExtensions;
     #[doc = " M"]
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
@@ -5042,9 +4787,6 @@ pub mod s1_ap_ies {
         #[rasn(extension_addition)]
         min1 = 9,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousM4ConfigurationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as M4ConfigurationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousM4ConfigurationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -5098,9 +4840,6 @@ pub mod s1_ap_ies {
         ms10240 = 3,
         min1 = 4,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousM5ConfigurationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as M5ConfigurationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousM5ConfigurationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -5154,9 +4893,6 @@ pub mod s1_ap_ies {
         ms10240 = 3,
         min1 = 4,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousM6ConfigurationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as M6ConfigurationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousM6ConfigurationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -5234,9 +4970,6 @@ pub mod s1_ap_ies {
         ms5120 = 2,
         ms10240 = 3,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousM7ConfigurationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as M7ConfigurationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousM7ConfigurationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -5287,9 +5020,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=8"), identifier = "MBSFN-ResultToLog")]
     pub struct MBSFNResultToLog(pub SequenceOf<MBSFNResultToLogInfo>);
     crate::per::sequence_of! { MBSFNResultToLog, 1, 8 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousMBSFNResultToLogInfoIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as MBSFNResultToLogInfoIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousMBSFNResultToLogInfoIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "MBSFN-ResultToLogInfo")]
     #[non_exhaustive]
@@ -5335,9 +5065,6 @@ pub mod s1_ap_ies {
         #[rasn(extension_addition, identifier = "logged-MBSFN-MDT")]
         logged_MBSFN_MDT = 3,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousMDTConfigurationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as MDTConfigurationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousMDTConfigurationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "MDT-Configuration")]
     #[non_exhaustive]
@@ -5406,8 +5133,6 @@ pub mod s1_ap_ies {
             Self::mDTMode_Extension(value)
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as MDTModeExtensionCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as MDTModeExtension;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=16"))]
     pub struct MDTPLMNList(pub SequenceOf<PLMNidentity>);
@@ -5508,8 +5233,6 @@ pub mod s1_ap_ies {
             Self::threshold_RSRQ(value)
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as MeasurementThresholdL1LoggedMDTChoiceExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as MeasurementThresholdL1LoggedMDTChoiceExtensions;
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(choice, automatic_tags)]
     pub enum MeasurementThresholdL1LoggedMDT {
@@ -5586,9 +5309,6 @@ pub mod s1_ap_ies {
         ms5120 = 3,
         ms10240 = 4,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousMutingPatternInformationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as MutingPatternInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousMutingPatternInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -5659,9 +5379,6 @@ pub mod s1_ap_ies {
         hf512 = 12,
         hf1024 = 13,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousNBIoTPagingEDRXInformationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as NBIoTPagingEDRXInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousNBIoTPagingEDRXInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "NB-IoT-Paging-eDRXInformation")]
     #[non_exhaustive]
@@ -5732,9 +5449,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "NB-IoT-UEIdentityIndexValue")]
     pub struct NBIoTUEIdentityIndexValue(pub FixedBitString<12usize>);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousNGENBIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as NGENBIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousNGENBIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "NG-eNB")]
     #[non_exhaustive]
@@ -5761,9 +5475,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousNRCGIIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as NRCGIIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousNRCGIIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "NR-CGI")]
     #[non_exhaustive]
@@ -5823,9 +5534,6 @@ pub mod s1_ap_ies {
             Ok(Self(value))
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousNRUESecurityCapabilitiesIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as NRUESecurityCapabilitiesIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousNRUESecurityCapabilitiesIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -5858,9 +5566,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousNRUESidelinkAggregateMaximumBitrateIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as NRUESidelinkAggregateMaximumBitrateIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousNRUESidelinkAggregateMaximumBitrateIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -5887,9 +5592,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousNRV2XServicesAuthorizedIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as NRV2XServicesAuthorizedIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousNRV2XServicesAuthorizedIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6004,9 +5706,6 @@ pub mod s1_ap_ies {
             Self::overloadAction(value)
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPC5FlowBitRatesIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as PC5FlowBitRatesIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousPC5FlowBitRatesIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6039,9 +5738,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPC5QoSFlowItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as PC5QoSFlowItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousPC5QoSFlowItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6082,9 +5778,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=2048"))]
     pub struct PC5QoSFlowList(pub SequenceOf<PC5QoSFlowItem>);
     crate::per::sequence_of! { PC5QoSFlowList, 1, 2048 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPC5QoSParametersIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as PC5QoSParametersIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousPC5QoSParametersIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6126,9 +5819,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "PDCP-SNlength18", value("0..=262143"))]
     pub struct PDCPSNlength18(pub u32);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPLMNAreaBasedQMCIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as PLMNAreaBasedQMCIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousPLMNAreaBasedQMCIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6169,9 +5859,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "ps-service-not-available")]
         ps_service_not_available = 0,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPSCellInformationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as PSCellInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousPSCellInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6222,9 +5909,6 @@ pub mod s1_ap_ies {
         hf128 = 12,
         hf256 = 13,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPagingEDRXInformationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as PagingEDRXInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousPagingEDRXInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "Paging-eDRXInformation")]
     #[non_exhaustive]
@@ -6260,9 +5944,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, value("1..=16", extensible))]
     pub struct PagingAttemptCount(pub Integer);
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPagingAttemptInformationIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as PagingAttemptInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousPagingAttemptInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6422,9 +6103,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "logged-MDT")]
         logged_MDT = 1,
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousProSeAuthorizedIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ProSeAuthorizedIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousProSeAuthorizedIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6503,8 +6181,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=16"), identifier = "RAT-Restrictions")]
     pub struct RATRestrictions(pub SequenceOf<RATRestrictionsItem>);
     crate::per::sequence_of! { RATRestrictions, 1, 16 }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as RATRestrictionsItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousRATRestrictionsItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "RAT-RestrictionsItem")]
     #[non_exhaustive]
@@ -6588,8 +6264,6 @@ pub mod s1_ap_ies {
             Self::eHRPD_Sector_ID(value)
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as RIMTransferIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousRIMTransferIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6622,8 +6296,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as RLFReportInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousRLFReportInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6735,8 +6407,6 @@ pub mod s1_ap_ies {
             Ok(Self(value))
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as RecommendedCellItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousRecommendedCellItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6769,13 +6439,10 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousRecommendedCellList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=16"))]
     pub struct RecommendedCellList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { RecommendedCellList, 1, 16 }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as RecommendedCellsForPagingIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousRecommendedCellsForPagingIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6802,8 +6469,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as RecommendedENBItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousRecommendedENBItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6830,13 +6495,10 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousRecommendedENBList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=16"))]
     pub struct RecommendedENBList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { RecommendedENBList, 1, 16 }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as RecommendedENBsForPagingIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousRecommendedENBsForPagingIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6911,8 +6573,6 @@ pub mod s1_ap_ies {
         min30 = 11,
         min60 = 12,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as RequestTypeIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousRequestTypeIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6951,8 +6611,6 @@ pub mod s1_ap_ies {
     pub enum RequestTypeAdditionalInfo {
         includePSCell = 0,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as RequestedTNLInfoIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousRequestedTNLInfoIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -6982,8 +6640,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "Routing-ID", value("0..=255"))]
     pub struct RoutingID(pub u8);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as STMSIIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSTMSIIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "S-TMSI")]
     #[non_exhaustive]
@@ -7016,8 +6672,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SONConfigurationTransferIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSONConfigurationTransferIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7080,9 +6734,6 @@ pub mod s1_ap_ies {
             Self::sONInformation_Extension(value)
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SONInformationReplyIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSONInformationReplyIEExtensions;
-    pub use super::s1_ap_containers::ProtocolIEField as SONInformationExtension;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7152,8 +6803,6 @@ pub mod s1_ap_ies {
     pub enum SRVCCOperationPossible {
         possible = 0,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ScheduledCommunicationTimeIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousScheduledCommunicationTimeIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7192,8 +6841,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SecondaryRATDataUsageReportItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSecondaryRATDataUsageReportItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7232,7 +6879,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousSecondaryRATDataUsageReportList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"))]
     pub struct SecondaryRATDataUsageReportList(pub SequenceOf<ProtocolIEField>);
@@ -7251,8 +6897,6 @@ pub mod s1_ap_ies {
         #[rasn(extension_addition)]
         unlicensed = 1,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SecurityContextIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSecurityContextIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7285,8 +6929,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SecurityIndicationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSecurityIndicationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7341,8 +6983,6 @@ pub mod s1_ap_ies {
             Ok(Self(value))
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SecurityResultIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSecurityResultIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7375,8 +7015,6 @@ pub mod s1_ap_ies {
     pub enum SensorMeasConfig {
         setup = 0,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SensorMeasConfigNameItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSensorMeasConfigNameItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7407,8 +7045,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=3"))]
     pub struct SensorMeasConfigNameList(pub SequenceOf<SensorMeasConfigNameItem>);
     crate::per::sequence_of! { SensorMeasConfigNameList, 1, 3 }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SensorMeasurementConfigurationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSensorMeasurementConfigurationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7449,7 +7085,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "true")]
         R_true = 0,
     }
-    pub use super::s1_ap_containers::ProtocolIEField as SensorNameConfigChoiceExtensions;
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(choice, automatic_tags)]
     pub enum SensorNameConfig {
@@ -7474,8 +7109,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("0..=32"))]
     pub struct ServedDCNs(pub SequenceOf<ServedDCNsItem>);
     crate::per::sequence_of! { ServedDCNs, 0, 32 }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ServedDCNsItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousServedDCNsItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7513,8 +7146,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=8"))]
     pub struct ServedGUMMEIs(pub SequenceOf<ServedGUMMEIsItem>);
     crate::per::sequence_of! { ServedGUMMEIs, 1, 8 }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ServedGUMMEIsItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousServedGUMMEIsItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7582,8 +7213,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "SourceBSS-ToTargetBSS-TransparentContainer")]
     pub struct SourceBSSToTargetBSSTransparentContainer(pub OctetString);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SourceNgRanNodeIDIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSourceNgRanNodeIDIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "SourceNgRanNode-ID")]
     #[non_exhaustive]
@@ -7641,7 +7270,6 @@ pub mod s1_ap_ies {
             Self::sourceNodeID_Extension(value)
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEField as SourceNodeIDExtension;
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash, Copy)]
     #[rasn(enumerated)]
     #[non_exhaustive]
@@ -7653,8 +7281,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "SourceRNC-ToTargetRNC-TransparentContainer")]
     pub struct SourceRNCToTargetRNCTransparentContainer(pub OctetString);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SourceeNBIDIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSourceeNBIDIEExtensions;
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "SourceeNB-ID")]
@@ -7679,8 +7305,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SourceeNBToTargeteNBTransparentContainerIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSourceeNBToTargeteNBTransparentContainerIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(
         automatic_tags,
@@ -7780,8 +7404,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "not-battery-powered")]
         not_battery_powered = 2,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SubscriptionBasedUEDifferentiationInfoIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSubscriptionBasedUEDifferentiationInfoIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(
         automatic_tags,
@@ -7851,8 +7473,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=256"))]
     pub struct SupportedTAs(pub SequenceOf<SupportedTAsItem>);
     crate::per::sequence_of! { SupportedTAs, 1, 256 }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SupportedTAsItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSupportedTAsItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "SupportedTAs-Item")]
     #[non_exhaustive]
@@ -7885,8 +7505,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as SynchronisationInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousSynchronisationInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7932,8 +7550,6 @@ pub mod s1_ap_ies {
         synchronous = 0,
         asynchronous = 1,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TABasedMDTIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTABasedMDTIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7960,8 +7576,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TABasedQMCIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTABasedQMCIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -7996,8 +7610,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=12"), identifier = "TACList-In-LTE-NTN")]
     pub struct TACListInLTENTN(pub SequenceOf<TAC>);
     crate::per::sequence_of! { TACListInLTENTN, 1, 12 }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TAIIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTAIIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -8034,8 +7646,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=65535"), identifier = "TAI-Broadcast")]
     pub struct TAIBroadcast(pub SequenceOf<TAIBroadcastItem>);
     crate::per::sequence_of! { TAIBroadcast, 1, 65535 }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TAIBroadcastItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTAIBroadcastItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "TAI-Broadcast-Item")]
     #[non_exhaustive]
@@ -8072,8 +7682,6 @@ pub mod s1_ap_ies {
     #[rasn(delegate, size("1..=65535"), identifier = "TAI-Cancelled")]
     pub struct TAICancelled(pub SequenceOf<TAICancelledItem>);
     crate::per::sequence_of! { TAICancelled, 1, 65535 }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TAICancelledItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTAICancelledItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "TAI-Cancelled-Item")]
     #[non_exhaustive]
@@ -8106,8 +7714,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TAIBasedMDTIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTAIBasedMDTIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -8134,8 +7740,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TAIBasedQMCIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTAIBasedQMCIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -8228,8 +7832,6 @@ pub mod s1_ap_ies {
             Self::targetgNgRanNode_ID(value)
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TargetNgRanNodeIDIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTargetNgRanNodeIDIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "TargetNgRanNode-ID")]
     #[non_exhaustive]
@@ -8269,8 +7871,6 @@ pub mod s1_ap_ies {
         identifier = "TargetNgRanNode-ToSourceNgRanNode-TransparentContainer"
     )]
     pub struct TargetNgRanNodeToSourceNgRanNodeTransparentContainer(pub OctetString);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TargetRNCIDIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTargetRNCIDIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "TargetRNC-ID")]
     #[non_exhaustive]
@@ -8320,8 +7920,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "TargetRNC-ToSourceRNC-TransparentContainer")]
     pub struct TargetRNCToSourceRNCTransparentContainer(pub OctetString);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TargeteNBIDIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTargeteNBIDIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "TargeteNB-ID")]
     #[non_exhaustive]
@@ -8354,8 +7952,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TargeteNBToSourceeNBTransparentContainerIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTargeteNBToSourceeNBTransparentContainerIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(
         automatic_tags,
@@ -8401,8 +7997,6 @@ pub mod s1_ap_ies {
         value("0..=40950")
     )]
     pub struct TimeUEStayedInCellEnhancedGranularity(pub u16);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TimeBasedHandoverInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTimeBasedHandoverInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -8445,8 +8039,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct TimeSinceSecondaryNodeRelease(pub FixedOctetString<4usize>);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TimeSynchronisationInfoIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTimeSynchronisationInfoIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -8510,8 +8102,6 @@ pub mod s1_ap_ies {
         v20s = 4,
         v60s = 5,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TraceActivationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTraceActivationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -8596,8 +8186,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=160", extensible))]
     pub struct TransportLayerAddress(pub BitString);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TunnelInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTunnelInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -8661,8 +8249,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "ues-retained")]
         ues_retained = 0,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as UES1APIDPairIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousUES1APIDPairIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "UE-S1AP-ID-pair")]
     #[non_exhaustive]
@@ -8717,8 +8303,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, identifier = "UE-Usage-Type", value("0..=255"))]
     pub struct UEUsageType(pub u8);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as UEAssociatedLogicalS1ConnectionItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousUEAssociatedLogicalS1ConnectionItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "UE-associatedLogicalS1-ConnectionItem")]
     #[non_exhaustive]
@@ -8751,8 +8335,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as UEAggregateMaximumBitrateIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousUEAggregateMaximumBitrateIEExtensions;
     #[doc = " U"]
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
@@ -8786,8 +8368,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as UEAppLayerMeasConfigIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousUEAppLayerMeasConfigIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -8856,8 +8436,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct UERadioCapabilityID(pub OctetString);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as UESecurityCapabilitiesIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousUESecurityCapabilitiesIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -8890,8 +8468,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as UESidelinkAggregateMaximumBitrateIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousUESidelinkAggregateMaximumBitrateIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -8924,8 +8500,6 @@ pub mod s1_ap_ies {
     pub enum UEUserPlaneCIoTSupportIndicator {
         supported = 0,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ULCPSecurityInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousULCPSecurityInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "UL-CP-SecurityInformation")]
     #[non_exhaustive]
@@ -8974,8 +8548,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "unlicensed-restricted")]
         unlicensed_restricted = 0,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as UserLocationInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousUserLocationInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -9006,8 +8578,6 @@ pub mod s1_ap_ies {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as V2XServicesAuthorizedIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousV2XServicesAuthorizedIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -9086,8 +8656,6 @@ pub mod s1_ap_ies {
         #[rasn(identifier = "true")]
         R_true = 0,
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as WLANMeasurementConfigurationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousWLANMeasurementConfigurationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -9135,8 +8703,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=32"))]
     pub struct WLANName(pub OctetString);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as WUSAssistanceInformationIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousWUSAssistanceInformationIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "WUS-Assistance-Information")]
     #[non_exhaustive]
@@ -9199,8 +8765,6 @@ pub mod s1_ap_ies {
     #[derive(AsnType, Debug, Clone, Decode, Encode, PartialEq, Eq, Hash)]
     #[rasn(delegate)]
     pub struct WarningType(pub FixedOctetString<2usize>);
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as X2TNLConfigurationInfoIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousX2TNLConfigurationInfoIEExtensions;
     #[doc = " X"]
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
@@ -9238,7 +8802,6 @@ pub mod s1_ap_ies {
 )]
 pub mod s1_ap_pdu_contents {
     extern crate alloc;
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCSGMembershipInfoIEExtensionsCriticality;
     use super::s1_ap_common_data_types::{
         Criticality, Presence, PrivateIEID, ProcedureCode, ProtocolIEID,
     };
@@ -9346,8 +8909,6 @@ pub mod s1_ap_pdu_contents {
         MAXNOOF_E_RABS, MAXNOOF_EMERGENCY_AREA_ID, MAXNOOF_ERRORS,
         MAXNOOF_INDIVIDUAL_S1_CONNECTIONS_TO_RESET, MAXNOOF_TAIFOR_WARNING, MAXNOOF_TAIS,
     };
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as CSGMembershipInfoIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousCSGMembershipInfoIEExtensions;
     use super::s1_ap_containers::*;
     use super::s1_ap_ies::*;
     use core::borrow::Borrow;
@@ -9397,9 +8958,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousCellTrafficTraceProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as CellTrafficTraceProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousCellTrafficTraceProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " CELL TRAFFIC TRACE ELEMENTARY PROCEDURE"]
@@ -9426,9 +8984,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousConnectionEstablishmentIndicationProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ConnectionEstablishmentIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousConnectionEstablishmentIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Connection Establishment Indication"]
@@ -9450,9 +9005,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousDeactivateTraceProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as DeactivateTraceProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousDeactivateTraceProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " DEACTIVATE TRACE ELEMENTARY PROCEDURE"]
@@ -9479,9 +9031,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousDownlinkNASTransportProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as DownlinkNASTransportProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousDownlinkNASTransportProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " NAS TRANSPORT ELEMENTARY PROCEDURES"]
@@ -9508,9 +9057,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousDownlinkNonUEAssociatedLPPaTransportProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as DownlinkNonUEAssociatedLPPaTransportProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousDownlinkNonUEAssociatedLPPaTransportProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " DOWNLINK NON UE ASSOCIATED LPPA TRANSPORT"]
@@ -9532,9 +9078,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousDownlinkS1cdma2000tunnellingProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as DownlinkS1cdma2000tunnellingProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousDownlinkS1cdma2000tunnellingProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " DOWNLINK S1 CDMA2000 TUNNELLING ELEMENTARY PROCEDURE"]
@@ -9561,9 +9104,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousDownlinkUEAssociatedLPPaTransportProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as DownlinkUEAssociatedLPPaTransportProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousDownlinkUEAssociatedLPPaTransportProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " LPPA TRANSPORT ELEMENTARY PROCEDURES"]
@@ -9590,9 +9130,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABAdmittedItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABAdmittedItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABAdmittedItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABAdmittedItem")]
     #[non_exhaustive]
@@ -9655,15 +9192,10 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABAdmittedListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABAdmittedList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABAdmittedList")]
     pub struct ERABAdmittedList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABAdmittedList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABDataForwardingItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABDataForwardingItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABDataForwardingItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABDataForwardingItem")]
     #[non_exhaustive]
@@ -9714,9 +9246,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABFailedToResumeItemResumeReqIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABFailedToResumeItemResumeReqIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABFailedToResumeItemResumeReqIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABFailedToResumeItemResumeReq")]
     #[non_exhaustive]
@@ -9747,9 +9276,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABFailedToResumeItemResumeResIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABFailedToResumeItemResumeResIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABFailedToResumeItemResumeResIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABFailedToResumeItemResumeRes")]
     #[non_exhaustive]
@@ -9780,8 +9306,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABFailedToResumeListResumeReqCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABFailedToResumeListResumeReq;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -9790,8 +9314,6 @@ pub mod s1_ap_pdu_contents {
     )]
     pub struct ERABFailedToResumeListResumeReq(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABFailedToResumeListResumeReq, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABFailedToResumeListResumeResCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABFailedToResumeListResumeRes;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -9800,9 +9322,6 @@ pub mod s1_ap_pdu_contents {
     )]
     pub struct ERABFailedToResumeListResumeRes(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABFailedToResumeListResumeRes, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABFailedToSetupItemHOReqAckIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABFailedToSetupItemHOReqAckIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABFailedToSetupItemHOReqAckIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABFailedToSetupItemHOReqAck")]
     #[non_exhaustive]
@@ -9833,8 +9352,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABFailedtoSetupListHOReqAckCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABFailedtoSetupListHOReqAck;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -9843,9 +9360,6 @@ pub mod s1_ap_pdu_contents {
     )]
     pub struct ERABFailedtoSetupListHOReqAck(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABFailedtoSetupListHOReqAck, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABModificationConfirmProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ERABModificationConfirmProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABModificationConfirmProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB Modification Confirm"]
@@ -9867,9 +9381,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABModificationIndicationProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ERABModificationIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABModificationIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB MODIFICATION INDICATION ELEMENTARY PROCEDURE"]
@@ -9896,9 +9407,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABModifyItemBearerModConfIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABModifyItemBearerModConfIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABModifyItemBearerModConfIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABModifyItemBearerModConf")]
     #[non_exhaustive]
@@ -9922,9 +9430,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABModifyItemBearerModResIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABModifyItemBearerModResIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABModifyItemBearerModResIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABModifyItemBearerModRes")]
     #[non_exhaustive]
@@ -9948,21 +9453,14 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABModifyListBearerModConfCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABModifyListBearerModConf;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABModifyListBearerModConf")]
     pub struct ERABModifyListBearerModConf(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABModifyListBearerModConf, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABModifyListBearerModResCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABModifyListBearerModRes;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABModifyListBearerModRes")]
     pub struct ERABModifyListBearerModRes(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABModifyListBearerModRes, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABModifyRequestProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ERABModifyRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABModifyRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB MODIFY ELEMENTARY PROCEDURE"]
@@ -9989,9 +9487,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABModifyResponseProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ERABModifyResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABModifyResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB Modify Response"]
@@ -10013,9 +9508,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABNotToBeModifiedItemBearerModIndIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABNotToBeModifiedItemBearerModIndIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABNotToBeModifiedItemBearerModIndIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABNotToBeModifiedItemBearerModInd")]
     #[non_exhaustive]
@@ -10054,8 +9546,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABNotToBeModifiedListBearerModIndCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABNotToBeModifiedListBearerModInd;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -10064,9 +9554,6 @@ pub mod s1_ap_pdu_contents {
     )]
     pub struct ERABNotToBeModifiedListBearerModInd(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABNotToBeModifiedListBearerModInd, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABReleaseCommandProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ERABReleaseCommandProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABReleaseCommandProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB RELEASE ELEMENTARY PROCEDURE"]
@@ -10093,9 +9580,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABReleaseIndicationProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ERABReleaseIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABReleaseIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB RELEASE INDICATION ELEMENTARY PROCEDURE"]
@@ -10122,9 +9606,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABReleaseItemBearerRelCompIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABReleaseItemBearerRelCompIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABReleaseItemBearerRelCompIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABReleaseItemBearerRelComp")]
     #[non_exhaustive]
@@ -10148,8 +9629,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABReleaseListBearerRelCompCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABReleaseListBearerRelComp;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -10158,9 +9637,6 @@ pub mod s1_ap_pdu_contents {
     )]
     pub struct ERABReleaseListBearerRelComp(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABReleaseListBearerRelComp, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABReleaseResponseProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ERABReleaseResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABReleaseResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB Release Response"]
@@ -10182,9 +9658,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABSetupItemBearerSUResIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABSetupItemBearerSUResIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABSetupItemBearerSUResIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABSetupItemBearerSURes")]
     #[non_exhaustive]
@@ -10223,9 +9696,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABSetupItemCtxtSUResIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABSetupItemCtxtSUResIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABSetupItemCtxtSUResIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABSetupItemCtxtSURes")]
     #[non_exhaustive]
@@ -10264,21 +9734,14 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABSetupListBearerSUResCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABSetupListBearerSURes;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABSetupListBearerSURes")]
     pub struct ERABSetupListBearerSURes(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABSetupListBearerSURes, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABSetupListCtxtSUResCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABSetupListCtxtSURes;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABSetupListCtxtSURes")]
     pub struct ERABSetupListCtxtSURes(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABSetupListCtxtSURes, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABSetupRequestProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ERABSetupRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABSetupRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB SETUP ELEMENTARY PROCEDURE"]
@@ -10305,9 +9768,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABSetupResponseProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ERABSetupResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABSetupResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB Setup Response"]
@@ -10329,8 +9789,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABSubjecttoDataForwardingListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABSubjecttoDataForwardingList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -10339,9 +9797,6 @@ pub mod s1_ap_pdu_contents {
     )]
     pub struct ERABSubjecttoDataForwardingList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABSubjecttoDataForwardingList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeModifiedItemBearerModIndIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABToBeModifiedItemBearerModIndIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABToBeModifiedItemBearerModIndIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeModifiedItemBearerModInd")]
     #[non_exhaustive]
@@ -10380,9 +9835,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeModifiedItemBearerModReqIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABToBeModifiedItemBearerModReqIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABToBeModifiedItemBearerModReqIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeModifiedItemBearerModReq")]
     #[non_exhaustive]
@@ -10421,8 +9873,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeModifiedListBearerModIndCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABToBeModifiedListBearerModInd;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -10431,8 +9881,6 @@ pub mod s1_ap_pdu_contents {
     )]
     pub struct ERABToBeModifiedListBearerModInd(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABToBeModifiedListBearerModInd, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeModifiedListBearerModReqCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABToBeModifiedListBearerModReq;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -10441,9 +9889,6 @@ pub mod s1_ap_pdu_contents {
     )]
     pub struct ERABToBeModifiedListBearerModReq(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABToBeModifiedListBearerModReq, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeSetupItemBearerSUReqIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABToBeSetupItemBearerSUReqIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABToBeSetupItemBearerSUReqIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeSetupItemBearerSUReq")]
     #[non_exhaustive]
@@ -10494,9 +9939,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeSetupItemCtxtSUReqIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABToBeSetupItemCtxtSUReqIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABToBeSetupItemCtxtSUReqIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeSetupItemCtxtSUReq")]
     #[non_exhaustive]
@@ -10547,9 +9989,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeSetupItemHOReqIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABToBeSetupItemHOReqIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABToBeSetupItemHOReqIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeSetupItemHOReq")]
     #[non_exhaustive]
@@ -10594,8 +10033,6 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeSetupListBearerSUReqCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABToBeSetupListBearerSUReq;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -10604,21 +10041,14 @@ pub mod s1_ap_pdu_contents {
     )]
     pub struct ERABToBeSetupListBearerSUReq(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABToBeSetupListBearerSUReq, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeSetupListCtxtSUReqCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABToBeSetupListCtxtSUReq;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABToBeSetupListCtxtSUReq")]
     pub struct ERABToBeSetupListCtxtSUReq(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABToBeSetupListCtxtSUReq, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeSetupListHOReqCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABToBeSetupListHOReq;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABToBeSetupListHOReq")]
     pub struct ERABToBeSetupListHOReq(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABToBeSetupListHOReq, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeSwitchedDLItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABToBeSwitchedDLItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABToBeSwitchedDLItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeSwitchedDLItem")]
     #[non_exhaustive]
@@ -10657,15 +10087,10 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeSwitchedDLListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABToBeSwitchedDLList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABToBeSwitchedDLList")]
     pub struct ERABToBeSwitchedDLList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABToBeSwitchedDLList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeSwitchedULItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABToBeSwitchedULItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABToBeSwitchedULItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeSwitchedULItem")]
     #[non_exhaustive]
@@ -10704,15 +10129,10 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeSwitchedULListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABToBeSwitchedULList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABToBeSwitchedULList")]
     pub struct ERABToBeSwitchedULList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABToBeSwitchedULList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeUpdatedItemIEExtensionsCriticality;
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as ERABToBeUpdatedItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousERABToBeUpdatedItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags, identifier = "E-RABToBeUpdatedItem")]
     #[non_exhaustive]
@@ -10745,15 +10165,10 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousERABToBeUpdatedListCriticality;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousERABToBeUpdatedList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"), identifier = "E-RABToBeUpdatedList")]
     pub struct ERABToBeUpdatedList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { ERABToBeUpdatedList, 1, 256 }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENBCPRelocationIndicationProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ENBCPRelocationIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousENBCPRelocationIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB CP Relocation Indication"]
@@ -10775,9 +10190,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENBConfigurationTransferProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ENBConfigurationTransferProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousENBConfigurationTransferProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB CONFIGURATION TRANSFER ELEMENTARY PROCEDURE"]
@@ -10804,9 +10216,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENBConfigurationUpdateProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ENBConfigurationUpdateProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousENBConfigurationUpdateProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " ENB CONFIGURATION UPDATE ELEMENTARY PROCEDURE"]
@@ -10833,9 +10242,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENBConfigurationUpdateAcknowledgeProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ENBConfigurationUpdateAcknowledgeProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousENBConfigurationUpdateAcknowledgeProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB Configuration Update Acknowledge"]
@@ -10857,9 +10263,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENBConfigurationUpdateFailureProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ENBConfigurationUpdateFailureProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousENBConfigurationUpdateFailureProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB Configuration Update Failure"]
@@ -10881,9 +10284,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENBDirectInformationTransferProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ENBDirectInformationTransferProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousENBDirectInformationTransferProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB DIRECT INFORMATION TRANSFER ELEMENTARY PROCEDURE"]
@@ -10910,9 +10310,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENBEarlyStatusTransferProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ENBEarlyStatusTransferProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousENBEarlyStatusTransferProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB EARLY STATUS TRANSFER ELEMENTARY PROCEDURE"]
@@ -10939,9 +10336,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousENBStatusTransferProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ENBStatusTransferProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousENBStatusTransferProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB STATUS TRANSFER ELEMENTARY PROCEDURE"]
@@ -10968,9 +10362,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousErrorIndicationProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as ErrorIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousErrorIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " ERROR INDICATION ELEMENTARY PROCEDURE"]
@@ -10997,9 +10388,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousHandoverCancelProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as HandoverCancelProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousHandoverCancelProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " HANDOVER CANCEL ELEMENTARY PROCEDURE"]
@@ -11026,9 +10414,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousHandoverCancelAcknowledgeProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as HandoverCancelAcknowledgeProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousHandoverCancelAcknowledgeProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Handover Cancel Request Acknowledge"]
@@ -11050,9 +10435,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousHandoverCommandProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as HandoverCommandProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousHandoverCommandProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Handover Command"]
@@ -11074,9 +10456,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousHandoverFailureProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as HandoverFailureProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousHandoverFailureProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Handover Failure"]
@@ -11098,9 +10477,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousHandoverNotifyProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as HandoverNotifyProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousHandoverNotifyProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " HANDOVER NOTIFICATION ELEMENTARY PROCEDURE"]
@@ -11127,9 +10503,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousHandoverPreparationFailureProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as HandoverPreparationFailureProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousHandoverPreparationFailureProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Handover Preparation Failure"]
@@ -11151,9 +10524,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousHandoverRequestProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as HandoverRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousHandoverRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " HANDOVER RESOURCE ALLOCATION ELEMENTARY PROCEDURE"]
@@ -11180,9 +10550,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousHandoverRequestAcknowledgeProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as HandoverRequestAcknowledgeProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousHandoverRequestAcknowledgeProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Handover Request Acknowledge"]
@@ -11204,9 +10571,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousHandoverRequiredProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as HandoverRequiredProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousHandoverRequiredProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " HANDOVER PREPARATION ELEMENTARY PROCEDURE"]
@@ -11233,9 +10597,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousHandoverSuccessProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as HandoverSuccessProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousHandoverSuccessProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " HANDOVER SUCCESS ELEMENTARY PROCEDURE"]
@@ -11262,9 +10623,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousInitialContextSetupFailureProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as InitialContextSetupFailureProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousInitialContextSetupFailureProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Initial Context Setup Failure"]
@@ -11286,9 +10644,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousInitialContextSetupRequestProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as InitialContextSetupRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousInitialContextSetupRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " INITIAL CONTEXT SETUP ELEMENTARY PROCEDURE"]
@@ -11315,9 +10670,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousInitialContextSetupResponseProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as InitialContextSetupResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousInitialContextSetupResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Initial Context Setup Response"]
@@ -11339,9 +10691,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousInitialUEMessageProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as InitialUEMessageProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousInitialUEMessageProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " INITIAL UE MESSAGE"]
@@ -11378,9 +10727,6 @@ pub mod s1_ap_pdu_contents {
             Self::rIMTransfer(value)
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousKillRequestProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as KillRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousKillRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " KILL PROCEDURE"]
@@ -11407,9 +10753,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousKillResponseProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as KillResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousKillResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Kill Response"]
@@ -11431,9 +10774,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousLocationReportProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as LocationReportProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousLocationReportProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Location Report"]
@@ -11455,9 +10795,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousLocationReportingControlProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as LocationReportingControlProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousLocationReportingControlProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " LOCATION ELEMENTARY PROCEDURES"]
@@ -11484,9 +10821,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousLocationReportingFailureIndicationProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as LocationReportingFailureIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousLocationReportingFailureIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Location Report Failure Indication"]
@@ -11508,9 +10842,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousMMECPRelocationIndicationProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as MMECPRelocationIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousMMECPRelocationIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME CP Relocation Indication"]
@@ -11532,9 +10863,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousMMEConfigurationTransferProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as MMEConfigurationTransferProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousMMEConfigurationTransferProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME CONFIGURATION TRANSFER ELEMENTARY PROCEDURE"]
@@ -11561,9 +10889,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousMMEConfigurationUpdateProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as MMEConfigurationUpdateProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousMMEConfigurationUpdateProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME CONFIGURATION UPDATE ELEMENTARY PROCEDURE"]
@@ -11590,9 +10915,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousMMEConfigurationUpdateAcknowledgeProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as MMEConfigurationUpdateAcknowledgeProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousMMEConfigurationUpdateAcknowledgeProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME Configuration Update Acknowledge"]
@@ -11614,9 +10936,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousMMEConfigurationUpdateFailureProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as MMEConfigurationUpdateFailureProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousMMEConfigurationUpdateFailureProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME Configuration Update Failure"]
@@ -11638,9 +10957,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousMMEDirectInformationTransferProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as MMEDirectInformationTransferProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousMMEDirectInformationTransferProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME DIRECT INFORMATION TRANSFER ELEMENTARY PROCEDURE"]
@@ -11667,9 +10983,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousMMEEarlyStatusTransferProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as MMEEarlyStatusTransferProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousMMEEarlyStatusTransferProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME EARLY STATUS TRANSFER ELEMENTARY PROCEDURE"]
@@ -11696,9 +11009,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousMMEStatusTransferProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as MMEStatusTransferProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousMMEStatusTransferProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME STATUS TRANSFER ELEMENTARY PROCEDURE"]
@@ -11725,9 +11035,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousNASDeliveryIndicationProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as NASDeliveryIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousNASDeliveryIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " NAS DELIVERY INDICATION"]
@@ -11749,9 +11056,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousNASNonDeliveryIndicationProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as NASNonDeliveryIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousNASNonDeliveryIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " NAS NON DELIVERY INDICATION"]
@@ -11773,9 +11077,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousOverloadStartProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as OverloadStartProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousOverloadStartProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " OVERLOAD ELEMENTARY PROCEDURES"]
@@ -11802,9 +11103,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousOverloadStopProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as OverloadStopProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousOverloadStopProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Overload Stop"]
@@ -11826,9 +11124,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPWSFailureIndicationProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as PWSFailureIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousPWSFailureIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " PWS Failure Indication"]
@@ -11850,9 +11145,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPWSRestartIndicationProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as PWSRestartIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousPWSRestartIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " PWS RESTART INDICATION PROCEDURE"]
@@ -11879,9 +11171,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPagingProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as PagingProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousPagingProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " PAGING ELEMENTARY PROCEDURE"]
@@ -11908,9 +11197,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPathSwitchRequestProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as PathSwitchRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousPathSwitchRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " PATH SWITCH REQUEST ELEMENTARY PROCEDURE"]
@@ -11937,9 +11223,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPathSwitchRequestAcknowledgeProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as PathSwitchRequestAcknowledgeProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousPathSwitchRequestAcknowledgeProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Path Switch Request Acknowledge"]
@@ -11961,9 +11244,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_common_data_types::Criticality as AnonymousPathSwitchRequestFailureProtocolIEsCriticality;
-    pub use super::s1_ap_containers::ProtocolIEContainer as PathSwitchRequestFailureProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousPathSwitchRequestFailureProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Path Switch Request Failure"]
@@ -12033,8 +11313,6 @@ pub mod s1_ap_pdu_contents {
             Self { private_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as RerouteNASRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousRerouteNASRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " REROUTE NAS REQUEST"]
@@ -12056,8 +11334,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as ResetProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousResetProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " RESET ELEMENTARY PROCEDURE"]
@@ -12084,8 +11360,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as ResetAcknowledgeProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousResetAcknowledgeProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Reset Acknowledge"]
@@ -12133,8 +11407,6 @@ pub mod s1_ap_pdu_contents {
             Self::partOfS1_Interface(value)
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as RetrieveUEInformationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousRetrieveUEInformationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Retrieve UE Information"]
@@ -12156,8 +11428,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as S1RemovalFailureProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousS1RemovalFailureProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 Removal Failure"]
@@ -12179,8 +11449,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as S1RemovalRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousS1RemovalRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 REMOVAL ELEMENTARY PROCEDURE"]
@@ -12207,8 +11475,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as S1RemovalResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousS1RemovalResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 Removal Response"]
@@ -12230,8 +11496,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as S1SetupFailureProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousS1SetupFailureProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 Setup Failure"]
@@ -12253,8 +11517,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as S1SetupRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousS1SetupRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 SETUP ELEMENTARY PROCEDURE"]
@@ -12281,8 +11543,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as S1SetupResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousS1SetupResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 Setup Response"]
@@ -12304,8 +11564,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as SecondaryRATDataUsageReportProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousSecondaryRATDataUsageReportProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Secondary RAT Data Usage Report"]
@@ -12327,8 +11585,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolExtensionContainer as TAIItemIEExtensions;
-    pub use super::s1_ap_containers::ProtocolExtensionField as AnonymousTAIItemIEExtensions;
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
     #[rasn(automatic_tags)]
     #[non_exhaustive]
@@ -12352,13 +11608,10 @@ pub mod s1_ap_pdu_contents {
             }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousTAIList;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(delegate, size("1..=256"))]
     pub struct TAIList(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { TAIList, 1, 256 }
-    pub use super::s1_ap_containers::ProtocolIEContainer as TraceFailureIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousTraceFailureIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Trace Failure Indication"]
@@ -12380,8 +11633,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as TraceStartProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousTraceStartProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " TRACE ELEMENTARY PROCEDURES"]
@@ -12408,7 +11659,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEAssociatedLogicalS1ConnectionListRes;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -12417,7 +11667,6 @@ pub mod s1_ap_pdu_contents {
     )]
     pub struct UEAssociatedLogicalS1ConnectionListRes(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { UEAssociatedLogicalS1ConnectionListRes, 1, 256 }
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEAssociatedLogicalS1ConnectionListResAck;
     #[derive(AsnType, Debug, Clone, PartialEq, Eq, Hash)]
     #[rasn(
         delegate,
@@ -12426,8 +11675,6 @@ pub mod s1_ap_pdu_contents {
     )]
     pub struct UEAssociatedLogicalS1ConnectionListResAck(pub SequenceOf<ProtocolIEField>);
     crate::per::sequence_of! { UEAssociatedLogicalS1ConnectionListResAck, 1, 256 }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UECapabilityInfoIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUECapabilityInfoIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CAPABILITY INFO INDICATION ELEMENTARY PROCEDURE"]
@@ -12454,8 +11701,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextModificationConfirmProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextModificationConfirmProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Modification Confirm"]
@@ -12477,8 +11722,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextModificationFailureProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextModificationFailureProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Modification Failure"]
@@ -12500,8 +11743,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextModificationIndicationProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextModificationIndicationProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CONTEXT MODIFICATION INDICATION ELEMENTARY PROCEDURE"]
@@ -12528,8 +11769,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextModificationRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextModificationRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CONTEXT MODIFICATION ELEMENTARY PROCEDURE"]
@@ -12556,8 +11795,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextModificationResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextModificationResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Modification Response"]
@@ -12579,8 +11816,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextReleaseCommandProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextReleaseCommandProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Release Command"]
@@ -12602,8 +11837,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextReleaseCompleteProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextReleaseCompleteProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Release Complete"]
@@ -12625,8 +11858,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextReleaseRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextReleaseRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CONTEXT RELEASE ELEMENTARY PROCEDURE"]
@@ -12653,8 +11884,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextResumeFailureProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextResumeFailureProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Resume Failure"]
@@ -12676,8 +11905,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextResumeRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextResumeRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CONTEXT RESUME ELEMENTARY PROCEDURE"]
@@ -12704,8 +11931,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextResumeResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextResumeResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Resume Response"]
@@ -12727,8 +11952,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextSuspendRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextSuspendRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CONTEXT SUSPEND ELEMENTARY PROCEDURE"]
@@ -12755,8 +11978,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEContextSuspendResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEContextSuspendResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Suspend Response"]
@@ -12778,8 +11999,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UEInformationTransferProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUEInformationTransferProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = " UE Information Transfer"]
     #[doc = ""]
@@ -12800,8 +12019,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UERadioCapabilityIDMappingRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUERadioCapabilityIDMappingRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE RADIO CAPABILITY ID MAPPING PROCEDURE"]
@@ -12828,8 +12045,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UERadioCapabilityIDMappingResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUERadioCapabilityIDMappingResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Radio Capability ID Mapping Response"]
@@ -12851,8 +12066,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UERadioCapabilityMatchRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUERadioCapabilityMatchRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE RADIO CAPABILITY MATCH ELEMENTARY PROCEDURE"]
@@ -12879,8 +12092,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UERadioCapabilityMatchResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUERadioCapabilityMatchResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Radio Capability Match Response"]
@@ -12902,8 +12113,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UplinkNASTransportProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUplinkNASTransportProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UPLINK NAS TRANSPORT"]
@@ -12925,8 +12134,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UplinkNonUEAssociatedLPPaTransportProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUplinkNonUEAssociatedLPPaTransportProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UPLINK NON UE ASSOCIATED LPPA TRANSPORT"]
@@ -12948,8 +12155,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UplinkS1cdma2000tunnellingProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUplinkS1cdma2000tunnellingProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UPLINK S1 CDMA2000 TUNNELLING ELEMENTARY PROCEDURE"]
@@ -12976,8 +12181,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as UplinkUEAssociatedLPPaTransportProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousUplinkUEAssociatedLPPaTransportProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UPLINK UE ASSOCIATED LPPA TRANSPORT"]
@@ -12999,8 +12202,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as WriteReplaceWarningRequestProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousWriteReplaceWarningRequestProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " WRITE-REPLACE WARNING ELEMENTARY PROCEDURE"]
@@ -13027,8 +12228,6 @@ pub mod s1_ap_pdu_contents {
             Self { protocol_ies }
         }
     }
-    pub use super::s1_ap_containers::ProtocolIEContainer as WriteReplaceWarningResponseProtocolIEs;
-    pub use super::s1_ap_containers::ProtocolIEField as AnonymousWriteReplaceWarningResponseProtocolIEs;
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Write-Replace Warning Response"]

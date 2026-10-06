@@ -83,9 +83,9 @@ fn e_rab_container_lists_encode_their_size_constraint() {
         None,
         None,
     );
-    let admitted = ERABAdmittedList(vec![AnonymousERABAdmittedList::new(
+    let admitted = ERABAdmittedList(vec![ProtocolIEField::new(
         ID_E_RABADMITTED_ITEM.0,
-        AnonymousERABAdmittedListCriticality::ignore,
+        Criticality::ignore,
         encode_open_type(&item).expect("encode E-RAB admitted item"),
     )]);
     let acknowledge = build_s1ap!(SuccessfulOutcome, HandoverResourceAllocation,

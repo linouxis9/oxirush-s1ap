@@ -212,11 +212,13 @@ fn optional_root_extension_container_is_preserved() {
     let value = TAI::new(
         oxirush_s1ap::helpers::plmn("208", "93"),
         [0, 1].into(),
-        Some(TAIIEExtensions(vec![AnonymousTAIIEExtensions::new(
-            ProtocolExtensionID(65000),
-            Criticality::ignore,
-            Any::new(vec![0x5a]),
-        )])),
+        Some(ProtocolExtensionContainer(vec![
+            ProtocolExtensionField::new(
+                ProtocolExtensionID(65000),
+                Criticality::ignore,
+                Any::new(vec![0x5a]),
+            ),
+        ])),
     );
     assert_eq!(rasn::aper::decode::<TAI>(&wire).unwrap(), value);
     assert_eq!(rasn::aper::encode(&value).unwrap(), wire);

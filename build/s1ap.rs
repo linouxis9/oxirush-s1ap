@@ -45,8 +45,7 @@ fn post_process(path: &Path, asn_files: &[PathBuf]) -> Result<()> {
     // Plain bracketed specification references are otherwise parsed as rustdoc links.
     generated = generated.replace("[16]", "(reference 16)");
 
-    generated =
-        crate::containers::share(&generated, "s1_ap_containers", "s1_ap_common_data_types")?;
+    generated = crate::containers::share(&generated, "s1_ap_containers")?;
 
     // TS 36.413 declares both ECGIList, SIZE(1..maxnoofCellID), and ECGI-List,
     // SIZE(1..maxnoofCellsineNB), which rasn-compiler both names `ECGIList`.

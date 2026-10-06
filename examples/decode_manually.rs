@@ -31,23 +31,23 @@ fn main() {
     // In rasn's stable opaque-open-type representation, every entry holds its
     // numeric ID, criticality, and the APER bytes of its concrete S1AP value.
     let ies = vec![
-        AnonymousS1SetupResponseProtocolIEs::new(
+        ProtocolIEField::new(
             ID_MMENAME,
             Criticality::ignore,
             encode_open_type(&mme_name).expect("encode MME name"),
         ),
-        AnonymousS1SetupResponseProtocolIEs::new(
+        ProtocolIEField::new(
             ID_SERVED_GUMMEIS,
             Criticality::reject,
             encode_open_type(&served_gummeis).expect("encode served GUMMEIs"),
         ),
-        AnonymousS1SetupResponseProtocolIEs::new(
+        ProtocolIEField::new(
             ID_RELATIVE_MMECAPACITY,
             Criticality::ignore,
             encode_open_type(&RelativeMMECapacity(255)).expect("encode MME capacity"),
         ),
     ];
-    let response = S1SetupResponse::new(S1SetupResponseProtocolIEs(ies));
+    let response = S1SetupResponse::new(ProtocolIEContainer(ies));
 
     // The outer PDU wraps the APER-encoded message in its direction and
     // ASN.1-derived procedure code.

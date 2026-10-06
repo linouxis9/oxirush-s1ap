@@ -89,13 +89,11 @@ fn the_octets_of_an_ie_are_replaced_or_added_as_its_value_without_raw_value() {
 
 #[test]
 fn an_ie_that_does_not_decode_is_edited_as_its_octets() {
-    let request = UEContextReleaseRequest::new(UEContextReleaseRequestProtocolIEs(vec![
-        AnonymousUEContextReleaseRequestProtocolIEs::new(
-            ProtocolIEID(60000),
-            Criticality::ignore,
-            vec![0xC0, 0xFF, 0xEE].into(),
-        ),
-    ]));
+    let request = UEContextReleaseRequest::new(ProtocolIEContainer(vec![ProtocolIEField::new(
+        ProtocolIEID(60000),
+        Criticality::ignore,
+        vec![0xC0, 0xFF, 0xEE].into(),
+    )]));
     let pdu = S1AP_PDU::initiatingMessage(InitiatingMessage::new(
         ProcedureCode(18),
         Criticality::ignore,

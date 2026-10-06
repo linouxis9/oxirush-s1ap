@@ -14,12 +14,12 @@ is not source compatible with 0.2.0.
   every procedure, IE and extension up to Release 19.
 - Each protocol IE container, each extension container and their fields are
   one type: `ProtocolIEContainer` of `ProtocolIEField`, and
-  `ProtocolExtensionContainer` of `ProtocolExtensionField`. The name that
-  each use of one had, such as `InitialUEMessageProtocolIEs`, is a re-export
-  of that type. The `id` of a field is a `ProtocolIEID` or a
-  `ProtocolExtensionID`, where extension fields and the items of the
-  single-container lists, such as `AnonymousERABList`, had a `u16`, and
-  every `criticality` is a `Criticality`.
+  `ProtocolExtensionContainer` of `ProtocolExtensionField`. The types that
+  each use of one had, such as `InitialUEMessageProtocolIEs` and
+  `AnonymousInitialUEMessageProtocolIEs`, are gone. The `id` of a field is a
+  `ProtocolIEID` or a `ProtocolExtensionID`, where extension fields and the
+  items of the single-container lists, such as `AnonymousERABList`, had a
+  `u16`, and every `criticality` is a `Criticality`.
 - `ECGI-List`, of at most 256 cells, is `ECGI_List`. It was one type with
   `ECGIList`, of at most 65535, so the cell list of a warning request had a
   one-octet count. This changes the type of `SynchronisationInformation`'s

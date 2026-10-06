@@ -50,7 +50,7 @@
 //! ```
 //! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
 //!
-//! fn source(gummei: GUMMEI) -> AnonymousPathSwitchRequestProtocolIEs {
+//! fn source(gummei: GUMMEI) -> ProtocolIEField {
 //!     build_s1ap_ie!(PathSwitchRequest, IGNORE SourceMME_GUMMEI(gummei))
 //! }
 //! ```
@@ -58,7 +58,7 @@
 //! ```compile_fail
 //! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
 //!
-//! fn source(gummei: GUMMEI) -> AnonymousPathSwitchRequestProtocolIEs {
+//! fn source(gummei: GUMMEI) -> ProtocolIEField {
 //!     build_s1ap_ie!(PathSwitchRequest, IGNORE GUMMEI(gummei))
 //! }
 //! ```
@@ -210,7 +210,7 @@ macro_rules! build_s1ap {
     ) => {
         $crate::__paste::paste! {{
             let ies = vec![
-                $( $crate::s1ap::[< Anonymous $msg ProtocolIEs >] {
+                $( $crate::s1ap::ProtocolIEField {
                     id: $crate::s1ap::ProtocolIEID($crate::__s1ap_ie_id!($ie_name)),
                     criticality: $crate::build_s1ap!(@criticality $ie_crit),
                     value: $crate::__s1ap_encode_ie!($ie_name, ($($ie_value)+))
@@ -218,7 +218,7 @@ macro_rules! build_s1ap {
                 }, )*
             ];
             let message = $crate::s1ap::$msg::new(
-                $crate::s1ap::[< $msg ProtocolIEs >](ies),
+                $crate::s1ap::ProtocolIEContainer(ies),
             );
             let value = $crate::s1ap::encode_open_type(&message)
                 .expect("failed to APER-encode S1AP message open type");
@@ -251,7 +251,8 @@ macro_rules! build_s1ap {
     };
 }
 
-/// Build one S1AP Protocol IE entry for a message type.
+/// Build one S1AP protocol IE entry. Every message takes the same
+/// `ProtocolIEField`: the message name says where the IE goes and is not used.
 ///
 /// # Panics
 ///
@@ -260,7 +261,7 @@ macro_rules! build_s1ap {
 macro_rules! build_s1ap_ie {
     ($msg:ident, $criticality:ident $ie_name:ident ($($value:tt)+)) => {
         $crate::__paste::paste! {
-            $crate::s1ap::[< Anonymous $msg ProtocolIEs >] {
+            $crate::s1ap::ProtocolIEField {
                 id: $crate::s1ap::ProtocolIEID($crate::__s1ap_ie_id!($ie_name)),
                 criticality: $crate::build_s1ap!(@criticality $criticality),
                 value: $crate::__s1ap_encode_ie!($ie_name, ($($value)+))

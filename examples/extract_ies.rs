@@ -227,9 +227,9 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
         Some(NASPDU::from(nas)),
         None,
     );
-    ERABToBeSetupListCtxtSUReq(vec![AnonymousERABToBeSetupListCtxtSUReq::new(
+    ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField::new(
         ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ.0,
-        AnonymousERABToBeSetupListCtxtSUReqCriticality::reject,
+        Criticality::reject,
         encode_open_type(&item).expect("encode E-RAB item"),
     )])
 }
