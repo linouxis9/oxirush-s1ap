@@ -444,6 +444,9 @@ pub(crate) fn ie(id: u16) -> Result<Typed, String> {
         _ => return Err(format!("S1AP IE {id} is unknown or has several types")),
     })
 }
+pub(crate) fn ie_contents(_: u16) -> Option<Typed> {
+    None
+}
 pub(crate) fn transfer(field: &str) -> Result<Typed, String> {
     Err(format!(
         "S1AP contained transfer {field} is unknown or has several types"
