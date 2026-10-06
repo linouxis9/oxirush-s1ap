@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result, anyhow, ensure};
 use rasn_compiler::OutputMode;
 use rasn_compiler::prelude::{Compiler, RasnBackend, RasnConfig};
-use regex::{Captures, Regex};
+use regex::Regex;
 
 pub fn generate_s1ap() -> Result<()> {
     let mut files: Vec<PathBuf> = fs::read_dir("s1ap")
@@ -45,11 +45,8 @@ fn post_process(path: &Path, asn_files: &[PathBuf]) -> Result<()> {
     // Plain bracketed specification references are otherwise parsed as rustdoc links.
     generated = generated.replace("[16]", "(reference 16)");
 
-    // rasn-compiler already resolves every parameterized container invocation to
-    // a concrete anonymous type. These now-unused imports refer to parameterized
-    // definitions that intentionally have no standalone Rust representation.
-    let container_imports = Regex::new(r"(?ms)^    use super::s1_ap_containers::\{.*?^    \};\n")?;
-    generated = container_imports.replace_all(&generated, "").into_owned();
+    generated =
+        crate::containers::share(&generated, "s1_ap_containers", "s1_ap_common_data_types")?;
 
     // TS 36.413 declares both ECGIList, SIZE(1..maxnoofCellID), and ECGI-List,
     // SIZE(1..maxnoofCellsineNB), which rasn-compiler both names `ECGIList`.
@@ -75,31 +72,13 @@ fn post_process(path: &Path, asn_files: &[PathBuf]) -> Result<()> {
     generated = crate::aper_fix::fix_long_inline_strings(&generated)?;
     generated = crate::aper_fix::fix_extensible_sequences(&generated)?;
 
-    // The concrete private/extension containers below use these common types,
-    // but rasn-compiler omits both from the generated module import list.
+    // The private IE container uses PrivateIE-ID, which rasn-compiler omits
+    // from the import list of its module.
     generated = generated.replacen(
         "    use super::s1_ap_common_data_types::{Criticality, Presence, ProcedureCode, ProtocolIEID};",
-        "    use super::s1_ap_common_data_types::{\n        Criticality, Presence, PrivateIEID, ProcedureCode, ProtocolExtensionID, ProtocolIEID,\n    };",
+        "    use super::s1_ap_common_data_types::{\n        Criticality, Presence, PrivateIEID, ProcedureCode, ProtocolIEID,\n    };",
         1,
     );
-
-    // Some resolved ProtocolIE containers use primitive/anonymous field types
-    // while equivalent containers use the named common types. Normalize only
-    // message ProtocolIE entries; their APER representations are identical.
-    let protocol_ie_block = Regex::new(
-        r"(?ms)(    pub struct Anonymous[A-Za-z0-9_]+ProtocolIEs \{.*?^    \}\n    impl Anonymous[A-Za-z0-9_]+ProtocolIEs \{.*?^    \}\n)",
-    )?;
-    let anonymous_criticality = Regex::new(r"Anonymous[A-Za-z0-9_]+ProtocolIEsCriticality")?;
-    generated = protocol_ie_block
-        .replace_all(&generated, |captures: &Captures<'_>| {
-            let block = captures[1]
-                .replace("pub id: u16", "pub id: ProtocolIEID")
-                .replace("id: u16,", "id: ProtocolIEID,");
-            anonymous_criticality
-                .replace_all(&block, "Criticality")
-                .into_owned()
-        })
-        .into_owned();
 
     let support = generate_support(&generated, asn_files)?;
     generated.push_str(&support);
@@ -309,6 +288,7 @@ fn generate_support(generated: &str, asn_files: &[PathBuf]) -> Result<String> {
     )?;
     writeln!(out, "pub use s1_ap_common_data_types::*;")?;
     writeln!(out, "pub use s1_ap_constants::*;")?;
+    writeln!(out, "pub use s1_ap_containers::*;")?;
     writeln!(out, "pub use s1_ap_ies::*;")?;
     writeln!(out, "pub use s1_ap_pdu_contents::*;")?;
     writeln!(out, "pub use s1_ap_pdu_descriptions::*;")?;

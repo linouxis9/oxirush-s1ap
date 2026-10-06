@@ -164,6 +164,12 @@ mode emits unresolved object-set warnings and uncompilable bindings for these
 six modules. `Any` stays inside the generated representation; the public macros
 provide typed construction, extraction, and mutation.
 
+TS 36.413 gives its protocol IE and extension containers an object set as a
+parameter, which an opaque open type does not use. Each is one type:
+`ProtocolIEContainer` and `ProtocolExtensionContainer`, of `ProtocolIEField`
+and `ProtocolExtensionField`. The name that `rasn-compiler` gives to each use
+of one, such as `InitialUEMessageProtocolIEs`, is a re-export of that type.
+
 The crate enables rasn's efficient `bytes` storage and leaves its unused `f32`
 and `f64` features disabled. rasn 0.28's APER codec departs from ITU-T X.691
 where S1AP reaches it, so the generator replaces the derived codec there with
@@ -193,6 +199,7 @@ or all mandatory and conditional IE presence rules; callers enforce those.
 | --- | --- |
 | `S1AP_PDU` / `S1APPDU` | Top-level initiating/successful/unsuccessful PDU choice |
 | `InitiatingMessage` | Procedure code, criticality, and message open type |
+| `ProtocolIEContainer` / `ProtocolIEField` | The IEs of a message: identifier, criticality, and value open type |
 | `MMEUES1APID` | 32-bit MME UE S1AP identifier |
 | `ENBUES1APID` | eNB UE S1AP identifier |
 | `Cause` | Radio network, transport, NAS, protocol, or miscellaneous cause |

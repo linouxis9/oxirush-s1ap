@@ -1735,61 +1735,32 @@ open_types! { crate::s1ap::s1_ap_common_data_types::ProcedureCode {} }
 open_types! { crate::s1ap::s1_ap_common_data_types::ProtocolExtensionID {} }
 open_types! { crate::s1ap::s1_ap_common_data_types::ProtocolIEID {} }
 open_types! { crate::s1ap::s1_ap_common_data_types::TriggeringMessage {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousAdditionalGUTIIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousAdditionalGUTIIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::AdditionalGUTIIEExtensions { 0 } }
+open_types! { crate::s1ap::s1_ap_containers::ProtocolIEField { value } }
+open_types! { crate::s1ap::s1_ap_containers::ProtocolIEContainer { 0 } }
+open_types! { crate::s1ap::s1_ap_containers::ProtocolExtensionField { extension_value } }
+open_types! { crate::s1ap::s1_ap_containers::ProtocolExtensionContainer { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::AdditionalGUTI { g_ummei, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::AdditionalCSFallbackIndicator {} }
 open_types! { crate::s1ap::s1_ap_ies::AdditionalRRMPriorityIndex {} }
 open_types! { crate::s1ap::s1_ap_ies::AerialUEsubscriptionInformation {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousAllocationAndRetentionPriorityIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousAllocationAndRetentionPriorityIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::AllocationAndRetentionPriorityIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::AllocationAndRetentionPriority { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::AreaScopeOfMDT { cellBased, tABased, tAIBased } else { pLMNWide } }
 open_types! { crate::s1ap::s1_ap_ies::AreaScopeOfQMC { cellBased, tABased, tAIBased, pLMNAreaBased } else {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousAssistanceDataForCECapableUEsIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousAssistanceDataForCECapableUEsIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::AssistanceDataForCECapableUEsIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::AssistanceDataForCECapableUEs { cell_identifier_and_celevel_for_cecapable_ues, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousAssistanceDataForPagingIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousAssistanceDataForPagingIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::AssistanceDataForPagingIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::AssistanceDataForPaging { assistance_data_for_recommended_cells, assistance_data_for_cecapable_ues, paging_attempt_information, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousAssistanceDataForRecommendedCellsIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousAssistanceDataForRecommendedCellsIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::AssistanceDataForRecommendedCellsIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::AssistanceDataForRecommendedCells { recommended_cells_for_paging, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::BPLMNs {} }
 open_types! { crate::s1ap::s1_ap_ies::BearerType {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToDLDiscardingItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToDLDiscardingItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::BearersSubjectToDLDiscardingItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::BearersSubjectToDLDiscardingItem { d_l_discarding, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToDLDiscardingListCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToDLDiscardingList { value } }
 open_types! { crate::s1ap::s1_ap_ies::BearersSubjectToDLDiscardingList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToEarlyStatusTransferItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToEarlyStatusTransferItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::BearersSubjectToEarlyStatusTransferItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::BearersSubjectToEarlyStatusTransferItem { d_lcount_pdcp_snlength, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToEarlyStatusTransferListCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToEarlyStatusTransferList { value } }
 open_types! { crate::s1ap::s1_ap_ies::BearersSubjectToEarlyStatusTransferList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToStatusTransferItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToStatusTransferItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::BearersSubjectToStatusTransferItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::BearersSubjectToStatusTransferItem { u_l_countvalue, d_l_countvalue, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToStatusTransferListCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBearersSubjectToStatusTransferList { value } }
 open_types! { crate::s1ap::s1_ap_ies::BearersSubjectToStatusTransferList { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::BitRate {} }
 open_types! { crate::s1ap::s1_ap_ies::BluetoothMeasConfig {} }
 open_types! { crate::s1ap::s1_ap_ies::BluetoothMeasConfigNameList {} }
 open_types! { crate::s1ap::s1_ap_ies::BluetoothMeasurementConfigurationBtRssi {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBluetoothMeasurementConfigurationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousBluetoothMeasurementConfigurationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::BluetoothMeasurementConfigurationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::BluetoothMeasurementConfiguration { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::BluetoothName {} }
 open_types! { crate::s1ap::s1_ap_ies::BroadcastCancelledAreaList { cellID_Cancelled, tAI_Cancelled, emergencyAreaID_Cancelled } else {} }
@@ -1797,47 +1768,23 @@ open_types! { crate::s1ap::s1_ap_ies::BroadcastCompletedAreaList { cellID_Broadc
 open_types! { crate::s1ap::s1_ap_ies::CEModeBRestricted {} }
 open_types! { crate::s1ap::s1_ap_ies::CEModeBSupportIndicator {} }
 open_types! { crate::s1ap::s1_ap_ies::CELevel {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCGIIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCGIIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CGIIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CGI { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CI {} }
 open_types! { crate::s1ap::s1_ap_ies::CNDomain {} }
 open_types! { crate::s1ap::s1_ap_ies::CNType {} }
 open_types! { crate::s1ap::s1_ap_ies::CNTypeRestrictions { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCNTypeRestrictionsItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCNTypeRestrictionsItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CNTypeRestrictionsItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CNTypeRestrictionsItem { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCOUNTValueExtendedIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCOUNTValueExtendedIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::COUNTValueExtendedIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::COUNTValueExtended { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCOUNTvalueIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCOUNTvalueIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::COUNTvalueIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::COUNTvalue { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCOUNTvaluePDCPSNlength18IEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCOUNTvaluePDCPSNlength18IEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::COUNTvaluePDCPSNlength18IEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::COUNTvaluePDCPSNlength18 { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CSFallbackIndicator {} }
 open_types! { crate::s1ap::s1_ap_ies::CSGId {} }
 open_types! { crate::s1ap::s1_ap_ies::CSGIdList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCSGIdListItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCSGIdListItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CSGIdListItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CSGIdListItem { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CSGMembershipStatus {} }
 open_types! { crate::s1ap::s1_ap_ies::CancelledCellinEAI { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCancelledCellinEAIItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCancelledCellinEAIItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CancelledCellinEAIItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CancelledCellinEAIItem { e_cgi, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CancelledCellinTAI { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCancelledCellinTAIItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCancelledCellinTAIItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CancelledCellinTAIItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CancelledCellinTAIItem { e_cgi, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::Cause {} }
 open_types! { crate::s1ap::s1_ap_ies::CauseMisc {} }
@@ -1851,98 +1798,45 @@ open_types! { crate::s1ap::s1_ap_ies::Cdma2000OneXMEID {} }
 open_types! { crate::s1ap::s1_ap_ies::Cdma2000OneXMSI {} }
 open_types! { crate::s1ap::s1_ap_ies::Cdma2000OneXPilot {} }
 open_types! { crate::s1ap::s1_ap_ies::Cdma2000OneXRAND {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCdma2000OneXSRVCCInfoIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCdma2000OneXSRVCCInfoIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::Cdma2000OneXSRVCCInfoIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::Cdma2000OneXSRVCCInfo { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::Cdma2000PDU {} }
 open_types! { crate::s1ap::s1_ap_ies::Cdma2000RATType {} }
 open_types! { crate::s1ap::s1_ap_ies::Cdma2000SectorID {} }
 open_types! { crate::s1ap::s1_ap_ies::CellSize {} }
 open_types! { crate::s1ap::s1_ap_ies::CellAccessMode {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellBasedMDTIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellBasedMDTIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CellBasedMDTIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CellBasedMDT { cell_id_listfor_mdt, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellBasedQMCIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellBasedQMCIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CellBasedQMCIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CellBasedQMC { cell_id_listfor_qmc, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CellIDBroadcast { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellIDBroadcastItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellIDBroadcastItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CellIDBroadcastItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CellIDBroadcastItem { e_cgi, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CellIDCancelled { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellIDCancelledItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellIDCancelledItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CellIDCancelledItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CellIDCancelledItem { e_cgi, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CellIdListforMDT { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CellIdListforQMC { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellIdentifierAndCELevelForCECapableUEsIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellIdentifierAndCELevelForCECapableUEsIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CellIdentifierAndCELevelForCECapableUEsIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CellIdentifierAndCELevelForCECapableUEs { global_cell_id, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CellIdentity {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellTypeIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCellTypeIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CellTypeIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CellType { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CoarseUELocation {} }
 open_types! { crate::s1ap::s1_ap_ies::CoarseUELocationRequested {} }
 open_types! { crate::s1ap::s1_ap_ies::CompletedCellinEAI { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCompletedCellinEAIItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCompletedCellinEAIItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CompletedCellinEAIItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CompletedCellinEAIItem { e_cgi, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CompletedCellinTAI { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCompletedCellinTAIItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCompletedCellinTAIItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CompletedCellinTAIItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CompletedCellinTAIItem { e_cgi, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ConcurrentWarningMessageIndicator {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousConnectedengNBItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousConnectedengNBItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ConnectedengNBItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ConnectedengNBItem { supported_tas, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ConnectedengNBList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousContextatSourceIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousContextatSourceIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ContextatSourceIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ContextatSource { source_ng_ran_node_id, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CorrelationID {} }
 open_types! { crate::s1ap::s1_ap_ies::CoverageLevel {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCriticalityDiagnosticsIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCriticalityDiagnosticsIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CriticalityDiagnosticsIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CriticalityDiagnostics { i_es_criticality_diagnostics, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCriticalityDiagnosticsIEItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousCriticalityDiagnosticsIEItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::CriticalityDiagnosticsIEItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::CriticalityDiagnosticsIEItem { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::CriticalityDiagnosticsIEList { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::DAPSRequestInfoDAPSIndicator {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousDAPSRequestInfoIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousDAPSRequestInfoIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::DAPSRequestInfoIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::DAPSRequestInfo { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::DAPSResponseInfoDapsresponseindicator {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousDAPSResponseInfoIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousDAPSResponseInfoIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::DAPSResponseInfoIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::DAPSResponseInfo { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousDAPSResponseInfoItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousDAPSResponseInfoItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::DAPSResponseInfoItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::DAPSResponseInfoItem { d_apsresponse_info, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousDAPSResponseInfoListCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousDAPSResponseInfoList { value } }
 open_types! { crate::s1ap::s1_ap_ies::DAPSResponseInfoList { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::DCNID {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousDLCPSecurityInformationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousDLCPSecurityInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::DLCPSecurityInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::DLCPSecurityInformation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::DLForwarding {} }
 open_types! { crate::s1ap::s1_ap_ies::DLNASMAC {} }
@@ -1954,37 +1848,14 @@ open_types! { crate::s1ap::s1_ap_ies::DataCodingScheme {} }
 open_types! { crate::s1ap::s1_ap_ies::DataSize {} }
 open_types! { crate::s1ap::s1_ap_ies::DirectForwardingPathAvailability {} }
 open_types! { crate::s1ap::s1_ap_ies::ERABID {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABInformationListCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABInformationList { value } }
 open_types! { crate::s1ap::s1_ap_ies::ERABInformationList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABInformationListItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABInformationListItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ERABInformationListItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ERABInformationListItem { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ERABItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ERABItem { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABLevelQoSParametersIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABLevelQoSParametersIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ERABLevelQoSParametersIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ERABLevelQoSParameters { allocation_retention_priority, gbr_qos_information, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABListCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABList { value } }
 open_types! { crate::s1ap::s1_ap_ies::ERABList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABSecurityResultItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABSecurityResultItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ERABSecurityResultItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ERABSecurityResultItem { security_result, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABSecurityResultListCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABSecurityResultList { value } }
 open_types! { crate::s1ap::s1_ap_ies::ERABSecurityResultList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABUsageReportItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABUsageReportItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ERABUsageReportItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ERABUsageReportItem { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABUsageReportListCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousERABUsageReportList { value } }
 open_types! { crate::s1ap::s1_ap_ies::ERABUsageReportList { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::EUTRANTraceID {} }
 open_types! { crate::s1ap::s1_ap_ies::EARFCN {} }
@@ -1992,62 +1863,29 @@ open_types! { crate::s1ap::s1_ap_ies::ECGI_List { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ECGIList { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ECGIListForRestart { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::EDTSession {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENDCSONConfigurationTransferIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENDCSONConfigurationTransferIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ENDCSONConfigurationTransferIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ENDCSONConfigurationTransfer { transfertype, s_oninformation, x2_tnlconfig_info, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ENDCSONTransferType { request, reply } else {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENDCSONeNBIdentificationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENDCSONeNBIdentificationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ENDCSONeNBIdentificationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ENDCSONeNBIdentification { globale_nbid, selected_tai, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENDCSONengNBIdentificationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENDCSONengNBIdentificationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ENDCSONengNBIdentificationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ENDCSONengNBIdentification { globaleng_nbid, selected_tai, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENDCTransferTypeReplyIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENDCTransferTypeReplyIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ENDCTransferTypeReplyIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ENDCTransferTypeReply { sourceeng_nb, targete_nb, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENDCTransferTypeRequestIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENDCTransferTypeRequestIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ENDCTransferTypeRequestIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ENDCTransferTypeRequest { sourcee_nb, targeteng_nb, targete_nb, associated_tai, broadcast5_gstai, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENBEarlyStatusTransferTransparentContainerIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENBEarlyStatusTransferTransparentContainerIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ENBEarlyStatusTransferTransparentContainerIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ENBEarlyStatusTransferTransparentContainer { bearers_subject_to_early_status_transfer_list, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ENBID {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENBStatusTransferTransparentContainerIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENBStatusTransferTransparentContainerIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ENBStatusTransferTransparentContainerIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ENBStatusTransferTransparentContainer { bearers_subject_to_status_transfer_list, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ENBUES1APID {} }
 open_types! { crate::s1ap::s1_ap_ies::ENBIndirectX2TransportLayerAddresses {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENBX2ExtTLAIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousENBX2ExtTLAIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ENBX2ExtTLAIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ENBX2ExtTLA { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ENBX2ExtTLAs { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ENBX2GTPTLAs {} }
 open_types! { crate::s1ap::s1_ap_ies::ENBX2TLAs {} }
 open_types! { crate::s1ap::s1_ap_ies::ENBname {} }
 open_types! { crate::s1ap::s1_ap_ies::EPLMNs {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousEUTRANCGIIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousEUTRANCGIIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::EUTRANCGIIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::EUTRANCGI { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::EUTRANRoundTripDelayEstimationInfo {} }
 open_types! { crate::s1ap::s1_ap_ies::EmergencyAreaID {} }
 open_types! { crate::s1ap::s1_ap_ies::EmergencyAreaIDBroadcast { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousEmergencyAreaIDBroadcastItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousEmergencyAreaIDBroadcastItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::EmergencyAreaIDBroadcastItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::EmergencyAreaIDBroadcastItem { completed_cellin_eai, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::EmergencyAreaIDCancelled { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousEmergencyAreaIDCancelledItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousEmergencyAreaIDCancelledItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::EmergencyAreaIDCancelledItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::EmergencyAreaIDCancelledItem { cancelled_cellin_eai, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::EmergencyAreaIDList {} }
 open_types! { crate::s1ap::s1_ap_ies::EmergencyAreaIDListForRestart {} }
@@ -2057,91 +1895,47 @@ open_types! { crate::s1ap::s1_ap_ies::EncryptionAlgorithms {} }
 open_types! { crate::s1ap::s1_ap_ies::EndIndication {} }
 open_types! { crate::s1ap::s1_ap_ies::EnhancedCoverageRestricted {} }
 open_types! { crate::s1ap::s1_ap_ies::EthernetType {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousEventL1LoggedMDTConfigIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousEventL1LoggedMDTConfigIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::EventL1LoggedMDTConfigIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::EventL1LoggedMDTConfig { l1_threshold, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::EventTriggerOutOfCoverage {} }
-open_types! { crate::s1ap::s1_ap_ies::EventTriggerChoiceExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::EventTriggerChoiceExtensions { value } }
 open_types! { crate::s1ap::s1_ap_ies::EventTrigger { eventL1LoggedMDTConfig, choice_Extensions } else { outOfCoverage } }
 open_types! { crate::s1ap::s1_ap_ies::EventType {} }
 open_types! { crate::s1ap::s1_ap_ies::ExpectedActivityPeriod {} }
 open_types! { crate::s1ap::s1_ap_ies::ExpectedHOInterval {} }
 open_types! { crate::s1ap::s1_ap_ies::ExpectedIdlePeriod {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousExpectedUEActivityBehaviourIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousExpectedUEActivityBehaviourIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ExpectedUEActivityBehaviourIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ExpectedUEActivityBehaviour { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousExpectedUEBehaviourIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousExpectedUEBehaviourIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ExpectedUEBehaviourIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ExpectedUEBehaviour { expected_activity, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ExtendedUEIdentityIndexValue {} }
 open_types! { crate::s1ap::s1_ap_ies::ExtendedBitRate {} }
 open_types! { crate::s1ap::s1_ap_ies::ExtendedRNCID {} }
 open_types! { crate::s1ap::s1_ap_ies::ExtendedRepetitionPeriod {} }
 open_types! { crate::s1ap::s1_ap_ies::FiveGSTAC {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousFiveGSTAIIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousFiveGSTAIIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::FiveGSTAIIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::FiveGSTAI { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::FiveQI {} }
 open_types! { crate::s1ap::s1_ap_ies::ForbiddenInterRATs {} }
 open_types! { crate::s1ap::s1_ap_ies::ForbiddenLACs {} }
 open_types! { crate::s1ap::s1_ap_ies::ForbiddenLAs { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousForbiddenLAsItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousForbiddenLAsItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ForbiddenLAsItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ForbiddenLAsItem { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ForbiddenTACs {} }
 open_types! { crate::s1ap::s1_ap_ies::ForbiddenTAs { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousForbiddenTAsItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousForbiddenTAsItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ForbiddenTAsItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ForbiddenTAsItem { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGBRQosInformationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGBRQosInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::GBRQosInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::GBRQosInformation { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGERANCellIDIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGERANCellIDIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::GERANCellIDIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::GERANCellID { l_ai, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGNBIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGNBIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::GNBIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::GNB { global_g_nb_id, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::GNBID {} }
 open_types! { crate::s1ap::s1_ap_ies::GNBIdentity {} }
 open_types! { crate::s1ap::s1_ap_ies::GTPTEID {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGUMMEIIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGUMMEIIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::GUMMEIIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::GUMMEI { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::GUMMEIList { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::GUMMEIType {} }
 open_types! { crate::s1ap::s1_ap_ies::GWContextReleaseIndication {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGlobalENBIDIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGlobalENBIDIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::GlobalENBIDIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::GlobalENBID { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGlobalGNBIDIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGlobalGNBIDIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::GlobalGNBIDIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::GlobalGNBID { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::GlobalRANNODEID { gNB, ng_eNB } else {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGlobalEnGNBIDIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousGlobalEnGNBIDIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::GlobalEnGNBIDIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::GlobalEnGNBID { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::HFN {} }
 open_types! { crate::s1ap::s1_ap_ies::HFNModified {} }
 open_types! { crate::s1ap::s1_ap_ies::HFNforPDCPSNlength18 {} }
 open_types! { crate::s1ap::s1_ap_ies::HandoverFlag {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousHandoverRestrictionListIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousHandoverRestrictionListIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::HandoverRestrictionListIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::HandoverRestrictionList { forbidden_tas, forbidden_las, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::HandoverType {} }
 open_types! { crate::s1ap::s1_ap_ies::HandoverWindowDuration {} }
@@ -2152,133 +1946,68 @@ open_types! { crate::s1ap::s1_ap_ies::IABNodeIndication {} }
 open_types! { crate::s1ap::s1_ap_ies::IABSupported {} }
 open_types! { crate::s1ap::s1_ap_ies::IMSI {} }
 open_types! { crate::s1ap::s1_ap_ies::IMSvoiceEPSfallbackfrom5G {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousImmediateMDTIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousImmediateMDTIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ImmediateMDTIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ImmediateMDT { m1thresholdevent_a2, m1periodic_reporting, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousInformationOnRecommendedCellsAndENBsForPagingIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousInformationOnRecommendedCellsAndENBsForPagingIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::InformationOnRecommendedCellsAndENBsForPagingIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::InformationOnRecommendedCellsAndENBsForPaging { recommended_cells_for_paging, recommend_enbs_for_paging, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::IntegrityProtectionAlgorithms {} }
 open_types! { crate::s1ap::s1_ap_ies::IntegrityProtectionIndication {} }
 open_types! { crate::s1ap::s1_ap_ies::IntegrityProtectionResult {} }
 open_types! { crate::s1ap::s1_ap_ies::IntendedNumberOfPagingAttempts {} }
 open_types! { crate::s1ap::s1_ap_ies::InterSystemMeasurementItemSubcarrierSpacingSSB {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousInterSystemMeasurementItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousInterSystemMeasurementItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::InterSystemMeasurementItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::InterSystemMeasurementItem { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::InterSystemMeasurementList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousInterSystemMeasurementParametersIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousInterSystemMeasurementParametersIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::InterSystemMeasurementParametersIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::InterSystemMeasurementParameters { inter_system_measurement_list, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::InterfacesToTrace {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousIntersystemMeasurementConfigurationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousIntersystemMeasurementConfigurationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::IntersystemMeasurementConfigurationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::IntersystemMeasurementConfiguration { inter_system_measurement_parameters, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::IntersystemSONConfigurationTransfer {} }
 open_types! { crate::s1ap::s1_ap_ies::KillAllWarningMessages {} }
 open_types! { crate::s1ap::s1_ap_ies::L3Information {} }
 open_types! { crate::s1ap::s1_ap_ies::LAC {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLAIIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLAIIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::LAIIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::LAI { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::LHNID {} }
 open_types! { crate::s1ap::s1_ap_ies::LPPaPDU {} }
 open_types! { crate::s1ap::s1_ap_ies::LTEMIndication {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLTENTNTAIInformationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLTENTNTAIInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::LTENTNTAIInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::LTENTNTAIInformation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::LastVisitedCellItem { e_UTRAN_Cell } else { uTRAN_Cell, gERAN_Cell, nG_RAN_Cell } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLastVisitedEUTRANCellInformationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLastVisitedEUTRANCellInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::LastVisitedEUTRANCellInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::LastVisitedEUTRANCellInformation { global_cell_id, cell_type, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::LastVisitedGERANCellInformation {} }
 open_types! { crate::s1ap::s1_ap_ies::LastVisitedNGRANCellInformation {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLastVisitedPSCellInformationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLastVisitedPSCellInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::LastVisitedPSCellInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::LastVisitedPSCellInformation { p_scell_id, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::LastVisitedPSCellList { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::LastVisitedUTRANCellInformation {} }
 open_types! { crate::s1ap::s1_ap_ies::LinksToLog {} }
 open_types! { crate::s1ap::s1_ap_ies::ListeningSubframePatternPatternPeriod {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousListeningSubframePatternIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousListeningSubframePatternIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ListeningSubframePatternIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ListeningSubframePattern { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLoggedMBSFNMDTIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLoggedMBSFNMDTIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::LoggedMBSFNMDTIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::LoggedMBSFNMDT { m_bsfn_result_to_log, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLoggedMDTIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousLoggedMDTIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::LoggedMDTIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::LoggedMDT { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::LoggedMDTTrigger { eventTrigger } else { periodical } }
 open_types! { crate::s1ap::s1_ap_ies::LoggingDuration {} }
 open_types! { crate::s1ap::s1_ap_ies::LoggingInterval {} }
 open_types! { crate::s1ap::s1_ap_ies::MTMSI {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM1PeriodicReportingIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM1PeriodicReportingIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::M1PeriodicReportingIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::M1PeriodicReporting { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::M1ReportingTrigger {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM1ThresholdEventA2IEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM1ThresholdEventA2IEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::M1ThresholdEventA2IEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::M1ThresholdEventA2 { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM3ConfigurationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM3ConfigurationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::M3ConfigurationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::M3Configuration { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::M3period {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM4ConfigurationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM4ConfigurationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::M4ConfigurationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::M4Configuration { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::M4ReportAmountMDT {} }
 open_types! { crate::s1ap::s1_ap_ies::M4period {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM5ConfigurationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM5ConfigurationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::M5ConfigurationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::M5Configuration { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::M5ReportAmountMDT {} }
 open_types! { crate::s1ap::s1_ap_ies::M5period {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM6ConfigurationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM6ConfigurationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::M6ConfigurationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::M6Configuration { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::M6ReportAmountMDT {} }
 open_types! { crate::s1ap::s1_ap_ies::M6delayThreshold {} }
 open_types! { crate::s1ap::s1_ap_ies::M6reportInterval {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM7ConfigurationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousM7ConfigurationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::M7ConfigurationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::M7Configuration { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::M7ReportAmountMDT {} }
 open_types! { crate::s1ap::s1_ap_ies::M7period {} }
 open_types! { crate::s1ap::s1_ap_ies::MBSFNResultToLog { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousMBSFNResultToLogInfoIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousMBSFNResultToLogInfoIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::MBSFNResultToLogInfoIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::MBSFNResultToLogInfo { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::MDTActivation {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousMDTConfigurationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousMDTConfigurationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::MDTConfigurationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::MDTConfiguration { area_scope_of_mdt, m_dtmode, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::MDTConfigurationNR {} }
 open_types! { crate::s1ap::s1_ap_ies::MDTLocationInfo {} }
 open_types! { crate::s1ap::s1_ap_ies::MDTMode { immediateMDT, loggedMDT, mDTMode_Extension } else {} }
-open_types! { crate::s1ap::s1_ap_ies::MDTModeExtensionCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::MDTModeExtension { value } }
 open_types! { crate::s1ap::s1_ap_ies::MDTPLMNList {} }
 open_types! { crate::s1ap::s1_ap_ies::MMECode {} }
 open_types! { crate::s1ap::s1_ap_ies::MMEGroupID {} }
@@ -2291,51 +2020,28 @@ open_types! { crate::s1ap::s1_ap_ies::MSClassmark3 {} }
 open_types! { crate::s1ap::s1_ap_ies::ManagementBasedMDTAllowed {} }
 open_types! { crate::s1ap::s1_ap_ies::MaskedIMEISV {} }
 open_types! { crate::s1ap::s1_ap_ies::MeasurementThresholdA2 {} }
-open_types! { crate::s1ap::s1_ap_ies::MeasurementThresholdL1LoggedMDTChoiceExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::MeasurementThresholdL1LoggedMDTChoiceExtensions { value } }
 open_types! { crate::s1ap::s1_ap_ies::MeasurementThresholdL1LoggedMDT { choice_Extensions } else { threshold_RSRP, threshold_RSRQ } }
 open_types! { crate::s1ap::s1_ap_ies::MeasurementsToActivate {} }
 open_types! { crate::s1ap::s1_ap_ies::MessageIdentifier {} }
 open_types! { crate::s1ap::s1_ap_ies::MobilityInformation {} }
 open_types! { crate::s1ap::s1_ap_ies::MutingAvailabilityIndication {} }
 open_types! { crate::s1ap::s1_ap_ies::MutingPatternInformationMutingPatternPeriod {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousMutingPatternInformationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousMutingPatternInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::MutingPatternInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::MutingPatternInformation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::NASPDU {} }
 open_types! { crate::s1ap::s1_ap_ies::NASSecurityParametersfromEUTRAN {} }
 open_types! { crate::s1ap::s1_ap_ies::NASSecurityParameterstoEUTRAN {} }
 open_types! { crate::s1ap::s1_ap_ies::NBIoTDefaultPagingDRX {} }
 open_types! { crate::s1ap::s1_ap_ies::NBIoTPagingEDRXCycle {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNBIoTPagingEDRXInformationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNBIoTPagingEDRXInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::NBIoTPagingEDRXInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::NBIoTPagingEDRXInformation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::NBIoTPagingDRX {} }
 open_types! { crate::s1ap::s1_ap_ies::NBIoTPagingTimeWindow {} }
 open_types! { crate::s1ap::s1_ap_ies::NBIoTRLFReportContainer {} }
 open_types! { crate::s1ap::s1_ap_ies::NBIoTUEIdentityIndexValue {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNGENBIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNGENBIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::NGENBIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::NGENB { global_ng_e_nb_id, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNRCGIIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNRCGIIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::NRCGIIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::NRCGI { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::NRCellIdentity {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNRUESecurityCapabilitiesIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNRUESecurityCapabilitiesIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::NRUESecurityCapabilitiesIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::NRUESecurityCapabilities { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNRUESidelinkAggregateMaximumBitrateIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNRUESidelinkAggregateMaximumBitrateIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::NRUESidelinkAggregateMaximumBitrateIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::NRUESidelinkAggregateMaximumBitrate { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNRV2XServicesAuthorizedIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousNRV2XServicesAuthorizedIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::NRV2XServicesAuthorizedIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::NRV2XServicesAuthorized { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::NRencryptionAlgorithms {} }
 open_types! { crate::s1ap::s1_ap_ies::NRintegrityProtectionAlgorithms {} }
@@ -2348,44 +2054,23 @@ open_types! { crate::s1ap::s1_ap_ies::NumberofBroadcastRequest {} }
 open_types! { crate::s1ap::s1_ap_ies::OldBSSToNewBSSInformation {} }
 open_types! { crate::s1ap::s1_ap_ies::OverloadAction {} }
 open_types! { crate::s1ap::s1_ap_ies::OverloadResponse {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPC5FlowBitRatesIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPC5FlowBitRatesIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::PC5FlowBitRatesIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::PC5FlowBitRates { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPC5QoSFlowItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPC5QoSFlowItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::PC5QoSFlowItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::PC5QoSFlowItem { pc5_flow_bit_rates, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::PC5QoSFlowList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPC5QoSParametersIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPC5QoSParametersIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::PC5QoSParametersIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::PC5QoSParameters { pc5_qo_sflow_list, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::PDCPSN {} }
 open_types! { crate::s1ap::s1_ap_ies::PDCPSNExtended {} }
 open_types! { crate::s1ap::s1_ap_ies::PDCPSNlength18 {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPLMNAreaBasedQMCIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPLMNAreaBasedQMCIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::PLMNAreaBasedQMCIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::PLMNAreaBasedQMC { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::PLMNListforQMC {} }
 open_types! { crate::s1ap::s1_ap_ies::PLMNidentity {} }
 open_types! { crate::s1ap::s1_ap_ies::PSServiceNotAvailable {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPSCellInformationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPSCellInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::PSCellInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::PSCellInformation { n_cgi, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::PWSfailedECGIList { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::PacketLossRate {} }
 open_types! { crate::s1ap::s1_ap_ies::PagingEDRXCycle {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPagingEDRXInformationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPagingEDRXInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::PagingEDRXInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::PagingEDRXInformation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::PagingAttemptCount {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPagingAttemptInformationIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousPagingAttemptInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::PagingAttemptInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::PagingAttemptInformation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::PagingCause {} }
 open_types! { crate::s1ap::s1_ap_ies::PagingDRX {} }
@@ -2399,9 +2084,6 @@ open_types! { crate::s1ap::s1_ap_ies::PreEmptionCapability {} }
 open_types! { crate::s1ap::s1_ap_ies::PreEmptionVulnerability {} }
 open_types! { crate::s1ap::s1_ap_ies::PriorityLevel {} }
 open_types! { crate::s1ap::s1_ap_ies::PrivacyIndicator {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousProSeAuthorizedIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousProSeAuthorizedIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ProSeAuthorizedIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ProSeAuthorized { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ProSeDirectCommunication {} }
 open_types! { crate::s1ap::s1_ap_ies::ProSeDirectDiscovery {} }
@@ -2411,17 +2093,11 @@ open_types! { crate::s1ap::s1_ap_ies::RAC {} }
 open_types! { crate::s1ap::s1_ap_ies::RACSIndication {} }
 open_types! { crate::s1ap::s1_ap_ies::RANUENGAPID {} }
 open_types! { crate::s1ap::s1_ap_ies::RATRestrictions { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousRATRestrictionsItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::RATRestrictionsItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::RATRestrictionsItem { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::RATType {} }
 open_types! { crate::s1ap::s1_ap_ies::RIMInformation {} }
 open_types! { crate::s1ap::s1_ap_ies::RIMRoutingAddress { gERAN_Cell_ID, targetRNC_ID } else { eHRPD_Sector_ID } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousRIMTransferIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::RIMTransferIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::RIMTransfer { r_imrouting_address, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousRLFReportInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::RLFReportInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::RLFReportInformation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::RNCID {} }
 open_types! { crate::s1ap::s1_ap_ies::RRCContainer {} }
@@ -2430,21 +2106,11 @@ open_types! { crate::s1ap::s1_ap_ies::Range {} }
 open_types! { crate::s1ap::s1_ap_ies::ReceiveStatusOfULPDCPSDUsExtended {} }
 open_types! { crate::s1ap::s1_ap_ies::ReceiveStatusOfULPDCPSDUsPDCPSNlength18 {} }
 open_types! { crate::s1ap::s1_ap_ies::ReceiveStatusofULPDCPSDUs {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousRecommendedCellItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::RecommendedCellItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::RecommendedCellItem { e_utran_cgi, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousRecommendedCellList { value } }
 open_types! { crate::s1ap::s1_ap_ies::RecommendedCellList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousRecommendedCellsForPagingIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::RecommendedCellsForPagingIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::RecommendedCellsForPaging { recommended_cell_list, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousRecommendedENBItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::RecommendedENBItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::RecommendedENBItem { m_mepaging_target, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousRecommendedENBList { value } }
 open_types! { crate::s1ap::s1_ap_ies::RecommendedENBList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousRecommendedENBsForPagingIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::RecommendedENBsForPagingIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::RecommendedENBsForPaging { recommended_enblist, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::RelativeMMECapacity {} }
 open_types! { crate::s1ap::s1_ap_ies::RelayNodeIndicator {} }
@@ -2452,69 +2118,38 @@ open_types! { crate::s1ap::s1_ap_ies::RepetitionPeriod {} }
 open_types! { crate::s1ap::s1_ap_ies::ReportAmountMDT {} }
 open_types! { crate::s1ap::s1_ap_ies::ReportArea {} }
 open_types! { crate::s1ap::s1_ap_ies::ReportIntervalMDT {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousRequestTypeIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::RequestTypeIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::RequestType { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::RequestTypeAdditionalInfo {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousRequestedTNLInfoIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::RequestedTNLInfoIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::RequestedTNLInfo { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::RoutingID {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSTMSIIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::STMSIIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::STMSI { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSONConfigurationTransferIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SONConfigurationTransferIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SONConfigurationTransfer { targete_nb_id, sourcee_nb_id, s_oninformation, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::SONInformation { sONInformationReply, sONInformation_Extension } else { sONInformationRequest } }
-open_types! { crate::s1ap::s1_ap_ies::SONInformationExtension { value } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSONInformationReplyIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SONInformationReplyIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SONInformationReply { x2_tnlconfiguration_info, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::SONInformationReport { rLFReportInformation } else {} }
 open_types! { crate::s1ap::s1_ap_ies::SONInformationRequest {} }
 open_types! { crate::s1ap::s1_ap_ies::SRVCCHOIndication {} }
 open_types! { crate::s1ap::s1_ap_ies::SRVCCOperationNotPossible {} }
 open_types! { crate::s1ap::s1_ap_ies::SRVCCOperationPossible {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousScheduledCommunicationTimeIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ScheduledCommunicationTimeIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ScheduledCommunicationTime { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSecondaryRATDataUsageReportItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SecondaryRATDataUsageReportItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SecondaryRATDataUsageReportItem { e_rabusage_report_list, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSecondaryRATDataUsageReportList { value } }
 open_types! { crate::s1ap::s1_ap_ies::SecondaryRATDataUsageReportList { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SecondaryRATDataUsageRequest {} }
 open_types! { crate::s1ap::s1_ap_ies::SecondaryRATType {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSecurityContextIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SecurityContextIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SecurityContext { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSecurityIndicationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SecurityIndicationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SecurityIndication { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::SecurityKey {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSecurityResultIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SecurityResultIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SecurityResult { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::SensorMeasConfig {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSensorMeasConfigNameItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SensorMeasConfigNameItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SensorMeasConfigNameItem { sensor_name_config, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::SensorMeasConfigNameList { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSensorMeasurementConfigurationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SensorMeasurementConfigurationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SensorMeasurementConfiguration { sensor_meas_config_name_list, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::SensorNameConfigUncompensatedBarometricConfig {} }
-open_types! { crate::s1ap::s1_ap_ies::SensorNameConfigChoiceExtensions { value } }
 open_types! { crate::s1ap::s1_ap_ies::SensorNameConfig { choice_Extensions } else { uncompensatedBarometricConfig } }
 open_types! { crate::s1ap::s1_ap_ies::SerialNumber {} }
 open_types! { crate::s1ap::s1_ap_ies::ServedDCNs { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousServedDCNsItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ServedDCNsItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ServedDCNsItem { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ServedGUMMEIs { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousServedGUMMEIsItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ServedGUMMEIsItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ServedGUMMEIsItem { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ServedGroupIDs {} }
 open_types! { crate::s1ap::s1_ap_ies::ServedMMECs {} }
@@ -2522,19 +2157,12 @@ open_types! { crate::s1ap::s1_ap_ies::ServedPLMNs {} }
 open_types! { crate::s1ap::s1_ap_ies::ServiceType {} }
 open_types! { crate::s1ap::s1_ap_ies::SourceToTargetTransparentContainer {} }
 open_types! { crate::s1ap::s1_ap_ies::SourceBSSToTargetBSSTransparentContainer {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSourceNgRanNodeIDIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SourceNgRanNodeIDIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SourceNgRanNodeID { global_ran_node_id, selected_tai, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::SourceNgRanNodeToTargetNgRanNodeTransparentContainer {} }
 open_types! { crate::s1ap::s1_ap_ies::SourceNodeID { sourceNgRanNode_ID, sourceNodeID_Extension } else {} }
-open_types! { crate::s1ap::s1_ap_ies::SourceNodeIDExtension { value } }
 open_types! { crate::s1ap::s1_ap_ies::SourceOfUEActivityBehaviourInformation {} }
 open_types! { crate::s1ap::s1_ap_ies::SourceRNCToTargetRNCTransparentContainer {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSourceeNBIDIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SourceeNBIDIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SourceeNBID { global_enb_id, selected_tai, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSourceeNBToTargeteNBTransparentContainerIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SourceeNBToTargeteNBTransparentContainerIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SourceeNBToTargeteNBTransparentContainer { e_rabinformation_list, target_cell_id, u_e_history_information, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::StratumLevel {} }
 open_types! { crate::s1ap::s1_ap_ies::SubscriberProfileIDforRFP {} }
@@ -2542,41 +2170,21 @@ open_types! { crate::s1ap::s1_ap_ies::SubscriptionBasedUEDifferentiationInfoPeri
 open_types! { crate::s1ap::s1_ap_ies::SubscriptionBasedUEDifferentiationInfoStationaryIndication {} }
 open_types! { crate::s1ap::s1_ap_ies::SubscriptionBasedUEDifferentiationInfoTrafficProfile {} }
 open_types! { crate::s1ap::s1_ap_ies::SubscriptionBasedUEDifferentiationInfoBatteryIndication {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSubscriptionBasedUEDifferentiationInfoIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SubscriptionBasedUEDifferentiationInfoIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SubscriptionBasedUEDifferentiationInfo { scheduled_communication_time, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::SupportedTAs { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSupportedTAsItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SupportedTAsItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SupportedTAsItem { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousSynchronisationInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::SynchronisationInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::SynchronisationInformation { listening_subframe_pattern, aggressore_cgi_list, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::SynchronisationStatus {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTABasedMDTIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TABasedMDTIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TABasedMDT { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTABasedQMCIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TABasedQMCIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TABasedQMC { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::TAC {} }
 open_types! { crate::s1ap::s1_ap_ies::TACListInLTENTN {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTAIIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TAIIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TAI { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::TAIBroadcast { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTAIBroadcastItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TAIBroadcastItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TAIBroadcastItem { t_ai, completed_cellin_tai, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::TAICancelled { 0 } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTAICancelledItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TAICancelledItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TAICancelledItem { t_ai, cancelled_cellin_tai, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTAIBasedMDTIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TAIBasedMDTIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TAIBasedMDT { t_ailistfor_mdt, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTAIBasedQMCIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TAIBasedQMCIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TAIBasedQMC { t_ailistfor_qmc, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::TAIListForRestart { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TAIListforMDT { 0 } }
@@ -2588,43 +2196,27 @@ open_types! { crate::s1ap::s1_ap_ies::TBCDSTRING {} }
 open_types! { crate::s1ap::s1_ap_ies::TargetToSourceTransparentContainer {} }
 open_types! { crate::s1ap::s1_ap_ies::TargetBSSToSourceBSSTransparentContainer {} }
 open_types! { crate::s1ap::s1_ap_ies::TargetID { targeteNB_ID, targetRNC_ID, cGI, targetgNgRanNode_ID } else {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTargetNgRanNodeIDIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TargetNgRanNodeIDIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TargetNgRanNodeID { global_ran_node_id, selected_tai, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::TargetNgRanNodeToSourceNgRanNodeTransparentContainer {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTargetRNCIDIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TargetRNCIDIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TargetRNCID { l_ai, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::TargetRNCToSourceRNCTransparentContainer {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTargeteNBIDIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TargeteNBIDIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TargeteNBID { global_enb_id, selected_tai, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTargeteNBToSourceeNBTransparentContainerIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TargeteNBToSourceeNBTransparentContainerIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TargeteNBToSourceeNBTransparentContainer { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ThresholdRSRP {} }
 open_types! { crate::s1ap::s1_ap_ies::ThresholdRSRQ {} }
 open_types! { crate::s1ap::s1_ap_ies::TimeUEStayedInCell {} }
 open_types! { crate::s1ap::s1_ap_ies::TimeUEStayedInCellEnhancedGranularity {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTimeBasedHandoverInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TimeBasedHandoverInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TimeBasedHandoverInformation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::TimeRefDistribution {} }
 open_types! { crate::s1ap::s1_ap_ies::TimeSinceSecondaryNodeRelease {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTimeSynchronisationInfoIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TimeSynchronisationInfoIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TimeSynchronisationInfo { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::TimeToTrigger {} }
 open_types! { crate::s1ap::s1_ap_ies::TimeToWait {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTraceActivationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TraceActivationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TraceActivation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::TraceDepth {} }
 open_types! { crate::s1ap::s1_ap_ies::TrafficLoadReductionIndication {} }
 open_types! { crate::s1ap::s1_ap_ies::TransportInformation {} }
 open_types! { crate::s1ap::s1_ap_ies::TransportLayerAddress {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousTunnelInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::TunnelInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::TunnelInformation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::TypeOfError {} }
 open_types! { crate::s1ap::s1_ap_ies::UEApplicationLayerMeasurementCapability {} }
@@ -2633,19 +2225,11 @@ open_types! { crate::s1ap::s1_ap_ies::UEHistoryInformationFromTheUE {} }
 open_types! { crate::s1ap::s1_ap_ies::UERLFReportContainer {} }
 open_types! { crate::s1ap::s1_ap_ies::UERLFReportContainerForExtendedBands {} }
 open_types! { crate::s1ap::s1_ap_ies::UERetentionInformation {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousUES1APIDPairIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::UES1APIDPairIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::UES1APIDPair { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::UES1APIDs { uE_S1AP_ID_pair } else { mME_UE_S1AP_ID } }
 open_types! { crate::s1ap::s1_ap_ies::UEUsageType {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousUEAssociatedLogicalS1ConnectionItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::UEAssociatedLogicalS1ConnectionItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::UEAssociatedLogicalS1ConnectionItem { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousUEAggregateMaximumBitrateIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::UEAggregateMaximumBitrateIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::UEAggregateMaximumBitrate { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousUEAppLayerMeasConfigIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::UEAppLayerMeasConfigIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::UEAppLayerMeasConfig { area_scope_of_qmc, i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::UECapabilityInfoRequest {} }
 open_types! { crate::s1ap::s1_ap_ies::UEIdentityIndexValue {} }
@@ -2653,25 +2237,15 @@ open_types! { crate::s1ap::s1_ap_ies::UEPagingID { s_TMSI } else { iMSI } }
 open_types! { crate::s1ap::s1_ap_ies::UERadioCapability {} }
 open_types! { crate::s1ap::s1_ap_ies::UERadioCapabilityForPaging {} }
 open_types! { crate::s1ap::s1_ap_ies::UERadioCapabilityID {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousUESecurityCapabilitiesIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::UESecurityCapabilitiesIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::UESecurityCapabilities { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousUESidelinkAggregateMaximumBitrateIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::UESidelinkAggregateMaximumBitrateIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::UESidelinkAggregateMaximumBitrate { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::UEUserPlaneCIoTSupportIndicator {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousULCPSecurityInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::ULCPSecurityInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::ULCPSecurityInformation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::ULNASCount {} }
 open_types! { crate::s1ap::s1_ap_ies::ULNASMAC {} }
 open_types! { crate::s1ap::s1_ap_ies::URIAddress {} }
 open_types! { crate::s1ap::s1_ap_ies::UnlicensedSpectrumRestriction {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousUserLocationInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::UserLocationInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::UserLocationInformation { eutran_cgi, tai, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousV2XServicesAuthorizedIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::V2XServicesAuthorizedIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::V2XServicesAuthorized { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::VehicleUE {} }
 open_types! { crate::s1ap::s1_ap_ies::VoiceSupportMatchIndicator {} }
@@ -2679,534 +2253,163 @@ open_types! { crate::s1ap::s1_ap_ies::WLANMeasConfig {} }
 open_types! { crate::s1ap::s1_ap_ies::WLANMeasConfigNameList {} }
 open_types! { crate::s1ap::s1_ap_ies::WLANMeasurementConfigurationWlanRssi {} }
 open_types! { crate::s1ap::s1_ap_ies::WLANMeasurementConfigurationWlanRtt {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousWLANMeasurementConfigurationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::WLANMeasurementConfigurationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::WLANMeasurementConfiguration { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::WLANName {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousWUSAssistanceInformationIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::WUSAssistanceInformationIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::WUSAssistanceInformation { i_e_extensions } }
 open_types! { crate::s1ap::s1_ap_ies::WarningAreaCoordinates {} }
 open_types! { crate::s1ap::s1_ap_ies::WarningAreaList { cellIDList, trackingAreaListforWarning } else { emergencyAreaIDList } }
 open_types! { crate::s1ap::s1_ap_ies::WarningMessageContents {} }
 open_types! { crate::s1ap::s1_ap_ies::WarningSecurityInfo {} }
 open_types! { crate::s1ap::s1_ap_ies::WarningType {} }
-open_types! { crate::s1ap::s1_ap_ies::AnonymousX2TNLConfigurationInfoIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_ies::X2TNLConfigurationInfoIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_ies::X2TNLConfigurationInfo { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousCSGMembershipInfoIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousCSGMembershipInfoIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::CSGMembershipInfoIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::CSGMembershipInfo { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousCellTrafficTraceProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousCellTrafficTraceProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::CellTrafficTraceProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::CellTrafficTrace { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousConnectionEstablishmentIndicationProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousConnectionEstablishmentIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ConnectionEstablishmentIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ConnectionEstablishmentIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousDeactivateTraceProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousDeactivateTraceProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::DeactivateTraceProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::DeactivateTrace { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousDownlinkNASTransportProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousDownlinkNASTransportProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::DownlinkNASTransportProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::DownlinkNASTransport { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousDownlinkNonUEAssociatedLPPaTransportProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousDownlinkNonUEAssociatedLPPaTransportProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::DownlinkNonUEAssociatedLPPaTransportProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::DownlinkNonUEAssociatedLPPaTransport { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousDownlinkS1cdma2000tunnellingProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousDownlinkS1cdma2000tunnellingProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::DownlinkS1cdma2000tunnellingProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::DownlinkS1cdma2000tunnelling { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousDownlinkUEAssociatedLPPaTransportProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousDownlinkUEAssociatedLPPaTransportProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::DownlinkUEAssociatedLPPaTransportProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::DownlinkUEAssociatedLPPaTransport { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABAdmittedItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABAdmittedItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABAdmittedItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABAdmittedItem { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABAdmittedListCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABAdmittedList { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABAdmittedList { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABDataForwardingItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABDataForwardingItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABDataForwardingItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABDataForwardingItem { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedToResumeItemResumeReqIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedToResumeItemResumeReqIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABFailedToResumeItemResumeReqIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABFailedToResumeItemResumeReq { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedToResumeItemResumeResIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedToResumeItemResumeResIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABFailedToResumeItemResumeResIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABFailedToResumeItemResumeRes { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedToResumeListResumeReqCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedToResumeListResumeReq { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABFailedToResumeListResumeReq { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedToResumeListResumeResCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedToResumeListResumeRes { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABFailedToResumeListResumeRes { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedToSetupItemHOReqAckIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedToSetupItemHOReqAckIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABFailedToSetupItemHOReqAckIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABFailedToSetupItemHOReqAck { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedtoSetupListHOReqAckCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABFailedtoSetupListHOReqAck { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABFailedtoSetupListHOReqAck { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModificationConfirmProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModificationConfirmProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModificationConfirmProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModificationConfirm { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModificationIndicationProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModificationIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModificationIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModificationIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyItemBearerModConfIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyItemBearerModConfIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModifyItemBearerModConfIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModifyItemBearerModConf { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyItemBearerModResIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyItemBearerModResIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModifyItemBearerModResIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModifyItemBearerModRes { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyListBearerModConfCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyListBearerModConf { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModifyListBearerModConf { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyListBearerModResCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyListBearerModRes { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModifyListBearerModRes { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyRequestProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModifyRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModifyRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyResponseProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABModifyResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModifyResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABModifyResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABNotToBeModifiedItemBearerModIndIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABNotToBeModifiedItemBearerModIndIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABNotToBeModifiedItemBearerModIndIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABNotToBeModifiedItemBearerModInd { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABNotToBeModifiedListBearerModIndCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABNotToBeModifiedListBearerModInd { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABNotToBeModifiedListBearerModInd { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABReleaseCommandProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABReleaseCommandProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABReleaseCommandProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABReleaseCommand { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABReleaseIndicationProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABReleaseIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABReleaseIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABReleaseIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABReleaseItemBearerRelCompIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABReleaseItemBearerRelCompIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABReleaseItemBearerRelCompIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABReleaseItemBearerRelComp { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABReleaseListBearerRelCompCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABReleaseListBearerRelComp { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABReleaseListBearerRelComp { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABReleaseResponseProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABReleaseResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABReleaseResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABReleaseResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupItemBearerSUResIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupItemBearerSUResIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABSetupItemBearerSUResIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABSetupItemBearerSURes { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupItemCtxtSUResIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupItemCtxtSUResIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABSetupItemCtxtSUResIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABSetupItemCtxtSURes { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupListBearerSUResCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupListBearerSURes { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABSetupListBearerSURes { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupListCtxtSUResCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupListCtxtSURes { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABSetupListCtxtSURes { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupRequestProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABSetupRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABSetupRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupResponseProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSetupResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABSetupResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABSetupResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSubjecttoDataForwardingListCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABSubjecttoDataForwardingList { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABSubjecttoDataForwardingList { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeModifiedItemBearerModIndIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeModifiedItemBearerModIndIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeModifiedItemBearerModIndIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeModifiedItemBearerModInd { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeModifiedItemBearerModReqIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeModifiedItemBearerModReqIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeModifiedItemBearerModReqIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeModifiedItemBearerModReq { e_rablevel_qo_sparameters, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeModifiedListBearerModIndCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeModifiedListBearerModInd { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeModifiedListBearerModInd { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeModifiedListBearerModReqCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeModifiedListBearerModReq { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeModifiedListBearerModReq { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupItemBearerSUReqIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupItemBearerSUReqIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSetupItemBearerSUReqIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSetupItemBearerSUReq { e_rablevel_qo_sparameters, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupItemCtxtSUReqIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupItemCtxtSUReqIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSetupItemCtxtSUReqIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSetupItemCtxtSUReq { e_rablevel_qo_sparameters, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupItemHOReqIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupItemHOReqIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSetupItemHOReqIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSetupItemHOReq { e_rablevel_qos_parameters, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupListBearerSUReqCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupListBearerSUReq { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSetupListBearerSUReq { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupListCtxtSUReqCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupListCtxtSUReq { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSetupListCtxtSUReq { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupListHOReqCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSetupListHOReq { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSetupListHOReq { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSwitchedDLItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSwitchedDLItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSwitchedDLItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSwitchedDLItem { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSwitchedDLListCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSwitchedDLList { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSwitchedDLList { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSwitchedULItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSwitchedULItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSwitchedULItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSwitchedULItem { i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSwitchedULListCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeSwitchedULList { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeSwitchedULList { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeUpdatedItemIEExtensionsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeUpdatedItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeUpdatedItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeUpdatedItem { security_indication, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeUpdatedListCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousERABToBeUpdatedList { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ERABToBeUpdatedList { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBCPRelocationIndicationProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBCPRelocationIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ENBCPRelocationIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ENBCPRelocationIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBConfigurationTransferProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBConfigurationTransferProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ENBConfigurationTransferProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ENBConfigurationTransfer { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBConfigurationUpdateProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBConfigurationUpdateProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ENBConfigurationUpdateProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ENBConfigurationUpdate { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBConfigurationUpdateAcknowledgeProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBConfigurationUpdateAcknowledgeProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ENBConfigurationUpdateAcknowledgeProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ENBConfigurationUpdateAcknowledge { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBConfigurationUpdateFailureProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBConfigurationUpdateFailureProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ENBConfigurationUpdateFailureProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ENBConfigurationUpdateFailure { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBDirectInformationTransferProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBDirectInformationTransferProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ENBDirectInformationTransferProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ENBDirectInformationTransfer { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBEarlyStatusTransferProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBEarlyStatusTransferProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ENBEarlyStatusTransferProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ENBEarlyStatusTransfer { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBStatusTransferProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousENBStatusTransferProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ENBStatusTransferProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ENBStatusTransfer { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousErrorIndicationProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousErrorIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ErrorIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ErrorIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverCancelProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverCancelProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverCancelProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverCancel { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverCancelAcknowledgeProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverCancelAcknowledgeProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverCancelAcknowledgeProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverCancelAcknowledge { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverCommandProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverCommandProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverCommandProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverCommand { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverFailureProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverFailureProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverFailureProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverFailure { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverNotifyProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverNotifyProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverNotifyProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverNotify { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverPreparationFailureProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverPreparationFailureProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverPreparationFailureProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverPreparationFailure { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverRequestProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverRequestAcknowledgeProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverRequestAcknowledgeProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverRequestAcknowledgeProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverRequestAcknowledge { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverRequiredProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverRequiredProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverRequiredProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverRequired { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverSuccessProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousHandoverSuccessProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverSuccessProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::HandoverSuccess { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousInitialContextSetupFailureProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousInitialContextSetupFailureProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::InitialContextSetupFailureProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::InitialContextSetupFailure { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousInitialContextSetupRequestProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousInitialContextSetupRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::InitialContextSetupRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::InitialContextSetupRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousInitialContextSetupResponseProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousInitialContextSetupResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::InitialContextSetupResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::InitialContextSetupResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousInitialUEMessageProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousInitialUEMessageProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::InitialUEMessageProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::InitialUEMessage { protocol_ies } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::InterSystemInformationTransferType { rIMTransfer } else {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousKillRequestProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousKillRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::KillRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::KillRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousKillResponseProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousKillResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::KillResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::KillResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousLocationReportProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousLocationReportProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::LocationReportProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::LocationReport { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousLocationReportingControlProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousLocationReportingControlProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::LocationReportingControlProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::LocationReportingControl { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousLocationReportingFailureIndicationProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousLocationReportingFailureIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::LocationReportingFailureIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::LocationReportingFailureIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMECPRelocationIndicationProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMECPRelocationIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::MMECPRelocationIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::MMECPRelocationIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEConfigurationTransferProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEConfigurationTransferProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::MMEConfigurationTransferProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::MMEConfigurationTransfer { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEConfigurationUpdateProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEConfigurationUpdateProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::MMEConfigurationUpdateProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::MMEConfigurationUpdate { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEConfigurationUpdateAcknowledgeProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEConfigurationUpdateAcknowledgeProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::MMEConfigurationUpdateAcknowledgeProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::MMEConfigurationUpdateAcknowledge { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEConfigurationUpdateFailureProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEConfigurationUpdateFailureProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::MMEConfigurationUpdateFailureProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::MMEConfigurationUpdateFailure { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEDirectInformationTransferProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEDirectInformationTransferProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::MMEDirectInformationTransferProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::MMEDirectInformationTransfer { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEEarlyStatusTransferProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEEarlyStatusTransferProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::MMEEarlyStatusTransferProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::MMEEarlyStatusTransfer { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEStatusTransferProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousMMEStatusTransferProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::MMEStatusTransferProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::MMEStatusTransfer { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousNASDeliveryIndicationProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousNASDeliveryIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::NASDeliveryIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::NASDeliveryIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousNASNonDeliveryIndicationProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousNASNonDeliveryIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::NASNonDeliveryIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::NASNonDeliveryIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousOverloadStartProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousOverloadStartProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::OverloadStartProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::OverloadStart { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousOverloadStopProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousOverloadStopProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::OverloadStopProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::OverloadStop { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPWSFailureIndicationProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPWSFailureIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::PWSFailureIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::PWSFailureIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPWSRestartIndicationProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPWSRestartIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::PWSRestartIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::PWSRestartIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPagingProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPagingProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::PagingProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::Paging { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPathSwitchRequestProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPathSwitchRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::PathSwitchRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::PathSwitchRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPathSwitchRequestAcknowledgeProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPathSwitchRequestAcknowledgeProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::PathSwitchRequestAcknowledgeProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::PathSwitchRequestAcknowledge { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPathSwitchRequestFailureProtocolIEsCriticality {} }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPathSwitchRequestFailureProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::PathSwitchRequestFailureProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::PathSwitchRequestFailure { protocol_ies } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousPrivateMessagePrivateIEs { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::PrivateMessagePrivateIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::PrivateMessage { private_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousRerouteNASRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::RerouteNASRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::RerouteNASRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousResetProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ResetProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::Reset { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousResetAcknowledgeProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::ResetAcknowledgeProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ResetAcknowledge { protocol_ies } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ResetAll {} }
 open_types! { crate::s1ap::s1_ap_pdu_contents::ResetType { partOfS1_Interface } else { s1_Interface } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousRetrieveUEInformationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::RetrieveUEInformationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::RetrieveUEInformation { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousS1RemovalFailureProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::S1RemovalFailureProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::S1RemovalFailure { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousS1RemovalRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::S1RemovalRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::S1RemovalRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousS1RemovalResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::S1RemovalResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::S1RemovalResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousS1SetupFailureProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::S1SetupFailureProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::S1SetupFailure { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousS1SetupRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::S1SetupRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::S1SetupRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousS1SetupResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::S1SetupResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::S1SetupResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousSecondaryRATDataUsageReportProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::SecondaryRATDataUsageReportProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::SecondaryRATDataUsageReport { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousTAIItemIEExtensions { extension_value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::TAIItemIEExtensions { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::TAIItem { t_ai, i_e_extensions } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousTAIList { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::TAIList { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousTraceFailureIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::TraceFailureIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::TraceFailureIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousTraceStartProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::TraceStartProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::TraceStart { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEAssociatedLogicalS1ConnectionListRes { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEAssociatedLogicalS1ConnectionListRes { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEAssociatedLogicalS1ConnectionListResAck { value } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEAssociatedLogicalS1ConnectionListResAck { 0 } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUECapabilityInfoIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UECapabilityInfoIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UECapabilityInfoIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextModificationConfirmProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextModificationConfirmProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextModificationConfirm { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextModificationFailureProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextModificationFailureProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextModificationFailure { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextModificationIndicationProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextModificationIndicationProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextModificationIndication { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextModificationRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextModificationRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextModificationRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextModificationResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextModificationResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextModificationResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextReleaseCommandProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextReleaseCommandProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextReleaseCommand { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextReleaseCompleteProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextReleaseCompleteProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextReleaseComplete { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextReleaseRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextReleaseRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextReleaseRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextResumeFailureProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextResumeFailureProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextResumeFailure { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextResumeRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextResumeRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextResumeRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextResumeResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextResumeResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextResumeResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextSuspendRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextSuspendRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextSuspendRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEContextSuspendResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextSuspendResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEContextSuspendResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUEInformationTransferProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UEInformationTransferProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UEInformationTransfer { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUERadioCapabilityIDMappingRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UERadioCapabilityIDMappingRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UERadioCapabilityIDMappingRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUERadioCapabilityIDMappingResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UERadioCapabilityIDMappingResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UERadioCapabilityIDMappingResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUERadioCapabilityMatchRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UERadioCapabilityMatchRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UERadioCapabilityMatchRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUERadioCapabilityMatchResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UERadioCapabilityMatchResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UERadioCapabilityMatchResponse { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUplinkNASTransportProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UplinkNASTransportProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UplinkNASTransport { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUplinkNonUEAssociatedLPPaTransportProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UplinkNonUEAssociatedLPPaTransportProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UplinkNonUEAssociatedLPPaTransport { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUplinkS1cdma2000tunnellingProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UplinkS1cdma2000tunnellingProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UplinkS1cdma2000tunnelling { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousUplinkUEAssociatedLPPaTransportProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::UplinkUEAssociatedLPPaTransportProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::UplinkUEAssociatedLPPaTransport { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousWriteReplaceWarningRequestProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::WriteReplaceWarningRequestProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::WriteReplaceWarningRequest { protocol_ies } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::AnonymousWriteReplaceWarningResponseProtocolIEs { value } }
-open_types! { crate::s1ap::s1_ap_pdu_contents::WriteReplaceWarningResponseProtocolIEs { 0 } }
 open_types! { crate::s1ap::s1_ap_pdu_contents::WriteReplaceWarningResponse { protocol_ies } }
 open_types! { crate::s1ap::s1_ap_pdu_descriptions::InitiatingMessage { value } }
 open_types! { crate::s1ap::s1_ap_pdu_descriptions::S1APPDU { initiatingMessage, successfulOutcome, unsuccessfulOutcome } else {} }
