@@ -34,7 +34,7 @@ is not source compatible with 0.2.0.
 
 - The optional `inspect` feature: a decoded PDU as a `serde_json` tree in the
   ASN.1 JSON encoding, which can be edited and encoded again. What is not
-  edited keeps the octets received.
+  edited keeps the octets received, and an IE is added with a typed value.
 - The `S1_Message` IE name, for the one IE whose type is an inline
   `OCTET STRING`.
 - The `sized` module: the `OCTET STRING` and `BIT STRING` types whose length

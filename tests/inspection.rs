@@ -88,6 +88,32 @@ fn the_octets_of_an_ie_are_replaced_or_added_as_its_value_without_raw_value() {
 }
 
 #[test]
+fn a_new_ie_takes_a_typed_value_of_the_type_of_its_identifier() {
+    let with_cause = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(1u32),
+        REJECT eNB_UE_S1AP_ID(7u32),
+        IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+    );
+    let added = |id: u16, value: serde_json::Value| {
+        let mut tree = inspect::inspect_pdu(&release_request(7)).unwrap();
+        let ies = tree.pointer_mut("/message/protocolIEs").unwrap();
+        ies.as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({"id": id, "criticality": "ignore", "value": value}));
+        inspect::encode_pdu(&tree)
+    };
+    let cause = serde_json::json!({"radioNetwork": "user-inactivity"});
+    assert_eq!(
+        added(2, cause.clone()).unwrap().encode().unwrap(),
+        with_cause.encode().unwrap()
+    );
+    // A value that the type does not have, and an identifier without a type.
+    assert!(added(2, serde_json::json!({"radioNetwork": "no-such-cause"})).is_err());
+    assert!(added(60000, cause).is_err());
+}
+
+#[test]
 fn an_ie_that_does_not_decode_is_edited_as_its_octets() {
     let request = UEContextReleaseRequest::new(ProtocolIEContainer(vec![ProtocolIEField::new(
         ProtocolIEID(60000),
