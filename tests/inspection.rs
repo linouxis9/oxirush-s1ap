@@ -123,7 +123,7 @@ fn a_new_ie_whose_value_is_a_string_is_typed_too() {
         IGNORE, UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         IGNORE RRC_Establishment_Cause(RRCEstablishmentCause::mo_Signalling),
-        REJECT NAS_PDU(vec![0x07, 0x60]),
+        REJECT NAS_PDU(vec![0x07, 0x6a]),
     );
     let mut tree = inspect::inspect_pdu(&pdu).unwrap();
     let ies = tree.pointer_mut("/message/protocolIEs").unwrap();
@@ -131,7 +131,13 @@ fn a_new_ie_whose_value_is_a_string_is_typed_too() {
     // An ENUMERATED by its name and an OCTET STRING by its octets, not the
     // octets of their open types.
     ies.push(serde_json::json!({"id": 134, "criticality": "ignore", "value": "mo-Signalling"}));
-    ies.push(serde_json::json!({"id": 26, "criticality": "reject", "value": "0760"}));
+    ies.push(serde_json::json!({"id": 26, "criticality": "reject", "value": "076A"}));
+    assert_eq!(
+        inspect::encode_pdu(&tree).unwrap().encode().unwrap(),
+        typed.encode().unwrap()
+    );
+    // Hexadecimal in lower case is the same octets.
+    *tree.pointer_mut("/message/protocolIEs/2/value").unwrap() = serde_json::json!("076a");
     assert_eq!(
         inspect::encode_pdu(&tree).unwrap().encode().unwrap(),
         typed.encode().unwrap()
