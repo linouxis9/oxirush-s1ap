@@ -175,18 +175,8 @@ fn main() {
         println!();
     }
 
-    // ── Equivalent hand-written extraction (for comparison) ────────────────
-    // Without `extract_s1ap_ies!`, release-request extraction would manually:
-    //
-    //   let mut mme_id = None;
-    //   for ie in &msg.protocol_ies.0 {
-    //       if ie.id == ID_MME_UE_S1AP_ID {
-    //           if let Ok(value) = decode_open_type::<MMEUES1APID>(&ie.value) {
-    //               mme_id = Some(value.0);
-    //           }
-    //       }
-    //   }
-    //   let mme_id = mme_id.ok_or(MissingIeError { ie_name: "mme_id" })?;
+    // The `decode_manually` example reads the IEs of a message by hand, which is
+    // what `extract_s1ap_ies!` does for each field.
 }
 
 fn decode_initiating<T: rasn::Decode>(pdu: &S1AP_PDU, procedure_code: u8) -> Option<T> {

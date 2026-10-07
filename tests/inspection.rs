@@ -355,3 +355,275 @@ fn an_enumerated_value_is_named_whatever_its_case_and_separators() {
     assert!(causes("mo-Signalling", "mo-Signalling").is_err());
     assert!(causes("user-inactivit", "mo-Signalling").is_err());
 }
+
+/// A UE CONTEXT RELEASE REQUEST: two UE S1AP IDs and a cause.
+fn release_with_cause() -> S1AP_PDU {
+    build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(1u32),
+        REJECT eNB_UE_S1AP_ID(7u32),
+        IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+    )
+}
+
+#[test]
+fn the_ies_of_a_message_have_paths_by_their_names() {
+    use serde_json::json;
+    let tree = inspect::inspect_pdu(&release_with_cause()).unwrap();
+    let paths = inspect::paths(&tree);
+    let printed: Vec<_> = (paths.iter())
+        .map(|(path, value)| format!("{path} = {value}"))
+        .collect();
+    assert_eq!(
+        printed,
+        [
+            "/criticality = \"ignore\"",
+            "/direction = \"InitiatingMessage\"",
+            "/s1ap/MME-UE-S1AP-ID/criticality = \"reject\"",
+            "/s1ap/MME-UE-S1AP-ID/id = 0",
+            "/s1ap/MME-UE-S1AP-ID/value = 1",
+            "/s1ap/eNB-UE-S1AP-ID/criticality = \"reject\"",
+            "/s1ap/eNB-UE-S1AP-ID/id = 8",
+            "/s1ap/eNB-UE-S1AP-ID/value = 7",
+            "/s1ap/Cause/criticality = \"ignore\"",
+            "/s1ap/Cause/id = 2",
+            "/s1ap/Cause/value/radioNetwork = \"user-inactivity\"",
+            "/procedure_code = 18",
+        ]
+    );
+    // A name is taken in any case, and an IE also by its identifier or its position.
+    for path in [
+        "/s1ap/eNB-UE-S1AP-ID/value",
+        "/s1ap/enb_ue_s1ap_id/value",
+        "/s1ap/@id=8/value",
+        "/s1ap/1/value",
+    ] {
+        assert_eq!(inspect::select(&tree, path).unwrap(), [&json!(7)], "{path}");
+    }
+    // The octets that an IE was received as.
+    let octets = inspect::select(&tree, "/s1ap/eNB-UE-S1AP-ID/octets").unwrap();
+    assert_eq!(octets, [&json!("0007")]);
+    assert_eq!(inspect::select(&tree, "/s1ap/*/id").unwrap().len(), 3);
+}
+
+#[test]
+fn every_path_of_every_canonical_procedure_selects_its_value() {
+    for line in include_str!("fixtures/messages.tsv")
+        .lines()
+        .filter(|line| !line.starts_with('#') && !line.is_empty())
+    {
+        let fields: Vec<_> = line.split('\t').collect();
+        let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
+        let tree = inspect::inspect_pdu(&pdu).unwrap();
+        for (path, value) in inspect::paths(&tree) {
+            // The list that holds the IEs of a message is never named.
+            assert!(!path.contains("protocolIEs"), "{} {path}", fields[0]);
+            let selected = inspect::select(&tree, &path);
+            assert_eq!(selected, Ok(vec![&value]), "{} {path}", fields[0]);
+        }
+    }
+}
+
+#[test]
+fn an_ie_that_is_there_twice_goes_by_its_position() {
+    use serde_json::json;
+    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(1u32),
+        REJECT eNB_UE_S1AP_ID(7u32),
+        REJECT MME_UE_S1AP_ID(2u32),
+    );
+    let mut tree = inspect::inspect_pdu(&pdu).unwrap();
+    let paths = inspect::paths(&tree);
+    let values: Vec<_> = (paths.iter())
+        .filter(|(path, _)| path.ends_with("/value"))
+        .map(|(path, value)| (path.as_str(), value))
+        .collect();
+    assert_eq!(
+        values,
+        [
+            ("/s1ap/0/value", &json!(1)),
+            ("/s1ap/eNB-UE-S1AP-ID/value", &json!(7)),
+            ("/s1ap/2/value", &json!(2)),
+        ]
+    );
+    // The name selects each of them, in the order of the message.
+    let both = inspect::select(&tree, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
+    assert_eq!(both, [&json!(1), &json!(2)]);
+    inspect::set(&mut tree, "/s1ap/2/value", json!(3)).unwrap();
+    let edited = inspect::encode_pdu(&tree).unwrap();
+    let tree = inspect::inspect_pdu(&edited).unwrap();
+    let both = inspect::select(&tree, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
+    assert_eq!(both, [&json!(1), &json!(3)]);
+}
+
+#[test]
+fn a_value_set_at_a_path_changes_the_octets_of_its_ie_alone() {
+    use serde_json::json;
+    let mut tree = inspect::inspect_pdu(&release_with_cause()).unwrap();
+    let octets = |tree: &serde_json::Value| -> Vec<serde_json::Value> {
+        let octets = inspect::select(tree, "/s1ap/*/octets").unwrap();
+        octets.into_iter().cloned().collect()
+    };
+    let before = octets(&tree);
+    inspect::set(&mut tree, "/s1ap/eNB-UE-S1AP-ID/value", json!(9)).unwrap();
+    let cause = json!("Release Due To EUTRAN Generated Reason");
+    inspect::set(&mut tree, "/s1ap/Cause/value/radioNetwork", cause).unwrap();
+    let tree = inspect::inspect_pdu(&inspect::encode_pdu(&tree).unwrap()).unwrap();
+    let after = octets(&tree);
+    assert_eq!(after[0], before[0]);
+    assert_eq!(after[1], json!("0009"));
+    assert_ne!(after[2], before[2]);
+    let cause = inspect::select(&tree, "/s1ap/Cause/value/radioNetwork").unwrap();
+    assert_eq!(cause, [&json!("release-due-to-eutran-generated-reason")]);
+}
+
+#[test]
+fn ies_are_added_taken_out_and_given_their_octets_at_a_path() {
+    use serde_json::json;
+    let mut tree = inspect::inspect_pdu(&release_with_cause()).unwrap();
+    // An IE by the name of its identifier, with its typed value, at the end.
+    let name = json!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
+    inspect::insert(&mut tree, "/s1ap/-", name).unwrap();
+    // Given octets as an IE, before the cause.
+    let unknown = json!({"id": 60000, "criticality": "ignore", "octets": "C0FFEE"});
+    inspect::insert(&mut tree, "/s1ap/Cause", unknown).unwrap();
+    inspect::remove(&mut tree, "/s1ap/MME-UE-S1AP-ID").unwrap();
+    inspect::set(&mut tree, "/s1ap/eNB-UE-S1AP-ID/octets", json!("400102")).unwrap();
+    let tree = inspect::inspect_pdu(&inspect::encode_pdu(&tree).unwrap()).unwrap();
+    let ids: Vec<_> = (inspect::select(&tree, "/s1ap/*/id").unwrap().into_iter())
+        .map(|id| id.as_u64().unwrap())
+        .collect();
+    assert_eq!(ids, [8, 60000, 2, 60]);
+    let select = |path: &str| inspect::select(&tree, path).unwrap();
+    assert_eq!(select("/s1ap/eNB-UE-S1AP-ID/value"), [&json!(258)]);
+    assert_eq!(select("/s1ap/eNBname/value"), [&json!("enb-1")]);
+    assert_eq!(select("/s1ap/@id=60000/octets"), [&json!("C0FFEE")]);
+    // An IE that the message does not have is nothing, not an error.
+    assert!(select("/s1ap/MME-UE-S1AP-ID/value").is_empty());
+}
+
+#[test]
+fn the_entries_of_a_list_of_ies_go_by_name_too() {
+    use serde_json::json;
+    let pdu = S1AP_PDU::decode(&fixture("E-RABSetupRequest")).unwrap();
+    let mut tree = inspect::inspect_pdu(&pdu).unwrap();
+    let list = "/s1ap/E-RABToBeSetupListBearerSUReq/value";
+    let by_name = format!("{list}/E-RABToBeSetupItemBearerSUReq/value/e-RAB-ID");
+    let by_position = format!("{list}/0/value/e-RAB-ID");
+    assert_eq!(inspect::select(&tree, &by_name).unwrap(), [&json!(0)]);
+    inspect::set(&mut tree, &by_name, json!(5)).unwrap();
+    let tree = inspect::inspect_pdu(&inspect::encode_pdu(&tree).unwrap()).unwrap();
+    assert_eq!(inspect::select(&tree, &by_position).unwrap(), [&json!(5)]);
+    // The IEs of a message that a tree contains are selected in its place: no S1AP
+    // type has one, so this is a tree of that shape.
+    let mut contained = json!({"message": {"protocolIEs": [{"id": 2, "value": {"decoded":
+        {"protocolIEs": [{"id": 8, "value": 7}, {"id": 60000, "value": "00"}]}}}]}});
+    let paths: Vec<_> = (inspect::paths(&contained).into_iter())
+        .map(|(path, _)| path)
+        .collect();
+    assert_eq!(
+        paths,
+        [
+            "/s1ap/Cause/id",
+            "/s1ap/Cause/value/decoded/eNB-UE-S1AP-ID/id",
+            "/s1ap/Cause/value/decoded/eNB-UE-S1AP-ID/value",
+            "/s1ap/Cause/value/decoded/1/id",
+            "/s1ap/Cause/value/decoded/1/value",
+        ]
+    );
+    let inner = "/s1ap/Cause/value/decoded";
+    for path in [
+        "/eNB-UE-S1AP-ID",
+        "/0",
+        "/@id=8",
+        "/protocolIEs/eNB-UE-S1AP-ID",
+    ] {
+        let value = inspect::select(&contained, &format!("{inner}{path}/value"));
+        assert_eq!(value, Ok(vec![&json!(7)]), "{path}");
+    }
+    let all = inspect::select(&contained, &format!("{inner}/*/id")).unwrap();
+    assert_eq!(all, [&json!(8), &json!(60000)]);
+    inspect::remove(&mut contained, &format!("{inner}/eNB-UE-S1AP-ID")).unwrap();
+    let all = inspect::select(&contained, &format!("{inner}/*/id")).unwrap();
+    assert_eq!(all, [&json!(60000)]);
+}
+
+#[test]
+fn a_path_that_names_nothing_is_refused_and_changes_nothing() {
+    use serde_json::json;
+    let mut tree = inspect::inspect_pdu(&release_with_cause()).unwrap();
+    let before = tree.clone();
+    for (path, reason) in [
+        ("/s1ap/NoSuchIE/value", "\"NoSuchIE\" is not an IE of S1AP"),
+        (
+            "/s1ap/Cause/value/misspelled",
+            "unknown or unavailable decoded field \"misspelled\"",
+        ),
+        (
+            "/s1ap/Cause/value/radioNetwork/deeper",
+            "traverses a scalar",
+        ),
+        (
+            "/misspelled",
+            "unknown or unavailable decoded field \"misspelled\"",
+        ),
+        ("s1ap/Cause", "must start with /"),
+        ("/s1ap/@id=70000", "IE id must be u16"),
+    ] {
+        let error = inspect::select(&tree, path).unwrap_err();
+        assert!(error.contains(reason), "{path}: {error}");
+    }
+    for (path, reason) in [
+        ("/s1ap/NoSuchIE/value", "is not an IE of S1AP"),
+        ("/s1ap/GUMMEI-ID/value", "selected no field"),
+        ("/s1ap/7/value", "selected no field"),
+    ] {
+        let error = inspect::set(&mut tree, path, json!(1)).unwrap_err();
+        assert!(error.contains(reason), "{path}: {error}");
+    }
+    assert!(inspect::remove(&mut tree, "/s1ap/GUMMEI-ID").is_err());
+    let both = json!({"id": "Cause", "criticality": "ignore", "value": 1, "octets": "00"});
+    assert!(inspect::insert(&mut tree, "/s1ap/-", both).is_err());
+    let unnamed = json!({"id": "NoSuchIE", "criticality": "ignore", "octets": "00"});
+    assert!(inspect::insert(&mut tree, "/s1ap/-", unnamed).is_err());
+    assert_eq!(tree, before);
+}
+
+#[test]
+fn a_message_goes_by_the_name_that_asn1_gives_it() {
+    use serde_json::json;
+    for line in include_str!("fixtures/messages.tsv")
+        .lines()
+        .filter(|line| !line.starts_with('#') && !line.is_empty())
+    {
+        let fields: Vec<_> = line.split('\t').collect();
+        let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
+        assert_eq!(inspect::message_name(&pdu), Some(fields[0]));
+    }
+    // A name finds its message again, however it is written, and no other does.
+    for (direction, code, name) in inspect::message_names() {
+        let found = Some((direction, code));
+        assert_eq!(inspect::message_named(name), found, "{name}");
+        assert_eq!(inspect::message_named(&name.to_lowercase()), found);
+        assert_eq!(inspect::message_named(&name.replace('-', "")), found);
+    }
+    assert_eq!(inspect::message_named("NoSuchMessage"), None);
+    // The tree of a message that is written from its name.
+    let (direction, procedure_code) = inspect::message_named("ue context release request").unwrap();
+    let mut tree = json!({
+        "direction": direction,
+        "procedure_code": procedure_code,
+        "criticality": "ignore",
+        "message": {"protocolIEs": []},
+    });
+    inspect::insert(
+        &mut tree,
+        "/s1ap/-",
+        json!({"id": "eNB-UE-S1AP-ID", "criticality": "reject", "value": 7}),
+    )
+    .unwrap();
+    let pdu = inspect::encode_pdu(&tree).unwrap();
+    assert_eq!(inspect::message_name(&pdu), Some("UEContextReleaseRequest"));
+    assert!(pdu.is_initiating());
+}

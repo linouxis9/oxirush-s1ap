@@ -38,6 +38,16 @@ is not source compatible with 0.2.0.
   by its octets. A PLMN identity, a transport layer address, an IMSI and the
   usual identifiers read and write as they are usually written, and an
   `ENUMERATED` value is named in any case.
+- With the `inspect` feature, the values of a tree by their paths:
+  `inspect::paths` gives each value with the path that selects it,
+  `inspect::select` the values at a path, and `inspect::set`, `remove` and
+  `insert` edit a tree at a path. `/s1ap` stands for the IEs of the message,
+  and an IE goes by its name, as in `/s1ap/eNB-UE-S1AP-ID/value`, by its
+  position or by its identifier.
+- With the `inspect` feature, `inspect::message_name` gives the name that
+  ASN.1 has for the message of a PDU, such as `E-RABSetupRequest`,
+  `inspect::message_named` the direction and the procedure code of the
+  message of a name, in any case, and `inspect::message_names` all of them.
 - The `S1_Message` IE name, for the one IE whose type is an inline
   `OCTET STRING`.
 - The `sized` module: the `OCTET STRING` and `BIT STRING` types whose length

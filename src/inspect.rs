@@ -36,20 +36,118 @@
 //!   `_raw_value`: the value is encoded as the type of the identifier, whatever JSON it is;
 //! - to send given octets as an IE, write them in hexadecimal as `_raw_value` and leave
 //!   `value` out. For a transfer, replace the member with its octets;
+//! - to add a transfer, or the value of an IE that contains a type, write it as an object
+//!   with its `decoded` value alone, which is encoded as the type contained;
 //! - an IE with a `_decode_error` has its octets as `value`: change them there.
 //!
 //! Beside a `value`, `_raw_value` is what the value is compared with, as `_raw_message` is
 //! for the message, so changing one alone sends nothing else. A member that the ASN.1 type
 //! does not have is refused. Hexadecimal is taken in either case.
+//!
+//! # Paths
+//!
+//! [`paths`] gives each value of a tree with the path that selects it, [`select`] the
+//! values at a path, and [`set`], [`remove`] and [`insert`] edit a tree at a path:
+//!
+//! ```text
+//! /s1ap/MME-UE-S1AP-ID/criticality = "reject"
+//! /s1ap/MME-UE-S1AP-ID/value = 1
+//! /s1ap/Cause/value/radioNetwork = "user-inactivity"
+//! /procedure_code = 18
+//! ```
+//!
+//! A path is a JSON pointer into the tree, where `/s1ap` stands for the IEs of the
+//! message. The segment after it selects among them:
+//!
+//! - the name of an IE, as ASN.1 has it after `id-` and in any case:
+//!   `/s1ap/eNB-UE-S1AP-ID`. An IE that is there twice is selected twice;
+//! - a position, `/s1ap/0`, which is how [`paths`] names an IE that has no name or is
+//!   there twice;
+//! - `@id=N`, the IEs with that identifier, whether it has a name or not, and `*`, each
+//!   of them;
+//! - `-`, the end of the list, where [`insert`] adds an IE.
+//!
+//! Under an IE are its `criticality`, its typed `value`, and its `octets`: what it was
+//! received as, in hexadecimal. The entries of a list of IEs in a value are selected the
+//! same way, each with its own `value`:
+//!
+//! ```text
+//! /s1ap/E-RABToBeSetupListBearerSUReq/value/0/value/e-RAB-ID = 5
+//! ```
+//!
+//! Any other list selects by position, `*` and `@id=N`. An IE that the message does not
+//! have selects nothing, and a member that a value cannot have is an error.
+//!
+//! ```
+//! use oxirush_s1ap::{build_s1ap, inspect, s1ap::*};
+//! use serde_json::json;
+//!
+//! let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+//!     IGNORE, UEContextReleaseRequest,
+//!     REJECT MME_UE_S1AP_ID(1u32),
+//!     REJECT eNB_UE_S1AP_ID(7u32),
+//!     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+//! );
+//! let mut tree = inspect::inspect_pdu(&pdu)?;
+//! assert_eq!(inspect::select(&tree, "/s1ap/eNB-UE-S1AP-ID/value")?, [&json!(7)]);
+//!
+//! inspect::set(&mut tree, "/s1ap/Cause/value", json!({"nas": "detach"}))?;
+//! inspect::remove(&mut tree, "/s1ap/MME-UE-S1AP-ID")?;
+//! let name = json!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
+//! inspect::insert(&mut tree, "/s1ap/-", name)?;
+//! let edited = inspect::inspect_pdu(&inspect::encode_pdu(&tree)?)?;
+//! assert_eq!(inspect::select(&edited, "/s1ap/*/id")?, [&json!(8), &json!(2), &json!(60)]);
+//! # Ok::<(), String>(())
+//! ```
 
 use serde_json::{Value, json};
 
+pub use crate::inspect_paths::{insert, paths, remove, select, set};
 use crate::inspect_registry as registry;
 use crate::s1ap::S1AP_PDU;
 
 /// ASN.1-derived IE identifiers and names, including extension IEs.
 pub fn ie_names() -> &'static [(u16, &'static str)] {
     registry::IE_NAMES
+}
+
+/// The messages, each as the `direction` and the `procedure_code` that a tree has for it
+/// and the name that ASN.1 gives it.
+pub fn message_names() -> impl Iterator<Item = (&'static str, u8, &'static str)> {
+    let messages = registry::MESSAGES.iter();
+    messages.map(|(direction, code, name, _)| (*direction, *code, *name))
+}
+
+/// The name that ASN.1 gives the message of a PDU, as `InitialContextSetupResponse`; `None`
+/// for a procedure that the specification does not have in that direction.
+pub fn message_name(pdu: &S1AP_PDU) -> Option<&'static str> {
+    let (direction, code) = (pdu.direction(), pdu.procedure_code());
+    message_names()
+        .find(|(of, procedure, _)| (*of, *procedure) == (direction, code))
+        .map(|(.., name)| name)
+}
+
+/// The `direction` and the `procedure_code` of the message that `name` names, whatever
+/// its case and its hyphens, underscores and spaces.
+pub fn message_named(name: &str) -> Option<(&'static str, u8)> {
+    let letters = |name: &str| -> Vec<u8> {
+        let letters = name.bytes().filter(u8::is_ascii_alphanumeric);
+        letters.map(|letter| letter.to_ascii_lowercase()).collect()
+    };
+    let written = letters(name);
+    message_names()
+        .find(|(.., known)| letters(known) == written)
+        .map(|(direction, code, _)| (direction, code))
+}
+
+/// The functions of the type of the message of a direction and a procedure code.
+fn message_type(direction: &str, code: u8) -> Result<Typed, String> {
+    let mut messages = registry::MESSAGES.iter();
+    let message = messages.find(|(of, procedure, ..)| (*of, *procedure) == (direction, code));
+    let protocol = registry::PROTOCOL;
+    message
+        .map(|(.., typed)| typed())
+        .ok_or_else(|| format!("unknown {protocol} direction/procedure {direction}/{code}"))
 }
 
 fn decode_typed<T: rasn::Decode + rasn::Encode>(raw: &[u8]) -> Result<Value, String> {
@@ -175,6 +273,58 @@ fn written_as(checked: &Value, written: &Value) -> bool {
         _ => checked == written,
     }
 }
+
+/// The messages of the registry: the direction, the procedure code, the name that ASN.1
+/// gives it and the type of each.
+macro_rules! messages {
+    ($($direction:ident $code:literal $name:literal $message:path;)*) => {
+        pub(crate) const MESSAGES: &[(&str, u8, &str, fn() -> Typed)] = &[
+            $((stringify!($direction), $code, $name, Typed::of::<$message>),)*
+        ];
+    };
+}
+pub(crate) use messages;
+
+/// The IEs of the registry: the identifier, the name and the type of each, then the type
+/// that the octets of the IE contain. An identifier that has several types has its name
+/// alone.
+macro_rules! ies {
+    ($($id:literal $name:literal $($ie:path $(, $contents:path)?)?;)*) => {
+        pub(crate) const IE_NAMES: &[(u16, &str)] = &[$(($id, $name),)*];
+        pub(crate) fn ie(id: u16) -> Result<Typed, String> {
+            match id {
+                $($($id => Ok(Typed::of::<$ie>()),)?)*
+                _ => Err(format!("{PROTOCOL} IE {id} is unknown or has several types")),
+            }
+        }
+        #[allow(clippy::match_single_binding)]
+        pub(crate) fn ie_contents(id: u16) -> Option<Typed> {
+            match id {
+                $($($($id => Some(Typed::of::<$contents>()),)?)?)*
+                _ => None,
+            }
+        }
+    };
+}
+pub(crate) use ies;
+
+/// The transfers of the registry: the member that holds each, and the type that its
+/// octets contain. A member that has several types has its name alone.
+macro_rules! transfers {
+    ($($field:literal $($transfer:path)?;)*) => {
+        pub(crate) const TRANSFER_FIELDS: &[&str] = &[$($field,)*];
+        #[allow(clippy::match_single_binding)]
+        pub(crate) fn transfer(field: &str) -> Result<Typed, String> {
+            match field {
+                $($($field => Ok(Typed::of::<$transfer>()),)?)*
+                _ => Err(format!(
+                    "{PROTOCOL} contained transfer {field} is unknown or has several types"
+                )),
+            }
+        }
+    };
+}
+pub(crate) use transfers;
 
 /// The functions of a type of the registry.
 pub(crate) struct Typed {
@@ -522,6 +672,23 @@ fn collapse(value: &mut Value, member: &str, depth: usize) -> Result<(), String>
                     } else {
                         *child = raw;
                     }
+                } else if let Some(written) = child.get("decoded") {
+                    // What was not received is encoded from the value written.
+                    let transfer = match key.as_str() {
+                        "value" | "extensionValue" => id.and_then(registry::ie_contents),
+                        key if registry::TRANSFER_FIELDS.contains(&key) => {
+                            Some(registry::transfer(key)?)
+                        }
+                        _ => None,
+                    };
+                    if let Some(transfer) = transfer {
+                        if child.as_object().is_some_and(|members| members.len() != 1) {
+                            return Err(format!(
+                                "{key} is written with its decoded value alone, or as its octets"
+                            ));
+                        }
+                        *child = json!(hex(&(transfer.encode)(written)?));
+                    }
                 }
             }
         }
@@ -601,7 +768,7 @@ pub fn inspect_pdu(pdu: &S1AP_PDU) -> Result<Value, String> {
     let code = pdu.procedure_code();
     let direction = pdu.direction();
     let raw = body["value"].clone();
-    let mut message = (registry::message(direction, code)?.decode)(&unhex(&raw)?)?;
+    let mut message = (message_type(direction, code)?.decode)(&unhex(&raw)?)?;
     expand(&mut message, 0)?;
     Ok(
         json!({"procedure_code": code, "direction": direction, "criticality": body["criticality"], "message": message, "_raw_message": raw}),
@@ -641,7 +808,7 @@ pub fn encode_pdu(tree: &Value) -> Result<S1AP_PDU, String> {
     collapse(&mut message, "", 0)?;
     let raw = if let Some(original) = tree.get("_raw_message") {
         let original = unhex(original)?;
-        let typed = registry::message(direction, code)?;
+        let typed = message_type(direction, code)?;
         let decoded = (typed.decode)(&original)?;
         if decoded == message {
             original
@@ -652,7 +819,7 @@ pub fn encode_pdu(tree: &Value) -> Result<S1AP_PDU, String> {
             (typed.encode)(&message)?
         }
     } else {
-        (registry::message(direction, code)?.encode)(&message)?
+        (message_type(direction, code)?.encode)(&message)?
     };
     let top = json!({variant: {"procedureCode": code, "criticality": tree["criticality"], "value": hex(&raw)}});
     let mut pdu: S1AP_PDU = rasn::jer::decode(&top.to_string()).map_err(|e| e.to_string())?;
