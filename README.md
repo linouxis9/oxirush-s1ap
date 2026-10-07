@@ -126,6 +126,24 @@ its `criticality` and its `value`, which is typed whatever JSON it is: an
 without `value`. The module documentation lists the members of the tree and
 the rules of an edit.
 
+The values of well-known types are shown, and taken, as they are usually
+written:
+
+| Type | In the tree |
+| --- | --- |
+| `PLMNidentity` | `"208-93"`, the MCC and the MNC |
+| `TransportLayerAddress` | `"10.0.0.1"`, `"2001:db8::1"`, or the two with a comma |
+| `IMSI` | its digits |
+| `TAC`, `FiveGSTAC`, `LAC`, `RAC`, `CI`, `GTP-TEID`, `M-TMSI`, `MME-Group-ID`, `MME-Code`, `Port-Number`, `CellIdentity`, `NRCellIdentity`, `UL-NAS-Count` | a number |
+
+A number is also taken as a `"0x…"` string, each of these values as JER writes
+it, and the name of an `ENUMERATED` value whatever its case, with `-`, `_` and
+space taken as the same. An IMSI of an even number of digits is taken as its
+digits only. A value that does not fit its form, such as a transport layer
+address of another length, stays as JER writes it. The other strings stay in
+hexadecimal: keys and algorithm masks, the NAS-PDU and the other containers,
+and the node identifiers, whose length says which kind they are.
+
 Limits:
 
 - An IE with an integer of 2^63 or more stays as its octets, and one with an
@@ -228,7 +246,7 @@ cargo run -p oxirush-s1ap --example inspect --features inspect
 - `extract_ies` extracts UE release, handover, and nested EPS-bearer/NAS data
   from decoded S1AP messages.
 - `inspect` decodes an Initial UE Message, prints its tree, edits one IE, adds
-  another and encodes the PDU again.
+  one by its value and one by its octets, and encodes the PDU again.
 
 The examples intentionally mirror the corresponding `oxirush-ngap`
 examples, substituting the standards-defined S1AP messages and IEs.

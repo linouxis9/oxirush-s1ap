@@ -34,8 +34,8 @@ fn editing_a_known_ie_cannot_drop_unknown_sequence_additions() {
     let mut tree = inspect::inspect_pdu(&pdu).unwrap();
     assert_eq!(inspect::encode_pdu(&tree).unwrap().encode().unwrap(), wire);
     let path = "/message/protocolIEs/2/value/trackingAreaListforWarning/0/tAC";
-    assert_eq!(tree.pointer(path), Some(&serde_json::json!("0001")));
-    *tree.pointer_mut(path).unwrap() = serde_json::json!("0003");
+    assert_eq!(tree.pointer(path), Some(&serde_json::json!(1)));
+    *tree.pointer_mut(path).unwrap() = serde_json::json!(3);
     assert!(
         inspect::encode_pdu(&tree).is_err(),
         "a typed edit must not silently discard a future IE extension"
@@ -180,4 +180,172 @@ fn a_changed_raw_value_alone_sends_nothing_else() {
         inspect::encode_pdu(&tree).unwrap().encode().unwrap(),
         pdu.encode().unwrap()
     );
+}
+
+/// The octets of the message `name` of the fixtures.
+fn fixture(name: &str) -> Vec<u8> {
+    let mut lines = include_str!("fixtures/messages.tsv").lines();
+    let line = lines.find(|line| line.split('\t').next() == Some(name));
+    hex::decode(line.unwrap().split('\t').nth(1).unwrap()).unwrap()
+}
+
+/// The entry of the IE `id` of a tree.
+fn ie(tree: &mut serde_json::Value, id: u16) -> &mut serde_json::Value {
+    let ies = tree["message"]["protocolIEs"].as_array_mut().unwrap();
+    ies.iter_mut().find(|ie| ie["id"] == id).unwrap()
+}
+
+/// The tree of a message that has `entries` for IEs, encoded and decoded again.
+fn sent(entries: &[serde_json::Value]) -> Result<serde_json::Value, String> {
+    let pdu = build_s1ap!(
+        InitiatingMessage,
+        UEContextReleaseRequest,
+        IGNORE,
+        UEContextReleaseRequest,
+    );
+    let mut tree = inspect::inspect_pdu(&pdu)?;
+    *tree["message"]["protocolIEs"].as_array_mut().unwrap() = entries.to_vec();
+    inspect::inspect_pdu(&inspect::encode_pdu(&tree)?)
+}
+
+#[test]
+fn well_known_values_are_shown_and_taken_as_they_are_usually_written() {
+    use serde_json::json;
+    // S1 SETUP REQUEST: Global-ENB-ID is IE 59 and SupportedTAs IE 64.
+    let wire = fixture("S1SetupRequest");
+    let mut tree = inspect::inspect_pdu(&S1AP_PDU::decode(&wire).unwrap()).unwrap();
+    let area = &ie(&mut tree, 64)["value"][0];
+    assert_eq!(area["tAC"], json!(0x9302));
+    assert_eq!(area["broadcastPLMNs"], json!(["208-93"]));
+    assert_eq!(ie(&mut tree, 59)["value"]["pLMNidentity"], json!("208-93"));
+    // What is not edited keeps its octets.
+    assert_eq!(inspect::encode_pdu(&tree).unwrap().encode().unwrap(), wire);
+
+    // Edited as they are shown, a number in hexadecimal too.
+    let area = &mut ie(&mut tree, 64)["value"][0];
+    area["tAC"] = json!("0x7");
+    area["broadcastPLMNs"] = json!(["001-01", "310-410"]);
+    let edited = inspect::encode_pdu(&tree).unwrap();
+    let mut shown = inspect::inspect_pdu(&edited).unwrap();
+    let area = &ie(&mut shown, 64)["value"][0];
+    assert_eq!(area["tAC"], json!(7));
+    assert_eq!(area["broadcastPLMNs"], json!(["001-01", "310-410"]));
+    assert_eq!(
+        ie(&mut shown, 59)["_raw_value"],
+        ie(&mut tree, 59)["_raw_value"]
+    );
+
+    // As JER writes them, which is what a tree had before.
+    let area = &mut ie(&mut tree, 64)["value"][0];
+    area["tAC"] = json!("0007");
+    area["broadcastPLMNs"] = json!(["00F110", "130014"]);
+    assert_eq!(
+        inspect::encode_pdu(&tree).unwrap().encode().unwrap(),
+        edited.encode().unwrap()
+    );
+
+    // Neither form, and a number that the type has no room for.
+    for refused in [json!("7"), json!(1 << 16), json!("0x10000")] {
+        ie(&mut tree, 64)["value"][0]["tAC"] = refused.clone();
+        assert!(inspect::encode_pdu(&tree).is_err(), "{refused}");
+    }
+    ie(&mut tree, 64)["value"][0]["tAC"] = json!(7);
+    ie(&mut tree, 64)["value"][0]["broadcastPLMNs"] = json!(["208-9"]);
+    assert!(inspect::encode_pdu(&tree).is_err());
+}
+
+#[test]
+fn the_parts_of_a_gummei_are_numbers() {
+    use serde_json::json;
+    // S1 SETUP RESPONSE: ServedGUMMEIs is IE 105.
+    let wire = fixture("S1SetupResponse");
+    let mut tree = inspect::inspect_pdu(&S1AP_PDU::decode(&wire).unwrap()).unwrap();
+    let served = &mut ie(&mut tree, 105)["value"][0];
+    assert_eq!(served["servedPLMNs"], json!(["208-93"]));
+    assert_eq!(served["servedGroupIDs"], json!([0xB8A3]));
+    assert_eq!(served["servedMMECs"], json!([0x89]));
+    assert_eq!(inspect::encode_pdu(&tree).unwrap().encode().unwrap(), wire);
+    let served = &mut ie(&mut tree, 105)["value"][0];
+    served["servedGroupIDs"] = json!([2, "0x8000"]);
+    served["servedMMECs"] = json!([1]);
+    let edited = inspect::encode_pdu(&tree).unwrap();
+    let mut shown = inspect::inspect_pdu(&edited).unwrap();
+    let served = &ie(&mut shown, 105)["value"][0];
+    assert_eq!(served["servedGroupIDs"], json!([2, 0x8000]));
+    assert_eq!(served["servedMMECs"], json!([1]));
+    // An MME code has one octet.
+    ie(&mut tree, 105)["value"][0]["servedMMECs"] = json!([256]);
+    assert!(inspect::encode_pdu(&tree).is_err());
+}
+
+#[test]
+fn a_tunnel_endpoint_and_the_identities_of_a_ue_are_readable() {
+    use oxirush_s1ap::helpers::bytes_to_bitvec;
+    use serde_json::json;
+    let added = |id: u16, value: serde_json::Value| {
+        sent(&[json!({"id": id, "criticality": "ignore", "value": value})])
+    };
+    let octets = |value: &[u8]| json!(hex::encode_upper(value));
+    // E-RABSetupListCtxtSURes is IE 51, a list of IEs 50.
+    let bearer = json!({"e-RAB-ID": 5, "transportLayerAddress": "10.0.0.2", "gTP-TEID": 2});
+    let bearers = json!([{"id": 50, "criticality": "ignore", "value": bearer}]);
+    let mut shown = added(51, bearers).unwrap();
+    let item = &mut ie(&mut shown, 51)["value"][0];
+    assert_eq!(item["value"], bearer);
+    let expected = ERABSetupItemCtxtSURes::new(
+        ERABID(5u8.into()),
+        TransportLayerAddress(bytes_to_bitvec(&[10, 0, 0, 2])),
+        GTPTEID::from([0, 0, 0, 2]),
+        None,
+    );
+    assert_eq!(
+        item["_raw_value"],
+        octets(encode_open_type(&expected).unwrap().as_bytes())
+    );
+
+    // UEPagingID is IE 43: an IMSI by its digits, or an S-TMSI by its numbers.
+    let mut shown = added(43, json!({"iMSI": "208930000000001"})).unwrap();
+    let imsi = IMSI(vec![0x02, 0x98, 0x03, 0x00, 0x00, 0x00, 0x00, 0xF1].into());
+    let expected = encode_open_type(&UEPagingID::iMSI(imsi)).unwrap();
+    assert_eq!(
+        ie(&mut shown, 43)["value"]["iMSI"],
+        json!("208930000000001")
+    );
+    assert_eq!(
+        ie(&mut shown, 43)["_raw_value"],
+        octets(expected.as_bytes())
+    );
+    // As JER writes it, with the filler that says it is not digits.
+    let mut same = added(43, json!({"iMSI": "02980300000000F1"})).unwrap();
+    assert_eq!(
+        ie(&mut same, 43)["_raw_value"],
+        ie(&mut shown, 43)["_raw_value"]
+    );
+    let temporary = json!({"s-TMSI": {"mMEC": 1, "m-TMSI": "0xC0FFEE01"}});
+    let mut shown = added(43, temporary).unwrap();
+    let identity = &ie(&mut shown, 43)["value"]["s-TMSI"];
+    assert_eq!(identity, &json!({"mMEC": 1, "m-TMSI": 0xC0FFEE01u32}));
+}
+
+#[test]
+fn an_enumerated_value_is_named_whatever_its_case_and_separators() {
+    use serde_json::json;
+    let causes = |cause: &str, establishment: &str| {
+        sent(&[
+            json!({"id": 2, "criticality": "ignore", "value": {"radioNetwork": cause}}),
+            json!({"id": 134, "criticality": "ignore", "value": establishment}),
+        ])
+    };
+    let mut exact = causes("user-inactivity", "mo-Signalling").unwrap();
+    let mut loose = causes("User_Inactivity", "MO SIGNALLING").unwrap();
+    for id in [2, 134] {
+        assert_eq!(ie(&mut loose, id)["value"], ie(&mut exact, id)["value"]);
+        assert_eq!(
+            ie(&mut loose, id)["_raw_value"],
+            ie(&mut exact, id)["_raw_value"]
+        );
+    }
+    // A name of another type, and no name at all.
+    assert!(causes("mo-Signalling", "mo-Signalling").is_err());
+    assert!(causes("user-inactivit", "mo-Signalling").is_err());
 }

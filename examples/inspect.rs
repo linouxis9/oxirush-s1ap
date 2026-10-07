@@ -1,4 +1,4 @@
-//! Decode an S1AP PDU, print its tree, edit one IE, add another and encode it again.
+//! Decode an S1AP PDU, print its tree, edit one IE, add two and encode it again.
 //!
 //! ```sh
 //! cargo run --example inspect --features inspect
@@ -21,6 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     let pdu = S1AP_PDU::decode(&wire)?;
     let mut tree = inspect::inspect_pdu(&pdu)?;
+    // The PLMN identity is "208-93", and the TAC and the cell identity are numbers.
     println!("{}", serde_json::to_string_pretty(&tree)?);
 
     let ies = tree["message"]["protocolIEs"]
@@ -28,14 +29,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("the IEs of the message");
     // Edit an IE through its typed value. The other IEs keep the octets received.
     let tai = ies.iter_mut().find(|ie| ie["id"] == ie_id("TAI"));
-    tai.expect("a TAI")["value"]["tAC"] = json!("0007");
-    // Add an IE: its `value` has the type of the identifier. Given octets would be sent
-    // as `_raw_value`, without `value`.
+    let tai = &mut tai.expect("a TAI")["value"];
+    tai["tAC"] = json!(7);
+    tai["pLMNidentity"] = json!("001-01");
+    // Add an IE: its `value` has the type of the identifier. A number is also written
+    // in hexadecimal.
     ies.push(json!({
         "id": ie_id("S-TMSI"),
         "criticality": "reject",
-        "value": {"mMEC": "01", "m-TMSI": "C0FFEE01"},
+        "value": {"mMEC": 1, "m-TMSI": "0xC0FFEE01"},
     }));
+    // Add given octets as an IE: `_raw_value`, without `value`.
+    ies.push(json!({"id": 60000, "criticality": "ignore", "_raw_value": "C0FFEE"}));
 
     let edited = inspect::encode_pdu(&tree)?;
     println!("{}", hex::encode_upper(edited.encode()?));
