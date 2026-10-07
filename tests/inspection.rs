@@ -65,16 +65,16 @@ fn a_typed_edit_is_encoded_and_the_other_ies_keep_their_octets() {
 }
 
 #[test]
-fn the_octets_of_an_ie_are_replaced_or_added_as_its_value_without_raw_value() {
+fn the_octets_of_an_ie_are_replaced_or_added_as_its_raw_value_without_value() {
     let other = inspect::inspect_pdu(&release_request(9)).unwrap();
     let mut tree = inspect::inspect_pdu(&release_request(7)).unwrap();
     let ie = tree.pointer_mut("/message/protocolIEs/1").unwrap();
-    ie.as_object_mut().unwrap().remove("_raw_value");
-    ie["value"] = other["message"]["protocolIEs"][1]["_raw_value"].clone();
+    ie.as_object_mut().unwrap().remove("value");
+    ie["_raw_value"] = other["message"]["protocolIEs"][1]["_raw_value"].clone();
     let ies = tree.pointer_mut("/message/protocolIEs").unwrap();
     ies.as_array_mut()
         .unwrap()
-        .push(serde_json::json!({"id": 60000, "criticality": "ignore", "value": "C0FFEE"}));
+        .push(serde_json::json!({"id": 60000, "criticality": "ignore", "_raw_value": "C0FFEE"}));
     let edited = inspect::encode_pdu(&tree).unwrap();
     let tree = inspect::inspect_pdu(&edited).unwrap();
     assert_eq!(
@@ -110,7 +110,32 @@ fn a_new_ie_takes_a_typed_value_of_the_type_of_its_identifier() {
     );
     // A value that the type does not have, and an identifier without a type.
     assert!(added(2, serde_json::json!({"radioNetwork": "no-such-cause"})).is_err());
-    assert!(added(60000, cause).is_err());
+    assert!(added(60000, cause).unwrap_err().contains("_raw_value"));
+}
+
+#[test]
+fn a_new_ie_whose_value_is_a_string_is_typed_too() {
+    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(1u32),
+    );
+    let typed = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(1u32),
+        IGNORE RRC_Establishment_Cause(RRCEstablishmentCause::mo_Signalling),
+        REJECT NAS_PDU(vec![0x07, 0x60]),
+    );
+    let mut tree = inspect::inspect_pdu(&pdu).unwrap();
+    let ies = tree.pointer_mut("/message/protocolIEs").unwrap();
+    let ies = ies.as_array_mut().unwrap();
+    // An ENUMERATED by its name and an OCTET STRING by its octets, not the
+    // octets of their open types.
+    ies.push(serde_json::json!({"id": 134, "criticality": "ignore", "value": "mo-Signalling"}));
+    ies.push(serde_json::json!({"id": 26, "criticality": "reject", "value": "0760"}));
+    assert_eq!(
+        inspect::encode_pdu(&tree).unwrap().encode().unwrap(),
+        typed.encode().unwrap()
+    );
 }
 
 #[test]
