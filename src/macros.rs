@@ -402,7 +402,7 @@ macro_rules! build_s1ap {
      $($ie_crit:ident $ie_name:ident ($($ie_value:tt)+)),*
      $(,)?
     ) => {
-        $crate::__paste::paste! {{
+        {
             let ies = vec![
                 $( $crate::s1ap::ProtocolIEField {
                     id: $crate::s1ap::ProtocolIEID($crate::__s1ap_ie_id!($ie_name)),
@@ -417,7 +417,7 @@ macro_rules! build_s1ap {
             let value = $crate::s1ap::encode_open_type(&message)
                 .expect("failed to APER-encode S1AP message open type");
             $crate::build_s1ap!(@pdu $direction, $proc, $outer_crit, value)
-        }}
+        }
     };
     (@criticality REJECT) => { $crate::s1ap::Criticality::reject };
     (@criticality IGNORE) => { $crate::s1ap::Criticality::ignore };
@@ -454,13 +454,11 @@ macro_rules! build_s1ap {
 #[macro_export]
 macro_rules! build_s1ap_ie {
     ($msg:ident, $criticality:ident $ie_name:ident ($($value:tt)+)) => {
-        $crate::__paste::paste! {
-            $crate::s1ap::ProtocolIEField {
-                id: $crate::s1ap::ProtocolIEID($crate::__s1ap_ie_id!($ie_name)),
-                criticality: $crate::build_s1ap!(@criticality $criticality),
-                value: $crate::__s1ap_encode_ie!($ie_name, ($($value)+))
-                    .expect("failed to APER-encode S1AP IE open type"),
-            }
+        $crate::s1ap::ProtocolIEField {
+            id: $crate::s1ap::ProtocolIEID($crate::__s1ap_ie_id!($ie_name)),
+            criticality: $crate::build_s1ap!(@criticality $criticality),
+            value: $crate::__s1ap_encode_ie!($ie_name, ($($value)+))
+                .expect("failed to APER-encode S1AP IE open type"),
         }
     };
 }

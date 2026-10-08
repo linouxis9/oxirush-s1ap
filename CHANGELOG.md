@@ -61,6 +61,7 @@ is not source compatible with 0.2.0.
   the names that are close to it, where the error named the first IE of the
   specification. The variants of `S1apPduKind` are in the order of the procedure
   codes, and each says its message.
+- The crate no longer depends on `paste`: the macros paste no name.
 
 ### Fixed
 
