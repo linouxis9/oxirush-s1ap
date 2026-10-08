@@ -46,6 +46,8 @@ mod inspect_paths;
 mod inspect_registry;
 pub mod macros;
 mod per;
+#[doc(hidden)]
+pub mod registry;
 pub mod s1ap;
 pub mod sized;
 

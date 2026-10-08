@@ -53,6 +53,15 @@ is not source compatible with 0.2.0.
 - The `sized` module: the `OCTET STRING` and `BIT STRING` types whose length
   determinant takes two octets.
 
+### Changed
+
+- The macros and the `inspect` feature read one generated list,
+  `src/registry.rs`, with one line for each procedure and for each IE. An IE
+  or a procedure that a macro does not know is reported by its name, with
+  the names that are close to it, where the error named the first IE of the
+  specification. The variants of `S1apPduKind` are in the order of the procedure
+  codes, and each says its message.
+
 ### Fixed
 
 - APER encoding and decoding of constrained `SEQUENCE OF` lists, among them
