@@ -62,6 +62,16 @@ is not source compatible with 0.2.0.
   specification. The variants of `S1apPduKind` are in the order of the procedure
   codes, and each says its message.
 - The crate no longer depends on `paste`: the macros paste no name.
+- An edit at a path of an inspection tree changes what is sent or is refused.
+  `set` with `null` takes an optional member out, as its documentation said,
+  where it wrote a `null` that did not encode. The value of an IE is not
+  taken out: that edit returned without an error and sent the octets
+  received. The `octets` of an IE whose value an edit changed are an error to
+  select, and `*` leaves out the members that start with `_`.
+- The name of an ENUMERATED value of the PDU itself, its `criticality`, is
+  taken whatever its case, as those of its IEs are.
+- What is nested deeper than 64 levels stays as its octets beside a
+  `_decode_error`: `inspect_pdu` refused the whole PDU.
 
 ### Fixed
 

@@ -627,3 +627,73 @@ fn a_message_goes_by_the_name_that_asn1_gives_it() {
     assert_eq!(inspect::message_name(&pdu), Some("UEContextReleaseRequest"));
     assert!(pdu.is_initiating());
 }
+
+#[test]
+fn an_edit_changes_what_is_sent_or_is_refused() {
+    use serde_json::{Value, json};
+    let mut tree = inspect::inspect_pdu(&release_request(7)).unwrap();
+    let before = tree.clone();
+    // The value of an IE is not taken out: its octets would go out as they came.
+    for edit in [
+        inspect::remove(&mut tree, "/s1ap/eNB-UE-S1AP-ID/value"),
+        inspect::set(&mut tree, "/s1ap/eNB-UE-S1AP-ID/value", Value::Null),
+    ] {
+        let error = edit.unwrap_err();
+        assert!(error.contains("value is not taken out"), "{error}");
+    }
+    assert_eq!(tree, before);
+    // `*` is each member of a value, without what the tree keeps of what came.
+    let members = inspect::select(&tree, "/s1ap/eNB-UE-S1AP-ID/*").unwrap();
+    assert_eq!(members.len(), 3, "{members:?}");
+    // The octets of an IE whose value was edited are no longer its octets.
+    let octets = "/s1ap/eNB-UE-S1AP-ID/octets";
+    let received = inspect::select(&tree, octets).unwrap()[0].clone();
+    inspect::set(&mut tree, "/s1ap/eNB-UE-S1AP-ID/value", json!(9)).unwrap();
+    let error = inspect::select(&tree, octets).unwrap_err();
+    assert!(error.contains("the value was edited"), "{error}");
+    assert_eq!(
+        inspect::select(&tree, "/s1ap/MME-UE-S1AP-ID/octets")
+            .unwrap()
+            .len(),
+        1
+    );
+    assert!(
+        inspect::paths(&tree)
+            .iter()
+            .all(|(path, _)| !path.contains("_edited"))
+    );
+    let sent = inspect::inspect_pdu(&inspect::encode_pdu(&tree).unwrap()).unwrap();
+    assert_ne!(inspect::select(&sent, octets).unwrap(), [&received]);
+    assert_eq!(
+        inspect::select(&sent, "/s1ap/eNB-UE-S1AP-ID/value").unwrap(),
+        [&json!(9)]
+    );
+    // Octets that are set are those of the IE again.
+    inspect::set(&mut tree, octets, received.clone()).unwrap();
+    assert_eq!(inspect::select(&tree, octets).unwrap(), [&received]);
+    assert_eq!(inspect::encode_pdu(&tree).unwrap(), release_request(7));
+    // The name of an ENUMERATED value of the PDU itself is taken as any other.
+    inspect::set(&mut tree, "/criticality", json!("Reject")).unwrap();
+    let pdu = inspect::encode_pdu(&tree).unwrap();
+    assert_eq!(inspect::inspect_pdu(&pdu).unwrap()["criticality"], "reject");
+}
+
+#[test]
+fn null_takes_an_optional_member_out() {
+    use serde_json::{Value, json};
+    let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
+    let tree = inspect::inspect_pdu(&pdu).unwrap();
+    let sent = |tree: &Value| inspect::inspect_pdu(&inspect::encode_pdu(tree)?);
+    // An optional member that is there is taken out, and one that is not is not
+    // selected.
+    let nas = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/0/value/nAS-PDU";
+    let mut edited = tree.clone();
+    inspect::set(&mut edited, nas, json!("0102")).unwrap();
+    let mut edited = sent(&edited).unwrap();
+    assert_eq!(inspect::select(&edited, nas).unwrap(), [&json!("0102")]);
+    inspect::set(&mut edited, nas, Value::Null).unwrap();
+    let error = inspect::select(&sent(&edited).unwrap(), nas).unwrap_err();
+    assert!(error.contains("unknown or unavailable"), "{error}");
+    let error = inspect::set(&mut edited, nas, Value::Null).unwrap_err();
+    assert!(error.contains("selected no field"), "{error}");
+}
