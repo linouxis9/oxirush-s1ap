@@ -697,3 +697,52 @@ fn null_takes_an_optional_member_out() {
     let error = inspect::set(&mut edited, nas, Value::Null).unwrap_err();
     assert!(error.contains("selected no field"), "{error}");
 }
+
+#[test]
+fn a_message_has_the_ies_of_its_object_set() {
+    let id = |name: &str| {
+        let mut names = inspect::ie_names().iter();
+        names.find(|(_, known)| *known == name).unwrap().0
+    };
+    let ies = inspect::message_ies("InitialContextSetupRequest").unwrap();
+    assert_eq!(ies[0], (id("MME-UE-S1AP-ID"), true));
+    assert!(ies.contains(&(id("E-RABToBeSetupListCtxtSUReq"), true)));
+    assert!(ies.contains(&(id("TraceActivation"), false)));
+    let listed = |name: &str| ies.iter().any(|(ie, _)| *ie == id(name));
+    assert!(!listed("E-RABToBeSetupListBearerSUReq"));
+    // A name is taken as that of a message is, and a message without IEs has none.
+    assert_eq!(
+        inspect::message_ies("initial-context-setup-request"),
+        Some(ies)
+    );
+    assert_eq!(inspect::message_ies("PrivateMessage"), Some(&[][..]));
+    assert_eq!(inspect::message_ies("NoSuchMessage"), None);
+    // Every message has its IEs in the order of its set, each of them known.
+    for (.., name) in inspect::message_names() {
+        let ies = inspect::message_ies(name).unwrap();
+        assert!(name == "PrivateMessage" || !ies.is_empty(), "{name}");
+        for (ie, _) in ies {
+            assert!(
+                inspect::ie_names().iter().any(|(known, _)| known == ie),
+                "{name} {ie}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_kind_that_the_specification_does_not_have_says_the_direction_of_its_pdu() {
+    let pdu = S1AP_PDU::unsuccessfulOutcome(UnsuccessfulOutcome::new(
+        ProcedureCode(13),
+        Criticality::ignore,
+        rasn::types::Any::new(vec![0]),
+    ));
+    let oxirush_s1ap::S1apPduKind::Other {
+        direction,
+        procedure_code,
+    } = pdu.kind()
+    else {
+        panic!("{:?}", pdu.kind());
+    };
+    assert_eq!((direction, procedure_code), (pdu.direction(), 13));
+}

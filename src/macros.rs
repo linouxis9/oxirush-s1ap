@@ -131,21 +131,42 @@ impl std::error::Error for MissingIeError {}
 
 /// The procedures of the protocol, which `src/registry.rs` lists from the ASN.1: the
 /// code and the name of each, then for each of its messages the direction, the kind,
-/// the name that ASN.1 gives it and its type.
+/// the name that ASN.1 gives it, its type and the IEs of its object set, each with its
+/// identifier and its presence.
 ///
-/// The codes that the macros take by the names of the procedures, the kinds of a PDU
-/// and, with the `inspect` feature, the messages of a tree all come from these lines.
+/// The codes that the macros take by the names of the procedures, the type of the
+/// message that they build, the kinds of a PDU and, with the `inspect` feature, the
+/// messages of a tree and the IEs that each can have all come from these lines.
 macro_rules! procedures {
     ($($code:literal $procedure:ident {
-        $(InitiatingMessage $initiating:ident $initiating_name:literal $initiating_type:path;)?
-        $(SuccessfulOutcome $successful:ident $successful_name:literal $successful_type:path;)?
-        $(UnsuccessfulOutcome $unsuccessful:ident $unsuccessful_name:literal $unsuccessful_type:path;)?
+        $(InitiatingMessage $initiating:ident $initiating_name:literal $initiating_type:path
+            [$($initiating_ie:literal $initiating_presence:ident),*];)?
+        $(SuccessfulOutcome $successful:ident $successful_name:literal $successful_type:path
+            [$($successful_ie:literal $successful_presence:ident),*];)?
+        $(UnsuccessfulOutcome $unsuccessful:ident $unsuccessful_name:literal
+            $unsuccessful_type:path
+            [$($unsuccessful_ie:literal $unsuccessful_presence:ident),*];)?
     })*) => {
         /// The procedure codes, by the names of the procedures.
         #[doc(hidden)]
         #[allow(non_upper_case_globals)]
         pub mod procedures {
             $(pub const $procedure: u8 = $code;)*
+        }
+
+        /// The type of the message of each procedure, by its direction.
+        #[doc(hidden)]
+        #[allow(non_snake_case, non_camel_case_types)]
+        pub mod messages {
+            pub mod InitiatingMessage {
+                $($(pub type $procedure = $initiating_type;)?)*
+            }
+            pub mod SuccessfulOutcome {
+                $($(pub type $procedure = $successful_type;)?)*
+            }
+            pub mod UnsuccessfulOutcome {
+                $($(pub type $procedure = $unsuccessful_type;)?)*
+            }
         }
 
         /// The direction and the procedure of a PDU: each variant is one message.
@@ -156,7 +177,8 @@ macro_rules! procedures {
             $($(#[doc = concat!("`", $initiating_name, "`.")] $initiating,)?)*
             $($(#[doc = concat!("`", $successful_name, "`.")] $successful,)?)*
             $($(#[doc = concat!("`", $unsuccessful_name, "`.")] $unsuccessful,)?)*
-            /// A procedure that the specification does not have in that direction.
+            /// A procedure that the specification does not have in that direction, which
+            /// is the one that `direction()` of the PDU gives.
             Other { direction: &'static str, procedure_code: u8 },
         }
 
@@ -186,38 +208,66 @@ macro_rules! procedures {
             /// Return the canonical direction/procedure kind.
             pub fn kind(&self) -> S1apPduKind {
                 let procedure_code = self.procedure_code();
-                let (direction, kind) = match self {
-                    Self::initiatingMessage(_) => ("Initiating", match procedure_code {
+                let kind = match self {
+                    Self::initiatingMessage(_) => match procedure_code {
                         $($($code => Some(S1apPduKind::$initiating),)?)*
                         _ => None,
-                    }),
-                    Self::successfulOutcome(_) => ("Successful", match procedure_code {
+                    },
+                    Self::successfulOutcome(_) => match procedure_code {
                         $($($code => Some(S1apPduKind::$successful),)?)*
                         _ => None,
-                    }),
-                    Self::unsuccessfulOutcome(_) => ("Unsuccessful", match procedure_code {
+                    },
+                    Self::unsuccessfulOutcome(_) => match procedure_code {
                         $($($code => Some(S1apPduKind::$unsuccessful),)?)*
                         _ => None,
-                    }),
+                    },
                 };
+                let direction = self.direction();
                 kind.unwrap_or(S1apPduKind::Other { direction, procedure_code })
             }
         }
 
         /// The messages: the direction, the procedure code, the name that ASN.1 gives it
-        /// and the type of each.
+        /// and the type of each, and the IEs of its object set, each with its identifier
+        /// and whether its presence is mandatory.
         #[cfg(feature = "inspect")]
-        pub(crate) const MESSAGES: &[(&str, u8, &str, fn() -> $crate::inspect::Typed)] = &[
+        #[allow(clippy::type_complexity)]
+        pub(crate) const MESSAGES: &[(
+            &str,
+            u8,
+            &str,
+            fn() -> $crate::inspect::Typed,
+            &[(u16, bool)],
+        )] = &[
             $($(("InitiatingMessage", $code, $initiating_name,
-                $crate::inspect::Typed::of::<$initiating_type>),)?)*
+                $crate::inspect::Typed::of::<$initiating_type>,
+                &[$(($initiating_ie, $crate::macros::presence!($initiating_presence))),*]),)?)*
             $($(("SuccessfulOutcome", $code, $successful_name,
-                $crate::inspect::Typed::of::<$successful_type>),)?)*
+                $crate::inspect::Typed::of::<$successful_type>,
+                &[$(($successful_ie, $crate::macros::presence!($successful_presence))),*]),)?)*
             $($(("UnsuccessfulOutcome", $code, $unsuccessful_name,
-                $crate::inspect::Typed::of::<$unsuccessful_type>),)?)*
+                $crate::inspect::Typed::of::<$unsuccessful_type>,
+                &[$(($unsuccessful_ie, $crate::macros::presence!($unsuccessful_presence))),*]),)?)*
         ];
     };
 }
 pub(crate) use procedures;
+
+/// Whether an IE of an object set is always there: its `PRESENCE`, as ASN.1 words it.
+#[cfg(feature = "inspect")]
+macro_rules! presence {
+    (mandatory) => {
+        true
+    };
+    (optional) => {
+        false
+    };
+    (conditional) => {
+        false
+    };
+}
+#[cfg(feature = "inspect")]
+pub(crate) use presence;
 
 /// The IEs of the protocol, which `src/registry.rs` lists from the ASN.1: the identifier,
 /// the name that ASN.1 gives it and the type of each, the type that its octets contain,
@@ -329,6 +379,8 @@ macro_rules! extract_s1ap_ies {
         $($kind:ident $name:ident : $ty:ty = $ie_name:ident ($bind:ident) $(=> $expr:expr)?),+
         $(,)?
     ) => {
+        // The name is the type of what the IEs are taken from.
+        let _: &$crate::s1ap::$msg = &$msg_var;
         $( let mut $name: Option<$ty> = None; )+
         for _ie in &$msg_var.protocol_ies.0 {
             $(
@@ -372,6 +424,8 @@ macro_rules! with_s1ap_ie_mut {
         })
     }};
     ($msg_var:expr, $msg:ident, $ie_name:ident($bind:ident) => $expr:expr $(,)?) => {{
+        // The name is the type of what the IE is in.
+        let _: &$crate::s1ap::$msg = &$msg_var;
         let mut matched = false;
         for ie in &mut $msg_var.protocol_ies.0 {
             if ie.id.0 == $crate::__s1ap_ie_id!($ie_name) {
@@ -411,9 +465,9 @@ macro_rules! build_s1ap {
                         .expect("failed to APER-encode S1AP IE open type"),
                 }, )*
             ];
-            let message = $crate::s1ap::$msg::new(
-                $crate::s1ap::ProtocolIEContainer(ies),
-            );
+            // The message is the one that the procedure has in that direction.
+            let message: $crate::registry::messages::$direction::$proc =
+                $crate::s1ap::$msg::new($crate::s1ap::ProtocolIEContainer(ies));
             let value = $crate::s1ap::encode_open_type(&message)
                 .expect("failed to APER-encode S1AP message open type");
             $crate::build_s1ap!(@pdu $direction, $proc, $outer_crit, value)
@@ -453,14 +507,18 @@ macro_rules! build_s1ap {
 /// Panics if the value cannot be APER-encoded into its open type.
 #[macro_export]
 macro_rules! build_s1ap_ie {
-    ($msg:ident, $criticality:ident $ie_name:ident ($($value:tt)+)) => {
+    ($msg:ident, $criticality:ident $ie_name:ident ($($value:tt)+)) => {{
+        // The name is a type that has IEs.
+        let _ = |of: &$crate::s1ap::$msg| {
+            let _: &$crate::s1ap::ProtocolIEContainer = &of.protocol_ies;
+        };
         $crate::s1ap::ProtocolIEField {
             id: $crate::s1ap::ProtocolIEID($crate::__s1ap_ie_id!($ie_name)),
             criticality: $crate::build_s1ap!(@criticality $criticality),
             value: $crate::__s1ap_encode_ie!($ie_name, ($($value)+))
                 .expect("failed to APER-encode S1AP IE open type"),
         }
-    };
+    }};
 }
 
 #[cfg(test)]

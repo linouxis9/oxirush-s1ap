@@ -62,6 +62,15 @@ is not source compatible with 0.2.0.
   specification. The variants of `S1apPduKind` are in the order of the procedure
   codes, and each says its message.
 - The crate no longer depends on `paste`: the macros paste no name.
+- `build_s1ap!` takes the message that the procedure has in that direction, and
+  the other macros a type that has IEs: another name does not compile, where
+  it was not looked at. `S1apPduKind::Other` has the `direction` that
+  `direction()` gives, as `"UnsuccessfulOutcome"`, where it had
+  `"Unsuccessful"`.
+- With the `inspect` feature, `inspect::message_ies`: the IEs that a message
+  can have, as its ASN.1 object set lists them, each with its identifier and
+  whether its presence is mandatory. The list of `src/registry.rs` has them
+  on the line of each message.
 - An edit at a path of an inspection tree changes what is sent or is refused.
   `set` with `null` takes an optional member out, as its documentation said,
   where it wrote a `null` that did not encode. The value of an IE is not
