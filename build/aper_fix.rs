@@ -6,11 +6,11 @@ use regex::{Captures, Regex};
 /// Give the constrained `SEQUENCE OF` newtypes the codec of
 /// `crate::per::sequence_of!` in place of rasn's derived one.
 pub fn fix_constrained_sequences(generated: &str) -> Result<String> {
-    // rustfmt splits a long `rasn` attribute over several lines.
+    // rustfmt splits long attributes and SEQUENCE OF declarations over lines.
     let sequence = Regex::new(
         r#"(?ms)(    #\[derive\(AsnType, Debug, Clone, )Decode, Encode(, PartialEq, Eq, Hash\)\]
     #\[rasn\(\s*delegate,\s*size\("([0-9]+)\.\.=([0-9]+)"\)(?:,\s*identifier = "[^"]+")?,?\s*\)\]
-    pub struct ([A-Za-z0-9_]+)\(\s*pub SequenceOf<([A-Za-z0-9_]+)>,?\s*\);)"#,
+    pub struct ([A-Za-z0-9_]+)\(\s*pub\s+SequenceOf<\s*([A-Za-z0-9_]+),?\s*>,?\s*\);)"#,
     )?;
 
     let mut replacements = 0usize;
@@ -32,13 +32,20 @@ pub fn fix_constrained_sequences(generated: &str) -> Result<String> {
         replacements > 0,
         "no constrained SEQUENCE OF declarations found"
     );
+    let unpatched = Regex::new(
+        r#"(?ms)#\[derive\([^\]]*\bDecode\b[^\]]*\)\]\s*#\[rasn\([^\]]*size\("[0-9]+\.\.=[0-9]+"\)[^\]]*\)\]\s*pub struct ([A-Za-z0-9_]+)[^;]*\bSequenceOf\b"#,
+    )?;
+    ensure!(
+        !unpatched.is_match(&generated),
+        "a constrained SEQUENCE OF declaration still uses the derived decoder"
+    );
     Ok(generated)
 }
 
 /// Decode unknown extension additions before returning an extensible SEQUENCE.
 ///
 /// rasn 0.28 leaves them unread when the type has no known additions. All
-/// current S1AP SEQUENCE additions are empty; the protocol's named extension
+/// current SEQUENCE additions are empty; the protocol's named extension
 /// containers remain ordinary root fields. Preserve their root field tokens
 /// and constraints in the decoder macro, and fail if a future ASN.1 version
 /// defines additions that need a different decoder.
@@ -251,8 +258,11 @@ pub fn fix_fixed_bit_strings(generated: &str) -> Result<String> {
                     .filter(|(length, _)| *length > 16 && variant_type == "BitString")
             };
             if !alternatives.iter().any(|alternative| {
-                length(alternative.get(1).map_or("", |value| value.as_str()), &alternative[3])
-                    .is_some()
+                length(
+                    alternative.get(1).map_or("", |value| value.as_str()),
+                    &alternative[3],
+                )
+                .is_some()
             }) {
                 return captures[0].to_string();
             }
@@ -374,8 +384,13 @@ pub fn fix_long_inline_strings(generated: &str) -> Result<String> {
         let sized = match (&captures[7], extensible) {
             _ if upper - lower < 255 || upper >= 65536 => continue,
             ("OctetString", false) => format!("crate::sized::SizedOctetString<{lower}, {upper}>"),
-            ("BitString", _) => format!("crate::sized::SizedBitString<{lower}, {upper}, {extensible}>"),
-            _ => bail!("no sized type for an extensible OCTET STRING in `{}`", whole.as_str()),
+            ("BitString", _) => {
+                format!("crate::sized::SizedBitString<{lower}, {upper}, {extensible}>")
+            }
+            _ => bail!(
+                "no sized type for an extensible OCTET STRING in `{}`",
+                whole.as_str()
+            ),
         };
         replacements += 1;
         let attribute = captures
@@ -397,7 +412,10 @@ pub fn fix_long_inline_strings(generated: &str) -> Result<String> {
             .strip_prefix("pub ")
             .and_then(|name| name.strip_suffix(": "))
         {
-            let plain = format!("            {name}: {option}{}{},", &captures[7], &captures[8]);
+            let plain = format!(
+                "            {name}: {option}{}{},",
+                &captures[7], &captures[8]
+            );
             let constructor = generated[rest..]
                 .find("        pub fn new(")
                 .map(|offset| rest + offset)
@@ -407,8 +425,12 @@ pub fn fix_long_inline_strings(generated: &str) -> Result<String> {
                 .map(|offset| constructor + offset)
                 .ok_or_else(|| anyhow::anyhow!("no constructor parameter `{name}`"))?;
             output.push_str(&generated[rest..parameter]);
-            write!(output, "            {name}: {option}{sized}{},", &captures[8])
-                .expect("write to String");
+            write!(
+                output,
+                "            {name}: {option}{sized}{},",
+                &captures[8]
+            )
+            .expect("write to String");
             rest = parameter + plain.len();
         }
     }
@@ -425,11 +447,13 @@ pub fn fix_long_inline_strings(generated: &str) -> Result<String> {
 fn aligned_bits(length: usize, indent: &str) -> String {
     let rest = length - 8;
     [
-        "const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));".to_string(),
+        "const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));"
+            .to_string(),
         format!("const REST: Constraints = rasn::constraints!(rasn::size_constraint!({rest}));"),
         "let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;".to_string(),
         "let mut bits = BitString::from_element(first);".to_string(),
-        "bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);".to_string(),
+        "bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);"
+            .to_string(),
     ]
     .map(|line| format!("{indent}{line}"))
     .join("\n")

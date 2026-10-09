@@ -500,7 +500,8 @@ macro_rules! build_s1ap {
 }
 
 /// Build one S1AP protocol IE entry. Every message takes the same
-/// `ProtocolIEField`: the message name says where the IE goes and is not used.
+/// `ProtocolIEField`: the name says where the IE goes, and is that of a message
+/// or of another type that has IEs.
 ///
 /// # Panics
 ///
