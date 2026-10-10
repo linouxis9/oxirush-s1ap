@@ -109,6 +109,11 @@ is not source compatible with 0.2.0.
   that was added are set at its path. An `_original_id` that is no number is
   refused.
 - `paths` lists the `octets` of an IE that has no value beside them.
+- `with_s1ap_ie_mut!` changes the IE that `extract_s1ap_ies!` reads when a
+  message has it twice, the last that decodes: it changed the first, or
+  nothing when the first did not decode.
+- The examples of the documentation and of the README are compiled and run
+  by the documentation tests.
 
 ### Fixed
 

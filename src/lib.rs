@@ -23,7 +23,7 @@
 //! Encoding and decoding use [`rasn`](https://crates.io/crates/rasn)'s Aligned
 //! Packed Encoding Rules implementation.
 //!
-//! ```ignore
+//! ```
 //! use oxirush_s1ap::{build_s1ap, s1ap::*};
 //!
 //! let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
@@ -55,6 +55,11 @@ pub mod sized;
 pub use rasn as __rasn;
 
 pub use s1ap::S1apPduKind;
+
+/// The examples of the README, which the documentation tests compile and run.
+#[cfg(all(doctest, feature = "inspect"))]
+#[doc = include_str!("../README.md")]
+struct Readme;
 
 /// Version of oxirush-s1ap.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

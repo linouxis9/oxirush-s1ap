@@ -14,7 +14,7 @@
 //! are converted with `.into()`, so primitive values such as `u32` can be passed
 //! directly for generated newtypes.
 //!
-//! ```ignore
+//! ```
 //! use oxirush_s1ap::{build_s1ap, s1ap::*};
 //!
 //! let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
@@ -36,7 +36,7 @@
 //!
 //! This is useful for conditionally included IEs or IEs built separately.
 //!
-//! ```ignore
+//! ```
 //! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
 //!
 //! let ie = build_s1ap_ie!(UEContextReleaseRequest,
@@ -78,8 +78,8 @@
 //! implements `From<MissingIeError>`. Without `=> expression`, extraction uses
 //! `binding.0`, which unwraps the usual single-field generated newtype.
 //!
-//! ```ignore
-//! use oxirush_s1ap::{extract_s1ap_ies, macros::MissingIeError, s1ap::*};
+//! ```
+//! use oxirush_s1ap::{build_s1ap_ie, extract_s1ap_ies, macros::MissingIeError, s1ap::*};
 //!
 //! fn handle(msg: &UplinkNASTransport) -> Result<Vec<u8>, MissingIeError> {
 //!     extract_s1ap_ies!(msg, UplinkNASTransport,
@@ -90,6 +90,12 @@
 //!     let _ = (mme_id, enb_id);
 //!     Ok(nas_pdu)
 //! }
+//!
+//! let message = UplinkNASTransport::new(ProtocolIEContainer(vec![
+//!     build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32)),
+//!     build_s1ap_ie!(UplinkNASTransport, REJECT NAS_PDU(vec![0x07, 0x6a])),
+//! ]));
+//! assert_eq!(handle(&message).unwrap(), [0x07, 0x6a]);
 //! ```
 //!
 //! ## `with_s1ap_ie_mut!` — locate and mutate one decoded S1AP IE
@@ -99,9 +105,15 @@
 //! decoded and re-encoded successfully, and the expression returned `true`.
 //! The setter form `IeName(binding) = value` expands to `binding.0 = value`.
 //!
-//! ```ignore
-//! use oxirush_s1ap::{s1ap::*, with_s1ap_ie_mut};
+//! Of an IE that a message has twice, both macros take the same one: the last
+//! that decodes. `extract_s1ap_ies!` reads it and `with_s1ap_ie_mut!` changes it.
 //!
+//! ```
+//! use oxirush_s1ap::{build_s1ap_ie, s1ap::*, with_s1ap_ie_mut};
+//!
+//! let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
+//!     build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32)),
+//! ]));
 //! let updated = with_s1ap_ie_mut!(message, UplinkNASTransport,
 //!     MME_UE_S1AP_ID(id) = 42u32
 //! );
@@ -438,7 +450,8 @@ macro_rules! with_s1ap_ie_mut {
         // The name is the type of what the IE is in.
         let _: &$crate::s1ap::$msg = &$msg_var;
         let mut matched = false;
-        for ie in &mut $msg_var.protocol_ies.0 {
+        // The IE that `extract_s1ap_ies!` reads: the last one that decodes.
+        for ie in $msg_var.protocol_ies.0.iter_mut().rev() {
             if ie.id.0 == $crate::__s1ap_ie_id!($ie_name) {
                 if let Ok(mut $bind) = $crate::__s1ap_decode_ie!($ie_name, &ie.value) {
                     let result = $expr;
@@ -446,8 +459,8 @@ macro_rules! with_s1ap_ie_mut {
                         ie.value = value;
                         matched = result;
                     }
+                    break;
                 }
-                break;
             }
         }
         matched
@@ -567,6 +580,39 @@ mod tests {
             .expect("MME UE ID");
         let id: MMEUES1APID = rasn::aper::decode(ie.value.as_bytes()).expect("decode ID");
         assert_eq!(id.0, 42);
+    }
+
+    #[test]
+    fn an_ie_that_is_there_twice_is_read_and_changed_at_the_same_place() {
+        use crate::macros::MissingIeError;
+        fn id(request: &UEContextReleaseRequest) -> Result<u32, MissingIeError> {
+            extract_s1ap_ies!(request, UEContextReleaseRequest,
+                req id: u32 = MME_UE_S1AP_ID(id),
+            );
+            Ok(id)
+        }
+        let ids = |request: &UEContextReleaseRequest| -> Vec<Vec<u8>> {
+            let ies = request.protocol_ies.0.iter();
+            ies.map(|ie| ie.value.as_bytes().to_vec()).collect()
+        };
+        let entry = |id: u32| build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(id));
+        let mut request = UEContextReleaseRequest::new(ProtocolIEContainer(vec![
+            entry(1),
+            entry(2),
+            // An identifier of this IE that does not decode as one.
+            ProtocolIEField::new(0u16, Criticality::reject, rasn::types::Any::new(vec![0xff])),
+        ]));
+        assert_eq!(id(&request).unwrap(), 2);
+        let before = ids(&request);
+        assert!(with_s1ap_ie_mut!(
+            request,
+            UEContextReleaseRequest,
+            MME_UE_S1AP_ID(id) = 42u32
+        ));
+        assert_eq!(id(&request).unwrap(), 42);
+        let after = ids(&request);
+        assert_eq!((&after[0], &after[2]), (&before[0], &before[2]));
+        assert_ne!(after[1], before[1]);
     }
 
     #[test]

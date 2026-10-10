@@ -87,6 +87,9 @@ A `req` field returns `MissingIeError` from the enclosing function when the IE
 is absent or invalid. An `opt` field remains `Option<T>`. Without a custom
 `=> expression`, extraction unwraps the generated newtype's `.0` field.
 
+Of an IE that a message has twice, `extract_s1ap_ies!` and
+`with_s1ap_ie_mut!` take the same one: the last that decodes.
+
 ## Common helpers
 
 ```rust
