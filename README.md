@@ -131,7 +131,7 @@ fn edit(pdu: &S1AP_PDU) -> Result<S1AP_PDU, String> {
 }
 ```
 
-An IE is named as ASN.1 names it after `id-`, in any case, and also selected
+An IE is named as ASN.1 names it after `id-`, and also selected
 by its position (`/s1ap/0`), by its identifier (`/s1ap/@id=8`) or with all
 the others (`/s1ap/*`); `paths` gives the position of an IE that has no name
 or is there twice. Under an IE are its `criticality`, its typed `value` and
@@ -142,22 +142,37 @@ value are selected the same way, each with its own `value`:
 /s1ap/E-RABToBeSetupListBearerSUReq/value/0/value/e-RAB-ID = 5
 ```
 
-An IE that the message does not have selects nothing. A name that is no IE is
-an error, and so is a member that a value does not have, whether its type has
-none of that name or the value has it absent: a member that is written wrong
-is not taken for one that is optional and not there. `*` is each entry of a
-list or each member of a value, without the members that start with `_`.
+A path selects nothing where the message could have a value and does not: an
+IE that the message does not have, an `OPTIONAL` member that is absent, and
+another alternative of a `CHOICE`. A name that the type of a value cannot
+have is an error, which lists the members that the type has, so a member that
+is written wrong is not taken for one that is not there; what follows an
+absent value in a path is checked the same way. `*` is each entry of a list
+or each member of a value, without the members that start with `_`, and a
+segment after it is an error when none of the values can have it.
 
-The name of an IE is taken in any case, with `-`, `_` and space as the same;
-the members of a value are spelled as ASN.1 spells them, and the name of a
-message is taken with or without its hyphens. `inspect::message_ies` gives the
-IEs that a message can have, from its ASN.1 object set: the identifier of each
-and whether its presence is mandatory, in the order of the set.
+A name is its letters and its digits, whatever their case and whatever is
+between them: `/s1ap/eNB-UE-S1AP-ID`, `/S1AP/enb_ue_s1ap_id` and
+`/s1ap/enbues1apid` are one path. The root, the name of an IE, the members of a
+value, the name of a message and the name of an `ENUMERATED` value are all
+taken this way, and a test holds that no two of them that could be taken for
+each other are the same. A position is a number as decimal writes it.
+
+`inspect::check_path(message, path)` says whether a path can select anything
+in a message of a name, without a tree: under `/s1ap` the IE has to be one of
+the object set of the message, and each segment under it a member that the
+type has, through the lists, the alternatives of a `CHOICE` and the items of a
+list of IEs. What is not known is not refused: the value of an IE selected by
+`@id=N` whose identifier is unknown or has several types, and the entries of a
+container other than that of the message when they are selected by position.
+`inspect::message_ies` gives the IEs that a message can have, from its ASN.1
+object set: the identifier of each and whether its presence is mandatory, in
+the order of the set.
 
 `inspect::message_name(&pdu)` is the name that ASN.1 gives the message of a
 PDU, such as `E-RABSetupRequest`, and `inspect::message_named` finds
 the `direction` and the `procedure_code` that a tree has for a message from
-its name, whatever its case and its hyphens.
+its name.
 
 What is not edited keeps the octets received, and repeated IEs keep their
 order. An IE that is unknown or does not decode stays as its octets beside a
@@ -168,16 +183,23 @@ type does not have. An IE is added with `insert`, before the IE that the path
 selects or at the end for `/s1ap/-`, as its `id`, by name or by number, its
 `criticality` and its `value`, which is typed whatever JSON it is: an
 `ENUMERATED` is added by its name. Given octets are sent as its `octets`,
-without `value`. The module documentation lists the members of the tree and
+without `value`. An IE is written this way wherever a tree has IEs: in the
+items of a list of IEs, in a value that is set whole, and in a tree written by
+hand. The module documentation lists the members of the tree and
 the rules of an edit.
 
-No edit at a path is taken and then left out. `null` takes an optional member
-out. The value of an IE is not taken out, as the octets received would be sent
-in its place: the IE is removed, or its `octets` are set. Once `set`, `remove`
-or `insert` changed something under a value, the `octets` beside it are no
-longer those of that value and selecting them is an error, until `encode_pdu`
-gives the PDU its octets. What is nested deeper than 64 levels stays as its
-octets beside a `_decode_error`, and the rest of the PDU is read.
+No edit at a path is taken and then left out. `set` writes a member by the
+name that ASN.1 gives it and refuses a name that the type does not have.
+`null` takes an optional member out; a member that its type always has is not
+taken out, and an alternative of a `CHOICE` takes the place of the one that is
+there. The value of an IE is not taken out, as the octets received would be
+sent in its place: the IE is removed, or its `octets` are set. Once `set`,
+`remove` or `insert` changed something under a value, the `octets` beside it
+are no longer those of that value and selecting them is an error, until
+`encode_pdu` gives the PDU its octets. `paths` lists the `octets` of an IE
+only when it has no value beside them. What is nested deeper than 64 levels
+stays as its octets beside a `_decode_error`, and the rest of the PDU is read;
+a path into a value that did not decode is an error.
 
 The values of well-known types are shown, and taken, as they are usually
 written:
@@ -190,12 +212,12 @@ written:
 | `TAC`, `FiveGSTAC`, `LAC`, `RAC`, `CI`, `GTP-TEID`, `M-TMSI`, `MME-Group-ID`, `MME-Code`, `Port-Number`, `CellIdentity`, `NRCellIdentity`, `UL-NAS-Count` | a number |
 
 A number is also taken as a `"0x…"` string, each of these values as JER writes
-it, and the name of an `ENUMERATED` value whatever its case, with `-`, `_` and
-space taken as the same. An IMSI of an even number of digits is taken as its
-digits only. A value that does not fit its form, such as a transport layer
-address of another length, stays as JER writes it. The other strings stay in
-hexadecimal: keys and algorithm masks, the NAS-PDU and the other containers,
-and the node identifiers, whose length says which kind they are.
+it, and the name of an `ENUMERATED` value as any other name. An IMSI of an
+even number of digits is taken as its digits only. A value that does not fit
+its form, such as a transport layer address of another length, stays as JER
+writes it. The other strings stay in hexadecimal: keys and algorithm masks,
+the NAS-PDU and the other containers, and the node identifiers, whose length
+says which kind they are.
 
 Limits:
 
@@ -233,8 +255,22 @@ one line for each, with its code or its identifier, its names and its types,
 and for each message of a procedure the IEs of its object set.
 The names that the macros take, `S1apPduKind` and the names and the types of the
 `inspect` feature all expand from it, so each is written once.
-`src/inspect_registry.rs` has what the `inspect` feature alone needs. Commit
-the three files after regenerating them. Do not edit them by hand.
+`src/inspect_registry.rs` has what the `inspect` feature alone needs, among
+it the list of the types: one line for each SEQUENCE and each CHOICE with its
+members, which the paths of the inspection are read against. Commit the
+three files after regenerating them. Do not edit them by hand.
+
+The checked-in files were last regenerated on 2026-10-10, with the generator
+of that revision and the rustfmt of Rust 1.88, from the ASN.1 named above:
+the three files came out as they are committed, octet for octet. No CI job
+regenerates them, as the ASN.1 is not in the repository.
+
+oxirush-s1ap and oxirush-ngap share, octet for octet, the code that does
+not depend on the protocol: `build/aper_fix.rs`, `build/containers.rs`,
+`build/inspection.rs`, `build/registry.rs`, `src/inspect_paths.rs`,
+`src/per.rs` and `src/sized.rs`. `tests/shared_files.rs` holds a digest of
+each, so that an edit in one crate fails its tests until the file is the same
+in the other and both record the new digest.
 
 ## rasn integration
 

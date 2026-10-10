@@ -558,16 +558,20 @@ fn a_path_that_names_nothing_is_refused_and_changes_nothing() {
         ("/s1ap/NoSuchIE/value", "\"NoSuchIE\" is not an IE of S1AP"),
         (
             "/s1ap/Cause/value/misspelled",
-            "unknown or unavailable decoded field \"misspelled\"",
+            "\"misspelled\" is not a member of Cause, which has radioNetwork, transport, nas, \
+             protocol, misc",
         ),
         (
             "/s1ap/Cause/value/radioNetwork/deeper",
-            "traverses a scalar",
+            "\"deeper\" is not a member of this value, which has none",
         ),
         (
             "/misspelled",
-            "unknown or unavailable decoded field \"misspelled\"",
+            "\"misspelled\" is not a member of a tree, which has procedure_code, direction, \
+             criticality, message",
         ),
+        ("/s1ap/+0/id", "\"+0\" is not an IE of S1AP"),
+        ("/s1ap/00/id", "\"00\" is not an IE of S1AP"),
         ("s1ap/Cause", "must start with /"),
         ("/s1ap/@id=70000", "IE id must be u16"),
     ] {
@@ -692,8 +696,8 @@ fn null_takes_an_optional_member_out() {
     let mut edited = sent(&edited).unwrap();
     assert_eq!(inspect::select(&edited, nas).unwrap(), [&json!("0102")]);
     inspect::set(&mut edited, nas, Value::Null).unwrap();
-    let error = inspect::select(&sent(&edited).unwrap(), nas).unwrap_err();
-    assert!(error.contains("unknown or unavailable"), "{error}");
+    let none = Vec::<&Value>::new();
+    assert_eq!(inspect::select(&sent(&edited).unwrap(), nas).unwrap(), none);
     let error = inspect::set(&mut edited, nas, Value::Null).unwrap_err();
     assert!(error.contains("selected no field"), "{error}");
 }
@@ -787,4 +791,332 @@ fn a_kind_that_the_specification_does_not_have_says_the_direction_of_its_pdu() {
         panic!("{:?}", pdu.kind());
     };
     assert_eq!((direction, procedure_code), (pdu.direction(), 13));
+}
+
+#[test]
+fn a_member_that_is_absent_selects_nothing_and_one_that_its_type_has_not_is_an_error() {
+    use serde_json::{Value, json};
+    let tree = inspect::inspect_pdu(&release_with_cause()).unwrap();
+    let none = Vec::<&Value>::new();
+    let select = |path: &str| inspect::select(&tree, path);
+    // The alternative of a CHOICE that is there, and another one.
+    let cause = json!("user-inactivity");
+    assert_eq!(select("/s1ap/Cause/value/radioNetwork").unwrap(), [&cause]);
+    assert_eq!(select("/s1ap/Cause/value/nas").unwrap(), none);
+    // What follows an IE or a member that is not there is still a path of its type.
+    assert_eq!(select("/s1ap/GUMMEI-ID/value/mME-Code").unwrap(), none);
+    let error = select("/s1ap/GUMMEI-ID/value/misspelled").unwrap_err();
+    let members = "is not a member of GUMMEI, which has pLMN-Identity, mME-Group-ID, mME-Code, \
+                   iE-Extensions";
+    assert!(error.contains(members), "{error}");
+    let error = select("/s1ap/Cause/value/nas/deeper").unwrap_err();
+    assert!(error.contains("which has none"), "{error}");
+    // After `*`, a member is an error when no value can have it.
+    assert_eq!(select("/s1ap/*/value/radioNetwork").unwrap(), [&cause]);
+    assert_eq!(select("/s1ap/*/value/*").unwrap(), [&cause]);
+    let error = select("/s1ap/*/value/misspelled").unwrap_err();
+    assert!(error.contains("is not a member of"), "{error}");
+    // An optional member that is not there, and a list of values that has no IEs to name.
+    let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
+    let setup = inspect::inspect_pdu(&pdu).unwrap();
+    let item = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/E-RABToBeSetupItemCtxtSUReq/value";
+    let nas = inspect::select(&setup, &format!("{item}/nAS-PDU")).unwrap();
+    assert_eq!(nas, none);
+    let error = inspect::select(&setup, &format!("{item}/nas-pdu-typo")).unwrap_err();
+    assert!(
+        error.contains("is not a member of ERABToBeSetupItemCtxtSUReq, which has e-RAB-ID"),
+        "{error}"
+    );
+    let pdu = S1AP_PDU::decode(&fixture("S1SetupRequest")).unwrap();
+    let setup = inspect::inspect_pdu(&pdu).unwrap();
+    let error = inspect::select(&setup, "/s1ap/SupportedTAs/value/Cause/value").unwrap_err();
+    assert!(error.contains("go by position"), "{error}");
+}
+
+#[test]
+fn an_edit_names_a_member_that_the_type_has_and_keeps_what_it_always_has() {
+    use serde_json::{Value, json};
+    let mut tree = inspect::inspect_pdu(&release_with_cause()).unwrap();
+    let before = tree.clone();
+    let error = inspect::set(&mut tree, "/s1ap/Cause/value/misspelled", json!(1)).unwrap_err();
+    assert!(error.contains("is not a member of Cause"), "{error}");
+    let error = inspect::remove(&mut tree, "/s1ap/Cause/value/radioNetwork").unwrap_err();
+    assert!(error.contains("a CHOICE has one alternative"), "{error}");
+    let error = inspect::remove(&mut tree, "/s1ap/Cause/criticality").unwrap_err();
+    assert!(error.contains("its type always has it"), "{error}");
+    assert_eq!(tree, before);
+    // An alternative takes the place of the one that is there.
+    inspect::set(&mut tree, "/s1ap/Cause/value/nas", json!("detach")).unwrap();
+    let sent = inspect::inspect_pdu(&inspect::encode_pdu(&tree).unwrap()).unwrap();
+    let cause = inspect::select(&sent, "/s1ap/Cause/value").unwrap();
+    assert_eq!(cause, [&json!({"nas": "detach"})]);
+    // A member that the type always has stays, and an optional one is added by its name.
+    let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
+    let mut setup = inspect::inspect_pdu(&pdu).unwrap();
+    let item = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/0/value";
+    let error = inspect::remove(&mut setup, &format!("{item}/e-RAB-ID")).unwrap_err();
+    assert!(error.contains("its type always has it"), "{error}");
+    let error = inspect::set(&mut setup, &format!("{item}/e-RAB-ID"), Value::Null).unwrap_err();
+    assert!(error.contains("its type always has it"), "{error}");
+    inspect::set(&mut setup, &format!("{item}/nas_pdu"), json!("0102")).unwrap();
+    let sent = inspect::inspect_pdu(&inspect::encode_pdu(&setup).unwrap()).unwrap();
+    let nas = inspect::select(&sent, &format!("{item}/nAS-PDU")).unwrap();
+    assert_eq!(nas, [&json!("0102")]);
+}
+
+#[test]
+fn a_name_is_its_letters_and_its_digits() {
+    use serde_json::json;
+    let tree = inspect::inspect_pdu(&release_with_cause()).unwrap();
+    for path in [
+        "/s1ap/eNB-UE-S1AP-ID/value",
+        "/S1AP/enb_ue_s1ap_id/Value",
+        "/S1ap/enbues1apid/value",
+        "/s1ap/ENB UE S1AP ID/value",
+        "/message/protocol-ies/1/value",
+        "/Message/ProtocolIEs/1/VALUE",
+    ] {
+        assert_eq!(inspect::select(&tree, path).unwrap(), [&json!(7)], "{path}");
+    }
+    for path in [
+        "/s1ap/cause/value/radionetwork",
+        "/s1ap/Cause/value/Radio-Network",
+    ] {
+        let cause = inspect::select(&tree, path).unwrap();
+        assert_eq!(cause, [&json!("user-inactivity")], "{path}");
+    }
+    assert_eq!(
+        inspect::select(&tree, "/Procedure-Code").unwrap(),
+        inspect::select(&tree, "/procedure_code").unwrap()
+    );
+    // A member that a tree keeps of what was received is named as it is.
+    assert!(inspect::select(&tree, "/s1ap/Cause/_raw_value").is_ok());
+    assert!(inspect::select(&tree, "/s1ap/Cause/rawvalue").is_err());
+    // An edit writes the member by the name that ASN.1 gives it.
+    let mut edited = tree.clone();
+    inspect::set(&mut edited, "/s1ap/cause/value/NAS", json!("detach")).unwrap();
+    let cause = inspect::select(&edited, "/s1ap/Cause/value").unwrap();
+    assert_eq!(cause, [&json!({"nas": "detach"})]);
+    assert!(inspect::encode_pdu(&edited).is_ok());
+    assert_eq!(
+        inspect::message_named("ue context-release_REQUEST"),
+        Some(("InitiatingMessage", 18))
+    );
+}
+
+#[test]
+fn a_path_is_checked_against_a_message_without_a_tree() {
+    // Every path of every message is one that its message can have.
+    for line in include_str!("fixtures/messages.tsv")
+        .lines()
+        .filter(|line| !line.starts_with('#') && !line.is_empty())
+    {
+        let wire = hex::decode(line.split('\t').nth(1).unwrap()).unwrap();
+        let pdu = S1AP_PDU::decode(&wire).unwrap();
+        let name = inspect::message_name(&pdu).unwrap();
+        let tree = inspect::inspect_pdu(&pdu).unwrap();
+        for (path, _) in inspect::paths(&tree) {
+            let checked = inspect::check_path(name, &path);
+            assert!(checked.is_ok(), "{name} {path}: {checked:?}");
+        }
+    }
+    let item = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/E-RABToBeSetupItemCtxtSUReq";
+    for (message, path) in [
+        ("UEContextReleaseRequest", "/s1ap/Cause/value/nas"),
+        (
+            "ue-context-release-request",
+            "/s1ap/cause/value/radio_network",
+        ),
+        ("UEContextReleaseRequest", "/s1ap/Cause/octets"),
+        ("UEContextReleaseRequest", "/s1ap/*/value/radioNetwork"),
+        ("UEContextReleaseRequest", "/s1ap/0/criticality"),
+        ("UEContextReleaseRequest", "/s1ap/-"),
+        ("UEContextReleaseRequest", "/s1ap"),
+        ("UEContextReleaseRequest", "/procedure_code"),
+        ("UEContextReleaseRequest", "/message/protocolIEs/0/value"),
+        // An identifier that has no type may be anything.
+        ("UEContextReleaseRequest", "/s1ap/@id=60000/value/anything"),
+        (
+            "InitialContextSetupRequest",
+            "/s1ap/GUMMEI-ID/value/mME-Code",
+        ),
+        (
+            "InitialContextSetupRequest",
+            &format!("{item}/value/nAS-PDU"),
+        ),
+        (
+            "InitialContextSetupRequest",
+            "/s1ap/E-RABToBeSetupListCtxtSUReq/value/0/value/e-RABlevelQoSParameters/qCI",
+        ),
+        (
+            "InitialContextSetupRequest",
+            &format!("{item}/value/transportLayerAddress/length"),
+        ),
+    ] {
+        let checked = inspect::check_path(message, path);
+        assert!(checked.is_ok(), "{message} {path}: {checked:?}");
+    }
+    for (message, path, reason) in [
+        ("NoSuchMessage", "/s1ap/Cause", "is not a message of S1AP"),
+        (
+            "InitialContextSetupRequest",
+            "/s1ap/E-RABToBeSetupListBearerSUReq",
+            "is not an IE of InitialContextSetupRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID",
+        ),
+        (
+            "UEContextReleaseRequest",
+            "/s1ap/Cause/value/misspelled",
+            "is not a member of Cause",
+        ),
+        (
+            "UEContextReleaseRequest",
+            "/s1ap/*/value/misspelled",
+            "is not a member of",
+        ),
+        (
+            "UEContextReleaseRequest",
+            "/s1ap/eNB-UE-S1AP-ID/value/deeper",
+            "which has none",
+        ),
+        (
+            "UEContextReleaseRequest",
+            "/s1ap/eNB-UE-S1AP-ID/value/*/deeper",
+            "selects nothing in a message UEContextReleaseRequest",
+        ),
+        (
+            "UEContextReleaseRequest",
+            "/s1ap/Cause/misspelled",
+            "is not a member of an IE, which has id, criticality, value, octets",
+        ),
+        (
+            "UEContextReleaseRequest",
+            "/s1ap/NoSuchIE",
+            "is not an IE of S1AP",
+        ),
+        (
+            "InitialContextSetupRequest",
+            &format!("{item}/value/misspelled"),
+            "is not a member of ERABToBeSetupItemCtxtSUReq",
+        ),
+        (
+            "S1SetupRequest",
+            "/s1ap/SupportedTAs/value/Cause",
+            "go by position",
+        ),
+    ] {
+        let error = inspect::check_path(message, path).unwrap_err();
+        assert!(error.contains(reason), "{message} {path}: {error}");
+    }
+}
+
+#[test]
+fn an_ie_is_written_by_its_name_and_its_octets_wherever_a_tree_has_ies() {
+    use serde_json::json;
+    let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
+    let tree = inspect::inspect_pdu(&pdu).unwrap();
+    let list = "/s1ap/E-RABToBeSetupListCtxtSUReq/value";
+    let sent = |tree: &serde_json::Value| inspect::inspect_pdu(&inspect::encode_pdu(tree)?);
+    let item = inspect::select(&tree, &format!("{list}/0/value")).unwrap()[0].clone();
+    let named = json!({
+        "id": "E-RABToBeSetupItemCtxtSUReq", "criticality": "reject", "value": item,
+    });
+    let unknown = json!({"id": 60000, "criticality": "ignore", "octets": "00"});
+    // The items of a list of IEs: in a value that is set whole, and at the end of the
+    // list, on a path that has the root and on one that has not.
+    let mut edited = tree.clone();
+    inspect::set(&mut edited, list, json!([named, unknown])).unwrap();
+    let after = sent(&edited).unwrap();
+    let id = format!("{list}/E-RABToBeSetupItemCtxtSUReq/value/e-RAB-ID");
+    assert_eq!(
+        inspect::select(&after, &id).unwrap(),
+        inspect::select(&tree, &id).unwrap()
+    );
+    let octets = format!("{list}/@id=60000/octets");
+    assert_eq!(inspect::select(&after, &octets).unwrap(), [&json!("00")]);
+    let mut edited = tree.clone();
+    let position = (tree["message"]["protocolIEs"].as_array().unwrap().iter())
+        .position(|ie| ie["id"] == 24)
+        .unwrap();
+    let raw = format!("/message/protocolIEs/{position}/value/-");
+    inspect::insert(&mut edited, &raw, named.clone()).unwrap();
+    inspect::insert(&mut edited, &format!("{list}/-"), unknown).unwrap();
+    let after = sent(&edited).unwrap();
+    assert_eq!(
+        inspect::select(&after, &format!("{list}/*/id"))
+            .unwrap()
+            .len(),
+        3
+    );
+    assert_eq!(inspect::select(&after, &octets).unwrap(), [&json!("00")]);
+    // In a tree written by hand.
+    let mut edited = tree.clone();
+    let ies = edited["message"]["protocolIEs"].as_array_mut().unwrap();
+    ies[0]["id"] = json!("mme-ue-s1ap-id");
+    ies.push(json!({"id": "eNBname", "criticality": "ignore", "octets": "0461"}));
+    let after = sent(&edited).unwrap();
+    assert_eq!(after["message"]["protocolIEs"][0]["id"], json!(0));
+    let name = inspect::select(&after, "/s1ap/eNBname/octets").unwrap();
+    assert_eq!(name, [&json!("0461")]);
+    // The octets of an IE that was added are set at its path too.
+    let mut edited = tree.clone();
+    let name = json!({"id": "eNBname", "criticality": "ignore", "value": "a"});
+    inspect::insert(&mut edited, "/s1ap/-", name).unwrap();
+    inspect::set(&mut edited, "/s1ap/eNBname/octets", json!("0461")).unwrap();
+    let after = sent(&edited).unwrap();
+    let name = inspect::select(&after, "/s1ap/eNBname/octets").unwrap();
+    assert_eq!(name, [&json!("0461")]);
+    // A name that no IE has is refused, and so are a value and octets together.
+    let mut edited = tree.clone();
+    edited["message"]["protocolIEs"][0]["id"] = json!("NoSuchIE");
+    let error = inspect::encode_pdu(&edited).unwrap_err();
+    assert!(error.contains("is not an IE of S1AP"), "{error}");
+    let mut edited = tree.clone();
+    edited["message"]["protocolIEs"][0]["octets"] = json!("00");
+    let error = inspect::encode_pdu(&edited).unwrap_err();
+    assert!(
+        error.contains("its value or its octets, not both"),
+        "{error}"
+    );
+}
+
+#[test]
+fn the_octets_of_an_ie_without_a_value_have_a_path() {
+    use serde_json::json;
+    let mut tree = inspect::inspect_pdu(&release_with_cause()).unwrap();
+    // The octets repeat a value that is there.
+    let listed = |tree: &serde_json::Value, path: &str| {
+        let paths = inspect::paths(tree);
+        paths.iter().any(|(listed, _)| listed == path)
+    };
+    assert!(!listed(&tree, "/s1ap/Cause/octets"));
+    inspect::set(&mut tree, "/s1ap/Cause/octets", json!("0240")).unwrap();
+    assert!(listed(&tree, "/s1ap/Cause/octets"));
+    assert!(!listed(&tree, "/s1ap/Cause/value"));
+    for (path, value) in inspect::paths(&tree) {
+        assert_eq!(inspect::select(&tree, &path).unwrap(), [&value], "{path}");
+    }
+}
+
+#[test]
+fn a_private_message_has_no_ies_under_the_root() {
+    let pdu = S1AP_PDU::decode(&fixture("PrivateMessage")).unwrap();
+    let tree = inspect::inspect_pdu(&pdu).unwrap();
+    let error = inspect::select(&tree, "/s1ap/Cause").unwrap_err();
+    let reason = "a message PrivateMessage has no IEs under /s1ap: it has privateIEs";
+    assert!(error.contains(reason), "{error}");
+    assert!(!error.contains("protocolIEs"), "{error}");
+    let error = inspect::check_path("PrivateMessage", "/s1ap/Cause").unwrap_err();
+    assert!(error.contains(reason), "{error}");
+    assert!(inspect::select(&tree, "/message/privateIEs/0/id/local").is_ok());
+    assert!(inspect::check_path("PrivateMessage", "/message/privateIEs/0/id/global").is_ok());
+}
+
+#[test]
+fn the_identifier_that_the_octets_were_decoded_as_is_a_number() {
+    use serde_json::json;
+    let mut tree = inspect::inspect_pdu(&release_with_cause()).unwrap();
+    inspect::set(&mut tree, "/s1ap/Cause/value/nas", json!("detach")).unwrap();
+    ie(&mut tree, 2)["_original_id"] = json!("two");
+    let error = inspect::encode_pdu(&tree).unwrap_err();
+    assert!(error.contains("_original_id is the identifier"), "{error}");
 }
