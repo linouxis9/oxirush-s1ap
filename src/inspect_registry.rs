@@ -446,10 +446,526 @@ pub(crate) const ENUMERATED: &[&str] = &[
     "x2-handover-triggered",
     "x2TNL-Configuration-Info",
 ];
+/// The names of the values of each ENUMERATED, by the name of its type in the bindings, in the order of the names of the types.
+pub(crate) const ENUMERATIONS: &[(&str, &[&str])] = &[
+    (
+        "AdditionalCSFallbackIndicator",
+        &["no-restriction", "restriction"],
+    ),
+    (
+        "AerialUEsubscriptionInformation",
+        &["allowed", "not-allowed"],
+    ),
+    ("BearerType", &["non-IP"]),
+    ("BluetoothMeasConfig", &["setup"]),
+    ("BluetoothMeasurementConfigurationBtRssi", &["true"]),
+    ("CEModeBRestricted", &["restricted", "not-restricted"]),
+    ("CEModeBSupportIndicator", &["supported"]),
+    ("CNDomain", &["ps", "cs"]),
+    ("CNType", &["fiveGCForbidden", "epc-Forbiddden"]),
+    (
+        "CSFallbackIndicator",
+        &["cs-fallback-required", "cs-fallback-high-priority"],
+    ),
+    ("CSGMembershipStatus", &["member", "not-member"]),
+    (
+        "CauseMisc",
+        &[
+            "control-processing-overload",
+            "not-enough-user-plane-processing-resources",
+            "hardware-failure",
+            "om-intervention",
+            "unspecified",
+            "unknown-PLMN",
+        ],
+    ),
+    (
+        "CauseNas",
+        &[
+            "normal-release",
+            "authentication-failure",
+            "detach",
+            "unspecified",
+            "csg-subscription-expiry",
+            "uE-not-in-PLMN-serving-area",
+            "iab-not-authorized",
+        ],
+    ),
+    (
+        "CauseProtocol",
+        &[
+            "transfer-syntax-error",
+            "abstract-syntax-error-reject",
+            "abstract-syntax-error-ignore-and-notify",
+            "message-not-compatible-with-receiver-state",
+            "semantic-error",
+            "abstract-syntax-error-falsely-constructed-message",
+            "unspecified",
+        ],
+    ),
+    (
+        "CauseRadioNetwork",
+        &[
+            "unspecified",
+            "tx2relocoverall-expiry",
+            "successful-handover",
+            "release-due-to-eutran-generated-reason",
+            "handover-cancelled",
+            "partial-handover",
+            "ho-failure-in-target-EPC-eNB-or-target-system",
+            "ho-target-not-allowed",
+            "tS1relocoverall-expiry",
+            "tS1relocprep-expiry",
+            "cell-not-available",
+            "unknown-targetID",
+            "no-radio-resources-available-in-target-cell",
+            "unknown-mme-ue-s1ap-id",
+            "unknown-enb-ue-s1ap-id",
+            "unknown-pair-ue-s1ap-id",
+            "handover-desirable-for-radio-reason",
+            "time-critical-handover",
+            "resource-optimisation-handover",
+            "reduce-load-in-serving-cell",
+            "user-inactivity",
+            "radio-connection-with-ue-lost",
+            "load-balancing-tau-required",
+            "cs-fallback-triggered",
+            "ue-not-available-for-ps-service",
+            "radio-resources-not-available",
+            "failure-in-radio-interface-procedure",
+            "invalid-qos-combination",
+            "interrat-redirection",
+            "interaction-with-other-procedure",
+            "unknown-E-RAB-ID",
+            "multiple-E-RAB-ID-instances",
+            "encryption-and-or-integrity-protection-algorithms-not-supported",
+            "s1-intra-system-handover-triggered",
+            "s1-inter-system-handover-triggered",
+            "x2-handover-triggered",
+            "redirection-towards-1xRTT",
+            "not-supported-QCI-value",
+            "invalid-CSG-Id",
+            "release-due-to-pre-emption",
+            "n26-interface-not-available",
+            "insufficient-ue-capabilities",
+            "maximum-bearer-pre-emption-rate-exceeded",
+            "up-integrity-protection-not-possible",
+            "release-due-to-discontinuous-coverage",
+        ],
+    ),
+    (
+        "CauseTransport",
+        &["transport-resource-unavailable", "unspecified"],
+    ),
+    ("Cdma2000HORequiredIndication", &["true"]),
+    ("Cdma2000HOStatus", &["hOSuccess", "hOFailure"]),
+    ("Cdma2000RATType", &["hRPD", "onexRTT"]),
+    ("CellAccessMode", &["hybrid"]),
+    ("CellSize", &["verysmall", "small", "medium", "large"]),
+    ("CoarseUELocationRequested", &["true"]),
+    ("ConcurrentWarningMessageIndicator", &["true"]),
+    ("CoverageLevel", &["extendedcoverage"]),
+    ("Criticality", &["reject", "ignore", "notify"]),
+    ("DAPSRequestInfoDAPSIndicator", &["dAPS-HO-required"]),
+    (
+        "DAPSResponseInfoDapsresponseindicator",
+        &["dAPS-HO-accepted", "dAPS-HO-not-accepted"],
+    ),
+    ("DLForwarding", &["dL-Forwarding-proposed"]),
+    ("DLNASPDUDeliveryAckRequest", &["requested"]),
+    (
+        "DataForwardingNotPossible",
+        &["data-Forwarding-not-Possible"],
+    ),
+    ("DirectForwardingPathAvailability", &["directPathAvailable"]),
+    ("EDTSession", &["true"]),
+    ("EmergencyIndicator", &["true"]),
+    ("EndIndication", &["no-further-data", "further-data-exists"]),
+    ("EnhancedCoverageRestricted", &["restricted"]),
+    ("EthernetType", &["true"]),
+    ("EventTriggerOutOfCoverage", &["true"]),
+    (
+        "EventType",
+        &[
+            "direct",
+            "change-of-serve-cell",
+            "stop-change-of-serve-cell",
+        ],
+    ),
+    (
+        "ExpectedHOInterval",
+        &[
+            "sec15",
+            "sec30",
+            "sec60",
+            "sec90",
+            "sec120",
+            "sec180",
+            "long-time",
+        ],
+    ),
+    (
+        "ForbiddenInterRATs",
+        &[
+            "all",
+            "geran",
+            "utran",
+            "cdma2000",
+            "geranandutran",
+            "cdma2000andutran",
+        ],
+    ),
+    ("GUMMEIType", &["native", "mapped", "mappedFrom5G"]),
+    ("GWContextReleaseIndication", &["true"]),
+    ("HandoverFlag", &["handoverPreparation"]),
+    (
+        "HandoverType",
+        &[
+            "intralte",
+            "ltetoutran",
+            "ltetogeran",
+            "utrantolte",
+            "gerantolte",
+            "eps-to-5gs",
+            "fivegs-to-eps",
+        ],
+    ),
+    ("IABAuthorized", &["authorized", "not-authorized"]),
+    ("IABNodeIndication", &["true"]),
+    ("IABSupported", &["true"]),
+    ("IMSvoiceEPSfallbackfrom5G", &["true"]),
+    (
+        "IntegrityProtectionIndication",
+        &["required", "preferred", "not-needed"],
+    ),
+    ("IntegrityProtectionResult", &["performed", "not-performed"]),
+    (
+        "InterSystemMeasurementItemSubcarrierSpacingSSB",
+        &[
+            "kHz15", "kHz30", "kHz60", "kHz120", "kHz240", "kHz480", "kHz960",
+        ],
+    ),
+    ("KillAllWarningMessages", &["true"]),
+    ("LTEMIndication", &["lte-m"]),
+    (
+        "LinksToLog",
+        &["uplink", "downlink", "both-uplink-and-downlink"],
+    ),
+    (
+        "ListeningSubframePatternPatternPeriod",
+        &["ms1280", "ms2560", "ms5120", "ms10240"],
+    ),
+    (
+        "LoggingDuration",
+        &["m10", "m20", "m40", "m60", "m90", "m120"],
+    ),
+    (
+        "LoggingInterval",
+        &[
+            "ms1280", "ms2560", "ms5120", "ms10240", "ms20480", "ms30720", "ms40960", "ms61440",
+        ],
+    ),
+    (
+        "M1ReportingTrigger",
+        &["periodic", "a2eventtriggered", "a2eventtriggered-periodic"],
+    ),
+    (
+        "M3period",
+        &[
+            "ms100", "ms1000", "ms10000", "ms1024", "ms1280", "ms2048", "ms2560", "ms5120",
+            "ms10240", "min1",
+        ],
+    ),
+    (
+        "M4ReportAmountMDT",
+        &["r1", "r2", "r4", "r8", "r16", "r32", "r64", "infinity"],
+    ),
+    (
+        "M4period",
+        &["ms1024", "ms2048", "ms5120", "ms10240", "min1"],
+    ),
+    (
+        "M5ReportAmountMDT",
+        &["r1", "r2", "r4", "r8", "r16", "r32", "r64", "infinity"],
+    ),
+    (
+        "M5period",
+        &["ms1024", "ms2048", "ms5120", "ms10240", "min1"],
+    ),
+    (
+        "M6ReportAmountMDT",
+        &["r1", "r2", "r4", "r8", "r16", "r32", "r64", "infinity"],
+    ),
+    (
+        "M6delayThreshold",
+        &[
+            "ms30", "ms40", "ms50", "ms60", "ms70", "ms80", "ms90", "ms100", "ms150", "ms300",
+            "ms500", "ms750",
+        ],
+    ),
+    (
+        "M6reportInterval",
+        &["ms1024", "ms2048", "ms5120", "ms10240"],
+    ),
+    (
+        "M7ReportAmountMDT",
+        &["r1", "r2", "r4", "r8", "r16", "r32", "r64", "infinity"],
+    ),
+    (
+        "MDTActivation",
+        &[
+            "immediate-MDT-only",
+            "immediate-MDT-and-Trace",
+            "logged-MDT-only",
+            "logged-MBSFN-MDT",
+        ],
+    ),
+    ("MMERelaySupportIndicator", &["true"]),
+    ("ManagementBasedMDTAllowed", &["allowed"]),
+    (
+        "MutingAvailabilityIndication",
+        &["available", "unavailable"],
+    ),
+    (
+        "MutingPatternInformationMutingPatternPeriod",
+        &["ms0", "ms1280", "ms2560", "ms5120", "ms10240"],
+    ),
+    ("NBIoTDefaultPagingDRX", &["v128", "v256", "v512", "v1024"]),
+    (
+        "NBIoTPagingDRX",
+        &["v32", "v64", "v128", "v256", "v512", "v1024"],
+    ),
+    (
+        "NBIoTPagingEDRXCycle",
+        &[
+            "hf2", "hf4", "hf6", "hf8", "hf10", "hf12", "hf14", "hf16", "hf32", "hf64", "hf128",
+            "hf256", "hf512", "hf1024",
+        ],
+    ),
+    (
+        "NBIoTPagingTimeWindow",
+        &[
+            "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "s12", "s13",
+            "s14", "s15", "s16",
+        ],
+    ),
+    ("NRrestrictionin5GS", &["nRrestrictedin5GS"]),
+    (
+        "NRrestrictioninEPSasSecondaryRAT",
+        &["nRrestrictedinEPSasSecondaryRAT"],
+    ),
+    ("NextPagingAreaScope", &["same", "changed"]),
+    ("NotifySourceeNB", &["notifySource"]),
+    (
+        "OverloadAction",
+        &[
+            "reject-non-emergency-mo-dt",
+            "reject-rrc-cr-signalling",
+            "permit-emergency-sessions-and-mobile-terminated-services-only",
+            "permit-high-priority-sessions-and-mobile-terminated-services-only",
+            "reject-delay-tolerant-access",
+            "permit-high-priority-sessions-and-exception-reporting-and-mobile-terminated-services-only",
+            "not-accept-mo-data-or-delay-tolerant-access-from-CP-CIoT",
+        ],
+    ),
+    ("PSServiceNotAvailable", &["ps-service-not-available"]),
+    ("PagingCause", &["voice"]),
+    ("PagingDRX", &["v32", "v64", "v128", "v256"]),
+    (
+        "PagingEDRXCycle",
+        &[
+            "hfhalf", "hf1", "hf2", "hf4", "hf6", "hf8", "hf10", "hf12", "hf14", "hf16", "hf32",
+            "hf64", "hf128", "hf256",
+        ],
+    ),
+    (
+        "PagingPriority",
+        &[
+            "priolevel1",
+            "priolevel2",
+            "priolevel3",
+            "priolevel4",
+            "priolevel5",
+            "priolevel6",
+            "priolevel7",
+            "priolevel8",
+        ],
+    ),
+    (
+        "PagingProbabilityInformation",
+        &[
+            "p00", "p05", "p10", "p15", "p20", "p25", "p30", "p35", "p40", "p45", "p50", "p55",
+            "p60", "p65", "p70", "p75", "p80", "p85", "p90", "p95", "p100",
+        ],
+    ),
+    (
+        "PagingTimeWindow",
+        &[
+            "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "s12", "s13",
+            "s14", "s15", "s16",
+        ],
+    ),
+    ("PedestrianUE", &["authorized", "not-authorized"]),
+    ("PendingDataIndication", &["true"]),
+    (
+        "PreEmptionCapability",
+        &["shall-not-trigger-pre-emption", "may-trigger-pre-emption"],
+    ),
+    (
+        "PreEmptionVulnerability",
+        &["not-pre-emptable", "pre-emptable"],
+    ),
+    ("Presence", &["optional", "conditional", "mandatory"]),
+    ("PrivacyIndicator", &["immediate-MDT", "logged-MDT"]),
+    (
+        "ProSeDirectCommunication",
+        &["authorized", "not-authorized"],
+    ),
+    ("ProSeDirectDiscovery", &["authorized", "not-authorized"]),
+    (
+        "ProSeUEtoNetworkRelaying",
+        &["authorized", "not-authorized"],
+    ),
+    ("RACSIndication", &["true"]),
+    (
+        "RATType",
+        &[
+            "nbiot",
+            "nbiot-leo",
+            "nbiot-meo",
+            "nbiot-geo",
+            "nbiot-othersat",
+            "eutran-leo",
+            "eutran-meo",
+            "eutran-geo",
+            "eutran-othersat",
+        ],
+    ),
+    (
+        "RRCEstablishmentCause",
+        &[
+            "emergency",
+            "highPriorityAccess",
+            "mt-Access",
+            "mo-Signalling",
+            "mo-Data",
+            "delay-TolerantAccess",
+            "mo-VoiceCall",
+            "mo-ExceptionData",
+        ],
+    ),
+    (
+        "Range",
+        &[
+            "m50", "m80", "m180", "m200", "m350", "m400", "m500", "m700", "m1000",
+        ],
+    ),
+    ("RelayNodeIndicator", &["true"]),
+    (
+        "ReportAmountMDT",
+        &["r1", "r2", "r4", "r8", "r16", "r32", "r64", "rinfinity"],
+    ),
+    ("ReportArea", &["ecgi"]),
+    (
+        "ReportIntervalMDT",
+        &[
+            "ms120", "ms240", "ms480", "ms640", "ms1024", "ms2048", "ms5120", "ms10240", "min1",
+            "min6", "min12", "min30", "min60",
+        ],
+    ),
+    ("RequestTypeAdditionalInfo", &["includePSCell"]),
+    ("ResetAll", &["reset-all"]),
+    (
+        "SONInformationRequest",
+        &[
+            "x2TNL-Configuration-Info",
+            "time-Synchronisation-Info",
+            "activate-Muting",
+            "deactivate-Muting",
+        ],
+    ),
+    ("SRVCCHOIndication", &["pSandCS", "cSonly"]),
+    ("SRVCCOperationNotPossible", &["notPossible"]),
+    ("SRVCCOperationPossible", &["possible"]),
+    ("SecondaryRATDataUsageRequest", &["requested"]),
+    ("SecondaryRATType", &["nR", "unlicensed"]),
+    ("SensorMeasConfig", &["setup"]),
+    ("SensorNameConfigUncompensatedBarometricConfig", &["true"]),
+    (
+        "ServiceType",
+        &["qMC-for-streaming-service", "qMC-for-MTSI-service"],
+    ),
+    (
+        "SourceOfUEActivityBehaviourInformation",
+        &["subscription-information", "statistics"],
+    ),
+    (
+        "SubscriptionBasedUEDifferentiationInfoBatteryIndication",
+        &[
+            "battery-powered",
+            "battery-powered-not-rechargeable-or-replaceable",
+            "not-battery-powered",
+        ],
+    ),
+    (
+        "SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator",
+        &["periodically", "ondemand"],
+    ),
+    (
+        "SubscriptionBasedUEDifferentiationInfoStationaryIndication",
+        &["stationary", "mobile"],
+    ),
+    (
+        "SubscriptionBasedUEDifferentiationInfoTrafficProfile",
+        &["single-packet", "dual-packets", "multiple-packets"],
+    ),
+    ("SynchronisationStatus", &["synchronous", "asynchronous"]),
+    ("TimeRefDistribution", &["true"]),
+    (
+        "TimeToTrigger",
+        &[
+            "ms0", "ms40", "ms64", "ms80", "ms100", "ms128", "ms160", "ms256", "ms320", "ms480",
+            "ms512", "ms640", "ms1024", "ms1280", "ms2560", "ms5120",
+        ],
+    ),
+    ("TimeToWait", &["v1s", "v2s", "v5s", "v10s", "v20s", "v60s"]),
+    (
+        "TraceDepth",
+        &[
+            "minimum",
+            "medium",
+            "maximum",
+            "minimumWithoutVendorSpecificExtension",
+            "mediumWithoutVendorSpecificExtension",
+            "maximumWithoutVendorSpecificExtension",
+        ],
+    ),
+    (
+        "TriggeringMessage",
+        &[
+            "initiating-message",
+            "successful-outcome",
+            "unsuccessfull-outcome",
+        ],
+    ),
+    ("TypeOfError", &["not-understood", "missing"]),
+    ("UECapabilityInfoRequest", &["requested"]),
+    ("UERetentionInformation", &["ues-retained"]),
+    ("UEUserPlaneCIoTSupportIndicator", &["supported"]),
+    ("UnlicensedSpectrumRestriction", &["unlicensed-restricted"]),
+    ("VehicleUE", &["authorized", "not-authorized"]),
+    (
+        "VoiceSupportMatchIndicator",
+        &["supported", "not-supported"],
+    ),
+    ("WLANMeasConfig", &["setup"]),
+    ("WLANMeasurementConfigurationWlanRssi", &["true"]),
+    ("WLANMeasurementConfigurationWlanRtt", &["true"]),
+];
 types! {
     AdditionalGUTI sequence { "gUMMEI": GUMMEI, "m-TMSI": _, "iE-Extensions"? extensions };
-    AllocationAndRetentionPriority sequence { "priorityLevel": _, "pre-emptionCapability": _, "pre-emptionVulnerability": _, "iE-Extensions"? extensions };
-    AnonymousPrivateMessagePrivateIEs sequence { "id": PrivateIEID, "criticality": _, "value": _ };
+    AllocationAndRetentionPriority sequence { "priorityLevel": _, "pre-emptionCapability": PreEmptionCapability, "pre-emptionVulnerability": PreEmptionVulnerability, "iE-Extensions"? extensions };
+    AnonymousPrivateMessagePrivateIEs sequence { "id": PrivateIEID, "criticality": Criticality, "value": _ };
     AreaScopeOfMDT choice { "cellBased": CellBasedMDT, "tABased": TABasedMDT, "pLMNWide": _, "tAIBased": TAIBasedMDT };
     AreaScopeOfQMC choice { "cellBased": CellBasedQMC, "tABased": TABasedQMC, "tAIBased": TAIBasedQMC, "pLMNAreaBased": PLMNAreaBasedQMC };
     AssistanceDataForCECapableUEs sequence { "cellIdentifierAndCELevelForCECapableUEs": CellIdentifierAndCELevelForCECapableUEs, "iE-Extensions"? extensions };
@@ -463,23 +979,23 @@ types! {
     BearersSubjectToStatusTransferItem sequence { "e-RAB-ID": _, "uL-COUNTvalue": COUNTvalue, "dL-COUNTvalue": COUNTvalue, "receiveStatusofULPDCPSDUs"? _, "iE-Extensions"? extensions };
     BearersSubjectToStatusTransferList = [ie];
     BluetoothMeasConfigNameList = [_];
-    BluetoothMeasurementConfiguration sequence { "bluetoothMeasConfig": _, "bluetoothMeasConfigNameList"? BluetoothMeasConfigNameList, "bt-rssi"? _, "iE-Extensions"? extensions };
+    BluetoothMeasurementConfiguration sequence { "bluetoothMeasConfig": BluetoothMeasConfig, "bluetoothMeasConfigNameList"? BluetoothMeasConfigNameList, "bt-rssi"? BluetoothMeasurementConfigurationBtRssi, "iE-Extensions"? extensions };
     BroadcastCancelledAreaList choice { "cellID-Cancelled": CellIDCancelled, "tAI-Cancelled": TAICancelled, "emergencyAreaID-Cancelled": EmergencyAreaIDCancelled };
     BroadcastCompletedAreaList choice { "cellID-Broadcast": CellIDBroadcast, "tAI-Broadcast": TAIBroadcast, "emergencyAreaID-Broadcast": EmergencyAreaIDBroadcast };
     CGI sequence { "pLMNidentity": _, "lAC": _, "cI": _, "rAC"? _, "iE-Extensions"? extensions };
     CNTypeRestrictions = [CNTypeRestrictionsItem];
-    CNTypeRestrictionsItem sequence { "pLMN-Identity": _, "cNType": _, "iE-Extensions"? extensions };
+    CNTypeRestrictionsItem sequence { "pLMN-Identity": _, "cNType": CNType, "iE-Extensions"? extensions };
     COUNTValueExtended sequence { "pDCP-SNExtended": _, "hFNModified": _, "iE-Extensions"? extensions };
     COUNTvalue sequence { "pDCP-SN": _, "hFN": _, "iE-Extensions"? extensions };
     COUNTvaluePDCPSNlength18 sequence { "pDCP-SNlength18": _, "hFNforPDCP-SNlength18": _, "iE-Extensions"? extensions };
     CSGIdList = [CSGIdListItem];
     CSGIdListItem sequence { "cSG-Id": _, "iE-Extensions"? extensions };
-    CSGMembershipInfo sequence { "cSGMembershipStatus": _, "cSG-Id": _, "cellAccessMode"? _, "pLMNidentity"? _, "iE-Extensions"? extensions };
+    CSGMembershipInfo sequence { "cSGMembershipStatus": CSGMembershipStatus, "cSG-Id": _, "cellAccessMode"? CellAccessMode, "pLMNidentity"? _, "iE-Extensions"? extensions };
     CancelledCellinEAI = [CancelledCellinEAIItem];
     CancelledCellinEAIItem sequence { "eCGI": EUTRANCGI, "numberOfBroadcasts": _, "iE-Extensions"? extensions };
     CancelledCellinTAI = [CancelledCellinTAIItem];
     CancelledCellinTAIItem sequence { "eCGI": EUTRANCGI, "numberOfBroadcasts": _, "iE-Extensions"? extensions };
-    Cause choice { "radioNetwork": _, "transport": _, "nas": _, "protocol": _, "misc": _ };
+    Cause choice { "radioNetwork": CauseRadioNetwork, "transport": CauseTransport, "nas": CauseNas, "protocol": CauseProtocol, "misc": CauseMisc };
     Cdma2000OneXSRVCCInfo sequence { "cdma2000OneXMEID": _, "cdma2000OneXMSI": _, "cdma2000OneXPilot": _, "iE-Extensions"? extensions };
     CellBasedMDT sequence { "cellIdListforMDT": CellIdListforMDT, "iE-Extensions"? extensions };
     CellBasedQMC sequence { "cellIdListforQMC": CellIdListforQMC, "iE-Extensions"? extensions };
@@ -491,7 +1007,7 @@ types! {
     CellIdListforQMC = [EUTRANCGI];
     CellIdentifierAndCELevelForCECapableUEs sequence { "global-Cell-ID": EUTRANCGI, "cELevel": _, "iE-Extensions"? extensions };
     CellTrafficTrace sequence { "protocolIEs": ies };
-    CellType sequence { "cell-Size": _, "iE-Extensions"? extensions };
+    CellType sequence { "cell-Size": CellSize, "iE-Extensions"? extensions };
     CompletedCellinEAI = [CompletedCellinEAIItem];
     CompletedCellinEAIItem sequence { "eCGI": EUTRANCGI, "iE-Extensions"? extensions };
     CompletedCellinTAI = [CompletedCellinTAIItem];
@@ -500,11 +1016,11 @@ types! {
     ConnectedengNBList = [ConnectedengNBItem];
     ConnectionEstablishmentIndication sequence { "protocolIEs": ies };
     ContextatSource sequence { "sourceNG-RAN-node-ID": GlobalRANNODEID, "rAN-UE-NGAP-ID": _, "iE-Extensions"? extensions };
-    CriticalityDiagnostics sequence { "procedureCode"? _, "triggeringMessage"? _, "procedureCriticality"? _, "iEsCriticalityDiagnostics"? CriticalityDiagnosticsIEList, "iE-Extensions"? extensions };
-    CriticalityDiagnosticsIEItem sequence { "iECriticality": _, "iE-ID": _, "typeOfError": _, "iE-Extensions"? extensions };
+    CriticalityDiagnostics sequence { "procedureCode"? _, "triggeringMessage"? TriggeringMessage, "procedureCriticality"? Criticality, "iEsCriticalityDiagnostics"? CriticalityDiagnosticsIEList, "iE-Extensions"? extensions };
+    CriticalityDiagnosticsIEItem sequence { "iECriticality": Criticality, "iE-ID": _, "typeOfError": TypeOfError, "iE-Extensions"? extensions };
     CriticalityDiagnosticsIEList = [CriticalityDiagnosticsIEItem];
-    DAPSRequestInfo sequence { "dAPSIndicator": _, "iE-Extensions"? extensions };
-    DAPSResponseInfo sequence { "dapsresponseindicator": _, "iE-Extensions"? extensions };
+    DAPSRequestInfo sequence { "dAPSIndicator": DAPSRequestInfoDAPSIndicator, "iE-Extensions"? extensions };
+    DAPSResponseInfo sequence { "dapsresponseindicator": DAPSResponseInfoDapsresponseindicator, "iE-Extensions"? extensions };
     DAPSResponseInfoItem sequence { "e-RAB-ID": _, "dAPSResponseInfo": DAPSResponseInfo, "iE-Extensions"? extensions };
     DAPSResponseInfoList = [ie];
     DLCOUNTPDCPSNlength choice { "dLCOUNTValuePDCP-SNlength12": COUNTvalue, "dLCOUNTValuePDCP-SNlength15": COUNTValueExtended, "dLCOUNTValuePDCP-SNlength18": COUNTvaluePDCPSNlength18 };
@@ -551,7 +1067,7 @@ types! {
     ERABFailedToSetupItemHOReqAck sequence { "e-RAB-ID": _, "cause": Cause, "iE-Extensions"? extensions };
     ERABFailedtoSetupListHOReqAck = [ie];
     ERABInformationList = [ie];
-    ERABInformationListItem sequence { "e-RAB-ID": _, "dL-Forwarding"? _, "iE-Extensions"? extensions };
+    ERABInformationListItem sequence { "e-RAB-ID": _, "dL-Forwarding"? DLForwarding, "iE-Extensions"? extensions };
     ERABItem sequence { "e-RAB-ID": _, "cause": Cause, "iE-Extensions"? extensions };
     ERABLevelQoSParameters sequence { "qCI": _, "allocationRetentionPriority": AllocationAndRetentionPriority, "gbrQosInformation"? GBRQosInformation, "iE-Extensions"? extensions };
     ERABList = [ie];
@@ -606,10 +1122,10 @@ types! {
     EmergencyAreaIDListForRestart = [_];
     EnGNBID = bits;
     ErrorIndication sequence { "protocolIEs": ies };
-    EventL1LoggedMDTConfig sequence { "l1Threshold": MeasurementThresholdL1LoggedMDT, "hysteresis": _, "timeToTrigger": _, "iE-Extensions"? extensions };
-    EventTrigger choice { "outOfCoverage": _, "eventL1LoggedMDTConfig": EventL1LoggedMDTConfig, "choice-Extensions": ie };
-    ExpectedUEActivityBehaviour sequence { "expectedActivityPeriod"? _, "expectedIdlePeriod"? _, "sourceofUEActivityBehaviourInformation"? _, "iE-Extensions"? extensions };
-    ExpectedUEBehaviour sequence { "expectedActivity"? ExpectedUEActivityBehaviour, "expectedHOInterval"? _, "iE-Extensions"? extensions };
+    EventL1LoggedMDTConfig sequence { "l1Threshold": MeasurementThresholdL1LoggedMDT, "hysteresis": _, "timeToTrigger": TimeToTrigger, "iE-Extensions"? extensions };
+    EventTrigger choice { "outOfCoverage": EventTriggerOutOfCoverage, "eventL1LoggedMDTConfig": EventL1LoggedMDTConfig, "choice-Extensions": ie };
+    ExpectedUEActivityBehaviour sequence { "expectedActivityPeriod"? _, "expectedIdlePeriod"? _, "sourceofUEActivityBehaviourInformation"? SourceOfUEActivityBehaviourInformation, "iE-Extensions"? extensions };
+    ExpectedUEBehaviour sequence { "expectedActivity"? ExpectedUEActivityBehaviour, "expectedHOInterval"? ExpectedHOInterval, "iE-Extensions"? extensions };
     FiveGSTAI sequence { "pLMNidentity": _, "fiveGSTAC": _, "iE-Extensions"? extensions };
     ForbiddenLACs = [_];
     ForbiddenLAs = [ForbiddenLAsItem];
@@ -637,17 +1153,17 @@ types! {
     HandoverRequest sequence { "protocolIEs": ies };
     HandoverRequestAcknowledge sequence { "protocolIEs": ies };
     HandoverRequired sequence { "protocolIEs": ies };
-    HandoverRestrictionList sequence { "servingPLMN": _, "equivalentPLMNs"? EPLMNs, "forbiddenTAs"? ForbiddenTAs, "forbiddenLAs"? ForbiddenLAs, "forbiddenInterRATs"? _, "iE-Extensions"? extensions };
+    HandoverRestrictionList sequence { "servingPLMN": _, "equivalentPLMNs"? EPLMNs, "forbiddenTAs"? ForbiddenTAs, "forbiddenLAs"? ForbiddenLAs, "forbiddenInterRATs"? ForbiddenInterRATs, "iE-Extensions"? extensions };
     HandoverSuccess sequence { "protocolIEs": ies };
-    ImmediateMDT sequence { "measurementsToActivate": _, "m1reportingTrigger": _, "m1thresholdeventA2"? M1ThresholdEventA2, "m1periodicReporting"? M1PeriodicReporting, "iE-Extensions"? extensions };
+    ImmediateMDT sequence { "measurementsToActivate": _, "m1reportingTrigger": M1ReportingTrigger, "m1thresholdeventA2"? M1ThresholdEventA2, "m1periodicReporting"? M1PeriodicReporting, "iE-Extensions"? extensions };
     InformationOnRecommendedCellsAndENBsForPaging sequence { "recommendedCellsForPaging": RecommendedCellsForPaging, "recommendENBsForPaging": RecommendedENBsForPaging, "iE-Extensions"? extensions };
     InitialContextSetupFailure sequence { "protocolIEs": ies };
     InitialContextSetupRequest sequence { "protocolIEs": ies };
     InitialContextSetupResponse sequence { "protocolIEs": ies };
     InitialUEMessage sequence { "protocolIEs": ies };
-    InitiatingMessage sequence { "procedureCode": _, "criticality": _, "value": _ };
+    InitiatingMessage sequence { "procedureCode": _, "criticality": Criticality, "value": _ };
     InterSystemInformationTransferType choice { "rIMTransfer": RIMTransfer };
-    InterSystemMeasurementItem sequence { "freqBandIndicatorNR": _, "sSBfrequencies": _, "subcarrierSpacingSSB": _, "maxRSIndexCellQual"? _, "sMTC"? _, "threshRS-Index-r15"? _, "sSBToMeasure"? _, "sSRSSIMeasurement"? _, "quantityConfigNR-R15"? _, "excludedCellsToAddModList"? _, "iE-Extensions"? extensions };
+    InterSystemMeasurementItem sequence { "freqBandIndicatorNR": _, "sSBfrequencies": _, "subcarrierSpacingSSB": InterSystemMeasurementItemSubcarrierSpacingSSB, "maxRSIndexCellQual"? _, "sMTC"? _, "threshRS-Index-r15"? _, "sSBToMeasure"? _, "sSRSSIMeasurement"? _, "quantityConfigNR-R15"? _, "excludedCellsToAddModList"? _, "iE-Extensions"? extensions };
     InterSystemMeasurementList = [InterSystemMeasurementItem];
     InterSystemMeasurementParameters sequence { "measurementDuration": _, "interSystemMeasurementList"? InterSystemMeasurementList, "iE-Extensions"? extensions };
     IntersystemMeasurementConfiguration sequence { "rSRP"? _, "rSRQ"? _, "sINR"? _, "interSystemMeasurementParameters": InterSystemMeasurementParameters, "iE-Extensions"? extensions };
@@ -660,23 +1176,23 @@ types! {
     LastVisitedGERANCellInformation choice { "undefined": _ };
     LastVisitedPSCellInformation sequence { "pSCellID"? PSCellInformation, "timeStay": _, "iE-Extensions"? extensions };
     LastVisitedPSCellList = [LastVisitedPSCellInformation];
-    ListeningSubframePattern sequence { "pattern-period": _, "pattern-offset": _, "iE-Extensions"? extensions };
+    ListeningSubframePattern sequence { "pattern-period": ListeningSubframePatternPatternPeriod, "pattern-offset": _, "iE-Extensions"? extensions };
     LocationReport sequence { "protocolIEs": ies };
     LocationReportingControl sequence { "protocolIEs": ies };
     LocationReportingFailureIndication sequence { "protocolIEs": ies };
-    LoggedMBSFNMDT sequence { "loggingInterval": _, "loggingDuration": _, "mBSFN-ResultToLog"? MBSFNResultToLog, "iE-Extensions"? extensions };
-    LoggedMDT sequence { "loggingInterval": _, "loggingDuration": _, "iE-Extensions"? extensions };
+    LoggedMBSFNMDT sequence { "loggingInterval": LoggingInterval, "loggingDuration": LoggingDuration, "mBSFN-ResultToLog"? MBSFNResultToLog, "iE-Extensions"? extensions };
+    LoggedMDT sequence { "loggingInterval": LoggingInterval, "loggingDuration": LoggingDuration, "iE-Extensions"? extensions };
     LoggedMDTTrigger choice { "periodical": _, "eventTrigger": EventTrigger };
-    M1PeriodicReporting sequence { "reportInterval": _, "reportAmount": _, "iE-Extensions"? extensions };
+    M1PeriodicReporting sequence { "reportInterval": ReportIntervalMDT, "reportAmount": ReportAmountMDT, "iE-Extensions"? extensions };
     M1ThresholdEventA2 sequence { "measurementThreshold": MeasurementThresholdA2, "iE-Extensions"? extensions };
-    M3Configuration sequence { "m3period": _, "iE-Extensions"? extensions };
-    M4Configuration sequence { "m4period": _, "m4-links-to-log": _, "iE-Extensions"? extensions };
-    M5Configuration sequence { "m5period": _, "m5-links-to-log": _, "iE-Extensions"? extensions };
-    M6Configuration sequence { "m6report-Interval": _, "m6delay-threshold"? _, "m6-links-to-log": _, "iE-Extensions"? extensions };
-    M7Configuration sequence { "m7period": _, "m7-links-to-log": _, "iE-Extensions"? extensions };
+    M3Configuration sequence { "m3period": M3period, "iE-Extensions"? extensions };
+    M4Configuration sequence { "m4period": M4period, "m4-links-to-log": LinksToLog, "iE-Extensions"? extensions };
+    M5Configuration sequence { "m5period": M5period, "m5-links-to-log": LinksToLog, "iE-Extensions"? extensions };
+    M6Configuration sequence { "m6report-Interval": M6reportInterval, "m6delay-threshold"? M6delayThreshold, "m6-links-to-log": LinksToLog, "iE-Extensions"? extensions };
+    M7Configuration sequence { "m7period": _, "m7-links-to-log": LinksToLog, "iE-Extensions"? extensions };
     MBSFNResultToLog = [MBSFNResultToLogInfo];
     MBSFNResultToLogInfo sequence { "mBSFN-AreaId"? _, "carrierFreq": _, "iE-Extensions"? extensions };
-    MDTConfiguration sequence { "mdt-Activation": _, "areaScopeOfMDT": AreaScopeOfMDT, "mDTMode": MDTMode, "iE-Extensions"? extensions };
+    MDTConfiguration sequence { "mdt-Activation": MDTActivation, "areaScopeOfMDT": AreaScopeOfMDT, "mDTMode": MDTMode, "iE-Extensions"? extensions };
     MDTMode choice { "immediateMDT": ImmediateMDT, "loggedMDT": LoggedMDT, "mDTMode-Extension": ie };
     MDTPLMNList = [_];
     MMECPRelocationIndication sequence { "protocolIEs": ies };
@@ -690,20 +1206,20 @@ types! {
     MMEStatusTransfer sequence { "protocolIEs": ies };
     MeasurementThresholdA2 choice { "threshold-RSRP": _, "threshold-RSRQ": _ };
     MeasurementThresholdL1LoggedMDT choice { "threshold-RSRP": _, "threshold-RSRQ": _, "choice-Extensions": ie };
-    MutingPatternInformation sequence { "muting-pattern-period": _, "muting-pattern-offset"? _, "iE-Extensions"? extensions };
+    MutingPatternInformation sequence { "muting-pattern-period": MutingPatternInformationMutingPatternPeriod, "muting-pattern-offset"? _, "iE-Extensions"? extensions };
     NASDeliveryIndication sequence { "protocolIEs": ies };
     NASNonDeliveryIndication sequence { "protocolIEs": ies };
-    NBIoTPagingEDRXInformation sequence { "nB-IoT-paging-eDRX-Cycle": _, "nB-IoT-pagingTimeWindow"? _, "iE-Extensions"? extensions };
+    NBIoTPagingEDRXInformation sequence { "nB-IoT-paging-eDRX-Cycle": NBIoTPagingEDRXCycle, "nB-IoT-pagingTimeWindow"? NBIoTPagingTimeWindow, "iE-Extensions"? extensions };
     NGENB sequence { "global-ng-eNB-ID": GlobalENBID, "iE-Extensions"? extensions };
     NRCGI sequence { "pLMNIdentity": _, "nRCellIdentity": _, "iE-Extensions"? extensions };
     NRUESecurityCapabilities sequence { "nRencryptionAlgorithms": _, "nRintegrityProtectionAlgorithms": _, "iE-Extensions"? extensions };
     NRUESidelinkAggregateMaximumBitrate sequence { "uEaggregateMaximumBitRate": _, "iE-Extensions"? extensions };
-    NRV2XServicesAuthorized sequence { "vehicleUE"? _, "pedestrianUE"? _, "iE-Extensions"? extensions };
-    OverloadResponse choice { "overloadAction": _ };
+    NRV2XServicesAuthorized sequence { "vehicleUE"? VehicleUE, "pedestrianUE"? PedestrianUE, "iE-Extensions"? extensions };
+    OverloadResponse choice { "overloadAction": OverloadAction };
     OverloadStart sequence { "protocolIEs": ies };
     OverloadStop sequence { "protocolIEs": ies };
     PC5FlowBitRates sequence { "guaranteedFlowBitRate": _, "maximumFlowBitRate": _, "iE-Extensions"? extensions };
-    PC5QoSFlowItem sequence { "pQI": _, "pc5FlowBitRates"? PC5FlowBitRates, "range"? _, "iE-Extensions"? extensions };
+    PC5QoSFlowItem sequence { "pQI": _, "pc5FlowBitRates"? PC5FlowBitRates, "range"? Range, "iE-Extensions"? extensions };
     PC5QoSFlowList = [PC5QoSFlowItem];
     PC5QoSParameters sequence { "pc5QoSFlowList": PC5QoSFlowList, "pc5LinkAggregatedBitRates"? _, "iE-Extensions"? extensions };
     PLMNAreaBasedQMC sequence { "plmnListforQMC": PLMNListforQMC, "iE-Extensions"? extensions };
@@ -713,15 +1229,15 @@ types! {
     PWSRestartIndication sequence { "protocolIEs": ies };
     PWSfailedECGIList = [EUTRANCGI];
     Paging sequence { "protocolIEs": ies };
-    PagingAttemptInformation sequence { "pagingAttemptCount": _, "intendedNumberOfPagingAttempts": _, "nextPagingAreaScope"? _, "iE-Extensions"? extensions };
-    PagingEDRXInformation sequence { "paging-eDRX-Cycle": _, "pagingTimeWindow"? _, "iE-Extensions"? extensions };
+    PagingAttemptInformation sequence { "pagingAttemptCount": _, "intendedNumberOfPagingAttempts": _, "nextPagingAreaScope"? NextPagingAreaScope, "iE-Extensions"? extensions };
+    PagingEDRXInformation sequence { "paging-eDRX-Cycle": PagingEDRXCycle, "pagingTimeWindow"? PagingTimeWindow, "iE-Extensions"? extensions };
     PathSwitchRequest sequence { "protocolIEs": ies };
     PathSwitchRequestAcknowledge sequence { "protocolIEs": ies };
     PathSwitchRequestFailure sequence { "protocolIEs": ies };
     PrivateIEID choice { "local": _, "global": _ };
     PrivateMessage sequence { "privateIEs": PrivateMessagePrivateIEs };
     PrivateMessagePrivateIEs = [AnonymousPrivateMessagePrivateIEs];
-    ProSeAuthorized sequence { "proSeDirectDiscovery"? _, "proSeDirectCommunication"? _, "iE-Extensions"? extensions };
+    ProSeAuthorized sequence { "proSeDirectDiscovery"? ProSeDirectDiscovery, "proSeDirectCommunication"? ProSeDirectCommunication, "iE-Extensions"? extensions };
     RATRestrictions = [RATRestrictionsItem];
     RATRestrictionsItem sequence { "pLMNidentity": _, "rAT-RestrictionInformation": _, "iE-Extensions"? extensions };
     RIMRoutingAddress choice { "gERAN-Cell-ID": GERANCellID, "targetRNC-ID": TargetRNCID, "eHRPD-Sector-ID": _ };
@@ -735,12 +1251,12 @@ types! {
     RecommendedENBItem sequence { "mMEPagingTarget": MMEPagingTarget, "iE-Extensions"? extensions };
     RecommendedENBList = [ie];
     RecommendedENBsForPaging sequence { "recommendedENBList": RecommendedENBList, "iE-Extensions"? extensions };
-    RequestType sequence { "eventType": _, "reportArea": _, "iE-Extensions"? extensions };
+    RequestType sequence { "eventType": EventType, "reportArea": ReportArea, "iE-Extensions"? extensions };
     RequestedTNLInfo sequence { "pLMNidentity": _, "iE-Extensions"? extensions };
     RerouteNASRequest sequence { "protocolIEs": ies };
     Reset sequence { "protocolIEs": ies };
     ResetAcknowledge sequence { "protocolIEs": ies };
-    ResetType choice { "s1-Interface": _, "partOfS1-Interface": UEAssociatedLogicalS1ConnectionListRes };
+    ResetType choice { "s1-Interface": ResetAll, "partOfS1-Interface": UEAssociatedLogicalS1ConnectionListRes };
     RetrieveUEInformation sequence { "protocolIEs": ies };
     S1APPDU choice { "initiatingMessage": InitiatingMessage, "successfulOutcome": SuccessfulOutcome, "unsuccessfulOutcome": UnsuccessfulOutcome };
     S1RemovalFailure sequence { "protocolIEs": ies };
@@ -750,21 +1266,21 @@ types! {
     S1SetupRequest sequence { "protocolIEs": ies };
     S1SetupResponse sequence { "protocolIEs": ies };
     SONConfigurationTransfer sequence { "targeteNB-ID": TargeteNBID, "sourceeNB-ID": SourceeNBID, "sONInformation": SONInformation, "iE-Extensions"? extensions };
-    SONInformation choice { "sONInformationRequest": _, "sONInformationReply": SONInformationReply, "sONInformation-Extension": ie };
+    SONInformation choice { "sONInformationRequest": SONInformationRequest, "sONInformationReply": SONInformationReply, "sONInformation-Extension": ie };
     SONInformationReply sequence { "x2TNLConfigurationInfo"? X2TNLConfigurationInfo, "iE-Extensions"? extensions };
     SONInformationReport choice { "rLFReportInformation": RLFReportInformation };
     STMSI sequence { "mMEC": _, "m-TMSI": _, "iE-Extensions"? extensions };
     ScheduledCommunicationTime sequence { "dayofWeek"? _, "timeofDayStart"? _, "timeofDayEnd"? _, "iE-Extensions"? extensions };
     SecondaryRATDataUsageReport sequence { "protocolIEs": ies };
-    SecondaryRATDataUsageReportItem sequence { "e-RAB-ID": _, "secondaryRATType": _, "e-RABUsageReportList": ERABUsageReportList, "iE-Extensions"? extensions };
+    SecondaryRATDataUsageReportItem sequence { "e-RAB-ID": _, "secondaryRATType": SecondaryRATType, "e-RABUsageReportList": ERABUsageReportList, "iE-Extensions"? extensions };
     SecondaryRATDataUsageReportList = [ie];
     SecurityContext sequence { "nextHopChainingCount": _, "nextHopParameter": _, "iE-Extensions"? extensions };
-    SecurityIndication sequence { "integrityProtectionIndication": _, "iE-Extensions"? extensions };
-    SecurityResult sequence { "integrityProtectionResult": _, "iE-Extensions"? extensions };
+    SecurityIndication sequence { "integrityProtectionIndication": IntegrityProtectionIndication, "iE-Extensions"? extensions };
+    SecurityResult sequence { "integrityProtectionResult": IntegrityProtectionResult, "iE-Extensions"? extensions };
     SensorMeasConfigNameItem sequence { "sensorNameConfig": SensorNameConfig, "iE-Extensions"? extensions };
     SensorMeasConfigNameList = [SensorMeasConfigNameItem];
-    SensorMeasurementConfiguration sequence { "sensorMeasConfig": _, "sensorMeasConfigNameList"? SensorMeasConfigNameList, "iE-Extensions"? extensions };
-    SensorNameConfig choice { "uncompensatedBarometricConfig": _, "choice-Extensions": ie };
+    SensorMeasurementConfiguration sequence { "sensorMeasConfig": SensorMeasConfig, "sensorMeasConfigNameList"? SensorMeasConfigNameList, "iE-Extensions"? extensions };
+    SensorNameConfig choice { "uncompensatedBarometricConfig": SensorNameConfigUncompensatedBarometricConfig, "choice-Extensions": ie };
     ServedDCNs = [ServedDCNsItem];
     ServedDCNsItem sequence { "dCN-ID": _, "relativeDCNCapacity": _, "iE-Extensions"? extensions };
     ServedGUMMEIs = [ServedGUMMEIsItem];
@@ -776,8 +1292,8 @@ types! {
     SourceNodeID choice { "sourceNgRanNode-ID": SourceNgRanNodeID, "sourceNodeID-Extension": ie };
     SourceeNBID sequence { "global-ENB-ID": GlobalENBID, "selected-TAI": TAI, "iE-Extensions"? extensions };
     SourceeNBToTargeteNBTransparentContainer sequence { "rRC-Container": _, "e-RABInformationList"? ERABInformationList, "targetCell-ID": EUTRANCGI, "subscriberProfileIDforRFP"? _, "uE-HistoryInformation": UEHistoryInformation, "iE-Extensions"? extensions };
-    SubscriptionBasedUEDifferentiationInfo sequence { "periodicCommunicationIndicator"? _, "periodicTime"? _, "scheduledCommunicationTime"? ScheduledCommunicationTime, "stationaryIndication"? _, "trafficProfile"? _, "batteryIndication"? _, "iE-Extensions"? extensions };
-    SuccessfulOutcome sequence { "procedureCode": _, "criticality": _, "value": _ };
+    SubscriptionBasedUEDifferentiationInfo sequence { "periodicCommunicationIndicator"? SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator, "periodicTime"? _, "scheduledCommunicationTime"? ScheduledCommunicationTime, "stationaryIndication"? SubscriptionBasedUEDifferentiationInfoStationaryIndication, "trafficProfile"? SubscriptionBasedUEDifferentiationInfoTrafficProfile, "batteryIndication"? SubscriptionBasedUEDifferentiationInfoBatteryIndication, "iE-Extensions"? extensions };
+    SuccessfulOutcome sequence { "procedureCode": _, "criticality": Criticality, "value": _ };
     SupportedTAs = [SupportedTAsItem];
     SupportedTAsItem sequence { "tAC": _, "broadcastPLMNs": BPLMNs, "iE-Extensions"? extensions };
     SynchronisationInformation sequence { "sourceStratumLevel"? _, "listeningSubframePattern"? ListeningSubframePattern, "aggressoreCGI-List"? ECGI_List, "iE-Extensions"? extensions };
@@ -805,8 +1321,8 @@ types! {
     TargeteNBID sequence { "global-ENB-ID": GlobalENBID, "selected-TAI": TAI, "iE-Extensions"? extensions };
     TargeteNBToSourceeNBTransparentContainer sequence { "rRC-Container": _, "iE-Extensions"? extensions };
     TimeBasedHandoverInformation sequence { "hOWindowStart": _, "hOWindowDuration": _, "iE-Extensions"? extensions };
-    TimeSynchronisationInfo sequence { "stratumLevel": _, "synchronisationStatus": _, "iE-Extensions"? extensions };
-    TraceActivation sequence { "e-UTRAN-Trace-ID": _, "interfacesToTrace": _, "traceDepth": _, "traceCollectionEntityIPAddress": TransportLayerAddress, "iE-Extensions"? extensions };
+    TimeSynchronisationInfo sequence { "stratumLevel": _, "synchronisationStatus": SynchronisationStatus, "iE-Extensions"? extensions };
+    TraceActivation sequence { "e-UTRAN-Trace-ID": _, "interfacesToTrace": _, "traceDepth": TraceDepth, "traceCollectionEntityIPAddress": TransportLayerAddress, "iE-Extensions"? extensions };
     TraceFailureIndication sequence { "protocolIEs": ies };
     TraceStart sequence { "protocolIEs": ies };
     TransportInformation sequence { "transportLayerAddress": TransportLayerAddress, "uL-GTP-TEID": _ };
@@ -843,16 +1359,16 @@ types! {
     UESecurityCapabilities sequence { "encryptionAlgorithms": _, "integrityProtectionAlgorithms": _, "iE-Extensions"? extensions };
     UESidelinkAggregateMaximumBitrate sequence { "uESidelinkAggregateMaximumBitRate": _, "iE-Extensions"? extensions };
     ULCPSecurityInformation sequence { "ul-NAS-MAC": _, "ul-NAS-Count": _, "iE-Extensions"? extensions };
-    UnsuccessfulOutcome sequence { "procedureCode": _, "criticality": _, "value": _ };
+    UnsuccessfulOutcome sequence { "procedureCode": _, "criticality": Criticality, "value": _ };
     UplinkNASTransport sequence { "protocolIEs": ies };
     UplinkNonUEAssociatedLPPaTransport sequence { "protocolIEs": ies };
     UplinkS1cdma2000tunnelling sequence { "protocolIEs": ies };
     UplinkUEAssociatedLPPaTransport sequence { "protocolIEs": ies };
     UserLocationInformation sequence { "eutran-cgi": EUTRANCGI, "tai": TAI, "iE-Extensions"? extensions };
-    V2XServicesAuthorized sequence { "vehicleUE"? _, "pedestrianUE"? _, "iE-Extensions"? extensions };
+    V2XServicesAuthorized sequence { "vehicleUE"? VehicleUE, "pedestrianUE"? PedestrianUE, "iE-Extensions"? extensions };
     WLANMeasConfigNameList = [_];
-    WLANMeasurementConfiguration sequence { "wlanMeasConfig": _, "wlanMeasConfigNameList"? WLANMeasConfigNameList, "wlan-rssi"? _, "wlan-rtt"? _, "iE-Extensions"? extensions };
-    WUSAssistanceInformation sequence { "pagingProbabilityInformation": _, "iE-Extensions"? extensions };
+    WLANMeasurementConfiguration sequence { "wlanMeasConfig": WLANMeasConfig, "wlanMeasConfigNameList"? WLANMeasConfigNameList, "wlan-rssi"? WLANMeasurementConfigurationWlanRssi, "wlan-rtt"? WLANMeasurementConfigurationWlanRtt, "iE-Extensions"? extensions };
+    WUSAssistanceInformation sequence { "pagingProbabilityInformation": PagingProbabilityInformation, "iE-Extensions"? extensions };
     WarningAreaList choice { "cellIDList": ECGIList, "trackingAreaListforWarning": TAIListforWarning, "emergencyAreaIDList": EmergencyAreaIDList };
     WriteReplaceWarningRequest sequence { "protocolIEs": ies };
     WriteReplaceWarningResponse sequence { "protocolIEs": ies };
