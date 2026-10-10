@@ -803,6 +803,64 @@ fn the_messages_of_the_fixtures_have_the_criticality_that_asn1_assigns() {
     assert!(ies > 200, "{ies}");
 }
 
+/// The IEs that `value` holds, each as its identifier and its criticality: the entries
+/// that have a `value`, which an extension has not.
+fn held(value: &serde_json::Value, ies: &mut Vec<(u64, String)>) {
+    use serde_json::Value;
+    let entry = (value["id"].as_u64(), value["criticality"].as_str());
+    if let (Some(id), Some(criticality)) = entry
+        && !value["value"].is_null()
+    {
+        ies.push((id, criticality.into()));
+    }
+    match value {
+        Value::Object(members) => members.values().for_each(|member| held(member, ies)),
+        Value::Array(entries) => entries.iter().for_each(|entry| held(entry, ies)),
+        _ => {}
+    }
+}
+
+#[test]
+fn an_ie_that_a_value_holds_alone_has_the_criticality_of_its_object_sets() {
+    let id = |name: &str| {
+        let mut names = inspect::ie_names().iter();
+        names.find(|(_, known)| *known == name).unwrap().0
+    };
+    // The items of a list of E-RABs, in a request and in its response.
+    let item = |name: &str| inspect::item_criticality(id(name));
+    assert_eq!(inspect::item_criticality(52), Some("reject"));
+    assert_eq!(item("E-RABToBeSetupItemCtxtSUReq"), Some("reject"));
+    assert_eq!(item("E-RABSetupItemCtxtSURes"), Some("ignore"));
+    // A list that a parameterized type makes of single containers, and the alternative
+    // that extends a CHOICE.
+    assert_eq!(item("E-RABToBeSetupItemHOReq"), Some("reject"));
+    assert_eq!(item("LoggedMBSFNMDT"), Some("ignore"));
+    // RESET has this item with `reject` and RESET ACKNOWLEDGE with `ignore`.
+    assert_eq!(item("UE-associatedLogicalS1-ConnectionItem"), None);
+    // The IEs of a message are in no single container.
+    assert_eq!(item("MME-UE-S1AP-ID"), None);
+    assert_eq!(inspect::item_criticality(u16::MAX), None);
+    // The items of the fixtures have the criticality of their sets.
+    let mut items = Vec::new();
+    for line in include_str!("fixtures/messages.tsv")
+        .lines()
+        .filter(|line| !line.starts_with('#') && !line.is_empty())
+    {
+        let fields: Vec<_> = line.split('\t').collect();
+        let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
+        let tree = inspect::inspect_pdu(&pdu).unwrap();
+        let entries = tree["message"]["protocolIEs"].as_array();
+        for ie in entries.into_iter().flatten() {
+            held(&ie["value"], &mut items);
+        }
+    }
+    assert!(items.len() > 10, "{}", items.len());
+    for (id, criticality) in items {
+        let assigned = inspect::item_criticality(id.try_into().unwrap());
+        assert_eq!(assigned, Some(criticality.as_str()), "{id}");
+    }
+}
+
 #[test]
 fn the_identifiers_of_the_registry_are_the_constants_of_the_bindings() {
     use std::collections::BTreeMap;
