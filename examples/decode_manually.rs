@@ -6,11 +6,16 @@
 //! - Decoding and pattern-matching open protocol IE values
 //! - Verifying encode → decode round-trip fidelity
 //!
+//! `rasn` is the one that the crate re-exports, so the example needs no
+//! dependency on it.
+//!
 //! For the ergonomic `build_s1ap!` / `extract_s1ap_ies!` versions, see
 //! `build_pdu.rs` and `extract_ies.rs`.
 
-use rasn::types::{FixedOctetString, PrintableString};
-
+use oxirush_s1ap::rasn::{
+    self,
+    types::{FixedOctetString, PrintableString},
+};
 use oxirush_s1ap::s1ap::*;
 
 fn main() {

@@ -4,10 +4,9 @@
 //! IEs, custom expressions, nested handover choices, and an EPS NAS PDU carried
 //! inside the Initial Context Setup E-RAB list.
 
-use rasn::types::FixedBitString;
-
 use oxirush_s1ap::helpers::*;
 use oxirush_s1ap::macros::MissingIeError;
+use oxirush_s1ap::rasn::{self, types::FixedBitString};
 use oxirush_s1ap::s1ap::*;
 use oxirush_s1ap::{build_s1ap, extract_s1ap_ies};
 

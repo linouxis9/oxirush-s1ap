@@ -52,6 +52,10 @@ is not source compatible with 0.2.0.
   `OCTET STRING`.
 - The `sized` module: the `OCTET STRING` and `BIT STRING` types whose length
   determinant takes two octets.
+- `oxirush_s1ap::rasn`, the `rasn` that the crate is built with: a crate that
+  names the values of the bindings, such as `FixedBitString`, or the errors
+  of the codec takes them from there, where it had to depend on the same
+  `rasn` itself. The examples do.
 - With the `inspect` feature, `inspect::check_path`: whether a path can select
   anything in a message of a name, without a tree. The IE has to be one of
   the object set of the message, and each segment under it a member that the

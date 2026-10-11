@@ -5,9 +5,8 @@
 //! invocations hide numeric IDs and rasn open-type encoding; the commented
 //! construction at the end shows the equivalent generated types.
 
-use rasn::types::FixedBitString;
-
 use oxirush_s1ap::helpers::*;
+use oxirush_s1ap::rasn::types::FixedBitString;
 use oxirush_s1ap::s1ap::*;
 use oxirush_s1ap::{build_s1ap, build_s1ap_ie};
 
