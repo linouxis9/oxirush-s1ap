@@ -246,158 +246,94 @@ fn generate_support(generated: &str) -> Result<String> {
     writeln!(out, "pub use crate::registry::S1apPduKind;")?;
 
     writeln!(out, "impl S1APPDU {{")?;
-    writeln!(out, "    /// Encode this PDU using Aligned PER.")?;
-    writeln!(
-        out,
-        "    pub fn encode(&self) -> Result<Vec<u8>, rasn::error::EncodeError> {{"
-    )?;
-    writeln!(out, "        rasn::aper::encode(self)")?;
+    writeln!(out, "    /// The octets of this PDU, in aligned PER.")?;
+    writeln!(out, "    pub fn encode(&self) -> Result<Vec<u8>, crate::Error> {{")?;
+    writeln!(out, "        rasn::aper::encode(self).map_err(crate::Error::encoding::<Self>)")?;
     writeln!(out, "    }}")?;
-    writeln!(out, "    /// Decode an S1AP PDU from Aligned PER bytes.")?;
-    writeln!(
-        out,
-        "    pub fn decode(bytes: &[u8]) -> Result<Self, rasn::error::DecodeError> {{"
-    )?;
-    writeln!(out, "        decode_complete(bytes)")?;
+    writeln!(out, "    /// The PDU that `bytes` are, in aligned PER: the octets of one PDU, whole, and no")?;
+    writeln!(out, "    /// octet after it.")?;
+    writeln!(out, "    pub fn decode(bytes: &[u8]) -> Result<Self, crate::Error> {{")?;
+    writeln!(out, "        crate::per::decode_complete(bytes)")?;
     writeln!(out, "    }}")?;
-    writeln!(
-        out,
-        "    /// Decode the typed message held by this PDU's open type."
-    )?;
-    writeln!(
-        out,
-        "    pub fn decode_value<T: rasn::Decode>(&self) -> Result<T, rasn::error::DecodeError> {{"
-    )?;
+    writeln!(out, "    /// The message that this PDU holds, as its type `T`.")?;
+    writeln!(out, "    ///")?;
+    writeln!(out, "    /// `T` is the type of the message that `kind()` says. For the type of another")?;
+    writeln!(out, "    /// message the error has the kind `WrongMessage`, as the octets of one message")?;
+    writeln!(out, "    /// may decode as another:")?;
+    writeln!(out, "    ///")?;
+    writeln!(out, "    /// ```")?;
+    writeln!(out, "    /// use oxirush_s1ap::{{ErrorKind, s1ap::*}};")?;
+    writeln!(out, "    ///")?;
+    writeln!(out, "    /// // A UE CONTEXT RELEASE REQUEST")?;
+    writeln!(out, "    /// let octets = hex::decode(\"0012401500000300000002002a000800020007000240020280\").unwrap();")?;
+    writeln!(out, "    /// let pdu = S1AP_PDU::decode(&octets)?;")?;
+    writeln!(out, "    /// let request: UEContextReleaseRequest = pdu.decode_value()?;")?;
+    writeln!(out, "    /// assert_eq!(request.protocol_ies.0.len(), 3);")?;
+    writeln!(out, "    ///")?;
+    writeln!(out, "    /// let other = pdu.decode_value::<S1SetupRequest>().unwrap_err();")?;
+    writeln!(out, "    /// assert_eq!(other.kind(), ErrorKind::WrongMessage);")?;
+    writeln!(out, "    /// # Ok::<(), oxirush_s1ap::Error>(())")?;
+    writeln!(out, "    /// ```")?;
+    writeln!(out, "    ///")?;
+    writeln!(out, "    /// A type that is no message, as that of an IE or the item of a list, does not compile.")?;
+    writeln!(out, "    /// `decode_open_type` decodes any type from an open type.")?;
+    writeln!(out, "    ///")?;
+    writeln!(out, "    /// ```compile_fail")?;
+    writeln!(out, "    /// use oxirush_s1ap::s1ap::*;")?;
+    writeln!(out, "    ///")?;
+    writeln!(out, "    /// fn held(pdu: &S1AP_PDU) {{")?;
+    writeln!(out, "    ///     let _ = pdu.decode_value::<ERABToBeSetupItemCtxtSUReq>();")?;
+    writeln!(out, "    /// }}")?;
+    writeln!(out, "    /// ```")?;
+    writeln!(out, "    pub fn decode_value<T: crate::Message>(&self) -> Result<T, crate::Error> {{")?;
+    writeln!(out, "        let (direction, code) = (self.direction(), self.procedure_code());")?;
+    writeln!(out, "        if (direction, code) != (T::DIRECTION, T::PROCEDURE_CODE) {{")?;
+    writeln!(out, "            return Err(crate::Error::wrong_message(T::NAME, direction, code));")?;
+    writeln!(out, "        }}")?;
     writeln!(out, "        let value = match self {{")?;
-    writeln!(
-        out,
-        "            S1APPDU::initiatingMessage(message) => &message.value,"
-    )?;
-    writeln!(
-        out,
-        "            S1APPDU::successfulOutcome(message) => &message.value,"
-    )?;
-    writeln!(
-        out,
-        "            S1APPDU::unsuccessfulOutcome(message) => &message.value,"
-    )?;
+    writeln!(out, "            S1APPDU::initiatingMessage(message) => &message.value,")?;
+    writeln!(out, "            S1APPDU::successfulOutcome(message) => &message.value,")?;
+    writeln!(out, "            S1APPDU::unsuccessfulOutcome(message) => &message.value,")?;
     writeln!(out, "        }};")?;
     writeln!(out, "        decode_open_type(value)")?;
     writeln!(out, "    }}")?;
     writeln!(out, "    /// Return the procedure code of this PDU.")?;
     writeln!(out, "    pub fn procedure_code(&self) -> u8 {{")?;
     writeln!(out, "        match self {{")?;
-    writeln!(
-        out,
-        "            S1APPDU::initiatingMessage(message) => message.procedure_code.0,"
-    )?;
-    writeln!(
-        out,
-        "            S1APPDU::successfulOutcome(message) => message.procedure_code.0,"
-    )?;
-    writeln!(
-        out,
-        "            S1APPDU::unsuccessfulOutcome(message) => message.procedure_code.0,"
-    )?;
+    writeln!(out, "            S1APPDU::initiatingMessage(message) => message.procedure_code.0,")?;
+    writeln!(out, "            S1APPDU::successfulOutcome(message) => message.procedure_code.0,")?;
+    writeln!(out, "            S1APPDU::unsuccessfulOutcome(message) => message.procedure_code.0,")?;
     writeln!(out, "        }}")?;
     writeln!(out, "    }}")?;
-    writeln!(
-        out,
-        "    /// Return the PDU direction as a human-readable string."
-    )?;
+    writeln!(out, "    /// Return the PDU direction as a human-readable string.")?;
     writeln!(out, "    pub fn direction(&self) -> &'static str {{")?;
     writeln!(out, "        match self {{")?;
-    writeln!(
-        out,
-        "            S1APPDU::initiatingMessage(_) => \"InitiatingMessage\","
-    )?;
-    writeln!(
-        out,
-        "            S1APPDU::successfulOutcome(_) => \"SuccessfulOutcome\","
-    )?;
-    writeln!(
-        out,
-        "            S1APPDU::unsuccessfulOutcome(_) => \"UnsuccessfulOutcome\","
-    )?;
+    writeln!(out, "            S1APPDU::initiatingMessage(_) => \"InitiatingMessage\",")?;
+    writeln!(out, "            S1APPDU::successfulOutcome(_) => \"SuccessfulOutcome\",")?;
+    writeln!(out, "            S1APPDU::unsuccessfulOutcome(_) => \"UnsuccessfulOutcome\",")?;
     writeln!(out, "        }}")?;
     writeln!(out, "    }}")?;
     writeln!(out, "    /// Returns `true` for an initiating message.")?;
-    writeln!(
-        out,
-        "    pub fn is_initiating(&self) -> bool {{ matches!(self, S1APPDU::initiatingMessage(_)) }}"
-    )?;
+    writeln!(out, "    pub fn is_initiating(&self) -> bool {{ matches!(self, S1APPDU::initiatingMessage(_)) }}")?;
     writeln!(out, "    /// Returns `true` for a successful outcome.")?;
-    writeln!(
-        out,
-        "    pub fn is_successful(&self) -> bool {{ matches!(self, S1APPDU::successfulOutcome(_)) }}"
-    )?;
+    writeln!(out, "    pub fn is_successful(&self) -> bool {{ matches!(self, S1APPDU::successfulOutcome(_)) }}")?;
     writeln!(out, "    /// Returns `true` for an unsuccessful outcome.")?;
-    writeln!(
-        out,
-        "    pub fn is_unsuccessful(&self) -> bool {{ matches!(self, S1APPDU::unsuccessfulOutcome(_)) }}"
-    )?;
+    writeln!(out, "    pub fn is_unsuccessful(&self) -> bool {{ matches!(self, S1APPDU::unsuccessfulOutcome(_)) }}")?;
     writeln!(out, "}}")?;
-
     writeln!(out, "impl std::fmt::Display for S1APPDU {{")?;
-    writeln!(
-        out,
-        "    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{"
-    )?;
-    writeln!(
-        out,
-        "        write!(formatter, \"{{}} {{}} (code={{}})\", self.direction(), self.procedure_name(), self.procedure_code())"
-    )?;
+    writeln!(out, "    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{")?;
+    writeln!(out, "        write!(formatter, \"{{}} {{}} (code={{}})\", self.direction(), self.procedure_name(), self.procedure_code())")?;
     writeln!(out, "    }}")?;
     writeln!(out, "}}")?;
-
-    writeln!(
-        out,
-        "/// Encode a typed ASN.1 value for an S1AP open type using APER."
-    )?;
-    writeln!(out, "///")?;
-    writeln!(
-        out,
-        "/// An open type holds a complete encoding, in which an empty encoding"
-    )?;
-    writeln!(
-        out,
-        "/// becomes one zero octet (X.691 (02/2021) §11.1.4, §11.2.1)."
-    )?;
-    writeln!(
-        out,
-        "pub fn encode_open_type<T: rasn::Encode>(value: &T) -> Result<rasn::types::Any, rasn::error::EncodeError> {{"
-    )?;
-    writeln!(out, "    let mut bytes = rasn::aper::encode(value)?;")?;
-    writeln!(out, "    if bytes.is_empty() {{")?;
-    writeln!(out, "        bytes.push(0);")?;
-    writeln!(out, "    }}")?;
-    writeln!(out, "    Ok(rasn::types::Any::new(bytes))")?;
+    writeln!(out, "/// The open type of a value: its complete encoding in aligned PER, in which an empty")?;
+    writeln!(out, "/// encoding becomes one zero octet (X.691 (02/2021) §11.1.4, §11.2.1).")?;
+    writeln!(out, "pub fn encode_open_type<T: rasn::Encode>(value: &T) -> Result<rasn::types::Any, crate::Error> {{")?;
+    writeln!(out, "    crate::per::encode_open_type(value)")?;
     writeln!(out, "}}")?;
-    writeln!(
-        out,
-        "/// Decode a typed ASN.1 value from an S1AP open type using APER."
-    )?;
-    writeln!(
-        out,
-        "pub fn decode_open_type<T: rasn::Decode>(value: &rasn::types::Any) -> Result<T, rasn::error::DecodeError> {{"
-    )?;
-    writeln!(out, "    decode_complete(value.as_bytes())")?;
-    writeln!(out, "}}")?;
-    writeln!(out, "fn decode_complete<T: rasn::Decode>(bytes: &[u8]) -> Result<T, rasn::error::DecodeError> {{")?;
-    writeln!(out, "    if bytes.is_empty() {{")?;
-    writeln!(out, "        return Err(<rasn::error::DecodeError as rasn::de::Error>::custom(")?;
-    writeln!(out, "            \"APER value must contain a complete encoding\", rasn::Codec::Aper,")?;
-    writeln!(out, "        ));")?;
-    writeln!(out, "    }}")?;
-    writeln!(out, "    let (decoded, remainder) = rasn::aper::decode_with_remainder(bytes)?;")?;
-    writeln!(out, "    // A zero-bit field-list has exactly one zero octet as its complete encoding.")?;
-    writeln!(out, "    let zero_bit_encoding = bytes == [0] && remainder == bytes;")?;
-    writeln!(out, "    if !remainder.is_empty() && !zero_bit_encoding {{")?;
-    writeln!(out, "        return Err(<rasn::error::DecodeError as rasn::de::Error>::custom(")?;
-    writeln!(out, "            \"APER complete encoding has trailing whole octets\", rasn::Codec::Aper,")?;
-    writeln!(out, "        ));")?;
-    writeln!(out, "    }}")?;
-    writeln!(out, "    Ok(decoded)")?;
+    writeln!(out, "/// The value of the type `T` that an open type holds, in aligned PER: one value,")?;
+    writeln!(out, "/// whole, and no octet after it.")?;
+    writeln!(out, "pub fn decode_open_type<T: rasn::Decode>(value: &rasn::types::Any) -> Result<T, crate::Error> {{")?;
+    writeln!(out, "    crate::per::decode_complete(value.as_bytes())")?;
     writeln!(out, "}}")?;
 
     Ok(out)

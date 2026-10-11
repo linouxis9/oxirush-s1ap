@@ -12,7 +12,7 @@ fn value(pdu: &S1AP_PDU) -> &Any {
     }
 }
 
-fn check_typed<T: rasn::Decode + rasn::Encode>(pdu: &S1AP_PDU, name: &str) {
+fn check_typed<T: oxirush_s1ap::Message>(pdu: &S1AP_PDU, name: &str) {
     let raw = value(pdu);
     let decoded: T = pdu
         .decode_value()

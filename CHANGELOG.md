@@ -35,6 +35,25 @@ is not source compatible with 0.2.0.
   returned the two strings: `None` for octets that are not a PLMN identity,
   a half octet being no digit where it is not the filler before an MNC of
   two digits. `ab cd ef` was the MCC `111013` and the MNC `151412`.
+- One error type, `oxirush_s1ap::Error`. `S1AP_PDU::decode`, `encode` and
+  `decode_value`, and `s1ap::decode_open_type` and `s1ap::encode_open_type`,
+  return it where they returned a `rasn::error::DecodeError` or an
+  `EncodeError`. A function that returned one of those returns
+  `Result<_, oxirush_s1ap::Error>`, or keeps a `Box<dyn std::error::Error>`.
+  `error.kind()` is an `ErrorKind` to match on, `Decode`, `Encode` or
+  `WrongMessage` here, and the message says what is wrong without the wording
+  of rasn: `these octets do not decode as S1AP-PDU: they end before the value
+  does`. The error of rasn is the `source()`, for code that read its `kind`:
+  `source.downcast_ref::<rasn::error::DecodeError>()`. `Error` has a `From`
+  of both, for code that calls `rasn::aper` itself.
+- `decode_value::<T>()` takes the type of a message alone, and checks that
+  the PDU holds that message: on another one the error has the kind
+  `WrongMessage`, where 0.2.0 decoded the octets as whatever type was named,
+  and a UE CONTEXT RELEASE REQUEST read as a setup request with three IEs.
+  A type that is no message, as that of an IE, does not compile: decode it
+  with `s1ap::decode_open_type::<T>(&any)`. Generic code that calls
+  `decode_value` asks for `T: oxirush_s1ap::Message` where it asked for
+  `T: rasn::Decode`.
 
 ### Added
 
@@ -66,9 +85,12 @@ is not source compatible with 0.2.0.
 - The `sized` module: the `OCTET STRING` and `BIT STRING` types whose length
   determinant takes two octets.
 - `oxirush_s1ap::rasn`, the `rasn` that the crate is built with: a crate that
-  names the values of the bindings, such as `FixedBitString`, or the errors
-  of the codec takes them from there, where it had to depend on the same
-  `rasn` itself. The examples do.
+  names the values of the bindings, such as `FixedBitString`, or the error
+  of the codec that an `Error` has as its source, takes them from there,
+  where it had to depend on the same `rasn` itself. The examples do.
+- `oxirush_s1ap::Message`, which the type of each message of a procedure
+  implements: its `NAME`, as ASN.1 gives it, its `DIRECTION` and its
+  `PROCEDURE_CODE`.
 - With the `inspect` feature, `inspect::check_path`: whether a path can select
   anything in a message of a name, without a view. The IE has to be one of
   the object set of the message, and each segment under it a member that the
