@@ -186,7 +186,7 @@ mod tests {
     fn common_identifiers_have_the_required_widths() {
         let plmn = plmn("208", "93");
         // The 20-bit eNB ID and the 8-bit cell: a 28-bit cell identity,
-        // octet-aligned after the PLMN (X.691 (07/2002) §15.10).
+        // octet-aligned after the PLMN (X.691 (02/2021) §16.10).
         let cgi = eutran_cgi(plmn.clone(), 0x12345, 0x67);
         assert_eq!(cgi.cell_id.0[..28], int_to_bitvec(0x123_4567, 28)[..]);
         assert_eq!(

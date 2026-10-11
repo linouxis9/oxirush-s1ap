@@ -37,7 +37,7 @@ fn public_macros_round_trip_typed_open_message() -> Result<(), MissingIeError> {
 
 /// Constrained lists whose `rasn` attribute rustfmt splits over several
 /// lines use the corrected APER codec too: an octet-aligned length for
-/// SIZE(1..256) (X.691 §11.9.3.3), as Wireshark decodes it.
+/// SIZE(1..256) (X.691 (02/2021) §11.9.3.3), as Wireshark decodes it.
 #[test]
 fn every_constrained_list_encodes_its_length_per_x691() {
     let diagnostics = CriticalityDiagnostics::new(
@@ -69,8 +69,8 @@ fn every_constrained_list_encodes_its_length_per_x691() {
 
 /// Lists declared through the parameterized E-RAB-IE-ContainerList keep the
 /// SIZE(1..maxnoofE-RABs) that ProtocolIE-ContainerList takes as parameters:
-/// an octet-aligned count for SIZE(1..256) (X.691 §11.9.3.3), as Wireshark
-/// decodes E-RABAdmittedList.
+/// an octet-aligned count for SIZE(1..256) (X.691 (02/2021) §11.9.3.3), as
+/// Wireshark decodes E-RABAdmittedList.
 #[test]
 fn e_rab_container_lists_encode_their_size_constraint() {
     let item = ERABAdmittedItem::new(
@@ -123,7 +123,7 @@ fn e_rab_container_lists_encode_their_size_constraint() {
 /// 65535, for the cells of WarningAreaList, and ECGI-List,
 /// SIZE(1..maxnoofCellsineNB) with maxnoofCellsineNB 256, for the aggressor
 /// cells of SynchronisationInformation: a two-octet and a one-octet count
-/// (X.691 §11.9.3.3, §11.5.7), as Wireshark decodes them.
+/// (X.691 (02/2021) §11.9.3.3, §11.5.7), as Wireshark decodes them.
 #[test]
 fn each_ecgi_list_encodes_its_own_size_constraint() {
     use oxirush_s1ap::helpers::{eutran_cgi, plmn};
@@ -157,9 +157,9 @@ fn each_ecgi_list_encodes_its_own_size_constraint() {
 }
 
 /// An open type holds a complete encoding, and the empty encoding of a
-/// single-value ENUMERATED becomes one zero octet (X.691 §11.1.4, §11.2.1):
-/// pycrate rejects an empty KillAllWarningMessages, and Wireshark decodes it
-/// only from that octet.
+/// single-value ENUMERATED becomes one zero octet (X.691 (02/2021) §11.1.4,
+/// §11.2.1): pycrate rejects an empty KillAllWarningMessages, and Wireshark
+/// decodes it only from that octet.
 #[test]
 fn empty_encoding_in_an_open_type_is_one_zero_octet() -> Result<(), MissingIeError> {
     let mut identifier = rasn::types::FixedBitString::<16>::ZERO;
