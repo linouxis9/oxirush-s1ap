@@ -5,22 +5,19 @@
 //! inside the Initial Context Setup E-RAB list.
 
 use oxirush_s1ap::helpers::*;
-use oxirush_s1ap::macros::MissingIeError;
-use oxirush_s1ap::rasn::{self, types::FixedBitString};
+use oxirush_s1ap::rasn::types::FixedBitString;
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{build_s1ap, extract_s1ap_ies};
+use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies};
 
 // ── 1. Simple extraction: required IDs + optional cause ────────────────────
 
-fn handle_release_request(pdu: &S1AP_PDU) -> Result<Vec<String>, MissingIeError> {
-    let Some(msg): Option<UEContextReleaseRequest> =
-        decode_initiating(pdu, ID_UECONTEXT_RELEASE_REQUEST.0)
-    else {
-        return Ok(vec![]);
-    };
+fn handle_release_request(pdu: &S1AP_PDU) -> Result<Vec<String>, Error> {
+    // The message of the PDU, as its type: another message is an error.
+    let msg: UEContextReleaseRequest = pdu.decode_value()?;
 
-    // `req` fields return Err(MissingIeError) if absent or invalid.
-    // `opt` fields become Option<T>.
+    // A `req` field whose IE is absent is an error of the kind `MissingIe`.
+    // An `opt` field is an Option<T>, `None` when its IE is absent.
+    // An IE that is there and does not decode is an error for both.
     // Without `=> expr`, extraction defaults to `.0` (newtype unwrap).
     extract_s1ap_ies!(&msg, UEContextReleaseRequest,
         req mme_id: u32 = MME_UE_S1AP_ID(id),
@@ -40,11 +37,8 @@ fn handle_release_request(pdu: &S1AP_PDU) -> Result<Vec<String>, MissingIeError>
 
 // ── 2. Complex extraction: handover with pattern matching ──────────────────
 
-fn handle_handover_required(pdu: &S1AP_PDU) -> Result<Vec<String>, MissingIeError> {
-    let Some(msg): Option<HandoverRequired> = decode_initiating(pdu, ID_HANDOVER_PREPARATION.0)
-    else {
-        return Ok(vec![]);
-    };
+fn handle_handover_required(pdu: &S1AP_PDU) -> Result<Vec<String>, Error> {
+    let msg: HandoverRequired = pdu.decode_value()?;
 
     // Demonstrates concrete ENUMERATED values, a nested TargetID CHOICE,
     // transparent-container lengths, and custom extraction expressions.
@@ -81,12 +75,8 @@ fn handle_handover_required(pdu: &S1AP_PDU) -> Result<Vec<String>, MissingIeErro
 
 // ── 3. InitialContextSetupRequest: many IEs + nested EPS bearer ────────────
 
-fn handle_initial_context_setup(pdu: &S1AP_PDU) -> Result<Vec<String>, MissingIeError> {
-    let Some(msg): Option<InitialContextSetupRequest> =
-        decode_initiating(pdu, ID_INITIAL_CONTEXT_SETUP.0)
-    else {
-        return Ok(vec![]);
-    };
+fn handle_initial_context_setup(pdu: &S1AP_PDU) -> Result<Vec<String>, Error> {
+    let msg: InitialContextSetupRequest = pdu.decode_value()?;
 
     extract_s1ap_ies!(&msg, InitialContextSetupRequest,
         req mme_id: u32 = MME_UE_S1AP_ID(id),
@@ -111,7 +101,7 @@ fn handle_initial_context_setup(pdu: &S1AP_PDU) -> Result<Vec<String>, MissingIe
     ])
 }
 
-fn main() {
+fn main() -> Result<(), Error> {
     // ── Build test PDUs ─────────────────────────────────────────────────────
 
     // 1. UEContextReleaseRequest
@@ -121,7 +111,7 @@ fn main() {
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
-    );
+    )?;
 
     // 2. HandoverRequired
     let cause = Cause::radioNetwork(CauseRadioNetwork::handover_desirable_for_radio_reason);
@@ -136,7 +126,7 @@ fn main() {
         REJECT TargetID(target_enb()),
 
         REJECT Source_ToTarget_TransparentContainer(vec![0xDE, 0xAD, 0xBE, 0xEF]),
-    );
+    )?;
 
     // 3. InitialContextSetupRequest. The NAS PDU is nested in its E-RAB item,
     // as specified by TS 36.413 rather than as a top-level message IE.
@@ -154,10 +144,10 @@ fn main() {
 
         REJECT UESecurityCapabilities(ue_security_capabilities(&[0xe0, 0xe0])),
         REJECT SecurityKey(SecurityKey(FixedBitString::<256>::ZERO)),
-    );
+    )?;
 
     // Encode → decode round-trip, then extract.
-    type Handler = fn(&S1AP_PDU) -> Result<Vec<String>, MissingIeError>;
+    type Handler = fn(&S1AP_PDU) -> Result<Vec<String>, Error>;
     let cases: [(&str, &S1AP_PDU, Handler); 3] = [
         (
             "UEContextReleaseRequest",
@@ -173,8 +163,8 @@ fn main() {
     ];
 
     for (name, pdu, handler) in cases {
-        let bytes = pdu.encode().expect("encode failed");
-        let decoded = S1AP_PDU::decode(&bytes).expect("decode failed");
+        let bytes = pdu.encode()?;
+        let decoded = S1AP_PDU::decode(&bytes)?;
 
         println!("=== {name} ({decoded}) ===");
         match handler(&decoded) {
@@ -190,15 +180,7 @@ fn main() {
 
     // The `decode_manually` example reads the IEs of a message by hand, which is
     // what `extract_s1ap_ies!` does for each field.
-}
-
-fn decode_initiating<T: rasn::Decode>(pdu: &S1AP_PDU, procedure_code: u8) -> Option<T> {
-    match pdu {
-        S1AP_PDU::initiatingMessage(message) if message.procedure_code.0 == procedure_code => {
-            decode_open_type(&message.value).ok()
-        }
-        _ => None,
-    }
+    Ok(())
 }
 
 fn target_enb() -> TargetID {

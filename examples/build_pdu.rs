@@ -8,9 +8,9 @@
 use oxirush_s1ap::helpers::*;
 use oxirush_s1ap::rasn::types::FixedBitString;
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{build_s1ap, build_s1ap_ie};
+use oxirush_s1ap::{Error, build_s1ap, build_s1ap_ie};
 
-fn main() {
+fn main() -> Result<(), Error> {
     // ── 1. Simple: InitialContextSetupResponse ─────────────────────────────
 
     let mme_ue_id: u32 = 1;
@@ -24,10 +24,10 @@ fn main() {
         IGNORE MME_UE_S1AP_ID(mme_ue_id),
         IGNORE eNB_UE_S1AP_ID(enb_ue_id),
         IGNORE E_RABSetupListCtxtSURes(erab_setup_list()),
-    );
+    )?;
 
     println!("=== 1. InitialContextSetupResponse ===");
-    print_and_encode(&pdu);
+    print_and_encode(&pdu)?;
 
     // ── 2. UEContextReleaseRequest with Cause ──────────────────────────────
 
@@ -37,10 +37,10 @@ fn main() {
         REJECT MME_UE_S1AP_ID(mme_ue_id),
         REJECT eNB_UE_S1AP_ID(enb_ue_id),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
-    );
+    )?;
 
     println!("\n=== 2. UEContextReleaseRequest ===");
-    print_and_encode(&pdu);
+    print_and_encode(&pdu)?;
 
     // ── 3. Complex: InitialContextSetupRequest with EPS bearer + security ──
     //
@@ -70,10 +70,10 @@ fn main() {
 
         // Its MME
         IGNORE GUMMEI_ID(gummei(network.clone(), 1, 1)),
-    );
+    )?;
 
     println!("\n=== 3. InitialContextSetupRequest (complex) ===");
-    print_and_encode(&pdu);
+    print_and_encode(&pdu)?;
 
     // ── 4. Handover: procedure name differs from message name ──────────────
     //
@@ -99,10 +99,10 @@ fn main() {
 
         // The container that goes to the target
         REJECT Source_ToTarget_TransparentContainer(vec![0x00, 0x01, 0x02]),
-    );
+    )?;
 
     println!("\n=== 4. HandoverRequired (procedure=HandoverPreparation) ===");
-    print_and_encode(&pdu);
+    print_and_encode(&pdu)?;
 
     // ── 5. SuccessfulOutcome + UnsuccessfulOutcome ─────────────────────────
 
@@ -114,25 +114,25 @@ fn main() {
 
         IGNORE E_RABAdmittedList(erab_admitted_list()),
         REJECT Target_ToSource_TransparentContainer(vec![0xAA, 0xBB]),
-    );
+    )?;
 
     println!("\n=== 5. HandoverRequestAcknowledge (SuccessfulOutcome) ===");
-    print_and_encode(&pdu);
+    print_and_encode(&pdu)?;
 
     let pdu = build_s1ap!(UnsuccessfulOutcome, S1Setup,
         REJECT, S1SetupFailure,
 
         IGNORE Cause(Cause::misc(CauseMisc::unknown_PLMN)),
-    );
+    )?;
 
     println!("\n=== 5. S1SetupFailure (UnsuccessfulOutcome) ===");
-    print_and_encode(&pdu);
+    print_and_encode(&pdu)?;
 
     // ── 6. build_s1ap_ie! for conditional IE construction ──────────────────
 
     let cause_ie = build_s1ap_ie!(UEContextReleaseRequest, IGNORE
         Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity))
-    );
+    )?;
 
     println!("\n=== 6. Single IE (via build_s1ap_ie!) ===");
     println!(
@@ -167,6 +167,7 @@ fn main() {
     //       Criticality::reject,
     //       encode_open_type(&response)?,
     //   ));
+    Ok(())
 }
 
 fn erab_setup_list() -> ERABSetupListCtxtSURes {
@@ -233,7 +234,7 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
     )])
 }
 
-fn print_and_encode(pdu: &S1AP_PDU) {
+fn print_and_encode(pdu: &S1AP_PDU) -> Result<(), Error> {
     // Display example: "InitiatingMessage S1Setup (code=17)".
     println!("{pdu}");
     println!(
@@ -243,6 +244,7 @@ fn print_and_encode(pdu: &S1AP_PDU) {
         pdu.procedure_code()
     );
 
-    let bytes = pdu.encode().expect("APER encode failed");
+    let bytes = pdu.encode()?;
     println!("  APER ({} bytes): {}", bytes.len(), hex::encode(&bytes));
+    Ok(())
 }

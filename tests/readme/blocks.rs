@@ -53,35 +53,40 @@ pub const BLOCKS: &[fn()] = &[
 fn block_1() {
     use oxirush_s1ap::{build_s1ap, extract_s1ap_ies, s1ap::*};
 
-    // Decode a UE CONTEXT RELEASE REQUEST
-    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    let pdu = S1AP_PDU::decode(&bytes).unwrap();
-    assert_eq!((pdu.procedure_code(), pdu.is_initiating()), (18, true));
-    println!("{}", pdu.procedure_name());
+    fn main() -> Result<(), Box<dyn std::error::Error>> {
+        // Decode a UE CONTEXT RELEASE REQUEST
+        let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
+        let pdu = S1AP_PDU::decode(&bytes)?;
+        assert_eq!((pdu.procedure_code(), pdu.is_initiating()), (18, true));
+        println!("{}", pdu.procedure_name());
 
-    // Read its IEs by name. An `opt` field is `None` when its IE is not there,
-    // and what follows `=>` is what the field keeps of the decoded value
-    let request: UEContextReleaseRequest = pdu.decode_value().unwrap();
-    extract_s1ap_ies!(request, UEContextReleaseRequest,
-        opt mme_id: u32 = MME_UE_S1AP_ID(id),
-        opt enb_id: u32 = eNB_UE_S1AP_ID(id),
-        opt cause: Cause = Cause(cause) => cause,
-    );
-    println!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}");
+        // Read its IEs by name. An `opt` field is `None` when its IE is not there,
+        // and what follows `=>` is what the field keeps of the decoded value
+        let request: UEContextReleaseRequest = pdu.decode_value()?;
+        extract_s1ap_ies!(request, UEContextReleaseRequest,
+            opt mme_id: u32 = MME_UE_S1AP_ID(id),
+            opt enb_id: u32 = eNB_UE_S1AP_ID(id),
+            opt cause: Cause = Cause(cause) => cause,
+        );
+        println!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}");
 
-    // Build it with another cause: the direction, the procedure, the criticality
-    // of the PDU and the message, then each IE with its criticality
-    let rebuilt = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+        // Build it with another cause: the direction, the procedure, the criticality
+        // of the PDU and the message, then each IE with its criticality
+        let rebuilt = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+            IGNORE, UEContextReleaseRequest,
 
-        REJECT MME_UE_S1AP_ID(42u32),
-        REJECT eNB_UE_S1AP_ID(7u32),
-        IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::radio_connection_with_ue_lost)),
-    );
+            REJECT MME_UE_S1AP_ID(42u32),
+            REJECT eNB_UE_S1AP_ID(7u32),
+            IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::radio_connection_with_ue_lost)),
+        )?;
 
-    // Encode it
-    let encoded = hex::encode(rebuilt.encode().unwrap());
-    assert_eq!(encoded, "0012401500000300000002002a0008000200070002400202a0");
+        // Encode it
+        let encoded = hex::encode(rebuilt.encode()?);
+        assert_eq!(encoded, "0012401500000300000002002a0008000200070002400202a0");
+        Ok(())
+    }
+
+    main().unwrap();
 }
 
 /// The Rust block 2 of README.md.
@@ -135,9 +140,9 @@ fn block_3() {
 
 /// The Rust block 4 of README.md.
 fn block_4() {
-    use oxirush_s1ap::{extract_s1ap_ies, macros::MissingIeError, s1ap::*};
+    use oxirush_s1ap::{Error, extract_s1ap_ies, s1ap::*};
 
-    fn handle(request: &UEContextReleaseRequest) -> Result<(), MissingIeError> {
+    fn handle(request: &UEContextReleaseRequest) -> Result<(), Error> {
         extract_s1ap_ies!(request, UEContextReleaseRequest,
             req mme_id: u32 = MME_UE_S1AP_ID(id),
             req enb_id: u32 = eNB_UE_S1AP_ID(id),
@@ -155,14 +160,14 @@ fn block_5() {
 
     // A message with one IE, which is built alone
     let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
-        build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32)),
+        build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32)).unwrap(),
     ]));
 
     // The IE is decoded, changed and encoded again in its place
     let updated = with_s1ap_ie_mut!(message, UplinkNASTransport,
         MME_UE_S1AP_ID(id) = 42u32
     );
-    assert!(updated);
+    assert_eq!(updated, Ok(true));
 }
 
 /// The Rust block 6 of README.md.

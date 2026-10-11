@@ -22,8 +22,13 @@
 //!     REJECT MME_UE_S1AP_ID(1u32),
 //!     REJECT eNB_UE_S1AP_ID(7u32),
 //!     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
-//! );
+//! )?;
+//! assert_eq!(pdu.procedure_name(), "UEContextReleaseRequest");
+//! # Ok::<(), oxirush_s1ap::Error>(())
 //! ```
+//!
+//! The macro gives a `Result`. A value that does not encode, as an integer outside
+//! its constraint, is an [`Error`] of the kind `Encode`, and no panic.
 //!
 //! Arguments:
 //! - `$direction` — `InitiatingMessage`, `SuccessfulOutcome`, or `UnsuccessfulOutcome`
@@ -31,6 +36,27 @@
 //! - `$outer_crit` — outer criticality: `REJECT`, `IGNORE`, or `NOTIFY`
 //! - `$msg` — message struct name, such as `UEContextReleaseRequest`
 //! - IEs — `$ie_crit $ie_name($ie_value)`, with the IE ID derived from its name
+//!
+//! An IE that is written without its criticality does not compile, and the error says
+//! which IE it is. Neither does a PDU without its own:
+//!
+//! ```compile_fail
+//! use oxirush_s1ap::{build_s1ap, s1ap::*};
+//!
+//! let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+//!     IGNORE, UEContextReleaseRequest,
+//!     MME_UE_S1AP_ID(1u32),
+//! );
+//! ```
+//!
+//! ```compile_fail
+//! use oxirush_s1ap::{build_s1ap, s1ap::*};
+//!
+//! let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+//!     UEContextReleaseRequest,
+//!     REJECT MME_UE_S1AP_ID(1u32),
+//! );
+//! ```
 //!
 //! ## `build_s1ap_ie!` — build one Protocol IE entry
 //!
@@ -41,7 +67,15 @@
 //!
 //! let ie = build_s1ap_ie!(UEContextReleaseRequest,
 //!     REJECT MME_UE_S1AP_ID(1u32)
-//! );
+//! )?;
+//! assert_eq!(ie.criticality, Criticality::reject);
+//! # Ok::<(), oxirush_s1ap::Error>(())
+//! ```
+//!
+//! ```compile_fail
+//! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
+//!
+//! let ie = build_s1ap_ie!(UEContextReleaseRequest, MME_UE_S1AP_ID(1u32));
 //! ```
 //!
 //! IEs are named after their `id-` constant. The name of a type is an alias
@@ -53,7 +87,7 @@
 //! ```
 //! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
 //!
-//! fn source(gummei: GUMMEI) -> ProtocolIEField {
+//! fn source(gummei: GUMMEI) -> Result<ProtocolIEField, oxirush_s1ap::Error> {
 //!     build_s1ap_ie!(PathSwitchRequest, IGNORE SourceMME_GUMMEI(gummei))
 //! }
 //! ```
@@ -61,7 +95,7 @@
 //! ```compile_fail
 //! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
 //!
-//! fn source(gummei: GUMMEI) -> ProtocolIEField {
+//! fn source(gummei: GUMMEI) -> Result<ProtocolIEField, oxirush_s1ap::Error> {
 //!     build_s1ap_ie!(PathSwitchRequest, IGNORE GUMMEI(gummei))
 //! }
 //! ```
@@ -72,20 +106,24 @@
 //!
 //! The macro iterates through `protocol_ies`, matches generated ASN.1 IE IDs,
 //! and APER-decodes each matching open type into its concrete generated type.
-//! Required fields are unwrapped; a missing or invalid required field returns
-//! [`MissingIeError`] from the enclosing function. Optional fields remain
-//! `Option<T>`.
+//! A `req` field is the value, and an `opt` field an `Option` of it:
 //!
-//! The enclosing function must return `Result<_, MissingIeError>` or a `Result`
-//! whose error type implements `From<MissingIeError>`, as
+//! | The IE | A `req` field | An `opt` field |
+//! |--------|---------------|----------------|
+//! | is in the message | the value | `Some` of the value |
+//! | is not in the message | an error of the kind `MissingIe` | `None` |
+//! | is there and does not decode | an error of the kind `UndecodableIe` | the same error |
+//!
+//! The error is that of the enclosing function, which returns a `Result` whose
+//! error is [`Error`] or has a `From` of it, as
 //! `Box<dyn std::error::Error>` does: the macro converts the error as `?`
 //! converts one. Without `=> expression`, extraction uses `binding.0`, which
 //! unwraps the usual single-field generated newtype.
 //!
 //! ```
-//! use oxirush_s1ap::{build_s1ap_ie, extract_s1ap_ies, macros::MissingIeError, s1ap::*};
+//! use oxirush_s1ap::{Error, ErrorKind, build_s1ap_ie, extract_s1ap_ies, s1ap::*};
 //!
-//! fn handle(msg: &UplinkNASTransport) -> Result<Vec<u8>, MissingIeError> {
+//! fn handle(msg: &UplinkNASTransport) -> Result<Vec<u8>, Error> {
 //!     extract_s1ap_ies!(msg, UplinkNASTransport,
 //!         req mme_id: u32 = MME_UE_S1AP_ID(id),
 //!         req nas_pdu: Vec<u8> = NAS_PDU(pdu) => pdu.0.to_vec(),
@@ -95,55 +133,98 @@
 //!     Ok(nas_pdu)
 //! }
 //!
-//! let message = UplinkNASTransport::new(ProtocolIEContainer(vec![
-//!     build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32)),
-//!     build_s1ap_ie!(UplinkNASTransport, REJECT NAS_PDU(vec![0x07, 0x6a])),
+//! let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
+//!     build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32))?,
+//!     build_s1ap_ie!(UplinkNASTransport, REJECT NAS_PDU(vec![0x07, 0x6a]))?,
 //! ]));
-//! assert_eq!(handle(&message).unwrap(), [0x07, 0x6a]);
+//! assert_eq!(handle(&message)?, [0x07, 0x6a]);
+//!
+//! // Without the NAS-PDU, which a field requires
+//! message.protocol_ies.0.pop();
+//! assert_eq!(handle(&message).unwrap_err().kind(), ErrorKind::MissingIe);
+//! # Ok::<(), Error>(())
 //! ```
 //!
 //! ## `with_s1ap_ie_mut!` — locate and mutate one decoded S1AP IE
 //!
 //! This decodes the matching open type, passes the concrete value into the
-//! expression, then re-encodes it. It returns `true` only when the IE was found,
-//! decoded and re-encoded successfully, and the expression returned `true`.
+//! expression, then re-encodes it. It gives a `Result<bool, Error>`: what the
+//! expression says, `Ok(false)` for an IE that is not in the message, and an error
+//! for an IE that does not decode (`UndecodableIe`) or a changed value that does
+//! not encode (`Encode`).
 //! The setter form `IeName(binding) = value` expands to `binding.0 = value`.
 //!
-//! When a message has the same IE twice, both macros use the same one: the last
-//! that decodes. `extract_s1ap_ies!` reads it and `with_s1ap_ie_mut!` changes it.
+//! When a message has the same IE twice, both macros use the same one, the last:
+//! `extract_s1ap_ies!` reads it and `with_s1ap_ie_mut!` changes it. One of them that
+//! does not decode is an error for both.
 //!
 //! ```
 //! use oxirush_s1ap::{build_s1ap_ie, s1ap::*, with_s1ap_ie_mut};
 //!
 //! let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
-//!     build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32)),
+//!     build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32))?,
 //! ]));
 //! let updated = with_s1ap_ie_mut!(message, UplinkNASTransport,
 //!     MME_UE_S1AP_ID(id) = 42u32
-//! );
+//! )?;
 //! assert!(updated);
+//! # Ok::<(), oxirush_s1ap::Error>(())
 //! ```
 
-use core::fmt;
+use rasn::types::Any;
 
-/// Error returned by `extract_s1ap_ies!` when a required IE is absent or invalid.
-#[derive(Debug, Clone)]
-pub struct MissingIeError {
-    /// Name of the required field as written in the macro invocation.
-    pub ie_name: &'static str,
+use crate::s1ap::{
+    Criticality, InitiatingMessage, ProcedureCode, ProtocolIEContainer, ProtocolIEField,
+    ProtocolIEID, S1AP_PDU, SuccessfulOutcome, UnsuccessfulOutcome,
+};
+use crate::{Error, Message};
+
+/// For the macros that build: one entry of the IEs of a message, which is the
+/// identifier of an IE, its criticality and its value in an open type, or why the
+/// value does not encode.
+#[doc(hidden)]
+pub fn __ie(
+    id: u16,
+    criticality: Criticality,
+    value: Result<Any, Error>,
+) -> Result<ProtocolIEField, Error> {
+    Ok(ProtocolIEField {
+        id: ProtocolIEID(id),
+        criticality,
+        value: value?,
+    })
 }
 
-impl fmt::Display for MissingIeError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            formatter,
-            "missing or invalid required S1AP IE: {}",
-            self.ie_name
-        )
-    }
+/// For the macro that builds a PDU: the PDU of the message `M` that `new` makes of
+/// these IEs, with the direction and the procedure code of that message, or the
+/// first error of an IE that was not built.
+#[doc(hidden)]
+pub fn __pdu<M: Message, const N: usize>(
+    criticality: Criticality,
+    ies: [Result<ProtocolIEField, Error>; N],
+    new: fn(ProtocolIEContainer) -> M,
+) -> Result<S1AP_PDU, Error> {
+    let ies = ies.into_iter().collect::<Result<Vec<_>, Error>>()?;
+    let value = crate::per::encode_open_type(&new(ProtocolIEContainer(ies)))?;
+    let procedure_code = ProcedureCode(M::PROCEDURE_CODE);
+    Ok(match M::DIRECTION {
+        "InitiatingMessage" => S1AP_PDU::initiatingMessage(InitiatingMessage {
+            procedure_code,
+            criticality,
+            value,
+        }),
+        "SuccessfulOutcome" => S1AP_PDU::successfulOutcome(SuccessfulOutcome {
+            procedure_code,
+            criticality,
+            value,
+        }),
+        _ => S1AP_PDU::unsuccessfulOutcome(UnsuccessfulOutcome {
+            procedure_code,
+            criticality,
+            value,
+        }),
+    })
 }
-
-impl std::error::Error for MissingIeError {}
 
 /// The procedures of the protocol, which `src/registry.rs` lists from the ASN.1: the
 /// code, the name and the criticality of each, then for each of its messages the
@@ -374,7 +455,7 @@ macro_rules! ies {
             )?)?)*
         }
 
-        #[cfg(feature = "inspect")]
+        /// The identifier of each IE with the name that ASN.1 gives it after `id-`.
         pub(crate) const IE_NAMES: &[(u16, &str)] = &[$(($id, $name),)*];
 
         /// The criticality that ASN.1 assigns to each IE that a value holds alone, in a
@@ -502,7 +583,39 @@ macro_rules! __s1ap_proc_code {
     };
 }
 
+/// Why the IEs of a call of `build_s1ap!` are not written as they are read: the one
+/// that has no criticality, by its name.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __s1ap_ie_syntax {
+    // An IE that has its criticality: the fault is in one that follows.
+    ($criticality:ident $name:ident ($($value:tt)*) $(, $($rest:tt)*)?) => {
+        $crate::__s1ap_ie_syntax!($($($rest)*)?)
+    };
+    ($name:ident ($($value:tt)*) $($rest:tt)*) => {
+        compile_error!(concat!(
+            "the criticality of the IE ",
+            stringify!($name),
+            " is missing: write REJECT, IGNORE or NOTIFY before its name",
+        ))
+    };
+    ($($other:tt)*) => {
+        compile_error!(
+            "each IE is written `CRITICALITY Name(value)`, with REJECT, IGNORE or NOTIFY \
+             as its criticality and a comma after it"
+        )
+    };
+}
+
 /// Extract typed S1AP protocol IEs with `req` and `opt` semantics.
+///
+/// A `req` field whose IE is not in the message is an error of the kind `MissingIe`,
+/// and an IE that is there and does not decode one of the kind `UndecodableIe`, for a
+/// `req` and for an `opt` field: the enclosing function returns it, converted as `?`
+/// converts an error. An `opt` field is `None` only when its IE is not in the message.
+///
+/// When the message has the IE twice, the field is the last one, which is the one
+/// that `with_s1ap_ie_mut!` changes, and any of them that does not decode is the error.
 #[macro_export]
 macro_rules! extract_s1ap_ies {
     ($msg_var:expr, $msg:ident,
@@ -511,43 +624,78 @@ macro_rules! extract_s1ap_ies {
     ) => {
         // The name is the type of what the IEs are taken from.
         let _: &$crate::s1ap::$msg = &$msg_var;
-        $( let mut $name: Option<$ty> = None; )+
+        $(
+            let mut $name: ::core::option::Option<::core::result::Result<$ty, $crate::Error>> =
+                ::core::option::Option::None;
+        )+
         for _ie in &$msg_var.protocol_ies.0 {
             $(
                 if _ie.id.0 == $crate::__s1ap_ie_id!($ie_name) {
                     // `$bind` is out of scope where `$name` is assigned, as
                     // both may have the same name.
-                    let _value: Option<$ty> = match $crate::__s1ap_decode_ie!($ie_name, &_ie.value) {
-                        Ok($bind) => Some($crate::extract_s1ap_ies!(@val $bind $(, $expr)?)),
-                        Err(_) => None,
+                    let _value: ::core::result::Result<$ty, $crate::Error> =
+                        match $crate::__s1ap_decode_ie!($ie_name, &_ie.value) {
+                            ::core::result::Result::Ok($bind) => ::core::result::Result::Ok(
+                                $crate::extract_s1ap_ies!(@val $bind $(, $expr)?),
+                            ),
+                            ::core::result::Result::Err(_error) => ::core::result::Result::Err(
+                                _error.__undecodable_ie(stringify!($msg), _ie.id.0),
+                            ),
+                        };
+                    // The last one is read, and one that does not decode is an error.
+                    $name = match $name {
+                        ::core::option::Option::Some(::core::result::Result::Err(_error)) => {
+                            ::core::option::Option::Some(::core::result::Result::Err(_error))
+                        }
+                        _ => ::core::option::Option::Some(_value),
                     };
-                    if _value.is_some() {
-                        $name = _value;
-                    }
                 }
             )+
         }
-        $( $crate::extract_s1ap_ies!(@check $kind $name); )+
+        $( $crate::extract_s1ap_ies!(@check $kind $name, $msg, $ie_name); )+
     };
     (@val $bind:ident) => { $bind.0 };
     (@val $_bind:ident, $expr:expr) => { $expr };
-    (@check req $name:ident) => {
+    (@check req $name:ident, $msg:ident, $ie_name:ident) => {
         let $name = match $name {
-            Some(value) => value,
-            None => {
-                // The error of the enclosing function, converted as `?` converts one.
-                return Err(::core::convert::From::from(
-                    $crate::macros::MissingIeError {
-                        ie_name: stringify!($name),
-                    },
+            ::core::option::Option::Some(::core::result::Result::Ok(_value)) => _value,
+            // The error of the enclosing function, converted as `?` converts one.
+            ::core::option::Option::Some(::core::result::Result::Err(_error)) => {
+                return ::core::result::Result::Err(::core::convert::From::from(_error));
+            }
+            ::core::option::Option::None => {
+                return ::core::result::Result::Err(::core::convert::From::from(
+                    $crate::Error::__missing_ie(
+                        stringify!($msg),
+                        $crate::__s1ap_ie_id!($ie_name),
+                        stringify!($name),
+                    ),
                 ));
             }
         };
     };
-    (@check opt $name:ident) => {};
+    (@check opt $name:ident, $msg:ident, $ie_name:ident) => {
+        let $name = match $name {
+            ::core::option::Option::Some(::core::result::Result::Ok(_value)) => {
+                ::core::option::Option::Some(_value)
+            }
+            ::core::option::Option::Some(::core::result::Result::Err(_error)) => {
+                return ::core::result::Result::Err(::core::convert::From::from(_error));
+            }
+            ::core::option::Option::None => ::core::option::Option::None,
+        };
+    };
 }
 
 /// Locate, decode, mutate, and re-encode one S1AP protocol IE.
+///
+/// Gives a `Result<bool, Error>`: what the expression says, `Ok(false)` when the IE is
+/// not in the message, and an error when the IE does not decode (`UndecodableIe`) or
+/// the changed value does not encode (`Encode`). The message is as it was after an
+/// error.
+///
+/// When the message has the IE twice, the last one is changed, which is the one that
+/// `extract_s1ap_ies!` reads, and any of them that does not decode is the error.
 #[macro_export]
 macro_rules! with_s1ap_ie_mut {
     ($msg_var:expr, $msg:ident, $ie_name:ident($bind:ident) = $value:expr $(,)?) => {{
@@ -559,30 +707,45 @@ macro_rules! with_s1ap_ie_mut {
     ($msg_var:expr, $msg:ident, $ie_name:ident($bind:ident) => $expr:expr $(,)?) => {{
         // The name is the type of what the IE is in.
         let _: &$crate::s1ap::$msg = &$msg_var;
-        let mut matched = false;
-        // The IE that `extract_s1ap_ies!` reads: the last one that decodes.
-        for ie in $msg_var.protocol_ies.0.iter_mut().rev() {
-            if ie.id.0 == $crate::__s1ap_ie_id!($ie_name) {
-                if let Ok(mut $bind) = $crate::__s1ap_decode_ie!($ie_name, &ie.value) {
-                    let result = $expr;
-                    if let Ok(value) = $crate::s1ap::encode_open_type(&$bind) {
-                        ie.value = value;
-                        matched = result;
+        // The IE that `extract_s1ap_ies!` reads: the last one, and one that does not
+        // decode is an error.
+        let mut _found = ::core::result::Result::Ok(::core::option::Option::None);
+        for (_index, _ie) in $msg_var.protocol_ies.0.iter().enumerate() {
+            if _ie.id.0 == $crate::__s1ap_ie_id!($ie_name) && _found.is_ok() {
+                _found = match $crate::__s1ap_decode_ie!($ie_name, &_ie.value) {
+                    ::core::result::Result::Ok(_value) => {
+                        ::core::result::Result::Ok(::core::option::Option::Some((_index, _value)))
                     }
-                    break;
+                    ::core::result::Result::Err(_error) => ::core::result::Result::Err(
+                        _error.__undecodable_ie(stringify!($msg), _ie.id.0),
+                    ),
+                };
+            }
+        }
+        match _found {
+            ::core::result::Result::Err(_error) => ::core::result::Result::Err(_error),
+            ::core::result::Result::Ok(::core::option::Option::None) => {
+                ::core::result::Result::Ok(false)
+            }
+            ::core::result::Result::Ok(::core::option::Option::Some((_index, mut $bind))) => {
+                let _changed: bool = $expr;
+                match $crate::s1ap::encode_open_type(&$bind) {
+                    ::core::result::Result::Ok(_value) => {
+                        $msg_var.protocol_ies.0[_index].value = _value;
+                        ::core::result::Result::Ok(_changed)
+                    }
+                    ::core::result::Result::Err(_error) => ::core::result::Result::Err(_error),
                 }
             }
         }
-        matched
     }};
 }
 
 /// Build a complete `S1AP_PDU` from a direction, procedure, message, and IEs.
 ///
-/// # Panics
-///
-/// Panics if a value cannot be APER-encoded into its open type, such as an
-/// integer outside its constraint.
+/// Gives a `Result<S1AP_PDU, Error>`: a value that does not encode into its open type,
+/// such as an integer outside its constraint, is an error of the kind `Encode`. A call
+/// that leaves out a criticality does not compile, and the error says which one.
 #[macro_export]
 macro_rules! build_s1ap {
     ($direction:ident, $proc:ident,
@@ -590,46 +753,47 @@ macro_rules! build_s1ap {
      $($ie_crit:ident $ie_name:ident ($($ie_value:tt)+)),*
      $(,)?
     ) => {
-        {
-            let ies = vec![
-                $( $crate::s1ap::ProtocolIEField {
-                    id: $crate::s1ap::ProtocolIEID($crate::__s1ap_ie_id!($ie_name)),
-                    criticality: $crate::build_s1ap!(@criticality $ie_crit),
-                    value: $crate::__s1ap_encode_ie!($ie_name, ($($ie_value)+))
-                        .expect("failed to APER-encode S1AP IE open type"),
-                }, )*
-            ];
+        $crate::macros::__pdu(
+            $crate::build_s1ap!(@criticality $outer_crit),
+            [$(
+                $crate::macros::__ie(
+                    $crate::__s1ap_ie_id!($ie_name),
+                    $crate::build_s1ap!(@criticality $ie_crit),
+                    $crate::__s1ap_encode_ie!($ie_name, ($($ie_value)+)),
+                ),
+            )*],
             // The message is the one that the procedure has in that direction.
-            let message: $crate::registry::messages::$direction::$proc =
-                $crate::s1ap::$msg::new($crate::s1ap::ProtocolIEContainer(ies));
-            let value = $crate::s1ap::encode_open_type(&message)
-                .expect("failed to APER-encode S1AP message open type");
-            $crate::build_s1ap!(@pdu $direction, $proc, $outer_crit, value)
-        }
+            {
+                let new: fn(
+                    $crate::s1ap::ProtocolIEContainer,
+                ) -> $crate::registry::messages::$direction::$proc = $crate::s1ap::$msg::new;
+                new
+            },
+        )
+    };
+    // The criticality of the PDU is left out: the message follows the procedure.
+    ($direction:ident, $proc:ident, $msg:ident,
+     $($ie_crit:ident $ie_name:ident ($($ie_value:tt)+)),*
+     $(,)?
+    ) => {
+        compile_error!(concat!(
+            "the criticality of the PDU is missing: write REJECT, IGNORE or NOTIFY before ",
+            stringify!($msg),
+        ))
+    };
+    // An IE is not written as its criticality, its name and its value.
+    ($direction:ident, $proc:ident, $outer_crit:ident, $msg:ident, $($ies:tt)*) => {
+        $crate::__s1ap_ie_syntax!($($ies)*)
     };
     (@criticality REJECT) => { $crate::s1ap::Criticality::reject };
     (@criticality IGNORE) => { $crate::s1ap::Criticality::ignore };
     (@criticality NOTIFY) => { $crate::s1ap::Criticality::notify };
-    (@pdu InitiatingMessage, $proc:ident, $criticality:ident, $value:expr) => {
-        $crate::s1ap::S1AP_PDU::initiatingMessage($crate::s1ap::InitiatingMessage {
-            procedure_code: $crate::s1ap::ProcedureCode($crate::__s1ap_proc_code!($proc)),
-            criticality: $crate::build_s1ap!(@criticality $criticality),
-            value: $value,
-        })
-    };
-    (@pdu SuccessfulOutcome, $proc:ident, $criticality:ident, $value:expr) => {
-        $crate::s1ap::S1AP_PDU::successfulOutcome($crate::s1ap::SuccessfulOutcome {
-            procedure_code: $crate::s1ap::ProcedureCode($crate::__s1ap_proc_code!($proc)),
-            criticality: $crate::build_s1ap!(@criticality $criticality),
-            value: $value,
-        })
-    };
-    (@pdu UnsuccessfulOutcome, $proc:ident, $criticality:ident, $value:expr) => {
-        $crate::s1ap::S1AP_PDU::unsuccessfulOutcome($crate::s1ap::UnsuccessfulOutcome {
-            procedure_code: $crate::s1ap::ProcedureCode($crate::__s1ap_proc_code!($proc)),
-            criticality: $crate::build_s1ap!(@criticality $criticality),
-            value: $value,
-        })
+    (@criticality $other:tt) => {
+        compile_error!(concat!(
+            "`",
+            stringify!($other),
+            "` is no criticality: write REJECT, IGNORE or NOTIFY",
+        ))
     };
 }
 
@@ -637,9 +801,8 @@ macro_rules! build_s1ap {
 /// `ProtocolIEField`: the name says where the IE goes, and is that of a message
 /// or of another type that has IEs.
 ///
-/// # Panics
-///
-/// Panics if the value cannot be APER-encoded into its open type.
+/// Gives a `Result<ProtocolIEField, Error>`: a value that does not encode into its
+/// open type is an error of the kind `Encode`.
 #[macro_export]
 macro_rules! build_s1ap_ie {
     ($msg:ident, $criticality:ident $ie_name:ident ($($value:tt)+)) => {{
@@ -647,27 +810,34 @@ macro_rules! build_s1ap_ie {
         let _ = |of: &$crate::s1ap::$msg| {
             let _: &$crate::s1ap::ProtocolIEContainer = &of.protocol_ies;
         };
-        $crate::s1ap::ProtocolIEField {
-            id: $crate::s1ap::ProtocolIEID($crate::__s1ap_ie_id!($ie_name)),
-            criticality: $crate::build_s1ap!(@criticality $criticality),
-            value: $crate::__s1ap_encode_ie!($ie_name, ($($value)+))
-                .expect("failed to APER-encode S1AP IE open type"),
-        }
+        $crate::macros::__ie(
+            $crate::__s1ap_ie_id!($ie_name),
+            $crate::build_s1ap!(@criticality $criticality),
+            $crate::__s1ap_encode_ie!($ie_name, ($($value)+)),
+        )
     }};
+    ($msg:ident, $ie_name:ident ($($value:tt)+)) => {
+        compile_error!(concat!(
+            "the criticality of the IE ",
+            stringify!($ie_name),
+            " is missing: write REJECT, IGNORE or NOTIFY before its name",
+        ))
+    };
 }
 
 #[cfg(test)]
 mod tests {
     use crate::s1ap::*;
+    use crate::{Error, ErrorKind};
 
     #[test]
-    fn mutating_macro_updates_newtype_payload() {
+    fn mutating_macro_updates_newtype_payload() -> Result<(), Error> {
         let mut pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
             IGNORE, UEContextReleaseRequest,
             REJECT MME_UE_S1AP_ID(1u32),
             REJECT eNB_UE_S1AP_ID(7u32),
             IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
-        );
+        )?;
 
         let S1AP_PDU::initiatingMessage(message) = &mut pdu else {
             panic!("expected initiating message");
@@ -676,11 +846,9 @@ mod tests {
             rasn::aper::decode(message.value.as_bytes()).expect("decode request");
         let mut request = request;
 
-        assert!(with_s1ap_ie_mut!(
-            request,
-            UEContextReleaseRequest,
-            MME_UE_S1AP_ID(id) = 42u32
-        ));
+        let changed =
+            with_s1ap_ie_mut!(request, UEContextReleaseRequest, MME_UE_S1AP_ID(id) = 42u32);
+        assert_eq!(changed, Ok(true));
 
         let ie = request
             .protocol_ies
@@ -690,55 +858,84 @@ mod tests {
             .expect("MME UE ID");
         let id: MMEUES1APID = rasn::aper::decode(ie.value.as_bytes()).expect("decode ID");
         assert_eq!(id.0, 42);
+        Ok(())
+    }
+
+    /// The identifier of a request, as the macro reads it.
+    fn id(request: &UEContextReleaseRequest) -> Result<u32, Error> {
+        extract_s1ap_ies!(request, UEContextReleaseRequest,
+            req id: u32 = MME_UE_S1AP_ID(id),
+        );
+        Ok(id)
     }
 
     #[test]
-    fn an_ie_that_is_there_twice_is_read_and_changed_at_the_same_place() {
-        use crate::macros::MissingIeError;
-        fn id(request: &UEContextReleaseRequest) -> Result<u32, MissingIeError> {
-            extract_s1ap_ies!(request, UEContextReleaseRequest,
-                req id: u32 = MME_UE_S1AP_ID(id),
-            );
-            Ok(id)
-        }
+    fn an_ie_that_is_there_twice_is_read_and_changed_at_the_same_place() -> Result<(), Error> {
         let ids = |request: &UEContextReleaseRequest| -> Vec<Vec<u8>> {
             let ies = request.protocol_ies.0.iter();
             ies.map(|ie| ie.value.as_bytes().to_vec()).collect()
         };
         let entry = |id: u32| build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(id));
-        let mut request = UEContextReleaseRequest::new(ProtocolIEContainer(vec![
-            entry(1),
-            entry(2),
-            // An identifier of this IE that does not decode as one.
-            ProtocolIEField::new(0u16, Criticality::reject, rasn::types::Any::new(vec![0xff])),
-        ]));
-        assert_eq!(id(&request).unwrap(), 2);
+        let mut request =
+            UEContextReleaseRequest::new(ProtocolIEContainer(vec![entry(1)?, entry(2)?]));
+        // The last one is read, and is the one that is changed.
+        assert_eq!(id(&request)?, 2);
         let before = ids(&request);
-        assert!(with_s1ap_ie_mut!(
-            request,
-            UEContextReleaseRequest,
-            MME_UE_S1AP_ID(id) = 42u32
-        ));
-        assert_eq!(id(&request).unwrap(), 42);
+        let changed =
+            with_s1ap_ie_mut!(request, UEContextReleaseRequest, MME_UE_S1AP_ID(id) = 42u32);
+        assert_eq!(changed, Ok(true));
+        assert_eq!(id(&request)?, 42);
         let after = ids(&request);
-        assert_eq!((&after[0], &after[2]), (&before[0], &before[2]));
+        assert_eq!(after[0], before[0]);
         assert_ne!(after[1], before[1]);
+        Ok(())
     }
 
     #[test]
-    fn builder_macros_cover_ie_and_outcome_forms() {
+    fn one_of_two_that_does_not_decode_is_an_error_for_both_macros() -> Result<(), Error> {
+        // An entry with the identifier of this IE whose octets are not its value,
+        // after one that decodes and before it.
+        let undecodable = || {
+            let octets = rasn::types::Any::new(vec![0xff]);
+            ProtocolIEField::new(0u16, Criticality::reject, octets)
+        };
+        let entry = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(1u32))?;
+        for ies in [
+            vec![entry.clone(), undecodable()],
+            vec![undecodable(), entry.clone()],
+        ] {
+            let mut request = UEContextReleaseRequest::new(ProtocolIEContainer(ies));
+            let before = request.clone();
+            assert_eq!(id(&request).unwrap_err().kind(), ErrorKind::UndecodableIe);
+            let changed =
+                with_s1ap_ie_mut!(request, UEContextReleaseRequest, MME_UE_S1AP_ID(id) = 42u32);
+            assert_eq!(changed.unwrap_err().kind(), ErrorKind::UndecodableIe);
+            // The message is as it was.
+            assert_eq!(request, before);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn builder_macros_cover_ie_and_outcome_forms() -> Result<(), Error> {
         let ie = build_s1ap_ie!(
             UEContextReleaseRequest,
             REJECT MME_UE_S1AP_ID(1u32)
-        );
+        )?;
         assert_eq!(ie.id.0, 0);
 
-        let successful = build_s1ap!(SuccessfulOutcome, S1Setup, REJECT, S1SetupResponse,);
+        // The direction and the procedure code of a PDU are those of its message.
+        let initiating = build_s1ap!(InitiatingMessage, S1Setup, REJECT, S1SetupRequest,)?;
+        assert!(initiating.is_initiating());
+        assert_eq!(initiating.procedure_code(), 17);
+
+        let successful = build_s1ap!(SuccessfulOutcome, S1Setup, REJECT, S1SetupResponse,)?;
         assert!(successful.is_successful());
         assert_eq!(successful.procedure_code(), 17);
 
-        let unsuccessful = build_s1ap!(UnsuccessfulOutcome, S1Setup, REJECT, S1SetupFailure,);
+        let unsuccessful = build_s1ap!(UnsuccessfulOutcome, S1Setup, REJECT, S1SetupFailure,)?;
         assert!(unsuccessful.is_unsuccessful());
         assert_eq!(unsuccessful.procedure_code(), 17);
+        Ok(())
     }
 }

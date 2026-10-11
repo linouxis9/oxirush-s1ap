@@ -200,7 +200,8 @@
 //!     REJECT MME_UE_S1AP_ID(1u32),
 //!     REJECT eNB_UE_S1AP_ID(7u32),
 //!     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
-//! );
+//! )
+//! .unwrap();
 //! let mut view = inspect::message_view(&pdu)?;
 //! assert_eq!(inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/value")?, [&json!(7)]);
 //!

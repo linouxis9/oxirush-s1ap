@@ -1,14 +1,14 @@
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{build_s1ap, extract_s1ap_ies, macros::MissingIeError};
+use oxirush_s1ap::{Error, ErrorKind, build_s1ap, extract_s1ap_ies};
 
 #[test]
-fn public_macros_round_trip_typed_open_message() -> Result<(), MissingIeError> {
+fn public_macros_round_trip_typed_open_message() -> Result<(), Error> {
     let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
         IGNORE, UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
-    );
+    )?;
 
     let S1AP_PDU::initiatingMessage(message) = &pdu else {
         panic!("expected initiating message");
@@ -39,7 +39,7 @@ fn public_macros_round_trip_typed_open_message() -> Result<(), MissingIeError> {
 /// lines use the corrected APER codec too: an octet-aligned length for
 /// SIZE(1..256) (X.691 (02/2021) §11.9.3.3), as Wireshark decodes it.
 #[test]
-fn every_constrained_list_encodes_its_length_per_x691() {
+fn every_constrained_list_encodes_its_length_per_x691() -> Result<(), Error> {
     let diagnostics = CriticalityDiagnostics::new(
         Some(ProcedureCode(9)),
         Some(TriggeringMessage::initiating_message),
@@ -58,13 +58,14 @@ fn every_constrained_list_encodes_its_length_per_x691() {
         IGNORE, ErrorIndication,
         IGNORE Cause(Cause::protocol(CauseProtocol::abstract_syntax_error_reject)),
         IGNORE CriticalityDiagnostics(diagnostics),
-    );
+    )?;
     let wire = error.encode().expect("encode ErrorIndication");
     assert_eq!(
         hex::encode(&wire),
         "000f40140000020002400131003a40087809000000001a40"
     );
     assert_eq!(S1AP_PDU::decode(&wire).expect("decode"), error);
+    Ok(())
 }
 
 /// Lists declared through the parameterized E-RAB-IE-ContainerList keep the
@@ -72,7 +73,7 @@ fn every_constrained_list_encodes_its_length_per_x691() {
 /// an octet-aligned count for SIZE(1..256) (X.691 (02/2021) §11.9.3.3), as
 /// Wireshark decodes E-RABAdmittedList.
 #[test]
-fn e_rab_container_lists_encode_their_size_constraint() {
+fn e_rab_container_lists_encode_their_size_constraint() -> Result<(), Error> {
     let item = ERABAdmittedItem::new(
         ERABID(5u8.into()),
         TransportLayerAddress(oxirush_s1ap::helpers::bytes_to_bitvec(&[10, 0, 0, 3])),
@@ -94,7 +95,7 @@ fn e_rab_container_lists_encode_their_size_constraint() {
         IGNORE eNB_UE_S1AP_ID(2u32),
         IGNORE E_RABAdmittedList(admitted.clone()),
         REJECT Target_ToSource_TransparentContainer(vec![0x55]),
-    );
+    )?;
     let wire = acknowledge
         .encode()
         .expect("encode HandoverRequestAcknowledge");
@@ -117,6 +118,7 @@ fn e_rab_container_lists_encode_their_size_constraint() {
         decode_open_type::<ERABAdmittedList>(&ie.value).expect("decode E-RABAdmittedList"),
         admitted
     );
+    Ok(())
 }
 
 /// TS 36.413 declares both ECGIList, SIZE(1..maxnoofCellID) with maxnoofCellID
@@ -125,7 +127,7 @@ fn e_rab_container_lists_encode_their_size_constraint() {
 /// cells of SynchronisationInformation: a two-octet and a one-octet count
 /// (X.691 (02/2021) §11.9.3.3, §11.5.7), as Wireshark decodes them.
 #[test]
-fn each_ecgi_list_encodes_its_own_size_constraint() {
+fn each_ecgi_list_encodes_its_own_size_constraint() -> Result<(), Error> {
     use oxirush_s1ap::helpers::{eutran_cgi, plmn};
 
     let cell = eutran_cgi(plmn("208", "93"), 0x12345, 1);
@@ -138,7 +140,7 @@ fn each_ecgi_list_encodes_its_own_size_constraint() {
         IGNORE WarningAreaList(WarningAreaList::cellIDList(ECGIList(vec![cell.clone()]))),
         REJECT RepetitionPeriod(RepetitionPeriod(10)),
         REJECT NumberofBroadcastRequest(NumberofBroadcastRequest(1)),
-    );
+    )?;
     let wire = request.encode().expect("encode WriteReplaceWarningRequest");
     assert_eq!(
         hex::encode(&wire),
@@ -154,6 +156,7 @@ fn each_ecgi_list_encodes_its_own_size_constraint() {
         rasn::aper::decode::<SynchronisationInformation>(&wire).expect("decode"),
         synchronisation
     );
+    Ok(())
 }
 
 /// An open type holds a complete encoding, and the empty encoding of a
@@ -161,14 +164,14 @@ fn each_ecgi_list_encodes_its_own_size_constraint() {
 /// §11.2.1): pycrate rejects an empty KillAllWarningMessages, and Wireshark
 /// decodes it only from that octet.
 #[test]
-fn empty_encoding_in_an_open_type_is_one_zero_octet() -> Result<(), MissingIeError> {
+fn empty_encoding_in_an_open_type_is_one_zero_octet() -> Result<(), Error> {
     let mut identifier = rasn::types::FixedBitString::<16>::ZERO;
     identifier.set(0, true);
     let kill = build_s1ap!(InitiatingMessage, Kill, REJECT, KillRequest,
         REJECT MessageIdentifier(MessageIdentifier(identifier)),
         REJECT SerialNumber(SerialNumber(identifier)),
         REJECT KillAllWarningMessages(KillAllWarningMessages::R_true),
-    );
+    )?;
     let wire = kill.encode().expect("encode KillRequest");
     assert_eq!(
         hex::encode(&wire),
@@ -189,14 +192,14 @@ fn empty_encoding_in_an_open_type_is_one_zero_octet() -> Result<(), MissingIeErr
 /// id-S1-Message, a mandatory IE of RerouteNASRequest, has the inline type
 /// OCTET STRING rather than a named one; the macros address it too.
 #[test]
-fn reroute_nas_request_carries_the_s1_message_ie() -> Result<(), MissingIeError> {
+fn reroute_nas_request_carries_the_s1_message_ie() -> Result<(), Error> {
     let message = hex::decode("000f40140000020002400131003a40087809000000001a40").unwrap();
     let reroute = build_s1ap!(InitiatingMessage, RerouteNASRequest,
         REJECT, RerouteNASRequest,
         REJECT eNB_UE_S1AP_ID(7u32),
         REJECT S1_Message(message.clone()),
         REJECT MME_Group_ID([0x80, 0x01]),
-    );
+    )?;
     let wire = reroute.encode().expect("encode RerouteNASRequest");
     assert_eq!(
         hex::encode(&wire),
@@ -216,12 +219,12 @@ fn reroute_nas_request_carries_the_s1_message_ie() -> Result<(), MissingIeError>
 
 /// An extracted field and its binding may share a name.
 #[test]
-fn extraction_binding_may_share_the_field_name() -> Result<(), MissingIeError> {
+fn extraction_binding_may_share_the_field_name() -> Result<(), Error> {
     let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
         IGNORE, UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
-    );
+    )?;
     let request: UEContextReleaseRequest = pdu.decode_value().expect("decode message");
     extract_s1ap_ies!(&request, UEContextReleaseRequest,
         req mme_ue_s1ap_id: u32 = MME_UE_S1AP_ID(mme_ue_s1ap_id),
@@ -238,13 +241,13 @@ fn extraction_binding_may_share_the_field_name() -> Result<(), MissingIeError> {
 /// The crate names the type of id-eNB-UE-S1AP-ID `ENB_UE_S1AP_ID`, and the macros
 /// take that alias wherever they take `eNB_UE_S1AP_ID`, the name of the IE.
 #[test]
-fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), MissingIeError> {
+fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), Error> {
     use oxirush_s1ap::{build_s1ap_ie, with_s1ap_ie_mut};
 
     // The alias is the type, and the two names are one entry.
     let id: ENB_UE_S1AP_ID = ENBUES1APID(7);
-    let by_alias = build_s1ap_ie!(UEContextReleaseRequest, REJECT ENB_UE_S1AP_ID(id));
-    let by_name = build_s1ap_ie!(UEContextReleaseRequest, REJECT eNB_UE_S1AP_ID(7u32));
+    let by_alias = build_s1ap_ie!(UEContextReleaseRequest, REJECT ENB_UE_S1AP_ID(id))?;
+    let by_name = build_s1ap_ie!(UEContextReleaseRequest, REJECT eNB_UE_S1AP_ID(7u32))?;
     assert_eq!(by_alias, by_name);
     assert_eq!(by_alias.id, ID_E_NB_UE_S1_AP_ID);
 
@@ -253,12 +256,12 @@ fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), Mi
         IGNORE, UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT ENB_UE_S1AP_ID(7u32),
-    );
+    )?;
     let named = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
         IGNORE, UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(7u32),
-    );
+    )?;
     assert_eq!(pdu.encode().unwrap(), named.encode().unwrap());
 
     // The alias reads the IE, and changes it.
@@ -268,11 +271,8 @@ fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), Mi
         opt absent: Cause = Cause(cause) => cause,
     );
     assert_eq!((read, absent), (7, None));
-    assert!(with_s1ap_ie_mut!(
-        request,
-        UEContextReleaseRequest,
-        ENB_UE_S1AP_ID(id) = 9u32
-    ));
+    let renamed = with_s1ap_ie_mut!(request, UEContextReleaseRequest, ENB_UE_S1AP_ID(id) = 9u32);
+    assert_eq!(renamed, Ok(true));
     extract_s1ap_ies!(&request, UEContextReleaseRequest,
         req changed: u32 = eNB_UE_S1AP_ID(id),
     );
@@ -282,23 +282,24 @@ fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), Mi
 
 /// A message with the identifier that the functions below require, or without it.
 fn release_request(id: Option<u32>) -> UEContextReleaseRequest {
-    let ies = id
-        .map(|id| oxirush_s1ap::build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(id)));
+    let ie =
+        |id: u32| oxirush_s1ap::build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(id));
+    let ies = id.map(|id| ie(id).expect("an identifier"));
     UEContextReleaseRequest::new(ProtocolIEContainer(ies.into_iter().collect()))
 }
 
 /// A `req` field that is not there is the error of the enclosing function: the
-/// macro converts its `MissingIeError` as `?` converts one, here into an error
-/// type of the caller that has a `From<MissingIeError>`.
+/// macro converts its error as `?` converts one, here into an error type of the
+/// caller that has a `From` of the error of the crate.
 #[test]
 fn a_missing_required_ie_is_an_error_of_the_callers_own_type() {
     #[derive(Debug, PartialEq)]
     enum Refused {
-        Missing(&'static str),
+        Codec(ErrorKind),
     }
-    impl From<MissingIeError> for Refused {
-        fn from(error: MissingIeError) -> Self {
-            Self::Missing(error.ie_name)
+    impl From<Error> for Refused {
+        fn from(error: Error) -> Self {
+            Self::Codec(error.kind())
         }
     }
     fn id(request: &UEContextReleaseRequest) -> Result<u32, Refused> {
@@ -307,12 +308,13 @@ fn a_missing_required_ie_is_an_error_of_the_callers_own_type() {
         );
         Ok(mme_id)
     }
-    assert_eq!(id(&release_request(None)), Err(Refused::Missing("mme_id")));
+    let missing = Refused::Codec(ErrorKind::MissingIe);
+    assert_eq!(id(&release_request(None)), Err(missing));
     assert_eq!(id(&release_request(Some(42))), Ok(42));
 }
 
-/// The same in a function whose error is a `Box<dyn Error>`, which holds the
-/// `MissingIeError`.
+/// The same in a function whose error is a `Box<dyn Error>`, which holds the error
+/// of the crate.
 #[test]
 fn a_missing_required_ie_is_a_boxed_error() {
     fn id(request: &UEContextReleaseRequest) -> Result<u32, Box<dyn std::error::Error>> {
@@ -322,25 +324,26 @@ fn a_missing_required_ie_is_a_boxed_error() {
         Ok(mme_id)
     }
     let error = id(&release_request(None)).unwrap_err();
-    let missing = error.downcast_ref::<MissingIeError>().expect("the error");
-    assert_eq!(missing.ie_name, "mme_id");
+    let missing = error.downcast_ref::<Error>().expect("the error");
+    assert_eq!(missing.kind(), ErrorKind::MissingIe);
     assert_eq!(
         error.to_string(),
-        "missing or invalid required S1AP IE: mme_id"
+        "this UEContextReleaseRequest has no MME-UE-S1AP-ID, which the field `mme_id` requires"
     );
     assert_eq!(id(&release_request(Some(42))).unwrap(), 42);
 }
 
-/// And in a function whose error is `MissingIeError` itself, which needs no
+/// And in a function whose error is the error of the crate itself, which needs no
 /// conversion.
 #[test]
-fn a_missing_required_ie_is_a_missing_ie_error() {
-    fn id(request: &UEContextReleaseRequest) -> Result<u32, MissingIeError> {
+fn a_missing_required_ie_is_an_error_of_the_crate() {
+    fn id(request: &UEContextReleaseRequest) -> Result<u32, Error> {
         extract_s1ap_ies!(request, UEContextReleaseRequest,
             req mme_id: u32 = MME_UE_S1AP_ID(id),
         );
         Ok(mme_id)
     }
-    assert_eq!(id(&release_request(None)).unwrap_err().ie_name, "mme_id");
-    assert_eq!(id(&release_request(Some(42))).unwrap(), 42);
+    let missing = id(&release_request(None)).unwrap_err();
+    assert_eq!(missing.kind(), ErrorKind::MissingIe);
+    assert_eq!(id(&release_request(Some(42))), Ok(42));
 }

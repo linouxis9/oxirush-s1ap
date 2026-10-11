@@ -26,7 +26,7 @@
 
 use oxirush_s1ap::helpers::{global_enb_id, plmn, plmn_from};
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{build_s1ap_ie, extract_s1ap_ies, macros::MissingIeError};
+use oxirush_s1ap::{Error, build_s1ap_ie, extract_s1ap_ies};
 
 /// An MCC, an MNC and the octets of their PLMN identity, digit by digit from the clause.
 const IDENTITIES: &[(&str, &str, [u8; 3])] = &[
@@ -115,7 +115,7 @@ fn the_octets_of_a_plmn_identity_are_those_of_the_clause() {
 }
 
 #[test]
-fn the_identities_of_an_s1_setup_are_those_that_tshark_reads() -> Result<(), MissingIeError> {
+fn the_identities_of_an_s1_setup_are_those_that_tshark_reads() -> Result<(), Error> {
     // What tshark printed names the three networks, in the order of the message.
     let read = networks(TSHARK);
     let (visited, home) = (("310".into(), "410".into()), ("208".into(), "93".into()));
@@ -138,9 +138,9 @@ fn the_identities_of_an_s1_setup_are_those_that_tshark_reads() -> Result<(), Mis
     // And write the octets of the message for them.
     assert_eq!(enb, global_enb_id(plmn("310", "410"), 1));
     assert_eq!(areas, tracking_areas());
-    let written = build_s1ap_ie!(S1SetupRequest, REJECT Global_ENB_ID(enb));
+    let written = build_s1ap_ie!(S1SetupRequest, REJECT Global_ENB_ID(enb)).unwrap();
     assert_eq!(written, request.protocol_ies.0[0]);
-    let written = build_s1ap_ie!(S1SetupRequest, REJECT SupportedTAs(tracking_areas()));
+    let written = build_s1ap_ie!(S1SetupRequest, REJECT SupportedTAs(tracking_areas())).unwrap();
     assert_eq!(written, request.protocol_ies.0[1]);
     assert_eq!(hex::encode(pdu.encode().unwrap()), S1_SETUP);
     Ok(())

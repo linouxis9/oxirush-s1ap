@@ -2,7 +2,9 @@
 //! caller matches on, and what its message says.
 
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{Error, ErrorKind, Message};
+use oxirush_s1ap::{
+    Error, ErrorKind, Message, build_s1ap, build_s1ap_ie, extract_s1ap_ies, with_s1ap_ie_mut,
+};
 use rasn::types::Any;
 
 /// A UE CONTEXT RELEASE REQUEST with its three IEs, the message of the README.
@@ -100,7 +102,7 @@ fn octets_that_are_no_pdu_are_a_decode_error() {
     assert_eq!(none.kind(), ErrorKind::Decode);
     assert_eq!(
         none.to_string(),
-        "these octets do not decode as S1AP-PDU: there are none"
+        "these octets do not decode as S1AP-PDU: there are no octets"
     );
     for cut in 1..octets.len() {
         let short = S1AP_PDU::decode(&octets[..cut]).unwrap_err();
@@ -135,7 +137,7 @@ fn an_open_type_that_is_not_the_value_asked_for_is_a_decode_error() {
     assert_eq!(short.kind(), ErrorKind::Decode);
     assert_eq!(
         short.to_string(),
-        "these octets do not decode as MME-UE-S1AP-ID: they end before the value does"
+        "these octets do not decode as MME-UE-S1AP-ID: the octets end before the value does"
     );
     let long = decode_open_type::<MMEUES1APID>(&Any::new(vec![0x00, 0x2a, 0x00, 0x00]));
     assert_eq!(
@@ -173,4 +175,132 @@ fn an_error_is_the_error_of_a_function_of_the_caller() {
         .downcast_ref::<Error>()
         .expect("the error of the crate");
     assert_eq!(error.kind(), ErrorKind::Decode);
+}
+
+/// What the macro reads in a request: an identifier that it requires, and one that
+/// the request may be without.
+fn ids(request: &UEContextReleaseRequest) -> Result<(u32, Option<u32>), Error> {
+    extract_s1ap_ies!(request, UEContextReleaseRequest,
+        req mme_id: u32 = MME_UE_S1AP_ID(id),
+        opt enb_id: u32 = eNB_UE_S1AP_ID(id),
+    );
+    Ok((mme_id, enb_id))
+}
+
+fn request(ies: Vec<ProtocolIEField>) -> UEContextReleaseRequest {
+    UEContextReleaseRequest::new(ProtocolIEContainer(ies))
+}
+
+/// The entry of an MME UE S1AP ID and that of an eNB UE S1AP ID.
+fn mme_and_enb() -> (ProtocolIEField, ProtocolIEField) {
+    let mme = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(42u32));
+    let enb = build_s1ap_ie!(UEContextReleaseRequest, REJECT eNB_UE_S1AP_ID(7u32));
+    (mme.unwrap(), enb.unwrap())
+}
+
+/// An entry with the identifier of an IE, whose octets are not the value of that IE.
+fn undecodable(id: u16) -> ProtocolIEField {
+    ProtocolIEField::new(id, Criticality::reject, Any::new(vec![0xff]))
+}
+
+#[test]
+fn a_required_ie_that_is_absent_is_missing_and_an_optional_one_is_none() {
+    let (mme, enb) = mme_and_enb();
+    assert_eq!(
+        ids(&request(vec![mme.clone(), enb.clone()])),
+        Ok((42, Some(7)))
+    );
+    assert_eq!(ids(&request(vec![mme])), Ok((42, None)));
+
+    let missing = ids(&request(vec![enb])).unwrap_err();
+    assert_eq!(missing.kind(), ErrorKind::MissingIe);
+    assert_eq!(
+        missing.to_string(),
+        "this UEContextReleaseRequest has no MME-UE-S1AP-ID, which the field `mme_id` requires"
+    );
+    assert_eq!(source(&missing), None);
+}
+
+#[test]
+fn an_ie_that_does_not_decode_is_an_error_for_a_required_and_for_an_optional_field() {
+    let (mme, enb) = mme_and_enb();
+
+    // The one that is required.
+    let required = ids(&request(vec![undecodable(0), enb])).unwrap_err();
+    assert_eq!(required.kind(), ErrorKind::UndecodableIe);
+    assert_eq!(
+        required.to_string(),
+        "the MME-UE-S1AP-ID of this UEContextReleaseRequest does not decode: the octets end \
+         before the value does"
+    );
+    assert!(source(&required).is_some_and(|source| source.contains("Codec: APER")));
+
+    // The one that may be absent is there: it is not `None`.
+    let optional = ids(&request(vec![mme, undecodable(8)])).unwrap_err();
+    assert_eq!(optional.kind(), ErrorKind::UndecodableIe);
+    let text = optional.to_string();
+    assert!(
+        text.starts_with("the eNB-UE-S1AP-ID of this UEContextReleaseRequest does not decode: "),
+        "{text}"
+    );
+}
+
+#[test]
+fn a_value_outside_its_constraint_is_an_error_of_the_macros_that_build() {
+    // An eNB UE S1AP ID is an INTEGER (0..16777215), TS 36.413 clause 9.2.3.4, and the
+    // macro takes a `u32`.
+    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(42u32),
+        REJECT eNB_UE_S1AP_ID(1u32 << 24),
+    );
+    let error = pdu.unwrap_err();
+    assert_eq!(error.kind(), ErrorKind::Encode);
+    assert_eq!(
+        error.to_string(),
+        "a value of ENB-UE-S1AP-ID does not encode: 16777216 is outside its constraint \
+         (0..16777215)"
+    );
+    let ie = build_s1ap_ie!(UEContextReleaseRequest, REJECT eNB_UE_S1AP_ID(1u32 << 24));
+    assert_eq!(ie.unwrap_err(), error);
+
+    // The last value of the constraint is built.
+    let last = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT eNB_UE_S1AP_ID((1u32 << 24) - 1),
+    );
+    assert!(last.is_ok());
+}
+
+#[test]
+fn changing_an_ie_says_whether_it_did_or_why_it_did_not() {
+    let (_, enb) = mme_and_enb();
+    let mut message = request(vec![enb]);
+
+    // The IE is changed, another one is not there, and the expression says no.
+    let changed = with_s1ap_ie_mut!(message, UEContextReleaseRequest, eNB_UE_S1AP_ID(id) = 8u32);
+    assert_eq!(changed, Ok(true));
+    let absent = with_s1ap_ie_mut!(message, UEContextReleaseRequest, MME_UE_S1AP_ID(id) = 43u32);
+    assert_eq!(absent, Ok(false));
+    let refused =
+        with_s1ap_ie_mut!(message, UEContextReleaseRequest, eNB_UE_S1AP_ID(id) => id.0 == 0);
+    assert_eq!(refused, Ok(false));
+    assert_eq!(ids(&message).unwrap_err().kind(), ErrorKind::MissingIe);
+
+    // A value that does not encode: the message is as it was.
+    let before = message.clone();
+    let outside = with_s1ap_ie_mut!(
+        message,
+        UEContextReleaseRequest,
+        eNB_UE_S1AP_ID(id) = 1u32 << 24
+    );
+    assert_eq!(outside.unwrap_err().kind(), ErrorKind::Encode);
+    assert_eq!(message, before);
+
+    // An IE that does not decode is not changed either.
+    let mut message = request(vec![undecodable(8)]);
+    let before = message.clone();
+    let unread = with_s1ap_ie_mut!(message, UEContextReleaseRequest, eNB_UE_S1AP_ID(id) = 1u32);
+    assert_eq!(unread.unwrap_err().kind(), ErrorKind::UndecodableIe);
+    assert_eq!(message, before);
 }

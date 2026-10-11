@@ -51,6 +51,7 @@ fn release_request(enb_ue_id: u32) -> S1AP_PDU {
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(enb_ue_id),
     )
+    .unwrap()
 }
 
 #[test]
@@ -97,7 +98,8 @@ fn a_new_ie_takes_a_typed_value_of_the_type_of_its_identifier() {
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
-    );
+    )
+    .unwrap();
     let added = |id: u16, value: serde_json::Value| {
         let mut view = inspect::message_view(&release_request(7)).unwrap();
         let ies = view.pointer_mut("/message/protocolIEs").unwrap();
@@ -121,13 +123,15 @@ fn a_new_ie_whose_value_is_a_string_is_typed_too() {
     let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
         IGNORE, UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
-    );
+    )
+    .unwrap();
     let typed = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
         IGNORE, UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         IGNORE RRC_Establishment_Cause(RRCEstablishmentCause::mo_Signalling),
         REJECT NAS_PDU(vec![0x07, 0x6a]),
-    );
+    )
+    .unwrap();
     let mut view = inspect::message_view(&pdu).unwrap();
     let ies = view.pointer_mut("/message/protocolIEs").unwrap();
     let ies = ies.as_array_mut().unwrap();
@@ -801,7 +805,8 @@ fn sent(entries: &[serde_json::Value]) -> Result<serde_json::Value, String> {
         UEContextReleaseRequest,
         IGNORE,
         UEContextReleaseRequest,
-    );
+    )
+    .unwrap();
     let mut view = inspect::message_view(&pdu)?;
     *view["message"]["protocolIEs"].as_array_mut().unwrap() = entries.to_vec();
     inspect::message_view(&inspect::message_from_view(&view)?)
@@ -964,6 +969,7 @@ fn release_with_cause() -> S1AP_PDU {
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
     )
+    .unwrap()
 }
 
 #[test]
@@ -1074,7 +1080,8 @@ fn an_ie_that_is_there_twice_goes_by_its_position() {
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         REJECT MME_UE_S1AP_ID(2u32),
-    );
+    )
+    .unwrap();
     let mut view = inspect::message_view(&pdu).unwrap();
     let paths = inspect::paths(&view);
     let values: Vec<_> = (paths.iter())
@@ -2051,6 +2058,7 @@ fn modification(bits: usize) -> S1AP_PDU {
         REJECT eNB_UE_S1AP_ID(1u32),
         REJECT UESecurityCapabilities(capabilities),
     )
+    .unwrap()
 }
 
 /// rasn's JER writes a BIT STRING of one extensible size as its octets alone, where

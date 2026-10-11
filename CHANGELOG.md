@@ -36,14 +36,14 @@ is not source compatible with 0.2.0.
   a half octet being no digit where it is not the filler before an MNC of
   two digits. `ab cd ef` was the MCC `111013` and the MNC `151412`.
 - One error type, `oxirush_s1ap::Error`. `S1AP_PDU::decode`, `encode` and
-  `decode_value`, and `s1ap::decode_open_type` and `s1ap::encode_open_type`,
-  return it where they returned a `rasn::error::DecodeError` or an
-  `EncodeError`. A function that returned one of those returns
-  `Result<_, oxirush_s1ap::Error>`, or keeps a `Box<dyn std::error::Error>`.
-  `error.kind()` is an `ErrorKind` to match on, `Decode`, `Encode` or
-  `WrongMessage` here, and the message says what is wrong without the wording
-  of rasn: `these octets do not decode as S1AP-PDU: they end before the value
-  does`. The error of rasn is the `source()`, for code that read its `kind`:
+  `decode_value`, `s1ap::decode_open_type` and `s1ap::encode_open_type` return
+  it where they returned a `rasn::error::DecodeError` or an `EncodeError`,
+  and so do the four macros. A function that returned one of those errors
+  returns `Result<_, oxirush_s1ap::Error>`, or keeps a
+  `Box<dyn std::error::Error>`. `error.kind()` is an `ErrorKind` to match on,
+  and the message says what is wrong without the wording of rasn: `these
+  octets do not decode as S1AP-PDU: the octets end before the value does`.
+  The error of rasn is the `source()`, for code that read its `kind`:
   `source.downcast_ref::<rasn::error::DecodeError>()`. `Error` has a `From`
   of both, for code that calls `rasn::aper` itself.
 - `decode_value::<T>()` takes the type of a message alone, and checks that
@@ -54,6 +54,33 @@ is not source compatible with 0.2.0.
   with `s1ap::decode_open_type::<T>(&any)`. Generic code that calls
   `decode_value` asks for `T: oxirush_s1ap::Message` where it asked for
   `T: rasn::Decode`.
+- `build_s1ap!` gives a `Result<S1AP_PDU, Error>` and `build_s1ap_ie!` a
+  `Result<ProtocolIEField, Error>`: write `?` after the call, or `.unwrap()`
+  where the values are known to encode. A value that does not encode, as an
+  integer outside its constraint, is an error of the kind `Encode`, where
+  the macros panicked with `failed to APER-encode S1AP IE open type`.
+- `extract_s1ap_ies!` returns an `Error` from the enclosing function, and
+  `macros::MissingIeError` is gone. A `req` field whose IE is not in the
+  message is an error of the kind `MissingIe`, whose message names the IE and
+  the field, where `MissingIeError` had the name of the field as `ie_name`.
+  An IE that is in the message and does not decode is an error of the kind
+  `UndecodableIe`, for a `req` and for an `opt` field: 0.2.0 said that a
+  `req` field was missing, and gave `None` for an `opt` one. The macro
+  converts the error as `?` converts one, which 0.2.0 documented and did
+  not do, so the enclosing function returns a `Result` whose error is
+  `Error`, `Box<dyn std::error::Error>` or a type with a
+  `From<oxirush_s1ap::Error>`, where it returned `MissingIeError` itself. A
+  call with `opt` fields alone returns the error too: it no longer compiles
+  in a function that returns nothing.
+- `with_s1ap_ie_mut!` gives a `Result<bool, Error>` where it gave a `bool`:
+  what the expression says, `Ok(false)` for an IE that is not in the message,
+  and an error for an IE that does not decode (`UndecodableIe`) or a changed
+  value that does not encode (`Encode`), which were both `false`. Write
+  `with_s1ap_ie_mut!(…)?` where the `bool` was read.
+- When a message has the same IE twice, `extract_s1ap_ies!` reads the last
+  one and `with_s1ap_ie_mut!` changes the last one, and any of them that does
+  not decode is an error for both. 0.2.0 read the last one that decoded,
+  and changed the first one or, when that did not decode, nothing.
 
 ### Added
 
@@ -149,6 +176,10 @@ is not source compatible with 0.2.0.
   specification. The variants of `S1apPduKind` are in the order of the procedure
   codes, and each says its message.
 - The crate no longer depends on `paste`: the macros paste no name.
+- A call of `build_s1ap!` or `build_s1ap_ie!` that leaves out a criticality is
+  a compile error that says which one: `the criticality of the IE … is
+  missing: write REJECT, IGNORE or NOTIFY before its name`, where the compiler
+  said ``no rules expected `(` ``. A word that is no criticality is named too.
 - `build_s1ap!` takes the message that the procedure has in that direction, and
   the other macros a type that has IEs: another name does not compile, where
   it was not looked at. `S1apPduKind::Other` has the `direction` that
@@ -199,15 +230,6 @@ is not source compatible with 0.2.0.
   as its octets, without its length: an algorithm mask of 20 bits and one of
   24 were shown as the same value, an edit of their IE was refused, and the
   tree of their PDU was not written back.
-- `with_s1ap_ie_mut!` changes the IE that `extract_s1ap_ies!` reads when a
-  message has it twice, the last that decodes: it changed the first, or
-  nothing when the first did not decode.
-- `extract_s1ap_ies!` converts the `MissingIeError` of a `req` field as `?`
-  converts an error, so the enclosing function returns `MissingIeError`,
-  `Box<dyn std::error::Error>` or any error type with a
-  `From<MissingIeError>`, as the documentation of 0.2.0 said and the macro did
-  not do: it returned the error as it is. A closure whose error type the
-  macro alone gave now has to say it.
 - The examples of the documentation and of the README are compiled and run
   by the documentation tests.
 

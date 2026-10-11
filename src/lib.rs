@@ -31,15 +31,16 @@
 //!     REJECT MME_UE_S1AP_ID(1u32),
 //!     REJECT eNB_UE_S1AP_ID(7u32),
 //!     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
-//! );
-//! let bytes = pdu.encode().unwrap();
-//! let decoded = S1AP_PDU::decode(&bytes).unwrap();
+//! )?;
+//! let bytes = pdu.encode()?;
+//! let decoded = S1AP_PDU::decode(&bytes)?;
 //! assert_eq!(decoded.procedure_name(), "UEContextReleaseRequest");
+//! # Ok::<(), oxirush_s1ap::Error>(())
 //! ```
 //!
-//! The codec returns an [`Error`]: its [`ErrorKind`] is what a caller matches on, its
-//! `Display` says what is wrong, and its source is the error of `rasn` where the codec
-//! gave one.
+//! The codec and the macros return an [`Error`]: its [`ErrorKind`] is what a caller
+//! matches on, its `Display` says what is wrong, and its source is the error of `rasn`
+//! where the codec gave one.
 
 mod error;
 pub mod helpers;
