@@ -42,6 +42,7 @@
 //! what a caller matches on, its `Display` says what is wrong, and its source is the
 //! error of `rasn` where the codec gave one.
 
+mod check;
 mod error;
 pub mod helpers;
 #[cfg(feature = "inspect")]
@@ -52,6 +53,7 @@ mod inspect_paths;
 mod inspect_registry;
 pub mod macros;
 mod message;
+mod pdu;
 mod per;
 #[doc(hidden)]
 pub mod registry;

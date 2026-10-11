@@ -53,7 +53,11 @@ is not source compatible with 0.2.0.
   A type that is no message, as that of an IE, does not compile: decode it
   with `s1ap::decode_open_type::<T>(&any)`. Generic code that calls
   `decode_value` asks for `T: oxirush_s1ap::Message` where it asked for
-  `T: rasn::Decode`.
+  `T: rasn::Decode`. Code that read the IEs of any PDU as those of one
+  message, as in `pdu.decode_value::<ErrorIndication>()`, because every
+  message is the same container, and wrote them back with
+  `encode_open_type`, calls `pdu.protocol_ies()` and
+  `pdu.set_protocol_ies(ies)`: see Added.
 - `build_s1ap!` gives a `Result<S1AP_PDU, Error>` and `build_s1ap_ie!` a
   `Result<ProtocolIEField, Error>`: write `?` after the call, or `.unwrap()`
   where the values are known to encode. A value that does not encode, as an
@@ -101,6 +105,15 @@ is not source compatible with 0.2.0.
 
 ### Added
 
+- `pdu.protocol_ies()` and `pdu.set_protocol_ies(ies)`: the protocol IEs of
+  the message of a PDU, whatever the message is, and the same PDU with other
+  IEs. The first gives the `ProtocolIEContainer` of the bindings, with each
+  IE as it was received: its identifier, its criticality and the octets of
+  its value, for an IE that the message cannot have, one that the protocol
+  does not have and one that is there twice as for any other. The second
+  keeps the direction, the procedure code and the criticality of the PDU,
+  and checks nothing. Both are an error of the kind `WrongMessage` for the
+  private message, which has no container of protocol IEs.
 - The optional `inspect` feature: `pdu.to_view()` gives a decoded PDU as its
   view, a `serde_json` value in the ASN.1 JSON encoding, which is edited and
   which `pdu.with_view(&view)` encodes again; `S1AP_PDU::from_view(&view)`
