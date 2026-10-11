@@ -57,8 +57,10 @@ fn handle_handover_required(pdu: &S1AP_PDU) -> Result<Vec<String>, MissingIeErro
 
         opt target: String = TargetID(target_value) => match target_value {
             TargetID::targeteNB_ID(value) => {
-                let (mcc, mnc) = plmn_from(&value.global_enb_id.p_lmnidentity);
-                format!("target eNB in PLMN {mcc}-{mnc}")
+                match plmn_from(&value.global_enb_id.p_lmnidentity) {
+                    Some((mcc, mnc)) => format!("target eNB in PLMN {mcc}-{mnc}"),
+                    None => "target eNB without a PLMN identity".to_string(),
+                }
             },
             _ => "non-eNB target".to_string(),
         },
