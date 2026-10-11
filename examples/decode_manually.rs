@@ -32,7 +32,7 @@ fn main() {
         None,
     )]);
 
-    let mme_name = MMEname(PrintableString::try_from("OxiRushMME").expect("valid MME name"));
+    let mme_name = MMEname(PrintableString::try_from("mme-1").expect("valid MME name"));
 
     // In rasn's stable opaque-open-type representation, every entry holds its
     // numeric ID, criticality, and the APER bytes of its concrete S1AP value.
