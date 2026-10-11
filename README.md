@@ -42,8 +42,9 @@ UEContextReleaseRequest
 MME=Some(42) eNB=Some(7) cause=Some(radioNetwork(user_inactivity))
 ```
 
-With the optional `inspect` feature, a PDU is also JSON, which is read, edited
-and written by the names of the specification:
+That needs no feature, only the `hex` crate for the octets of this page. With
+the optional `inspect` feature, and `serde_json` beside it, a PDU is also
+JSON, which is read, edited and written by the names of the specification:
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
@@ -96,22 +97,31 @@ oxirush-s1ap = "0.3"
 
 No feature is on by default. The minimum supported Rust version is 1.88. The
 examples of this page also use the `hex` crate, and `serde_json` for JSON.
+The values of the bindings are those of `rasn`, such as `Integer`,
+`FixedBitString`, `OctetString` and `Any`, and so are the errors of the
+codec: a crate that names them depends on `rasn` 0.28 too, as the examples
+of the typed API do.
 
 The bindings are checked in and large, and with `inspect` the compiler also
-builds JER and APER code for every type of the protocol. A clean build of the
-crate and its dependencies, in the `dev` profile with `-j 8`:
+builds JER and APER code for every type of the protocol. A clean
+`cargo build -j 8` of the crate and its dependencies, in the `dev` profile
+where the row does not say `--release`:
 
 | Build | Time | Peak memory |
 |-------|------|-------------|
-| Rust 1.88, no feature | 17 s | 1.2 GiB |
-| Rust 1.88, `inspect` | 36 s | 2.3 GiB |
-| Rust 1.88, `inspect`, `CARGO_PROFILE_DEV_DEBUG=0` | 31 s | 2.0 GiB |
-| Rust 1.88, `inspect`, `--release` | 52 s | 2.1 GiB |
-| Rust 1.98, `inspect` | 34 s | 2.4 GiB |
+| Rust 1.88, no feature | 16 s | 1.2 GiB |
+| Rust 1.88, `inspect` | 31 s | 2.5 GiB |
+| Rust 1.88, `inspect`, `CARGO_PROFILE_DEV_DEBUG=0` | 25 s | 2.0 GiB |
+| Rust 1.88, `inspect`, `--release` | 48 s | 2.1 GiB |
+| Rust 1.98, `inspect` | 31 s | 2.4 GiB |
 
-The peak is the summed resident memory of cargo and its compilers, on one
-x86-64 Linux machine. A build of the tests with every feature and `-j 4`
-peaked at 2.4 GiB, and at 1.8 GiB without debug information.
+Each row is two clean builds of an exported copy of the crate, with a target
+directory of its own: the mean of their times, which differ by less than a
+tenth on a machine that does other work, and the higher of their peaks. A
+peak is the summed resident memory of cargo and its compilers, sampled four
+times a second, on an eight-core x86-64 Linux machine. A build of the tests
+with every feature and `-j 4` peaked at 2.6 GiB, and at 1.9 GiB without debug
+information.
 
 ## What the crate covers
 
@@ -119,7 +129,7 @@ peaked at 2.4 GiB, and at 1.8 GiB without debug information.
 |------|----------|
 | Bindings | Rust types for the six ASN.1 modules of TS 36.413 V19.2.0, generated with [`rasn-compiler`](https://crates.io/crates/rasn-compiler) and checked in |
 | Codec | Aligned PER encoding and decoding through `rasn`, with the corrections of [rasn integration](#rasn-integration) |
-| Names | Flat re-exports of the generated types, and aliases such as `S1AP_PDU`, `MME_UE_S1AP_ID` and `ENB_UE_S1AP_ID`. IE identifiers, procedure codes, procedure names, directions and the kinds of a PDU (`S1apPduKind`) come from the ASN.1 |
+| Names | Flat re-exports of the generated types, and the aliases `S1AP_PDU`, `MME_UE_S1AP_ID` and `ENB_UE_S1AP_ID`. IE identifiers, procedure codes, procedure names, directions and the kinds of a PDU (`S1apPduKind`) come from the ASN.1 |
 | Macros | `build_s1ap!`, `build_s1ap_ie!`, `extract_s1ap_ies!` and `with_s1ap_ie_mut!`: typed values in and out of the open types |
 | Helpers | PLMN, core network, tracking area, cell and radio node identities, strings of bits and UE security capabilities |
 | `inspect` | A decoded PDU as a JSON tree that is read and edited by paths and encoded again, and a message written from its name and its IEs |
@@ -128,31 +138,84 @@ peaked at 2.4 GiB, and at 1.8 GiB without debug information.
 
 | Subject | Limit |
 |---------|-------|
-| Procedures | It is a codec: no procedure, state or transport, and no check that the mandatory and conditional IEs of a message are there: the caller checks them. |
+| Procedures | It is a codec: no procedure, no state and no transport. It does not check that the mandatory and conditional IEs of a message are there, nor that a criticality is the one that the specification assigns: the caller does. |
 | Unknown additions | A PDU keeps the octets of its open types. A typed value that is decoded and encoded again loses the additions of a later release. |
 | RRC, other systems | An RRC container stays octets. The container of a handover is read as the eNB type of TS 36.413 alone ([below](#the-container-of-a-handover)). |
 | `inspect`: two values | An IE with an integer of 2^63 or more stays octets, and one with an extensible fixed-size `BIT STRING` of another size is not edited as a typed value: rasn's JER does not represent them. |
-| `inspect`: criticalities | The tables have those of the object set of each message of a procedure, and of each single container. An item that two sets give two criticalities, and an IE of an extension container, says its own. |
+| `inspect`: criticalities | The tables have those of the object set of each message of a procedure, and of each single container whose object sets agree. Anywhere else an IE says its own, as the [rules](#rules) list. |
 | `inspect`: `check_path` | What the types do not say is not refused: the value of an IE selected by `@id=N` whose identifier is unknown or has several types, the entries of a container of a value when they are selected by position, and a segment under such an IE. |
 
 ## Typed API
 
-### Decode and build a PDU
+### Decode a PDU
 
-The example at the top of this page does both. A decoded `S1AP_PDU` has its
-`procedure_code()`, its `procedure_name()`, its `direction()` and its `kind()`,
-a `S1apPduKind`, and `decode_value()` gives its message. `build_s1ap!` takes:
+| Of an `S1AP_PDU` | Gives |
+|------------------|-------|
+| `S1AP_PDU::decode(&bytes)` | The PDU of the octets of one message. Octets that are incomplete, and octets after the message, are an error |
+| `encode()` | Its octets, a `Vec<u8>` |
+| `procedure_code()`, `procedure_name()` | The code and the name of its procedure: `18` and `"UEContextReleaseRequest"` |
+| `direction()` | `"InitiatingMessage"`, `"SuccessfulOutcome"` or `"UnsuccessfulOutcome"`; `is_initiating()`, `is_successful()` and `is_unsuccessful()` say which |
+| `kind()` | An `S1apPduKind`: one variant for each message, and `Other` for a procedure that the specification does not have in that direction |
+| `decode_value()` | The message, as the type that the caller names |
+
+The kind of a PDU says which message to decode:
+
+```rust
+use oxirush_s1ap::{S1apPduKind, s1ap::*};
+
+fn receive(bytes: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+    let pdu = S1AP_PDU::decode(bytes)?;
+
+    Ok(match pdu.kind() {
+        S1apPduKind::Initiating_UEContextReleaseRequest => {
+            let request: UEContextReleaseRequest = pdu.decode_value()?;
+            format!("a release request with {} IEs", request.protocol_ies.0.len())
+        }
+        S1apPduKind::Other { direction, procedure_code } => {
+            format!("procedure {procedure_code} has no {direction}")
+        }
+        kind => format!("{kind:?} is not handled here"),
+    })
+}
+
+// A UE CONTEXT RELEASE REQUEST, then an S1 SETUP FAILURE
+let request = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+println!("{}", receive(&request).unwrap());
+
+let failure = hex::decode("401100080000010002400145").unwrap();
+println!("{}", receive(&failure).unwrap());
+```
+
+```text
+a release request with 3 IEs
+Unsuccessful_S1Setup is not handled here
+```
+
+### Build a PDU
+
+`build_s1ap!` takes, in this order:
 
 | Argument | Is |
 |----------|----|
 | The direction | `InitiatingMessage`, `SuccessfulOutcome` or `UnsuccessfulOutcome` |
 | The procedure | Its name, which gives the procedure code |
 | The criticality of the PDU | `REJECT`, `IGNORE` or `NOTIFY` |
-| The message | The name of its type, such as `UEContextReleaseRequest` |
+| The message | The name of its type, such as `UEContextReleaseRequest`: the one that the procedure has in that direction, or the call does not compile |
 | Each IE | `CRITICALITY IeName(value)`: the name gives the identifier, and the value is converted with `.into()` |
 
-The identifiers of the IEs and the procedure codes are those of the ASN.1
-object sets.
+The name of an IE is its ASN.1 identifier without `id-` and with `_` for `-`,
+in the case of the ASN.1: `id-eNB-UE-S1AP-ID` is `eNB_UE_S1AP_ID`, and not
+`ENB_UE_S1AP_ID`, which is the alias of its type. The name of a type stands
+for the IE of that type where one IE alone has it, as `ENBUES1APID` for
+`eNB_UE_S1AP_ID`. A name that the crate does not have does not compile, and a
+value that does not encode, such as an integer outside its constraint, is a
+panic.
+
+A criticality says what a receiver does with what it does not comprehend
+(TS 36.413 clause 10.3.2). The specification assigns one to each procedure
+and to each IE of a message, in the tables of clause 9.1. The macros write
+the one that they are given and check none; with the `inspect` feature,
+[`message_from_tree`] writes a message with those that are assigned.
 
 ### Read the IEs of a message
 
@@ -171,12 +234,14 @@ fn handle(request: &UEContextReleaseRequest) -> Result<(), MissingIeError> {
 }
 ```
 
-| Field | When the IE is absent or does not decode |
-|-------|------------------------------------------|
-| `req` | The enclosing function returns `MissingIeError` |
-| `opt` | The field is `None` |
+A field is `req` or `opt`, its name and its type, then the IE with a name for
+its decoded value. After `=>` comes what the field keeps of that value;
+without it, the field is the `.0` of the generated newtype.
 
-Without `=> expression`, a field is the `.0` of the generated newtype.
+| Field | Is | When the IE is absent or does not decode |
+|-------|----|------------------------------------------|
+| `req` | A `T` | The enclosing function, whose error type is `MissingIeError` itself, returns an `Err` that names the field |
+| `opt` | An `Option<T>` | The field is `None` |
 
 ### Change or build one IE
 
@@ -192,11 +257,12 @@ let updated = with_s1ap_ie_mut!(message, UplinkNASTransport,
 assert!(updated);
 ```
 
-`with_s1ap_ie_mut!` decodes one IE, changes it and encodes it again, and says
-whether it did. Of an IE that a message has twice, it and `extract_s1ap_ies!`
-take the same one: the last that decodes. The name of an IE is its ASN.1
-identifier without `id-`, with `_` for `-`; the name of a type is an alias
-for the one IE of that type only.
+`build_s1ap_ie!` builds one entry of the IEs of a message, a
+`ProtocolIEField`. `with_s1ap_ie_mut!` decodes one IE, changes it and encodes
+it again, and says whether it did: `= value` sets the `.0` of a newtype, and
+`=> expression` changes the decoded value and gives the `bool` that the macro
+returns. Of an IE that a message has twice, it and `extract_s1ap_ies!` take
+the same one: the last that decodes.
 
 ### Identities and capabilities
 
@@ -231,8 +297,9 @@ let capabilities = ue_security_capabilities(&[0xe0, 0xe0]);
 ## JSON: trees and paths
 
 With the `inspect` feature a PDU is a `serde_json::Value` in two forms. A
-tree keeps what was received and is read and edited by paths; a message is
-written and shown shortly.
+tree keeps what was received, and is read and edited by paths. A message is
+the short form, in which a PDU is written and shown. The errors of these
+functions are `String`s.
 
 | | Tree | Message |
 |---|------|---------|
@@ -358,6 +425,67 @@ println!("{}", inspect::message_tree(&edited).unwrap()["ies"]);
 [{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"C0FFEE"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"criticality":"ignore","eNBname":"enb-1"}]
 ```
 
+### Write a message from its name and its IEs
+
+```rust
+use oxirush_s1ap::inspect;
+use serde_json::json;
+
+let request = json!({
+    "message": "ue context release request",
+    "ies": [
+        {"MME-UE-S1AP-ID": 42},
+        {"eNB-UE-S1AP-ID": 7},
+        {"Cause": {"radioNetwork": "user-inactivity"}},
+        // An IE that the message does not have says its criticality
+        {"eNBname": "enb-1", "criticality": "ignore"},
+    ],
+});
+let pdu = inspect::message_from_tree(&request).unwrap();
+println!("{}", hex::encode(pdu.encode().unwrap()));
+
+// The name gave the direction, the procedure code and the criticalities
+let tree = inspect::inspect_pdu(&pdu).unwrap();
+println!("{} {} {}", tree["direction"], tree["procedure_code"], tree["criticality"]);
+println!("{}", json!(inspect::select(&tree, "/s1ap/*/criticality").unwrap()));
+```
+
+```text
+0012402000000400000002002a000800020007000240020280003c40070200656e622d31
+"InitiatingMessage" 18 "ignore"
+["reject","reject","ignore","ignore"]
+```
+
+### Send octets as they are
+
+```rust
+use oxirush_s1ap::inspect;
+use serde_json::json;
+
+// `{"octets": "…"}` in place of a value is the octets of the IE, whatever they are
+let request = json!({"message": "UEContextReleaseRequest", "ies": [
+    {"MME-UE-S1AP-ID": 42},
+    {"65000": {"octets": "c0ffee"}, "criticality": "reject"},
+]});
+let pdu = inspect::message_from_tree(&request).unwrap();
+println!("{}", hex::encode(pdu.encode().unwrap()));
+
+// A tree shows an IE that does not decode by its octets, and says why
+let mut tree = inspect::inspect_pdu(&pdu).unwrap();
+println!("{}", tree["message"]["protocolIEs"][1]);
+
+// In a tree, the `octets` of an IE are set in place of its value
+inspect::set(&mut tree, "/s1ap/MME-UE-S1AP-ID/octets", json!("00ff")).unwrap();
+let edited = inspect::encode_pdu(&tree).unwrap();
+println!("{}", inspect::message_tree(&edited).unwrap());
+```
+
+```text
+0012401000000200000002002afde80003c0ffee
+{"_decode_error":"S1AP IE 65000 is unknown or has several types","_original_id":65000,"_raw_value":"C0FFEE","criticality":"reject","id":65000,"value":"C0FFEE"}
+{"ies":[{"MME-UE-S1AP-ID":255},{"65000":{"octets":"C0FFEE"},"criticality":"reject"}],"message":"UEContextReleaseRequest"}
+```
+
 ### A repeated IE
 
 ```rust
@@ -444,67 +572,6 @@ one place where its octets carry a type is
 [the container of a handover](#the-container-of-a-handover), which is a
 transfer once it is opened.
 
-### Write a message from its name and its IEs
-
-```rust
-use oxirush_s1ap::inspect;
-use serde_json::json;
-
-let request = json!({
-    "message": "ue context release request",
-    "ies": [
-        {"MME-UE-S1AP-ID": 42},
-        {"eNB-UE-S1AP-ID": 7},
-        {"Cause": {"radioNetwork": "user-inactivity"}},
-        // An IE that the message does not have says its criticality
-        {"eNBname": "enb-1", "criticality": "ignore"},
-    ],
-});
-let pdu = inspect::message_from_tree(&request).unwrap();
-println!("{}", hex::encode(pdu.encode().unwrap()));
-
-// The name gave the direction, the procedure code and the criticalities
-let tree = inspect::inspect_pdu(&pdu).unwrap();
-println!("{} {} {}", tree["direction"], tree["procedure_code"], tree["criticality"]);
-println!("{}", json!(inspect::select(&tree, "/s1ap/*/criticality").unwrap()));
-```
-
-```text
-0012402000000400000002002a000800020007000240020280003c40070200656e622d31
-"InitiatingMessage" 18 "ignore"
-["reject","reject","ignore","ignore"]
-```
-
-### Send octets as they are
-
-```rust
-use oxirush_s1ap::inspect;
-use serde_json::json;
-
-// `{"octets": "…"}` in place of a value is the octets of the IE, whatever they are
-let request = json!({"message": "UEContextReleaseRequest", "ies": [
-    {"MME-UE-S1AP-ID": 42},
-    {"65000": {"octets": "c0ffee"}, "criticality": "reject"},
-]});
-let pdu = inspect::message_from_tree(&request).unwrap();
-println!("{}", hex::encode(pdu.encode().unwrap()));
-
-// A tree shows an IE that does not decode by its octets, and says why
-let mut tree = inspect::inspect_pdu(&pdu).unwrap();
-println!("{}", tree["message"]["protocolIEs"][1]);
-
-// In a tree, the `octets` of an IE are set in place of its value
-inspect::set(&mut tree, "/s1ap/MME-UE-S1AP-ID/octets", json!("00ff")).unwrap();
-let edited = inspect::encode_pdu(&tree).unwrap();
-println!("{}", inspect::message_tree(&edited).unwrap());
-```
-
-```text
-0012401000000200000002002afde80003c0ffee
-{"_decode_error":"S1AP IE 65000 is unknown or has several types","_original_id":65000,"_raw_value":"C0FFEE","criticality":"reject","id":65000,"value":"C0FFEE"}
-{"ies":[{"MME-UE-S1AP-ID":255},{"65000":{"octets":"C0FFEE"},"criticality":"reject"}],"message":"UEContextReleaseRequest"}
-```
-
 ### The names of an ENUMERATED
 
 ```rust
@@ -545,7 +612,10 @@ for wrong in ["/s1ap/Cause/radioNetwrok", "/s1ap/eNB-UE-S1AP-ID/valeu", "/s1ap/G
 "GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
 ```
 
-The tables that `check_path` reads are also given as they are:
+### The messages and their IEs
+
+What ASN.1 says of each message, which `check_path` reads, is also given as
+it is, without a tree:
 
 | Function | Gives |
 |----------|-------|
@@ -622,7 +692,7 @@ headings that the rows link to.
 | [Paths] | A JSON pointer into the tree, where `/s1ap` stands for the IEs of the message and `*` for each entry of a list or each member of a value. |
 | An IE | The name that ASN.1 gives it after `id-`, its position (`/s1ap/0`) or its identifier (`/s1ap/@id=8`); `-` is the end of the list. A name selects each IE of that name. After the position of an IE, its name may follow, so the names and the positions that a message shows, joined, are a path; that of another IE is an error that says which IE is there. |
 | Under an IE | `id`, `criticality`, the typed `value`, and `octets`: what it was received as, in hexadecimal. The members that start with `_` keep what was received. |
-| `value`, `decoded` | May be left out of a path. What the IE or the transfer has itself comes first: `/s1ap/Cause/*` is the members of the IE, and `value/value` the one member of a value that is named as one of its IE, in a string of bits whose size varies. |
+| `value`, `decoded` | May be left out of a path. A segment is first a member of the IE or of the transfer itself: `/s1ap/Cause/*` is the members of the IE. A member of a value that has the name of one of them is reached after `value`, and only a string of bits whose size varies has one, its `value`: `value/value`. |
 | [Names] | Letters and digits, whatever their case and whatever is between them, for the root, the IEs, the members of a value, the messages and the values of an `ENUMERATED`: `/S1AP/enb_ue_s1ap_id` is `/s1ap/eNB-UE-S1AP-ID`. |
 | [What is not there] | An IE that the message does not have, an `OPTIONAL` member that is absent and another alternative of a `CHOICE` select nothing. A name that the type cannot have is an error, which lists the members of the value, then those of its IE or transfer. |
 | [Edits] | `set` writes a member by its ASN.1 name, or an alternative of a `CHOICE` in place of the one that is there. `null` or `remove` takes an optional member out, and `insert` adds before the entry that the path selects, or at `-`. An edit that selects nothing is an error, and the tree is as it was. |
@@ -643,14 +713,17 @@ written, and take them so.
 |------|----------|
 | `PLMNidentity` | `"208-93"`, the MCC and the MNC |
 | `TransportLayerAddress` | `"10.0.0.1"`, `"2001:db8::1"`, or the two with a comma |
-| `IMSI` | its digits; one of an even number of digits is read as its digits only |
+| `IMSI` | its digits. A string of digits alone is always the digits, also where an even number of them could be the octets that JER writes |
 | `TAC`, `FiveGSTAC`, `LAC`, `RAC`, `CI`, `GTP-TEID`, `M-TMSI`, `MME-Group-ID`, `MME-Code`, `Port-Number`, `CellIdentity`, `NRCellIdentity`, `UL-NAS-Count` | a number, also read as a `"0x…"` string |
 | `ENUMERATED` | the name of the value, read in any case |
-| the other strings: keys and algorithm masks, the NAS-PDU and the other containers, the node identifiers, whose length says which kind they are | hexadecimal, read in either case |
+| a string of bits whose size varies, as the identifier of a gNB | `{"value": "000004", "length": 22}`: the octets that hold it, in hexadecimal, and its length in bits |
+| the other strings: keys and algorithm masks, the NAS-PDU and the other containers, the identifiers of an eNB, whose length says which kind they are | hexadecimal, read in either case |
 
 Each is also read as JER writes it, and a value that does not fit its
 notation, such as a transport layer address of another length, stays as JER
-writes it.
+writes it. The octets of a string of bits start with its first bit:
+`"000010"` is the macro eNB identifier 1, in 20 bits, and `"000004"` the
+number 1 in 22 bits.
 
 ## Examples
 
@@ -662,8 +735,8 @@ writes it.
 | `inspect` | An Initial UE Message: its values with their paths, one IE edited, one added by its value and one by its octets, and the PDU encoded again | `inspect` |
 
 ```bash
-cargo run -p oxirush-s1ap --example build_pdu
-cargo run -p oxirush-s1ap --example inspect --features inspect
+cargo run --example build_pdu
+cargo run --example inspect --features inspect
 ```
 
 Each has its counterpart in `oxirush-ngap`, with the messages and the IEs of

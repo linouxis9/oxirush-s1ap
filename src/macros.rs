@@ -74,9 +74,10 @@
 //! [`MissingIeError`] from the enclosing function. Optional fields remain
 //! `Option<T>`.
 //!
-//! The enclosing function must return `Result<_, MissingIeError>` or a type that
-//! implements `From<MissingIeError>`. Without `=> expression`, extraction uses
-//! `binding.0`, which unwraps the usual single-field generated newtype.
+//! The enclosing function must return `Result<_, MissingIeError>`: the macro
+//! returns the error as it is, without a conversion. Without `=> expression`,
+//! extraction uses `binding.0`, which unwraps the usual single-field generated
+//! newtype.
 //!
 //! ```
 //! use oxirush_s1ap::{build_s1ap_ie, extract_s1ap_ies, macros::MissingIeError, s1ap::*};
