@@ -145,14 +145,31 @@ value are selected the same way, each with its own `value`:
 /s1ap/E-RABToBeSetupListBearerSUReq/value/0/value/e-RAB-ID = 5
 ```
 
+`value` may be left out of a path. A segment that names no member of an IE,
+which has `id`, `criticality`, `value` and `octets`, is taken in its value.
+These two paths select the same value:
+
+```text
+/s1ap/E-RABToBeSetupListBearerSUReq/value/0/value/e-RAB-ID
+/s1ap/E-RABToBeSetupListBearerSUReq/0/e-RAB-ID
+```
+
+What an IE has itself comes first: `/s1ap/Cause/value` is the value of the IE
+and `/s1ap/Cause/*` each of its members, so the entries of a list that is the
+value of an IE are `value/*`. A member of a value that is named as one of its
+IE is reached after `value`: only a string of bits whose size varies has one,
+its `value`, as in `/s1ap/TraceCollectionEntityIPAddress/value/value`. The
+members that start with `_` are those of the IE too.
+
 A path selects nothing where the message could have a value and does not: an
 IE that the message does not have, an `OPTIONAL` member that is absent, and
 another alternative of a `CHOICE`. A name that the type of a value cannot
 have is an error, which lists the members that the type has, so a member that
 is written wrong is not taken for one that is not there; what follows an
-absent value in a path is checked the same way. `*` is each entry of a list
-or each member of a value, without the members that start with `_`, and a
-segment after it is an error when none of the values can have it.
+absent value in a path is checked the same way. Under an IE, the error lists
+the members of its value, then those of the IE itself. `*` is each entry of a
+list or each member of a value, without the members that start with `_`, and
+a segment after it is an error when none of the values can have it.
 
 A name is its letters and its digits, whatever their case and whatever is
 between them: `/s1ap/eNB-UE-S1AP-ID`, `/S1AP/enb_ue_s1ap_id` and
@@ -166,8 +183,9 @@ in a message of a name, without a tree: under `/s1ap` the IE has to be one of
 the object set of the message, and each segment under it a member that the
 type has, through the lists, the alternatives of a `CHOICE` and the items of a
 list of IEs. What is not known is not refused: the value of an IE selected by
-`@id=N` whose identifier is unknown or has several types, and the entries of a
-container other than that of the message when they are selected by position.
+`@id=N` whose identifier is unknown or has several types, a segment under such
+an IE, which may name a member of its value, and the entries of a container
+other than that of the message when they are selected by position.
 `inspect::message_ies` gives the IEs that a message can have, from its ASN.1
 object set: the identifier of each and whether its presence is mandatory, in
 the order of the set. `inspect::message_ie_criticalities` gives the
@@ -195,6 +213,23 @@ the message does not have, by its name or by its identifier in digits, says
 its `criticality`, and `{"octets": "…"}` in place of a value is the octets of
 an IE as they are sent. `inspect::message_tree` shows a PDU in that form,
 without what the specification assigns.
+
+The form goes to any depth: the IEs that a value holds are each a name with a
+value, as those of the message are.
+
+```json
+{"E-RABToBeSetupListBearerSUReq": [{"E-RABToBeSetupItemBearerSUReq":
+  {"e-RAB-ID": 5, "transportLayerAddress": "10.0.0.1", "gTP-TEID": 1}}]}
+```
+
+An IE that a value holds alone or as an item of a list has the criticality
+that `inspect::item_criticality` gives, unless it says another. One that has
+none there, as `UE-associatedLogicalS1-ConnectionItem`, and an IE of an
+extension container always say their `criticality`, and `message_tree` always
+shows it: the tables have what the object set of a message of a procedure
+assigns, and that of a single container, and no other. `message_from_tree`
+also takes a value as `inspect_pdu` shows it, with an entry of `id`,
+`criticality` and `value` for an IE, and the two forms in one message.
 
 `inspect::message_name(&pdu)` is the name that ASN.1 gives the message of a
 PDU, such as `E-RABSetupRequest`, and `inspect::message_named` finds

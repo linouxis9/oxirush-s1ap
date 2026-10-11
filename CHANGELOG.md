@@ -74,6 +74,14 @@ is not source compatible with 0.2.0.
   [{NAME: VALUE}, …]}`, with the procedure code, the direction and the
   criticalities that the specification assigns, and `inspect::message_tree`
   shows a PDU in that form.
+- With the `inspect` feature, `value` may be left out. In a path, a segment
+  that names no member of an IE is taken in its value:
+  `/s1ap/Cause/radioNetwork` is `/s1ap/Cause/value/radioNetwork`.
+  `inspect::message_tree` shows each IE that a value holds as its name with
+  its value, to any depth, as in `{"E-RABToBeSetupListBearerSUReq":
+  [{"E-RABToBeSetupItemBearerSUReq": {"e-RAB-ID": 5, …}}]}`, and
+  `inspect::message_from_tree` reads that form. What is written with the
+  word is taken as it was.
 
 ### Changed
 

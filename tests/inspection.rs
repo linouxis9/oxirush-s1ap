@@ -263,6 +263,238 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
     assert!(refused(serde_json::json!({"message": "Paging", "ie": []})).contains("is no member"));
 }
 
+/// The members of the shown message `value` that only repeat what its form says: those of
+/// an IE in a tree, and a `criticality` that the tables have.
+fn redundant(value: &serde_json::Value, found: &mut Vec<String>) {
+    use serde_json::Value;
+    match value {
+        Value::Object(members) => {
+            for (name, member) in members {
+                let wraps = match name.as_str() {
+                    "decoded" | "id" | "extensionValue" | "criticality" => true,
+                    // A string of bits whose size varies has a `value` and a `length`.
+                    "value" => !members.contains_key("length"),
+                    name => name.starts_with('_'),
+                };
+                if wraps {
+                    found.push(name.clone());
+                }
+                redundant(member, found);
+            }
+        }
+        Value::Array(entries) => entries.iter().for_each(|entry| redundant(entry, found)),
+        _ => {}
+    }
+}
+
+#[test]
+fn a_message_is_shown_and_written_by_name_to_any_depth() {
+    use serde_json::json;
+    let shown = |wire: &[u8]| inspect::message_tree(&S1AP_PDU::decode(wire).unwrap());
+    let written = |tree: &serde_json::Value| {
+        inspect::message_from_tree(tree).map(|pdu| pdu.encode().unwrap())
+    };
+    // The items of a list of E-RABs go by name, without the criticality that their
+    // object set assigns.
+    let wire = fixture("E-RABSetupRequest");
+    let bearer = json!({
+        "e-RAB-ID": 0,
+        "e-RABlevelQoSParameters": {"qCI": 0, "allocationRetentionPriority": {
+            "priorityLevel": 0,
+            "pre-emptionCapability": "shall-not-trigger-pre-emption",
+            "pre-emptionVulnerability": "not-pre-emptable",
+        }},
+        "transportLayerAddress": {"value": "00", "length": 1},
+        "gTP-TEID": 2778534635u32,
+        "nAS-PDU": "076002",
+    });
+    let request = |bearer: &serde_json::Value| {
+        json!({
+            "message": "E-RABSetupRequest",
+            "ies": [
+                {"MME-UE-S1AP-ID": 0},
+                {"eNB-UE-S1AP-ID": 0},
+                {"E-RABToBeSetupListBearerSUReq": [bearer]},
+            ],
+        })
+    };
+    let by_name = request(&json!({"E-RABToBeSetupItemBearerSUReq": bearer}));
+    assert_eq!(shown(&wire).unwrap(), by_name);
+    assert_eq!(written(&by_name).unwrap(), wire);
+    // No message of the fixtures is shown with a member that only wraps a value, nor
+    // with a criticality: the tables have each of them.
+    let mut found = Vec::new();
+    for line in include_str!("fixtures/messages.tsv")
+        .lines()
+        .filter(|line| !line.starts_with('#') && !line.is_empty())
+    {
+        let fields: Vec<_> = line.split('\t').collect();
+        if let Ok(shown) = shown(&hex::decode(fields[1]).unwrap()) {
+            redundant(&shown["ies"], &mut found);
+        }
+    }
+    assert_eq!(found, Vec::<String>::new());
+    // The same message as a tree has it, with an entry for the item.
+    let entry = json!({"id": 17, "criticality": "reject", "value": bearer});
+    assert_eq!(written(&request(&entry)).unwrap(), wire);
+    // An IE of an extension container says its criticality, which `message_tree`
+    // shows: the tables have none for it.
+    let mut extended = bearer.clone();
+    extended["iE-Extensions"] = json!([{"BearerType": "non-IP", "criticality": "reject"}]);
+    let extended = request(&json!({"E-RABToBeSetupItemBearerSUReq": extended}));
+    let pdu = inspect::message_from_tree(&extended).unwrap();
+    let tree = inspect::inspect_pdu(&pdu).unwrap();
+    let extension = "/s1ap/E-RABToBeSetupListBearerSUReq/0/iE-Extensions/0";
+    let value = inspect::select(&tree, &format!("{extension}/extensionValue")).unwrap();
+    assert_eq!(value, [&json!("non-IP")]);
+    assert_eq!(inspect::message_tree(&pdu).unwrap(), extended);
+    let mut unassigned = bearer.clone();
+    unassigned["iE-Extensions"] = json!([{"BearerType": "non-IP"}]);
+    let unassigned = request(&json!({"E-RABToBeSetupItemBearerSUReq": unassigned}));
+    let error = written(&unassigned).unwrap_err();
+    assert!(
+        error.contains("BearerType says its \"criticality\""),
+        "{error}"
+    );
+    // An item that two object sets give two criticalities says its own: that of a
+    // connection is `reject` in a RESET and `ignore` in its acknowledgement.
+    let reset = |connection: &serde_json::Value| {
+        json!({"message": "Reset", "ies": [
+            {"Cause": {"misc": "unspecified"}},
+            {"ResetType": {"partOfS1-Interface": [connection]}},
+        ]})
+    };
+    let mut connection = json!({"UE-associatedLogicalS1-ConnectionItem": {"mME-UE-S1AP-ID": 1}});
+    let error = written(&reset(&connection)).unwrap_err();
+    assert!(error.contains("Item says its \"criticality\""), "{error}");
+    connection["criticality"] = json!("reject");
+    let pdu = inspect::message_from_tree(&reset(&connection)).unwrap();
+    assert_eq!(inspect::message_tree(&pdu).unwrap(), reset(&connection));
+    // An IE that a value holds alone, as the alternative that extends a CHOICE, has
+    // the criticality of its object set.
+    let node = json!({
+        "global-ENB-ID": {"pLMNidentity": "208-93", "eNB-ID": {"macroENB-ID": "000010"}},
+        "selected-TAI": {"pLMNidentity": "208-93", "tAC": 1},
+    });
+    let report = json!({"rLFReportInformation": {"uE-RLF-Report-Container": "00"}});
+    let transfer = json!({"message": "ENBConfigurationTransfer", "ies": [
+        {"SONConfigurationTransferECT": {
+            "targeteNB-ID": node,
+            "sourceeNB-ID": node,
+            "sONInformation": {"sONInformation-Extension": {"SON-Information-Report": report}},
+        }},
+    ]});
+    let pdu = inspect::message_from_tree(&transfer).unwrap();
+    let tree = inspect::inspect_pdu(&pdu).unwrap();
+    let held = "/s1ap/SONConfigurationTransferECT/sONInformation/sONInformation-Extension";
+    let criticality = inspect::select(&tree, &format!("{held}/criticality")).unwrap();
+    assert_eq!(criticality, [&json!("ignore")]);
+    let container = format!("{held}/rLFReportInformation/uE-RLF-Report-Container");
+    assert_eq!(inspect::select(&tree, &container).unwrap(), [&json!("00")]);
+    assert_eq!(inspect::message_tree(&pdu).unwrap(), transfer);
+    // What is in the place of an IE and is none is refused.
+    let error = written(&request(&json!({"a": 1, "b": 2}))).unwrap_err();
+    assert!(error.contains("one IE"), "{error}");
+}
+
+#[test]
+fn the_value_of_an_ie_may_be_left_out_of_a_path() {
+    use serde_json::{Value, json};
+    let name = "E-RABSetupRequest";
+    let tree = inspect::inspect_pdu(&S1AP_PDU::decode(&fixture(name)).unwrap()).unwrap();
+    let long = "/s1ap/E-RABToBeSetupListBearerSUReq/value/0/value";
+    let list = "/s1ap/E-RABToBeSetupListBearerSUReq";
+    let short = format!("{list}/0");
+    // Each of the two is left out alone, and both together; the item goes by its
+    // position, its name or its identifier.
+    let tunnel = inspect::select(&tree, &format!("{long}/gTP-TEID")).unwrap();
+    assert_eq!(tunnel, [&json!(2778534635u32)]);
+    for path in [
+        format!("{list}/0/value"),
+        format!("{list}/value/0"),
+        short.clone(),
+        short.to_lowercase(),
+        format!("{list}/E-RABToBeSetupItemBearerSUReq"),
+        format!("{list}/@id=17"),
+    ] {
+        let selected = inspect::select(&tree, &format!("{path}/gTP-TEID"));
+        assert_eq!(selected.as_ref(), Ok(&tunnel), "{path}");
+        let checked = inspect::check_path(name, &format!("{path}/gTP-TEID"));
+        assert_eq!(checked, Ok(()), "{path}");
+    }
+    // What an IE has itself comes first: `*` is each of its members, and the entries
+    // of its value are after `value`.
+    let select = |path: &str| inspect::select(&tree, path).unwrap();
+    assert_eq!(select(&format!("{list}/criticality")), [&json!("reject")]);
+    assert_eq!(select(&format!("{short}/criticality")), [&json!("reject")]);
+    assert_eq!(select(&format!("{list}/*")).len(), 3);
+    assert_eq!(select(&format!("{list}/value/*/id")), [&json!(17)]);
+    assert!(select(&format!("{short}/octets"))[0].is_string());
+    // The names of an ENUMERATED are found on the same path.
+    let capability = "e-RABlevelQoSParameters/allocationRetentionPriority/pre-emptionCapability";
+    let item = format!("{list}/E-RABToBeSetupItemBearerSUReq");
+    let names = inspect::enumerated_at(name, &format!("{item}/{capability}")).unwrap();
+    assert!(names.is_some_and(|names| names.contains(&"may-trigger-pre-emption")));
+    assert_eq!(
+        inspect::enumerated_at(name, &format!("{list}/value/@id=17/value/{capability}")),
+        Ok(names)
+    );
+    // Edits take the same paths: a member is set, an item is added and one taken out,
+    // and the octets of the IE are no longer those of its value.
+    let mut edited = tree.clone();
+    let second = inspect::select(&tree, &short).unwrap()[0].clone();
+    inspect::set(&mut edited, &format!("{short}/e-RAB-ID"), json!(5)).unwrap();
+    let error = inspect::select(&edited, &format!("{list}/octets")).unwrap_err();
+    assert!(error.contains("the value was edited"), "{error}");
+    inspect::insert(&mut edited, &format!("{list}/-"), second.clone()).unwrap();
+    inspect::insert(&mut edited, &format!("{list}/0"), second).unwrap();
+    inspect::set(&mut edited, &format!("{list}/0/nAS-PDU"), json!("0760")).unwrap();
+    inspect::remove(&mut edited, &format!("{list}/2")).unwrap();
+    let after = inspect::inspect_pdu(&inspect::encode_pdu(&edited).unwrap()).unwrap();
+    let bearers = inspect::select(&after, &format!("{list}/value/*/e-RAB-ID")).unwrap();
+    assert_eq!(bearers, [&json!(0), &json!(5)]);
+    let messages = inspect::select(&after, &format!("{list}/value/*/nAS-PDU")).unwrap();
+    assert_eq!(messages, [&json!("0760"), &json!("076002")]);
+    let error = inspect::set(&mut edited, &format!("{list}/0/nAS-PDU"), Value::Null);
+    assert!(error.unwrap_err().contains("its type always has it"));
+    // A name that neither has is refused with the members of both, and the tree is as
+    // it was.
+    let before = edited.clone();
+    for (path, value) in [
+        (
+            format!("{list}/0/misspelled"),
+            "is not a member of ERABToBeSetupItemBearerSUReq, which has e-RAB-ID",
+        ),
+        (format!("{list}/misspelled"), "array index must be numeric"),
+        (
+            "/s1ap/eNB-UE-S1AP-ID/valeu".to_string(),
+            "\"valeu\" is not a member of this value, which has none",
+        ),
+    ] {
+        for error in [
+            inspect::select(&edited, &path).map(|_| ()).unwrap_err(),
+            inspect::set(&mut edited, &path, json!(1)).unwrap_err(),
+        ] {
+            assert!(error.contains(value), "{path}: {error}");
+            let own = "; an IE itself has id, criticality, value, octets";
+            assert!(error.ends_with(own), "{path}: {error}");
+        }
+    }
+    assert_eq!(edited, before);
+    // A member of a value that is named as one of its IE is that of the IE: the `value`
+    // of a string of bits whose size varies is reached after `value`.
+    let address = json!({"value": "0A0000", "length": 24});
+    let entry =
+        json!({"id": "TraceCollectionEntityIPAddress", "criticality": "ignore", "value": address});
+    let tree = sent(&[entry]).unwrap();
+    let ie = "/s1ap/TraceCollectionEntityIPAddress";
+    let select = |path: &str| inspect::select(&tree, &format!("{ie}/{path}")).unwrap();
+    assert_eq!(select("value"), [&address]);
+    assert_eq!(select("value/value"), [&json!("0A0000")]);
+    assert_eq!(select("length"), [&json!(24)]);
+    assert_eq!(select("value/length"), [&json!(24)]);
+}
+
 /// The octets of the message `name` of the fixtures.
 fn fixture(name: &str) -> Vec<u8> {
     let mut lines = include_str!("fixtures/messages.tsv").lines();
@@ -483,6 +715,7 @@ fn the_ies_of_a_message_have_paths_by_their_names() {
 
 #[test]
 fn every_path_of_every_canonical_procedure_selects_its_value() {
+    let mut shorter = 0;
     for line in include_str!("fixtures/messages.tsv")
         .lines()
         .filter(|line| !line.starts_with('#') && !line.is_empty())
@@ -495,8 +728,49 @@ fn every_path_of_every_canonical_procedure_selects_its_value() {
             assert!(!path.contains("protocolIEs"), "{} {path}", fields[0]);
             let selected = inspect::select(&tree, &path);
             assert_eq!(selected, Ok(vec![&value]), "{} {path}", fields[0]);
+            // The path that leaves out what it may selects the same value.
+            let short = short(&tree, &path);
+            let selected = inspect::select(&tree, &short);
+            assert_eq!(selected, Ok(vec![&value]), "{} {short}", fields[0]);
+            shorter += usize::from(short != path);
         }
     }
+    assert!(shorter > 100, "{shorter}");
+}
+
+/// `path` of `tree` without the `value` of each IE and the `decoded` of each transfer on
+/// its way, which a path may leave out. One that the path ends with stays, and so does
+/// one before a member of the value that is named as a member of the IE or of the
+/// transfer.
+fn short(tree: &serde_json::Value, path: &str) -> String {
+    let segments: Vec<&str> = path.split('/').skip(1).collect();
+    let mut short = String::new();
+    for (at, segment) in segments.iter().enumerate() {
+        // What has the segment, by the path so far.
+        let holder = match at {
+            0 => None,
+            at => inspect::select(tree, &format!("/{}", segments[..at].join("/")))
+                .unwrap()
+                .pop(),
+        };
+        let has = |member: &str| holder.is_some_and(|holder| holder.get(member).is_some());
+        let own: &[&str] = match *segment {
+            "value" if has("_raw_value") => &["id", "criticality", "value", "octets"],
+            "extensionValue" if has("_raw_value") => {
+                &["id", "criticality", "extensionValue", "octets"]
+            }
+            "decoded" if has("_raw_transfer") => &["decoded", "octets"],
+            _ => &[],
+        };
+        let left_out = !own.is_empty()
+            && (segments.get(at + 1))
+                .is_some_and(|next| !own.contains(next) && !next.starts_with('_'));
+        if !left_out {
+            short.push('/');
+            short.push_str(segment);
+        }
+    }
+    short
 }
 
 #[test]
@@ -1120,9 +1394,14 @@ fn a_path_is_checked_against_a_message_without_a_tree() {
         for (path, _) in inspect::paths(&tree) {
             let checked = inspect::check_path(name, &path);
             assert!(checked.is_ok(), "{name} {path}: {checked:?}");
+            // And so is the path that leaves out what it may.
+            let short = short(&tree, &path);
+            let checked = inspect::check_path(name, &short);
+            assert!(checked.is_ok(), "{name} {short}: {checked:?}");
         }
     }
     let item = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/E-RABToBeSetupItemCtxtSUReq";
+    let short_item = "/s1ap/E-RABToBeSetupListCtxtSUReq/E-RABToBeSetupItemCtxtSUReq";
     for (message, path) in [
         ("UEContextReleaseRequest", "/s1ap/Cause/value/nas"),
         (
@@ -1153,6 +1432,28 @@ fn a_path_is_checked_against_a_message_without_a_tree() {
         (
             "InitialContextSetupRequest",
             &format!("{item}/value/transportLayerAddress/length"),
+        ),
+        // The value of an IE may be left out.
+        ("UEContextReleaseRequest", "/s1ap/Cause/nas"),
+        ("UEContextReleaseRequest", "/s1ap/*/radioNetwork"),
+        ("InitialContextSetupRequest", "/s1ap/GUMMEI-ID/mME-Code"),
+        (
+            "InitialContextSetupRequest",
+            &format!("{short_item}/e-RABlevelQoSParameters/qCI"),
+        ),
+        (
+            "InitialContextSetupRequest",
+            "/s1ap/E-RABToBeSetupListCtxtSUReq/0/e-RAB-ID",
+        ),
+        (
+            "InitialContextSetupRequest",
+            "/s1ap/E-RABToBeSetupListCtxtSUReq/-",
+        ),
+        // A segment under an IE whose type is not known may be a member of its value.
+        ("UEContextReleaseRequest", "/s1ap/@id=60000/anything"),
+        (
+            "InitialContextSetupRequest",
+            "/s1ap/E-RABToBeSetupListCtxtSUReq/0/anything",
         ),
     ] {
         let checked = inspect::check_path(message, path);
@@ -1185,10 +1486,38 @@ fn a_path_is_checked_against_a_message_without_a_tree() {
             "/s1ap/eNB-UE-S1AP-ID/value/*/deeper",
             "selects nothing in a message UEContextReleaseRequest",
         ),
+        // A name that neither an IE nor its value has: the members of both.
         (
             "UEContextReleaseRequest",
             "/s1ap/Cause/misspelled",
-            "is not a member of an IE, which has id, criticality, value, octets",
+            "is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, \
+             at /s1ap/Cause/misspelled; an IE itself has id, criticality, value, octets",
+        ),
+        (
+            "UEContextReleaseRequest",
+            "/s1ap/eNB-UE-S1AP-ID/valeu",
+            "is not a member of this value, which has none, at /s1ap/eNB-UE-S1AP-ID/valeu; an \
+             IE itself has id, criticality, value, octets",
+        ),
+        (
+            "UEContextReleaseRequest",
+            "/s1ap/Cause/radioNetwork/deeper",
+            "which has none",
+        ),
+        (
+            "InitialContextSetupRequest",
+            &format!("{short_item}/misspelled"),
+            "is not a member of ERABToBeSetupItemCtxtSUReq, which has e-RAB-ID",
+        ),
+        (
+            "InitialContextSetupRequest",
+            "/s1ap/E-RABToBeSetupListCtxtSUReq/misspelled",
+            "array index must be numeric",
+        ),
+        (
+            "InitialContextSetupRequest",
+            "/s1ap/E-RABToBeSetupListCtxtSUReq/Cause/misspelled",
+            "is not a member of Cause",
         ),
         (
             "UEContextReleaseRequest",
