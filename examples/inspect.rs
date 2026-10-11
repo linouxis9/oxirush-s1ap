@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "000c402c000005000800020000001a000403076002004300060002f839595c006440080002f839000000000086400100",
     )?;
     let pdu = S1AP_PDU::decode(&wire)?;
-    let mut view = inspect::message_view(&pdu)?;
+    let mut view = pdu.to_view()?;
 
     // The message by the name that ASN.1 gives it, then each value with the path that
     // selects it: `/s1ap` stands for the IEs of the message, and an IE goes by its name.
@@ -47,11 +47,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     inspect::insert(&mut view, "/s1ap/RRC-Establishment-Cause", unknown)?;
 
     // Encode the view again.
-    let edited = inspect::message_from_view(&view)?;
+    let edited = pdu.with_view(&view)?;
     println!("{}", hex::encode_upper(edited.encode()?));
 
     // The IE that was not edited is the octets that were received.
-    let view = inspect::message_view(&edited)?;
+    let view = edited.to_view()?;
     let nas = inspect::select(&view, "/s1ap/NAS-PDU/octets")?;
     assert_eq!(nas, [&json!("03076002")]);
 
