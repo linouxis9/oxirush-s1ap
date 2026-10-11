@@ -17,8 +17,11 @@ fn main() {
     let mme_ue_id: u32 = 1;
     let enb_ue_id: u32 = 0;
 
+    // The direction, the procedure, its criticality and the message, then
+    // each IE with its criticality.
     let pdu = build_s1ap!(SuccessfulOutcome, InitialContextSetup,
         REJECT, InitialContextSetupResponse,
+
         IGNORE MME_UE_S1AP_ID(mme_ue_id),
         IGNORE eNB_UE_S1AP_ID(enb_ue_id),
         IGNORE E_RABSetupListCtxtSURes(erab_setup_list()),
@@ -31,6 +34,7 @@ fn main() {
 
     let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
         IGNORE, UEContextReleaseRequest,
+
         REJECT MME_UE_S1AP_ID(mme_ue_id),
         REJECT eNB_UE_S1AP_ID(enb_ue_id),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -47,18 +51,25 @@ fn main() {
 
     let network = plmn("208", "93");
     let erabs = erab_to_be_setup_list(vec![0x07, 0x41, 0x00]);
+    let bit_rate =
+        UEAggregateMaximumBitrate::new(BitRate(1_000_000_000), BitRate(500_000_000), None);
+
     let pdu = build_s1ap!(InitiatingMessage, InitialContextSetup,
         REJECT, InitialContextSetupRequest,
+
+        // The UE, on each side of the interface
         REJECT MME_UE_S1AP_ID(mme_ue_id),
         REJECT eNB_UE_S1AP_ID(enb_ue_id),
-        REJECT UEAggregateMaximumBitrate(UEAggregateMaximumBitrate::new(
-            BitRate(1_000_000_000),
-            BitRate(500_000_000),
-            None,
-        )),
+
+        // Its bit rate and its bearers
+        REJECT UEAggregateMaximumBitrate(bit_rate),
         REJECT E_RABToBeSetupListCtxtSUReq(erabs),
+
+        // Its security capabilities and its key
         REJECT UESecurityCapabilities(ue_security_capabilities(&[0xe0, 0xe0])),
         REJECT SecurityKey(SecurityKey(FixedBitString::<256>::ZERO)),
+
+        // Its MME
         IGNORE GUMMEI_ID(gummei(network.clone(), 1, 1)),
     );
 
@@ -71,20 +82,23 @@ fn main() {
     // identity is mandatory in S1AP, and the transparent container uses the
     // ASN.1-derived underscore spelling accepted by the macro.
 
-    let target = TargetID::targeteNB_ID(TargeteNBID::new(
-        global_enb_id(network.clone(), 0x12345),
-        tai(network, &[0x00, 0x01]),
-        None,
-    ));
+    let target_enb = global_enb_id(network.clone(), 0x12345);
+    let target_area = tai(network, &[0x00, 0x01]);
+    let target = TargetID::targeteNB_ID(TargeteNBID::new(target_enb, target_area, None));
+    let cause = Cause::radioNetwork(CauseRadioNetwork::handover_desirable_for_radio_reason);
+
     let pdu = build_s1ap!(InitiatingMessage, HandoverPreparation,
         REJECT, HandoverRequired,
+
         REJECT MME_UE_S1AP_ID(mme_ue_id),
         REJECT eNB_UE_S1AP_ID(enb_ue_id),
+
+        // The kind of handover, its cause and its target
         REJECT HandoverType(HandoverType::intralte),
-        IGNORE Cause(Cause::radioNetwork(
-            CauseRadioNetwork::handover_desirable_for_radio_reason,
-        )),
+        IGNORE Cause(cause),
         REJECT TargetID(target),
+
+        // The container that goes to the target
         REJECT Source_ToTarget_TransparentContainer(vec![0x00, 0x01, 0x02]),
     );
 
@@ -95,8 +109,10 @@ fn main() {
 
     let pdu = build_s1ap!(SuccessfulOutcome, HandoverResourceAllocation,
         REJECT, HandoverRequestAcknowledge,
+
         IGNORE MME_UE_S1AP_ID(mme_ue_id),
         IGNORE eNB_UE_S1AP_ID(enb_ue_id),
+
         IGNORE E_RABAdmittedList(erab_admitted_list()),
         REJECT Target_ToSource_TransparentContainer(vec![0xAA, 0xBB]),
     );
@@ -106,6 +122,7 @@ fn main() {
 
     let pdu = build_s1ap!(UnsuccessfulOutcome, S1Setup,
         REJECT, S1SetupFailure,
+
         IGNORE Cause(Cause::misc(CauseMisc::unknown_PLMN)),
     );
 
@@ -117,6 +134,7 @@ fn main() {
     let cause_ie = build_s1ap_ie!(UEContextReleaseRequest, IGNORE
         Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity))
     );
+
     println!("\n=== 6. Single IE (via build_s1ap_ie!) ===");
     println!(
         "IE ID: {}, Criticality: {:?}",
@@ -159,6 +177,8 @@ fn erab_setup_list() -> ERABSetupListCtxtSURes {
         GTPTEID::from([0, 0, 0, 2]),
         None,
     );
+
+    // An item of the list is an IE itself, alone in its container.
     ERABSetupListCtxtSURes(vec![ProtocolIEField::new(
         ID_E_RABSETUP_ITEM_CTXT_SURES.0,
         Criticality::ignore,
@@ -177,6 +197,7 @@ fn erab_admitted_list() -> ERABAdmittedList {
         None,
         None,
     );
+
     ERABAdmittedList(vec![ProtocolIEField::new(
         ID_E_RABADMITTED_ITEM.0,
         Criticality::ignore,
@@ -196,6 +217,7 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
         None,
         None,
     );
+
     let item = ERABToBeSetupItemCtxtSUReq::new(
         ERABID(5u8.into()),
         qos,
@@ -204,6 +226,7 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
         Some(NASPDU::from(nas)),
         None,
     );
+
     ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField::new(
         ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ.0,
         Criticality::reject,
@@ -220,6 +243,7 @@ fn print_and_encode(pdu: &S1AP_PDU) {
         pdu.direction(),
         pdu.procedure_code()
     );
+
     let bytes = pdu.encode().expect("APER encode failed");
     println!("  APER ({} bytes): {}", bytes.len(), hex::encode(&bytes));
 }

@@ -13,11 +13,14 @@ its IEs by their names.
 ```rust
 use oxirush_s1ap::{build_s1ap, extract_s1ap_ies, s1ap::*};
 
-// UE CONTEXT RELEASE REQUEST: decode it, and read its IEs
+// Decode a UE CONTEXT RELEASE REQUEST
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
 let pdu = S1AP_PDU::decode(&bytes).unwrap();
 assert_eq!((pdu.procedure_code(), pdu.is_initiating()), (18, true));
 println!("{}", pdu.procedure_name());
+
+// Read its IEs by name. An `opt` field is `None` when its IE is not there,
+// and what follows `=>` is what the field keeps of the decoded value
 let request: UEContextReleaseRequest = pdu.decode_value().unwrap();
 extract_s1ap_ies!(request, UEContextReleaseRequest,
     opt mme_id: u32 = MME_UE_S1AP_ID(id),
@@ -26,13 +29,17 @@ extract_s1ap_ies!(request, UEContextReleaseRequest,
 );
 println!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}");
 
-// Build it with another cause, and encode it
+// Build it with another cause: the direction, the procedure, the criticality
+// of the PDU and the message, then each IE with its criticality
 let rebuilt = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
     IGNORE, UEContextReleaseRequest,
+
     REJECT MME_UE_S1AP_ID(42u32),
     REJECT eNB_UE_S1AP_ID(7u32),
     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::radio_connection_with_ue_lost)),
 );
+
+// Encode it
 let encoded = hex::encode(rebuilt.encode().unwrap());
 assert_eq!(encoded, "0012401500000300000002002a0008000200070002400202a0");
 ```
@@ -50,16 +57,21 @@ JSON, which is read, edited and written by the names of the specification:
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
 use serde_json::json;
 
+// The same message, shown as its name and its IEs by name
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
 let pdu = S1AP_PDU::decode(&bytes).unwrap();
 println!("{}", inspect::message_tree(&pdu).unwrap());
 
+// Its tree is edited at a path, and is a PDU again
 let mut tree = inspect::inspect_pdu(&pdu).unwrap();
 let lost = json!("radio-connection-with-ue-lost");
 inspect::set(&mut tree, "/s1ap/Cause/radioNetwork", lost).unwrap();
 let edited = inspect::encode_pdu(&tree).unwrap();
 println!("{}", inspect::message_tree(&edited).unwrap());
-assert_eq!(hex::encode(edited.encode().unwrap()), "0012401500000300000002002a0008000200070002400202a0");
+
+// Its octets are those that the typed example built
+let octets = hex::encode(edited.encode().unwrap());
+assert_eq!(octets, "0012401500000300000002002a0008000200070002400202a0");
 ```
 
 ```json
@@ -248,9 +260,12 @@ without it, the field is the `.0` of the generated newtype.
 ```rust
 use oxirush_s1ap::{build_s1ap_ie, s1ap::*, with_s1ap_ie_mut};
 
+// A message with one IE, which is built alone
 let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
     build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32)),
 ]));
+
+// The IE is decoded, changed and encoded again in its place
 let updated = with_s1ap_ie_mut!(message, UplinkNASTransport,
     MME_UE_S1AP_ID(id) = 42u32
 );
@@ -269,11 +284,15 @@ the same one: the last that decodes.
 ```rust
 use oxirush_s1ap::helpers::*;
 
+// A PLMN from its MCC and its MNC, and what is identified within it
 let network = plmn("208", "93");
-let mme = gummei(network.clone(), 1, 1);
-let tracking_area = tai(network.clone(), &[0x00, 0x01]);
-let cell = eutran_cgi(network.clone(), 0x12345, 7);
+let mme = gummei(network.clone(), 1, 1); // group, code
+let tracking_area = tai(network.clone(), &[0x00, 0x01]); // TAC
+let cell = eutran_cgi(network.clone(), 0x12345, 7); // macro eNB, cell
 let enb = global_enb_id(network, 0x12345);
+
+// A string of bits from octets, and the algorithms of a UE: the first octet
+// of its encryption bitmap, then of its integrity bitmap
 let algorithm_mask = bytes_to_bitvec(&[0xe0]);
 let capabilities = ue_security_capabilities(&[0xe0, 0xe0]);
 ```
@@ -315,6 +334,8 @@ use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
 // UE CONTEXT RELEASE REQUEST
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
 let pdu = S1AP_PDU::decode(&bytes).unwrap();
+
+// As a message, then its third IE as the tree has it
 println!("{}", inspect::message_tree(&pdu).unwrap());
 let tree = inspect::inspect_pdu(&pdu).unwrap();
 println!("{}", tree["message"]["protocolIEs"][2]);
@@ -335,17 +356,21 @@ use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
 use serde_json::json;
 
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-let tree = inspect::inspect_pdu(&S1AP_PDU::decode(&bytes).unwrap()).unwrap();
+let pdu = S1AP_PDU::decode(&bytes).unwrap();
+let tree = inspect::inspect_pdu(&pdu).unwrap();
 
 // `/s1ap` is the IEs of the message, and an IE goes by its name
 let select = |path| inspect::select(&tree, path).unwrap();
 assert_eq!(select("/s1ap/eNB-UE-S1AP-ID/value"), [&json!(7)]);
 assert_eq!(select("/s1ap/Cause/radioNetwork"), [&json!("user-inactivity")]);
 assert_eq!(select("/s1ap/Cause/octets"), [&json!("0280")]);
-// By its position or its identifier, in any case, and each of them
+
+// By its position, by its name whatever its case and its separators, by its
+// identifier, and each IE with `*`
 assert_eq!(select("/s1ap/1/value"), select("/S1AP/enb_ue_s1ap_id/value"));
 assert_eq!(select("/s1ap/@id=8/value"), [&json!(7)]);
 assert_eq!(select("/s1ap/*/criticality").len(), 3);
+
 // Nothing where the message could have a value and has none
 assert!(select("/s1ap/Cause/nas").is_empty());
 assert!(select("/s1ap/GUMMEI-ID/mME-Code").is_empty());
@@ -378,7 +403,8 @@ use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
 use serde_json::json;
 
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-let mut tree = inspect::inspect_pdu(&S1AP_PDU::decode(&bytes).unwrap()).unwrap();
+let pdu = S1AP_PDU::decode(&bytes).unwrap();
+let mut tree = inspect::inspect_pdu(&pdu).unwrap();
 
 // A value, and another alternative of a CHOICE in place of the one that is there
 inspect::set(&mut tree, "/s1ap/eNB-UE-S1AP-ID/value", json!(9)).unwrap();
@@ -390,6 +416,7 @@ println!("{}", inspect::message_tree(&edited).unwrap());
 let after = inspect::inspect_pdu(&edited).unwrap();
 let octets = inspect::select(&after, "/s1ap/MME-UE-S1AP-ID/octets").unwrap();
 assert_eq!(octets, [&json!("002A")]);
+
 // A name that the type does not have is refused, and the tree is as it was
 let wrong = inspect::set(&mut tree, "/s1ap/Cause/radioNetwrok", json!("unspecified"));
 println!("{}", wrong.unwrap_err());
@@ -407,14 +434,18 @@ use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
 use serde_json::json;
 
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-let mut tree = inspect::inspect_pdu(&S1AP_PDU::decode(&bytes).unwrap()).unwrap();
+let pdu = S1AP_PDU::decode(&bytes).unwrap();
+let mut tree = inspect::inspect_pdu(&pdu).unwrap();
 
-// At the end, by its name and its typed value
+// An IE is added at the end, by its name and its typed value
 let name = json!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
 inspect::insert(&mut tree, "/s1ap/-", name).unwrap();
+
 // Before another IE, by its number and its octets
 let unknown = json!({"id": 60000, "criticality": "ignore", "octets": "c0ffee"});
 inspect::insert(&mut tree, "/s1ap/Cause", unknown).unwrap();
+
+// An IE is taken out by its name
 inspect::remove(&mut tree, "/s1ap/MME-UE-S1AP-ID").unwrap();
 
 let edited = inspect::encode_pdu(&tree).unwrap();
@@ -431,6 +462,7 @@ println!("{}", inspect::message_tree(&edited).unwrap()["ies"]);
 use oxirush_s1ap::inspect;
 use serde_json::json;
 
+// The name of the message, whatever its case and its separators, then its IEs
 let request = json!({
     "message": "ue context release request",
     "ies": [
@@ -441,6 +473,7 @@ let request = json!({
         {"eNBname": "enb-1", "criticality": "ignore"},
     ],
 });
+
 let pdu = inspect::message_from_tree(&request).unwrap();
 println!("{}", hex::encode(pdu.encode().unwrap()));
 
@@ -492,6 +525,7 @@ println!("{}", inspect::message_tree(&edited).unwrap());
 use oxirush_s1ap::inspect;
 use serde_json::json;
 
+// A message that has one IE twice
 let twice = json!({"message": "UEContextReleaseRequest", "ies": [
     {"MME-UE-S1AP-ID": 1},
     {"eNB-UE-S1AP-ID": 7},
@@ -503,10 +537,14 @@ let mut tree = inspect::inspect_pdu(&pdu).unwrap();
 // The name selects both, in the order of the message
 let both = inspect::select(&tree, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
 assert_eq!(both, [&json!(1), &json!(2)]);
+
 // Each has its position, which is how `paths` names it, and its name may follow
 inspect::set(&mut tree, "/s1ap/2/MME-UE-S1AP-ID/value", json!(3)).unwrap();
-// The name of another IE says which IE is there
+
+// After a position, the name of another IE is an error that says which IE is there
 println!("{}", inspect::select(&tree, "/s1ap/2/eNB-UE-S1AP-ID/value").unwrap_err());
+
+// The values, each with its path
 for (path, value) in inspect::paths(&tree) {
     if path.ends_with("/value") {
         println!("{path} = {value}");
@@ -529,6 +567,7 @@ The items of a list of E-RABs are IEs themselves, each alone in a container.
 use oxirush_s1ap::inspect;
 use serde_json::{Value, json};
 
+// A message whose one IE is a list of two items
 let command = json!({"message": "E-RABReleaseCommand", "ies": [
     {"E-RABToBeReleasedList": [
         {"E-RABItem": {"e-RAB-ID": 5, "cause": {"nas": "normal-release"}}},
@@ -545,10 +584,13 @@ let select = |tree, path| -> Vec<Value> {
 };
 assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/1/e-RAB-ID"), [json!(6)]);
 assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/E-RABItem/e-RAB-ID"), [json!(5), json!(6)]);
+
 // The same value by the path that says each `value`
 assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/value/1/value/e-RAB-ID"), [json!(6)]);
+
 // And by the names that the message shows, joined: the item by its position, then its name
 assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/1/E-RABItem/e-RAB-ID"), [json!(6)]);
+
 // The criticality of an item is the one of its object set
 assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/0/criticality"), [json!("ignore")]);
 
@@ -557,6 +599,7 @@ let item = json!({"e-RAB-ID": 7, "cause": {"radioNetwork": "unspecified"}});
 let item = json!({"id": "E-RABItem", "criticality": "ignore", "value": item});
 inspect::insert(&mut tree, "/s1ap/E-RABToBeReleasedList/-", item).unwrap();
 inspect::remove(&mut tree, "/s1ap/E-RABToBeReleasedList/0").unwrap();
+
 let edited = inspect::encode_pdu(&tree).unwrap();
 println!("{}", inspect::message_tree(&edited).unwrap());
 ```
@@ -580,6 +623,7 @@ use oxirush_s1ap::inspect;
 // The names that the value at a path can have, as the specification spells them
 let names = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause/nas").unwrap();
 println!("{:?}", names.unwrap());
+
 // A value of another type has none
 let choice = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause/value");
 assert_eq!(choice, Ok(None));
@@ -601,6 +645,8 @@ use oxirush_s1ap::inspect;
 let check = |path| inspect::check_path("UEContextReleaseRequest", path);
 assert_eq!(check("/s1ap/Cause/nas"), Ok(()));
 assert_eq!(check("/s1ap/*/radioNetwork"), Ok(()));
+
+// A name that is written wrong, and an IE that the message does not have
 for wrong in ["/s1ap/Cause/radioNetwrok", "/s1ap/eNB-UE-S1AP-ID/valeu", "/s1ap/GUMMEI-ID"] {
     println!("{}", check(wrong).unwrap_err());
 }
@@ -653,18 +699,25 @@ let required = json!({"message": "HandoverRequired", "ies": [
         "uE-HistoryInformation": [{"uTRAN-Cell": "00"}],
     }}},
 ]});
+
+// A message shows the octets that the container was encoded as
 let pdu = inspect::message_from_tree(&required).unwrap();
 println!("{}", inspect::message_tree(&pdu).unwrap()["ies"][2]);
 
-// Read: a path goes through the name of the type, once `open` decoded the octets
+// Read: a path goes through the name of the type
 let mut tree = inspect::inspect_pdu(&pdu).unwrap();
 let container = format!("/s1ap/Source-ToTarget-TransparentContainer/{name}");
 let cell = format!("{container}/targetCell-ID/cell-ID");
 assert_eq!(inspect::check_path("HandoverRequired", &cell), Ok(()));
+
+// It is an error until `open` decoded the octets, and selects after
 assert!(inspect::select(&tree, &cell).unwrap_err().contains("open decodes them"));
 inspect::open(&mut tree, &cell).unwrap();
 assert_eq!(inspect::select(&tree, &cell).unwrap(), [&json!(4660)]);
-println!("{}", inspect::select(&tree, &format!("{container}/decoded")).unwrap()[0]);
+
+// What the octets carry, decoded
+let decoded = format!("{container}/decoded");
+println!("{}", inspect::select(&tree, &decoded).unwrap()[0]);
 
 // An edit goes into it, and what is not edited is sent as it was received
 inspect::set(&mut tree, &cell, json!(7)).unwrap();

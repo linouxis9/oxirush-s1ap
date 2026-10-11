@@ -52,8 +52,10 @@ fn handle_handover_required(pdu: &S1AP_PDU) -> Result<Vec<String>, MissingIeErro
     extract_s1ap_ies!(&msg, HandoverRequired,
         req mme_id: u32 = MME_UE_S1AP_ID(id),
         req enb_id: u32 = eNB_UE_S1AP_ID(id),
+
         opt ho_type: HandoverType = HandoverType(value) => value,
         opt cause_str: String = Cause(cause) => format!("{cause:?}"),
+
         opt target: String = TargetID(target_value) => match target_value {
             TargetID::targeteNB_ID(value) => {
                 let (mcc, mnc) = plmn_from(&value.global_enb_id.p_lmnidentity);
@@ -61,6 +63,7 @@ fn handle_handover_required(pdu: &S1AP_PDU) -> Result<Vec<String>, MissingIeErro
             },
             _ => "non-eNB target".to_string(),
         },
+
         opt container_len: usize =
             Source_ToTarget_TransparentContainer(container) => container.0.len(),
     );
@@ -87,14 +90,17 @@ fn handle_initial_context_setup(pdu: &S1AP_PDU) -> Result<Vec<String>, MissingIe
     extract_s1ap_ies!(&msg, InitialContextSetupRequest,
         req mme_id: u32 = MME_UE_S1AP_ID(id),
         req enb_id: u32 = eNB_UE_S1AP_ID(id),
+
         opt erabs: ERABToBeSetupListCtxtSUReq =
             E_RABToBeSetupListCtxtSUReq(list) => list,
+
         opt ambr_dl: u64 = UEAggregateMaximumBitrate(ambr) =>
             ambr.u_eaggregate_maximum_bit_rate_dl.0,
     );
 
     let erab_count = erabs.as_ref().map_or(0, |list| list.0.len());
     let nas_len = erabs.as_ref().and_then(nested_nas_len).unwrap_or(0);
+
     Ok(vec![
         format!("MME-UE-S1AP-ID: {mme_id}"),
         format!("eNB-UE-S1AP-ID: {enb_id}"),
@@ -110,48 +116,52 @@ fn main() {
     // 1. UEContextReleaseRequest
     let release_pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
         IGNORE, UEContextReleaseRequest,
+
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
     );
 
     // 2. HandoverRequired
+    let cause = Cause::radioNetwork(CauseRadioNetwork::handover_desirable_for_radio_reason);
     let handover_pdu = build_s1ap!(InitiatingMessage, HandoverPreparation,
         REJECT, HandoverRequired,
+
         REJECT MME_UE_S1AP_ID(100u32),
         REJECT eNB_UE_S1AP_ID(50u32),
+
         REJECT HandoverType(HandoverType::intralte),
-        IGNORE Cause(Cause::radioNetwork(
-            CauseRadioNetwork::handover_desirable_for_radio_reason,
-        )),
+        IGNORE Cause(cause),
         REJECT TargetID(target_enb()),
+
         REJECT Source_ToTarget_TransparentContainer(vec![0xDE, 0xAD, 0xBE, 0xEF]),
     );
 
     // 3. InitialContextSetupRequest. The NAS PDU is nested in its E-RAB item,
     // as specified by TS 36.413 rather than as a top-level message IE.
+    let bit_rate =
+        UEAggregateMaximumBitrate::new(BitRate(1_000_000_000), BitRate(500_000_000), None);
+    let erabs = erab_to_be_setup_list(vec![0x07, 0x41, 0x00, 0x01]);
     let ics_pdu = build_s1ap!(InitiatingMessage, InitialContextSetup,
         REJECT, InitialContextSetupRequest,
+
         REJECT MME_UE_S1AP_ID(200u32),
         REJECT eNB_UE_S1AP_ID(10u32),
-        REJECT UEAggregateMaximumBitrate(UEAggregateMaximumBitrate::new(
-            BitRate(1_000_000_000),
-            BitRate(500_000_000),
-            None,
-        )),
-        REJECT E_RABToBeSetupListCtxtSUReq(erab_to_be_setup_list(vec![
-            0x07, 0x41, 0x00, 0x01,
-        ])),
+
+        REJECT UEAggregateMaximumBitrate(bit_rate),
+        REJECT E_RABToBeSetupListCtxtSUReq(erabs),
+
         REJECT UESecurityCapabilities(ue_security_capabilities(&[0xe0, 0xe0])),
         REJECT SecurityKey(SecurityKey(FixedBitString::<256>::ZERO)),
     );
 
     // Encode → decode round-trip, then extract.
-    for (name, pdu, handler) in [
+    type Handler = fn(&S1AP_PDU) -> Result<Vec<String>, MissingIeError>;
+    let cases: [(&str, &S1AP_PDU, Handler); 3] = [
         (
             "UEContextReleaseRequest",
             &release_pdu,
-            handle_release_request as fn(&S1AP_PDU) -> Result<Vec<String>, MissingIeError>,
+            handle_release_request,
         ),
         ("HandoverRequired", &handover_pdu, handle_handover_required),
         (
@@ -159,7 +169,9 @@ fn main() {
             &ics_pdu,
             handle_initial_context_setup,
         ),
-    ] {
+    ];
+
+    for (name, pdu, handler) in cases {
         let bytes = pdu.encode().expect("encode failed");
         let decoded = S1AP_PDU::decode(&bytes).expect("decode failed");
 
@@ -190,11 +202,10 @@ fn decode_initiating<T: rasn::Decode>(pdu: &S1AP_PDU, procedure_code: u8) -> Opt
 
 fn target_enb() -> TargetID {
     let network = plmn("208", "93");
-    TargetID::targeteNB_ID(TargeteNBID::new(
-        global_enb_id(network.clone(), 0x12345),
-        tai(network, &[0x00, 0x01]),
-        None,
-    ))
+    let enb = global_enb_id(network.clone(), 0x12345);
+    let area = tai(network, &[0x00, 0x01]);
+
+    TargetID::targeteNB_ID(TargeteNBID::new(enb, area, None))
 }
 
 fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
@@ -209,6 +220,7 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
         None,
         None,
     );
+
     let item = ERABToBeSetupItemCtxtSUReq::new(
         ERABID(5u8.into()),
         qos,
@@ -217,6 +229,8 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
         Some(NASPDU::from(nas)),
         None,
     );
+
+    // An item of the list is an IE itself, alone in its container.
     ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField::new(
         ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ.0,
         Criticality::reject,

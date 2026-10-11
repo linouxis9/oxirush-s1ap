@@ -26,6 +26,7 @@ fn main() {
         ServedMMECs(vec![MMECode::from([0x01])]),
         None,
     )]);
+
     let mme_name = MMEname(PrintableString::try_from("OxiRushMME").expect("valid MME name"));
 
     // In rasn's stable opaque-open-type representation, every entry holds its
@@ -61,6 +62,7 @@ fn main() {
     // `pdu.encode()` is the convenience API; this deliberately uses raw rasn.
 
     let aper_bytes = rasn::aper::encode(&pdu).expect("APER encode failed");
+
     println!("Encoded S1SetupResponse: {} bytes", aper_bytes.len());
     println!("APER hex: {}", hex::encode(&aper_bytes));
 
@@ -89,42 +91,42 @@ fn main() {
 
             let response: S1SetupResponse =
                 decode_open_type(&outcome.value).expect("decode S1 Setup Response");
+
             for ie in &response.protocol_ies.0 {
                 match ie.id {
                     ID_MMENAME => {
                         let name: MMEname = decode_open_type(&ie.value).expect("decode MME name");
-                        println!(
-                            "MME Name:       {}",
-                            String::from_utf8_lossy(name.0.as_bytes())
-                        );
+                        let text = String::from_utf8_lossy(name.0.as_bytes());
+
+                        println!("MME Name:       {text}");
                     }
+
                     ID_RELATIVE_MMECAPACITY => {
                         let capacity: RelativeMMECapacity =
                             decode_open_type(&ie.value).expect("decode MME capacity");
+
                         println!("MME Capacity:   {}", capacity.0);
                     }
+
                     ID_SERVED_GUMMEIS => {
                         let list: ServedGUMMEIs =
                             decode_open_type(&ie.value).expect("decode served GUMMEIs");
+
                         println!("Served GUMMEIs: {} entries", list.0.len());
                         for item in &list.0 {
                             for plmn in &item.served_plmns.0 {
-                                println!(
-                                    "  PLMN: {}",
-                                    plmn.0
-                                        .0
-                                        .iter()
-                                        .map(|b| format!("{b:02x}"))
-                                        .collect::<String>()
-                                );
+                                let octets = &plmn.0.0;
+                                let plmn_hex: String =
+                                    octets.iter().map(|b| format!("{b:02x}")).collect();
+                                println!("  PLMN: {plmn_hex}");
                             }
-                            println!(
-                                "  groups: {}, MMECs: {}",
-                                item.served_group_ids.0.len(),
-                                item.served_mmecs.0.len()
-                            );
+
+                            let groups = item.served_group_ids.0.len();
+                            let mmecs = item.served_mmecs.0.len();
+                            println!("  groups: {groups}, MMECs: {mmecs}");
                         }
                     }
+
                     _ => println!("  (other IE: id={})", ie.id.0),
                 }
             }
@@ -136,5 +138,6 @@ fn main() {
 
     let re_encoded = decoded.encode().expect("re-encode failed");
     assert_eq!(aper_bytes, re_encoded, "Round-trip mismatch!");
+
     println!("\nRound-trip OK ({} bytes)", re_encoded.len());
 }
