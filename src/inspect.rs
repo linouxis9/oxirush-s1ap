@@ -115,6 +115,29 @@
 //! as in `/s1ap/TraceCollectionEntityIPAddress/value/value`. The value of an IE of an
 //! extension container is its `extensionValue`, and is left out the same way.
 //!
+//! After an entry of a list of IEs, or an IE that a value holds alone, a segment may be
+//! the name of that IE, and the path goes on from the IE:
+//!
+//! ```text
+//! /s1ap/E-RABToBeSetupListCtxtSUReq/0/E-RABToBeSetupItemCtxtSUReq/e-RAB-ID
+//! ```
+//!
+//! So the names and the positions that [`message_tree`] shows, joined after the root,
+//! are the path of a value in the tree of the same PDU. A path that ends with the name
+//! of an IE selects the IE, as its name alone does in a list, and `value` after it its
+//! value.
+//!
+//! Under an IE, a segment is a member of the IE, then the name of the IE, then a member
+//! of its value. A member that is named as another IE is that member, as the `nAS-PDU`
+//! of an E-RAB. One value of TS 36.413 has a member that is named as its own IE, the
+//! `uESidelinkAggregateMaximumBitRate` of `UESidelinkAggregateMaximumBitrate`: there
+//! the segment is the IE where it spells the name as ASN.1 spells that of the IE, which
+//! is how [`message_tree`] shows it, and the member otherwise, as it was before an IE
+//! could be named there. So the order changes the meaning of no path into a value. An
+//! IE of the same name that the value holds, in a list, is reached after `value`. The
+//! name of another IE, where the value has no such member, is an error that says which
+//! IE the entry is.
+//!
 //! ## Names
 //!
 //! A name is its letters and its digits, whatever their case and whatever is between

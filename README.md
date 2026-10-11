@@ -375,8 +375,10 @@ let mut tree = inspect::inspect_pdu(&pdu).unwrap();
 // The name selects both, in the order of the message
 let both = inspect::select(&tree, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
 assert_eq!(both, [&json!(1), &json!(2)]);
-// Each has its position, which is how `paths` names it
-inspect::set(&mut tree, "/s1ap/2/value", json!(3)).unwrap();
+// Each has its position, which is how `paths` names it, and its name may follow
+inspect::set(&mut tree, "/s1ap/2/MME-UE-S1AP-ID/value", json!(3)).unwrap();
+// The name of another IE says which IE is there
+println!("{}", inspect::select(&tree, "/s1ap/2/eNB-UE-S1AP-ID/value").unwrap_err());
 for (path, value) in inspect::paths(&tree) {
     if path.ends_with("/value") {
         println!("{path} = {value}");
@@ -385,6 +387,7 @@ for (path, value) in inspect::paths(&tree) {
 ```
 
 ```text
+this IE is MME-UE-S1AP-ID, not eNB-UE-S1AP-ID: "eNB-UE-S1AP-ID" is not a member of this value, which has none, at /s1ap/2/eNB-UE-S1AP-ID/value
 /s1ap/0/value = 1
 /s1ap/eNB-UE-S1AP-ID/value = 7
 /s1ap/2/value = 3
@@ -416,6 +419,8 @@ assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/1/e-RAB-ID"), [json!(6)]);
 assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/E-RABItem/e-RAB-ID"), [json!(5), json!(6)]);
 // The same value by the path that says each `value`
 assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/value/1/value/e-RAB-ID"), [json!(6)]);
+// And by the names that the message shows, joined: the item by its position, then its name
+assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/1/E-RABItem/e-RAB-ID"), [json!(6)]);
 // The criticality of an item is the one of its object set
 assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/0/criticality"), [json!("ignore")]);
 
@@ -615,7 +620,7 @@ headings that the rows link to.
 | Subject | Rule |
 |---------|------|
 | [Paths] | A JSON pointer into the tree, where `/s1ap` stands for the IEs of the message and `*` for each entry of a list or each member of a value. |
-| An IE | The name that ASN.1 gives it after `id-`, its position (`/s1ap/0`) or its identifier (`/s1ap/@id=8`); `-` is the end of the list. A name selects each IE of that name. |
+| An IE | The name that ASN.1 gives it after `id-`, its position (`/s1ap/0`) or its identifier (`/s1ap/@id=8`); `-` is the end of the list. A name selects each IE of that name. After the position of an IE, its name may follow, so the names and the positions that a message shows, joined, are a path; that of another IE is an error that says which IE is there. |
 | Under an IE | `id`, `criticality`, the typed `value`, and `octets`: what it was received as, in hexadecimal. The members that start with `_` keep what was received. |
 | `value`, `decoded` | May be left out of a path. What the IE or the transfer has itself comes first: `/s1ap/Cause/*` is the members of the IE, and `value/value` the one member of a value that is named as one of its IE, in a string of bits whose size varies. |
 | [Names] | Letters and digits, whatever their case and whatever is between them, for the root, the IEs, the members of a value, the messages and the values of an `ENUMERATED`: `/S1AP/enb_ue_s1ap_id` is `/s1ap/eNB-UE-S1AP-ID`. |

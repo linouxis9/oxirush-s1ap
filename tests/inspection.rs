@@ -630,6 +630,156 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     assert!(error.contains("which has none"), "{error}");
 }
 
+/// Each value of `shown`, a message as `message_tree` shows it or a part of one, with the
+/// path that joins the names and the positions on the way to it. A list of plain values
+/// is one value.
+fn joined(shown: &serde_json::Value, path: &str, found: &mut Vec<(String, serde_json::Value)>) {
+    use serde_json::Value;
+    match shown {
+        Value::Object(members) if !members.is_empty() => {
+            for (name, member) in members {
+                joined(member, &format!("{path}/{name}"), found);
+            }
+        }
+        Value::Array(entries) if entries.iter().any(|e| e.is_object() || e.is_array()) => {
+            for (index, entry) in entries.iter().enumerate() {
+                joined(entry, &format!("{path}/{index}"), found);
+            }
+        }
+        value => found.push((path.to_string(), value.clone())),
+    }
+}
+
+#[test]
+fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
+    use serde_json::json;
+    let (mut values, mut whole, mut bits) = (0, 0, 0);
+    for line in include_str!("fixtures/messages.tsv")
+        .lines()
+        .filter(|line| !line.starts_with('#') && !line.is_empty())
+    {
+        let fields: Vec<_> = line.split('\t').collect();
+        let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
+        // A private message has no IEs of the protocol to name.
+        let Ok(shown) = inspect::message_tree(&pdu) else {
+            continue;
+        };
+        let tree = inspect::inspect_pdu(&pdu).unwrap();
+        let ies = shown["ies"].as_array().unwrap();
+        for (index, ie) in ies.iter().enumerate() {
+            // An IE of the message by its position, then by its name, and by its name
+            // alone, which selects it when the message has it once.
+            let mut found = Vec::new();
+            joined(ie, &format!("/s1ap/{index}"), &mut found);
+            for (path, value) in found {
+                let at = format!("{} {path}", fields[0]);
+                let selected = inspect::select(&tree, &path).expect(&at);
+                assert_eq!(inspect::check_path(fields[0], &path), Ok(()), "{at}");
+                let named = path.replacen(&format!("/{index}/"), "/", 1);
+                if !named.ends_with("/criticality") || named.matches('/').count() > 3 {
+                    assert_eq!(inspect::select(&tree, &named), Ok(selected.clone()), "{at}");
+                }
+                values += 1;
+                // A path that ends with the name of an IE selects the IE, as the name
+                // alone does in a list: a value that is the whole value of its IE is
+                // after `value`.
+                if selected[0].get("_raw_value").is_some() {
+                    let of_the_ie = inspect::select(&tree, &format!("{path}/value")).expect(&at);
+                    assert_eq!(of_the_ie, [&value], "{at}");
+                    whole += 1;
+                    continue;
+                }
+                // A string of bits whose size varies that is the value of an IE has a
+                // member that is named as one of the IE: its `value` is after `value`.
+                if path.ends_with("/value") && selected[0].get("length").is_some() {
+                    let after = inspect::select(&tree, &format!("{path}/value")).expect(&at);
+                    assert_eq!(after, [&value], "{at}");
+                    bits += 1;
+                    continue;
+                }
+                assert_eq!(selected, [&value], "{at}");
+            }
+        }
+    }
+    assert!(
+        values > 300 && whole > 100 && bits > 0,
+        "{values} {whole} {bits}"
+    );
+
+    // An item of a list of E-RABs, by its position then its name.
+    let name = "E-RABSetupRequest";
+    let mut tree = inspect::inspect_pdu(&S1AP_PDU::decode(&fixture(name)).unwrap()).unwrap();
+    let list = "/s1ap/E-RABToBeSetupListBearerSUReq";
+    let tunnel = format!("{list}/0/E-RABToBeSetupItemBearerSUReq/gTP-TEID");
+    assert_eq!(
+        inspect::select(&tree, &tunnel).unwrap(),
+        [&json!(2778534635u32)]
+    );
+    // The name of another IE says which IE the entry is, where a tree says it.
+    let other = format!("{list}/0/E-RABItem/e-RAB-ID");
+    let error = inspect::select(&tree, &other).unwrap_err();
+    let which = "this IE is E-RABToBeSetupItemBearerSUReq, not E-RABItem: ";
+    assert!(error.starts_with(which), "{error}");
+    assert!(
+        error.contains("is not a member of ERABToBeSetupItemBearerSUReq"),
+        "{error}"
+    );
+    assert_eq!(inspect::set(&mut tree, &other, json!(5)), Err(error));
+    // Without a tree, the entry at a position is the IE that the segment names, and
+    // the path is read against its type.
+    assert_eq!(inspect::check_path(name, &tunnel), Ok(()));
+    assert_eq!(inspect::check_path(name, &other), Ok(()));
+    let wrong = format!("{list}/0/E-RABToBeSetupItemBearerSUReq/gTP-TEIDs");
+    let error = inspect::check_path(name, &wrong).unwrap_err();
+    assert!(
+        error.contains("is not a member of ERABToBeSetupItemBearerSUReq"),
+        "{error}"
+    );
+    let capability = "e-RABlevelQoSParameters/allocationRetentionPriority/pre-emptionCapability";
+    let item = format!("{list}/0/E-RABToBeSetupItemBearerSUReq");
+    let names = inspect::enumerated_at(name, &format!("{item}/{capability}")).unwrap();
+    assert!(names.is_some_and(|names| names.contains(&"may-trigger-pre-emption")));
+    // An edit takes the same path, and the entry itself where the path ends with its
+    // name.
+    inspect::set(&mut tree, &tunnel, json!(7)).unwrap();
+    let second = inspect::select(&tree, &item).unwrap()[0].clone();
+    inspect::insert(&mut tree, &item, second).unwrap();
+    inspect::remove(
+        &mut tree,
+        &format!("{list}/1/E-RABToBeSetupItemBearerSUReq"),
+    )
+    .unwrap();
+    let sent = inspect::inspect_pdu(&inspect::encode_pdu(&tree).unwrap()).unwrap();
+    let tunnels = inspect::select(&sent, &format!("{list}/value/*/gTP-TEID")).unwrap();
+    assert_eq!(tunnels, [&json!(7)]);
+    // A member of a value that is named as another IE is that member: an E-RAB has a
+    // `nAS-PDU`, and `NAS-PDU` is an IE.
+    let message = inspect::select(&sent, &format!("{item}/nAS-PDU")).unwrap();
+    assert_eq!(message, [&json!("076002")]);
+    let checked = inspect::check_path(name, &format!("{item}/nAS-PDU"));
+    assert_eq!(checked, Ok(()));
+    // The value of one IE has a member that is named as the IE itself. A segment is the
+    // IE when it spells the name as ASN.1 spells that of the IE, which is how a message
+    // shows it, and the member otherwise, as it was before an IE could be named there.
+    let limit = json!({"uESidelinkAggregateMaximumBitRate": 5});
+    let limit = json!({"UESidelinkAggregateMaximumBitrate": limit, "criticality": "ignore"});
+    let request = json!({"message": "InitialContextSetupRequest", "ies": [limit]});
+    let tree = inspect::inspect_pdu(&inspect::message_from_tree(&request).unwrap()).unwrap();
+    for path in [
+        "/s1ap/0/UESidelinkAggregateMaximumBitrate/uESidelinkAggregateMaximumBitRate",
+        "/s1ap/UESidelinkAggregateMaximumBitrate/uESidelinkAggregateMaximumBitRate",
+        "/s1ap/0/uESidelinkAggregateMaximumBitRate",
+        "/s1ap/0/uesidelinkaggregatemaximumbitrate",
+        "/s1ap/0/UESidelinkAggregateMaximumBitrate/value/UESidelinkAggregateMaximumBitrate",
+    ] {
+        assert_eq!(inspect::select(&tree, path).unwrap(), [&json!(5)], "{path}");
+        let checked = inspect::check_path("InitialContextSetupRequest", path);
+        assert_eq!(checked, Ok(()), "{path}");
+    }
+    let ie = inspect::select(&tree, "/s1ap/0/UESidelinkAggregateMaximumBitrate").unwrap();
+    assert_eq!(ie[0]["id"], json!(248));
+}
+
 /// The octets of the message `name` of the fixtures.
 fn fixture(name: &str) -> Vec<u8> {
     let mut lines = include_str!("fixtures/messages.tsv").lines();
