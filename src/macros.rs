@@ -731,8 +731,15 @@ macro_rules! with_s1ap_ie_mut {
                 let _changed: bool = $expr;
                 match $crate::s1ap::encode_open_type(&$bind) {
                     ::core::result::Result::Ok(_value) => {
-                        $msg_var.protocol_ies.0[_index].value = _value;
-                        ::core::result::Result::Ok(_changed)
+                        // The IE is where it was read, unless the message is another
+                        // one each time that its expression is read.
+                        match $msg_var.protocol_ies.0.get_mut(_index) {
+                            ::core::option::Option::Some(_ie) => {
+                                _ie.value = _value;
+                                ::core::result::Result::Ok(_changed)
+                            }
+                            ::core::option::Option::None => ::core::result::Result::Ok(false),
+                        }
                     }
                     ::core::result::Result::Err(_error) => ::core::result::Result::Err(_error),
                 }
@@ -913,6 +920,38 @@ mod tests {
             // The message is as it was.
             assert_eq!(request, before);
         }
+        Ok(())
+    }
+
+    #[test]
+    fn a_message_that_is_another_one_each_time_it_is_read_is_no_panic() -> Result<(), Error> {
+        // The macro reads the expression of its message more than once: one that gives
+        // a message with the IE, then one without it, has nowhere to write the IE.
+        struct Each {
+            messages: [UEContextReleaseRequest; 2],
+            reads: usize,
+        }
+        impl Each {
+            fn next(&mut self) -> &mut UEContextReleaseRequest {
+                self.reads += 1;
+                &mut self.messages[usize::from(self.reads > 2)]
+            }
+        }
+        let with = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(1u32))?;
+        let mut each = Each {
+            messages: [
+                UEContextReleaseRequest::new(ProtocolIEContainer(vec![with])),
+                UEContextReleaseRequest::new(ProtocolIEContainer(vec![])),
+            ],
+            reads: 0,
+        };
+        let changed = with_s1ap_ie_mut!(
+            each.next(),
+            UEContextReleaseRequest,
+            MME_UE_S1AP_ID(id) = 2u32
+        );
+        assert_eq!(changed, Ok(false));
+        assert_eq!(each.reads, 3);
         Ok(())
     }
 
