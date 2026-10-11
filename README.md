@@ -122,19 +122,19 @@ where the row does not say `--release`:
 
 | Build | Time | Peak memory |
 |-------|------|-------------|
-| Rust 1.88, no feature | 16 s | 1.2 GiB |
-| Rust 1.88, `inspect` | 31 s | 2.5 GiB |
-| Rust 1.88, `inspect`, `CARGO_PROFILE_DEV_DEBUG=0` | 25 s | 2.0 GiB |
+| Rust 1.88, no feature | 14 s | 1.4 GiB |
+| Rust 1.88, `inspect` | 29 s | 2.5 GiB |
+| Rust 1.88, `inspect`, `CARGO_PROFILE_DEV_DEBUG=0` | 24 s | 2.0 GiB |
 | Rust 1.88, `inspect`, `--release` | 48 s | 2.1 GiB |
-| Rust 1.98, `inspect` | 31 s | 2.4 GiB |
+| Rust 1.98, `inspect` | 30 s | 2.5 GiB |
 
 Each row is two clean builds of an exported copy of the crate, with a target
-directory of its own: the mean of their times, which differ by less than a
-tenth on a machine that does other work, and the higher of their peaks. A
-peak is the summed resident memory of cargo and its compilers, sampled four
-times a second, on an eight-core x86-64 Linux machine. A build of the tests
-with every feature and `-j 4` peaked at 2.6 GiB, and at 1.9 GiB without debug
-information.
+directory of its own, on a machine that does nothing else: the mean of their
+times, which are within two seconds of each other, and the higher of their
+peaks. A peak is the summed resident memory of cargo and its compilers,
+sampled four times a second, on an eight-core x86-64 Linux machine. A build of
+the tests with every feature and `-j 4` peaked at 2.7 GiB, and at 2.0 GiB
+without debug information.
 
 ## What the crate covers
 
