@@ -298,6 +298,12 @@ let algorithm_mask = bytes_to_bitvec(&[0xe0]);
 let capabilities = ue_security_capabilities(&[0xe0, 0xe0]);
 ```
 
+A PLMN identity has its digits in the order of TS 36.413 clause 9.2.3.8: the
+three of the MCC, then the two or three of the MNC, two in each octet, the
+second over the first. `plmn("310", "410")` is the octets `13 40 01`. A NAS
+message has another order for an MNC of three digits, that of TS 24.008,
+where the same network is `13 00 14`.
+
 ### Key types
 
 | Type | Description |
@@ -308,7 +314,7 @@ let capabilities = ue_security_capabilities(&[0xe0, 0xe0]);
 | `MMEUES1APID` | 32-bit MME UE S1AP identifier |
 | `ENBUES1APID` | eNB UE S1AP identifier |
 | `Cause` | Radio network, transport, NAS, protocol or miscellaneous cause |
-| `PLMNidentity` | Three octets of TBCD |
+| `PLMNidentity` | Three octets: the digits of the MCC, then those of the MNC, two in each octet |
 | `TAI` | PLMN and a TAC of two octets |
 | `EUTRANCGI` | PLMN and a 28-bit E-UTRAN cell identity |
 | `ERABID` | E-RAB identifier |

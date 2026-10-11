@@ -837,10 +837,11 @@ fn well_known_values_are_shown_and_taken_as_they_are_usually_written() {
         ie(&mut view, 59)["_raw_value"]
     );
 
-    // As JER writes them, which is what a view had before.
+    // As JER writes them, which is what a view had before: the octets that TS 36.413
+    // clause 9.2.3.8 has for 001-01 and for 310-410.
     let area = &mut ie(&mut view, 64)["value"][0];
     area["tAC"] = json!("0007");
-    area["broadcastPLMNs"] = json!(["00F110", "130014"]);
+    area["broadcastPLMNs"] = json!(["00F110", "134001"]);
     assert_eq!(
         inspect::message_from_view(&view).unwrap().encode().unwrap(),
         edited.encode().unwrap()

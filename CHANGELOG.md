@@ -29,6 +29,8 @@ is not source compatible with 0.2.0.
   id-GUMMEI-ID where a PATH SWITCH REQUEST carries id-SourceMME-GUMMEI.
 - The minimum supported Rust version is 1.88, which rasn 0.28.15 needs:
   0.2.0 declared 1.85.
+- `helpers::plmn` writes other octets for an MNC of three digits, and
+  `helpers::plmn_from` reads them: see the first entry of Fixed.
 
 ### Added
 
@@ -185,6 +187,15 @@ is not source compatible with 0.2.0.
 
 ### Fixed
 
+- The octets of a PLMN identity with an MNC of three digits, which is a fix
+  of the wire format of 0.2.0. TS 36.413 clause 9.2.3.8 has the three digits
+  of the MCC, then those of the MNC, two in each octet, the second over the
+  first: 310-410 is `13 40 01`. `helpers::plmn` wrote `13 00 14`, the order
+  that TS 24.008 gives a NAS message, which a decoder of S1AP reads as
+  310-041, and `helpers::plmn_from` read 310-410 in those octets. Both have
+  the order of the clause now, and so has the `"310-410"` that the `inspect`
+  feature writes and shows. An MNC of two digits has the same octets in both
+  orders: 208-93 is `02 f8 39` as before.
 - APER encoding and decoding of constrained `SEQUENCE OF` lists, among them
   the ten `E-RAB-IE-ContainerList` lists, which get back their bound of 256;
   of fixed-size `BIT STRING` values longer than 16 bits; of strings with a
