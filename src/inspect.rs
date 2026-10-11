@@ -12,12 +12,16 @@
 //! - a transport layer address as an IP address, `"10.0.0.1"` or `"2001:db8::1"`, or as
 //!   the two with a comma when it holds both;
 //! - an IMSI as its digits;
-//! - an identifier or a counter, such as a TAC, a GTP-TEID, a TMSI, a cell identity, the
-//!   parts of a GUAMI or an SST, as a number.
+//! - an identifier or a counter, such as a TAC, a GTP-TEID, an M-TMSI, a cell identity or
+//!   the parts of a GUMMEI, as a number.
 //!
 //! [`encode_pdu`] takes them in this form, a number also as a `"0x…"` string, and as JER
 //! writes them. It takes the name of an ENUMERATED value as any other name: see
-//! [Names](#names).
+//! [Names](#names). An IMSI of an even number of digits is taken as its digits only. A
+//! value that does not fit its form, such as a transport layer address of another length,
+//! stays as JER writes it. The other strings stay in hexadecimal: keys and algorithm
+//! masks, the NAS-PDU and the other containers, and the node identifiers, whose length
+//! says which kind they are.
 //!
 //! The members that start with `_` say what was received:
 //!
@@ -28,7 +32,7 @@
 //! - `_decode_error`: why an IE's `value` is still its octets in hexadecimal, or why a
 //!   transfer has no `decoded` member. The identifier is unknown or has several types, the
 //!   octets do not decode, JER cannot represent the value, or the IE is nested deeper
-//!   than 64 levels;
+//!   than 64 levels. The rest of the PDU is read all the same;
 //! - `_edited`: [`set`], [`remove`] or [`insert`] changed something under the value, whose
 //!   octets are no longer those beside it.
 //!
@@ -39,7 +43,9 @@
 //!   as with an extension addition that the typed value does not keep;
 //! - to add an IE, write an entry with its `id`, its `criticality` and its `value`, and no
 //!   `_raw_value`: the value is encoded as the type of the identifier, whatever JSON it is.
-//!   The `id` is a number, or the name of the IE;
+//!   The `id` is a number, or the name of the IE. An IE is written this way wherever a
+//!   tree has IEs: in the items of a list of IEs, in a value that is set whole, and in a
+//!   tree written by hand;
 //! - to send given octets as an IE, write them in hexadecimal as its `octets`, or as
 //!   `_raw_value`, and leave `value` out. For a transfer, replace the member with its
 //!   octets, or with an object that has them as its `octets` alone;
