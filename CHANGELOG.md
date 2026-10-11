@@ -154,6 +154,12 @@ is not source compatible with 0.2.0.
 - `with_s1ap_ie_mut!` changes the IE that `extract_s1ap_ies!` reads when a
   message has it twice, the last that decodes: it changed the first, or
   nothing when the first did not decode.
+- `extract_s1ap_ies!` converts the `MissingIeError` of a `req` field as `?`
+  converts an error, so the enclosing function returns `MissingIeError`,
+  `Box<dyn std::error::Error>` or any error type with a
+  `From<MissingIeError>`, as the documentation of 0.2.0 said and the macro did
+  not do: it returned the error as it is. A closure whose error type the
+  macro alone gave now has to say it.
 - The examples of the documentation and of the README are compiled and run
   by the documentation tests.
 

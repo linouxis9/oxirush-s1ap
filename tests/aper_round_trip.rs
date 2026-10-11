@@ -234,3 +234,68 @@ fn extraction_binding_may_share_the_field_name() -> Result<(), MissingIeError> {
     );
     Ok(())
 }
+
+/// A message with the identifier that the functions below require, or without it.
+fn release_request(id: Option<u32>) -> UEContextReleaseRequest {
+    let ies = id
+        .map(|id| oxirush_s1ap::build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(id)));
+    UEContextReleaseRequest::new(ProtocolIEContainer(ies.into_iter().collect()))
+}
+
+/// A `req` field that is not there is the error of the enclosing function: the
+/// macro converts its `MissingIeError` as `?` converts one, here into an error
+/// type of the caller that has a `From<MissingIeError>`.
+#[test]
+fn a_missing_required_ie_is_an_error_of_the_callers_own_type() {
+    #[derive(Debug, PartialEq)]
+    enum Refused {
+        Missing(&'static str),
+    }
+    impl From<MissingIeError> for Refused {
+        fn from(error: MissingIeError) -> Self {
+            Self::Missing(error.ie_name)
+        }
+    }
+    fn id(request: &UEContextReleaseRequest) -> Result<u32, Refused> {
+        extract_s1ap_ies!(request, UEContextReleaseRequest,
+            req mme_id: u32 = MME_UE_S1AP_ID(id),
+        );
+        Ok(mme_id)
+    }
+    assert_eq!(id(&release_request(None)), Err(Refused::Missing("mme_id")));
+    assert_eq!(id(&release_request(Some(42))), Ok(42));
+}
+
+/// The same in a function whose error is a `Box<dyn Error>`, which holds the
+/// `MissingIeError`.
+#[test]
+fn a_missing_required_ie_is_a_boxed_error() {
+    fn id(request: &UEContextReleaseRequest) -> Result<u32, Box<dyn std::error::Error>> {
+        extract_s1ap_ies!(request, UEContextReleaseRequest,
+            req mme_id: u32 = MME_UE_S1AP_ID(id),
+        );
+        Ok(mme_id)
+    }
+    let error = id(&release_request(None)).unwrap_err();
+    let missing = error.downcast_ref::<MissingIeError>().expect("the error");
+    assert_eq!(missing.ie_name, "mme_id");
+    assert_eq!(
+        error.to_string(),
+        "missing or invalid required S1AP IE: mme_id"
+    );
+    assert_eq!(id(&release_request(Some(42))).unwrap(), 42);
+}
+
+/// And in a function whose error is `MissingIeError` itself, which needs no
+/// conversion.
+#[test]
+fn a_missing_required_ie_is_a_missing_ie_error() {
+    fn id(request: &UEContextReleaseRequest) -> Result<u32, MissingIeError> {
+        extract_s1ap_ies!(request, UEContextReleaseRequest,
+            req mme_id: u32 = MME_UE_S1AP_ID(id),
+        );
+        Ok(mme_id)
+    }
+    assert_eq!(id(&release_request(None)).unwrap_err().ie_name, "mme_id");
+    assert_eq!(id(&release_request(Some(42))).unwrap(), 42);
+}
