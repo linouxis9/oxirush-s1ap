@@ -149,7 +149,10 @@ fn extended_tai(count: usize, fragmented_open_type: bool) -> Vec<u8> {
 #[test]
 fn unknown_additions_handle_small_large_and_fragmented_bitmaps() {
     let expected = FollowingTAI {
-        value: oxirush_s1ap::helpers::tai(oxirush_s1ap::helpers::plmn("208", "93"), &[0, 1]),
+        value: oxirush_s1ap::helpers::tai(
+            oxirush_s1ap::helpers::plmn("208", "93").unwrap(),
+            [0, 1],
+        ),
         following: 0x7c,
     };
     for count in [1, 64, 65, 128, 16384, 65536] {
@@ -188,7 +191,8 @@ fn unknown_additions_reject_truncated_small_open_types() {
 
 #[test]
 fn root_fields_and_other_codecs_keep_the_original_sequence_layout() {
-    let value = oxirush_s1ap::helpers::tai(oxirush_s1ap::helpers::plmn("208", "93"), &[0, 1]);
+    let value =
+        oxirush_s1ap::helpers::tai(oxirush_s1ap::helpers::plmn("208", "93").unwrap(), [0, 1]);
     macro_rules! round_trip {
         ($codec:ident) => {
             let wire = rasn::$codec::encode(&value).unwrap();
@@ -211,7 +215,7 @@ fn root_fields_and_other_codecs_keep_the_original_sequence_layout() {
 fn optional_root_extension_container_is_preserved() {
     let wire = hex::decode("4002f83900010000fde840015a").unwrap();
     let value = TAI::new(
-        oxirush_s1ap::helpers::plmn("208", "93"),
+        oxirush_s1ap::helpers::plmn("208", "93").unwrap(),
         [0, 1].into(),
         Some(ProtocolExtensionContainer(vec![
             ProtocolExtensionField::new(

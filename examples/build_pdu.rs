@@ -48,7 +48,7 @@ fn main() -> Result<(), Error> {
     // a top-level InitialContextSetupRequest IE. This demonstrates that nested
     // open container, fixed-size security key, GUMMEI, and LTE capabilities.
 
-    let network = plmn("208", "93");
+    let network = plmn("208", "93")?;
     let erabs = erab_to_be_setup_list(vec![0x07, 0x41, 0x00]);
     let bit_rate =
         UEAggregateMaximumBitrate::new(BitRate(1_000_000_000), BitRate(500_000_000), None);
@@ -65,7 +65,7 @@ fn main() -> Result<(), Error> {
         REJECT E_RABToBeSetupListCtxtSUReq(erabs),
 
         // Its security capabilities and its key
-        REJECT UESecurityCapabilities(ue_security_capabilities(&[0xe0, 0xe0])),
+        REJECT UESecurityCapabilities(ue_security_capabilities(0xe0, 0xe0)),
         REJECT SecurityKey(SecurityKey(FixedBitString::<256>::ZERO)),
 
         // Its MME
@@ -81,8 +81,8 @@ fn main() -> Result<(), Error> {
     // identity is mandatory in S1AP, and the transparent container uses the
     // ASN.1-derived underscore spelling accepted by the macro.
 
-    let target_enb = global_enb_id(network.clone(), 0x12345);
-    let target_area = tai(network, &[0x00, 0x01]);
+    let target_enb = global_enb_id(network.clone(), 0x12345)?;
+    let target_area = tai(network, [0x00, 0x01]);
     let target = TargetID::targeteNB_ID(TargeteNBID::new(target_enb, target_area, None));
     let cause = Cause::radioNetwork(CauseRadioNetwork::handover_desirable_for_radio_reason);
 

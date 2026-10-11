@@ -123,7 +123,7 @@ fn main() -> Result<(), Error> {
 
         REJECT HandoverType(HandoverType::intralte),
         IGNORE Cause(cause),
-        REJECT TargetID(target_enb()),
+        REJECT TargetID(target_enb()?),
 
         REJECT Source_ToTarget_TransparentContainer(vec![0xDE, 0xAD, 0xBE, 0xEF]),
     )?;
@@ -142,7 +142,7 @@ fn main() -> Result<(), Error> {
         REJECT UEAggregateMaximumBitrate(bit_rate),
         REJECT E_RABToBeSetupListCtxtSUReq(erabs),
 
-        REJECT UESecurityCapabilities(ue_security_capabilities(&[0xe0, 0xe0])),
+        REJECT UESecurityCapabilities(ue_security_capabilities(0xe0, 0xe0)),
         REJECT SecurityKey(SecurityKey(FixedBitString::<256>::ZERO)),
     )?;
 
@@ -183,12 +183,12 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn target_enb() -> TargetID {
-    let network = plmn("208", "93");
-    let enb = global_enb_id(network.clone(), 0x12345);
-    let area = tai(network, &[0x00, 0x01]);
+fn target_enb() -> Result<TargetID, Error> {
+    let network = plmn("208", "93")?;
+    let enb = global_enb_id(network.clone(), 0x12345)?;
+    let area = tai(network, [0x00, 0x01]);
 
-    TargetID::targeteNB_ID(TargeteNBID::new(enb, area, None))
+    Ok(TargetID::targeteNB_ID(TargeteNBID::new(enb, area, None)))
 }
 
 fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {

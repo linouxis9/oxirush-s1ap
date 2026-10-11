@@ -95,7 +95,10 @@ fn networks(printed: &str) -> Vec<(String, String)> {
 
 /// The tracking areas that the eNB of [`S1_SETUP`] supports, built with the helpers.
 fn tracking_areas() -> SupportedTAs {
-    let broadcast = BPLMNs(vec![plmn("208", "93"), plmn("310", "410")]);
+    let broadcast = BPLMNs(vec![
+        plmn("208", "93").unwrap(),
+        plmn("310", "410").unwrap(),
+    ]);
     SupportedTAs(vec![SupportedTAsItem::new(
         TAC::from([0, 1]),
         broadcast,
@@ -106,7 +109,7 @@ fn tracking_areas() -> SupportedTAs {
 #[test]
 fn the_octets_of_a_plmn_identity_are_those_of_the_clause() {
     for (mcc, mnc, octets) in IDENTITIES {
-        let identity = plmn(mcc, mnc);
+        let identity = plmn(mcc, mnc).unwrap();
         assert_eq!(&identity.0.0[..], octets, "{mcc}-{mnc}");
         let read = plmn_from(&PLMNidentity(TBCDSTRING::from(*octets)));
         let digits = (mcc.to_string(), mnc.to_string());
@@ -136,7 +139,7 @@ fn the_identities_of_an_s1_setup_are_those_that_tshark_reads() -> Result<(), Err
     );
 
     // And write the octets of the message for them.
-    assert_eq!(enb, global_enb_id(plmn("310", "410"), 1));
+    assert_eq!(enb, global_enb_id(plmn("310", "410")?, 1)?);
     assert_eq!(areas, tracking_areas());
     let written = build_s1ap_ie!(S1SetupRequest, REJECT Global_ENB_ID(enb)).unwrap();
     assert_eq!(written, request.protocol_ies.0[0]);
@@ -154,7 +157,7 @@ fn the_order_of_a_nas_message_is_another_network() {
     assert_eq!(read[0], ("310".into(), "041".into()));
     let identity = PLMNidentity(TBCDSTRING::from([0x13, 0x00, 0x14]));
     assert_eq!(plmn_from(&identity), Some(read[0].clone()));
-    assert_eq!(&plmn("310", "041").0.0[..], [0x13, 0x00, 0x14]);
+    assert_eq!(&plmn("310", "041").unwrap().0.0[..], [0x13, 0x00, 0x14]);
 }
 
 /// Octets that are no PLMN identity have no MCC and no MNC: a half octet that is no

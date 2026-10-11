@@ -81,6 +81,23 @@ is not source compatible with 0.2.0.
   one and `with_s1ap_ie_mut!` changes the last one, and any of them that does
   not decode is an error for both. 0.2.0 read the last one that decoded,
   and changed the first one or, when that did not decode, nothing.
+- No function of `helpers` panics, and none cuts a number short. Each of
+  these returns a `Result` with an `Error` of the kind `Argument`, so a call
+  takes a `?` or an `.unwrap()`:
+  - `plmn(mcc, mnc) -> Result<PLMNidentity, Error>`, for an MCC that is not
+    three digits or an MNC that is not two or three, where it panicked;
+  - `int_to_bitvec(value, width) -> Result<BitString, Error>`, for a width
+    over 64 bits, where it panicked, and for a value that does not fit in the
+    width, whose high bits it dropped;
+  - `eutran_cgi(…) -> Result<EUTRANCGI, Error>` and
+    `global_enb_id(…) -> Result<GlobalENBID, Error>`, for a macro eNB ID over
+    20 bits, which they masked: `global_enb_id(plmn, 0x1fffff)` built the
+    eNB `0xfffff`.
+- `helpers::tai` takes the TAC as `[u8; 2]`, where it took a slice and
+  panicked unless it had two octets: `tai(plmn, [0, 1])`.
+- `helpers::ue_security_capabilities(encryption, integrity)` takes the two
+  octets, where it took a slice, read its first two octets and took a
+  missing one for zero: `ue_security_capabilities(0xe0, 0xe0)`.
 
 ### Added
 

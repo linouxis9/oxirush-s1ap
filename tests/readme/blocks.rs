@@ -175,16 +175,20 @@ fn block_6() {
     use oxirush_s1ap::helpers::*;
 
     // A PLMN from its MCC and its MNC, and what is identified within it
-    let network = plmn("208", "93");
+    let network = plmn("208", "93").unwrap();
     let mme = gummei(network.clone(), 1, 1); // group, code
-    let tracking_area = tai(network.clone(), &[0x00, 0x01]); // TAC
-    let cell = eutran_cgi(network.clone(), 0x12345, 7); // macro eNB, cell
-    let enb = global_enb_id(network, 0x12345);
+    let tracking_area = tai(network.clone(), [0x00, 0x01]); // TAC
+    let cell = eutran_cgi(network.clone(), 0x12345, 7).unwrap(); // macro eNB, cell
+    let enb = global_enb_id(network.clone(), 0x12345).unwrap();
 
     // A bit string from octets, and the algorithms of a UE: the first octet
     // of its encryption bitmap, then of its integrity bitmap
     let algorithm_mask = bytes_to_bitvec(&[0xe0]);
-    let capabilities = ue_security_capabilities(&[0xe0, 0xe0]);
+    let capabilities = ue_security_capabilities(0xe0, 0xe0);
+
+    // What is no MCC, and a macro eNB ID that does not fit in its 20 bits
+    println!("{}", plmn("20", "93").unwrap_err());
+    println!("{}", global_enb_id(network, 0x100000).unwrap_err());
 }
 
 /// The Rust block 7 of README.md.

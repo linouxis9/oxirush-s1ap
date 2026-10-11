@@ -304,3 +304,37 @@ fn changing_an_ie_says_whether_it_did_or_why_it_did_not() {
     assert_eq!(unread.unwrap_err().kind(), ErrorKind::UndecodableIe);
     assert_eq!(message, before);
 }
+
+#[test]
+fn an_argument_that_a_helper_does_not_take_is_an_error_and_no_panic() {
+    use oxirush_s1ap::helpers::*;
+    let network = || plmn("208", "93").unwrap();
+
+    // What panicked: an MCC of two digits, an MNC of one, and a width over the 64 bits
+    // of a number.
+    let panicked = [
+        plmn("20", "93").unwrap_err(),
+        plmn("208", "9").unwrap_err(),
+        int_to_bitvec(1, 65).unwrap_err(),
+    ];
+    // What was cut short: a macro eNB ID over 20 bits (TS 36.413 clause 9.2.1.37),
+    // alone and before the 8 bits of a cell in a Cell Identity of 28 (clause 9.2.1.38),
+    // and a number over the width of its bit string.
+    let cut_short = [
+        global_enb_id(network(), 0x1f_ffff).unwrap_err(),
+        eutran_cgi(network(), 0x1f_ffff, 1).unwrap_err(),
+        int_to_bitvec(0x100, 8).unwrap_err(),
+    ];
+    for error in panicked.iter().chain(&cut_short) {
+        assert_eq!(error.kind(), ErrorKind::Argument, "{error}");
+        assert_eq!(source(error), None);
+    }
+    assert_eq!(
+        cut_short[0].to_string(),
+        "the macro eNB ID 2097151 does not fit in 20 bits"
+    );
+
+    // A TAC is two octets (clause 9.2.3.7), which the type of the argument says.
+    let area = tai(network(), [0, 1]);
+    assert_eq!(area.t_ac.0[..], [0, 1]);
+}

@@ -130,7 +130,7 @@ fn e_rab_container_lists_encode_their_size_constraint() -> Result<(), Error> {
 fn each_ecgi_list_encodes_its_own_size_constraint() -> Result<(), Error> {
     use oxirush_s1ap::helpers::{eutran_cgi, plmn};
 
-    let cell = eutran_cgi(plmn("208", "93"), 0x12345, 1);
+    let cell = eutran_cgi(plmn("208", "93")?, 0x12345, 1)?;
     let mut identifier = rasn::types::FixedBitString::<16>::ZERO;
     identifier.set(0, true);
     let request = build_s1ap!(InitiatingMessage, WriteReplaceWarning,
