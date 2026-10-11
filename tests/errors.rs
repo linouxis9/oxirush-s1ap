@@ -338,3 +338,413 @@ fn an_argument_that_a_helper_does_not_take_is_an_error_and_no_panic() {
     let area = tai(network(), [0, 1]);
     assert_eq!(area.t_ac.0[..], [0, 1]);
 }
+
+/// The errors of the `inspect` feature: a test for each kind, as a caller matches on it.
+#[cfg(feature = "inspect")]
+mod inspect_errors {
+    use super::release_request;
+    use oxirush_s1ap::s1ap::*;
+    use oxirush_s1ap::{Error, ErrorKind, inspect};
+    use rasn::types::Any;
+    use serde_json::{Value, json};
+
+    /// The view of the UE CONTEXT RELEASE REQUEST.
+    fn view() -> Value {
+        inspect::message_view(&release_request()).unwrap()
+    }
+
+    /// The kind of the error that a call returned.
+    fn kind<T: std::fmt::Debug>(result: Result<T, Error>) -> ErrorKind {
+        result.unwrap_err().kind()
+    }
+
+    /// The PDU of a tree: a release request with these IEs.
+    fn written(ies: Value) -> Result<S1AP_PDU, Error> {
+        inspect::message_from_tree(&json!({"message": "UEContextReleaseRequest", "ies": ies}))
+    }
+
+    /// A release request whose procedure code is one that the specification does not have.
+    fn of_no_procedure() -> S1AP_PDU {
+        let S1AP_PDU::initiatingMessage(mut held) = release_request() else {
+            panic!("an initiating message");
+        };
+        held.procedure_code = ProcedureCode(200);
+        S1AP_PDU::initiatingMessage(held)
+    }
+
+    #[test]
+    fn a_message_that_the_protocol_does_not_have_is_unknown() {
+        // A name that is no message, for a path and in a tree.
+        let checked = inspect::check_path("NoSuchMessage", "/s1ap/Cause");
+        assert_eq!(kind(checked), ErrorKind::UnknownMessage);
+        let names = inspect::enumerated_at("NoSuchMessage", "/s1ap/Cause");
+        assert_eq!(kind(names), ErrorKind::UnknownMessage);
+        let tree = json!({"message": "NoSuchMessage", "ies": []});
+        let error = inspect::message_from_tree(&tree).unwrap_err();
+        assert_eq!(error.kind(), ErrorKind::UnknownMessage);
+        assert_eq!(
+            error.to_string(),
+            "\"NoSuchMessage\" is not a message of S1AP"
+        );
+
+        // A procedure that the specification does not have, in a PDU and in a view.
+        let error = inspect::message_view(&of_no_procedure()).unwrap_err();
+        assert_eq!(error.kind(), ErrorKind::UnknownMessage);
+        assert_eq!(
+            error.to_string(),
+            "S1AP has no InitiatingMessage of procedure 200"
+        );
+        assert_eq!(
+            kind(inspect::message_tree(&of_no_procedure())),
+            ErrorKind::UnknownMessage
+        );
+        let mut view = view();
+        view["procedure_code"] = json!(200);
+        assert_eq!(
+            kind(inspect::message_from_view(&view)),
+            ErrorKind::UnknownMessage
+        );
+    }
+
+    #[test]
+    fn an_ie_that_the_protocol_does_not_have_is_unknown() {
+        // A name that is no IE: after the root of a path, in a tree, and as the `id` of
+        // an entry that an edit writes.
+        let mut view = view();
+        let error = inspect::select(&view, "/s1ap/NoSuchIe/value").unwrap_err();
+        assert_eq!(error.kind(), ErrorKind::UnknownIe);
+        assert_eq!(
+            error.to_string(),
+            "\"NoSuchIe\" is not an IE of S1AP at /s1ap/NoSuchIe/value"
+        );
+        assert_eq!(
+            kind(written(json!([{"NoSuchIe": 1}]))),
+            ErrorKind::UnknownIe
+        );
+        let entry = json!({"id": "NoSuchIe", "criticality": "ignore", "value": 1});
+        assert_eq!(
+            kind(inspect::insert(&mut view, "/s1ap/-", entry)),
+            ErrorKind::UnknownIe
+        );
+
+        // An identifier that has no type is written by its octets: its value has no
+        // type to be encoded as.
+        let error = written(json!([{"60000": 1, "criticality": "ignore"}])).unwrap_err();
+        assert_eq!(error.kind(), ErrorKind::UnknownIe);
+        assert_eq!(
+            error.to_string(),
+            "S1AP IE 60000 is unknown: give its octets as _raw_value, without value"
+        );
+        let octets = json!([{"60000": {"octets": "c0ffee"}, "criticality": "ignore"}]);
+        assert!(written(octets).is_ok());
+    }
+
+    #[test]
+    fn a_path_that_is_not_well_formed_is_a_path_error() {
+        let view = view();
+        // No `/` before the first segment, `~` before what is no 0 and no 1, and
+        // `@id=` before what is no identifier of an IE.
+        for path in [
+            "s1ap/Cause",
+            "",
+            "/s1ap/Cause/~2",
+            "/s1ap/@id=x",
+            "/s1ap/@id=70000",
+        ] {
+            assert_eq!(
+                kind(inspect::select(&view, path)),
+                ErrorKind::Path,
+                "{path}"
+            );
+            let checked = inspect::check_path("UEContextReleaseRequest", path);
+            assert_eq!(kind(checked), ErrorKind::Path, "{path}");
+        }
+        let error = inspect::select(&view, "s1ap/Cause").unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "\"s1ap/Cause\" is no path: a path starts with \"/\", as /s1ap/0"
+        );
+    }
+
+    #[test]
+    fn a_name_that_the_type_at_its_place_cannot_have_is_no_member() {
+        let mut view = view();
+        // A member that a CHOICE does not have, a member of a value that has none, the
+        // identifier of an IE where there is no list, and a name where a list goes by
+        // position.
+        let error = inspect::select(&view, "/s1ap/Cause/radioNetwrok").unwrap_err();
+        assert_eq!(error.kind(), ErrorKind::NoSuchMember);
+        let text = error.to_string();
+        assert!(
+            text.starts_with("\"radioNetwrok\" is not a member of Cause, which has radioNetwork, "),
+            "{text}"
+        );
+        for path in [
+            "/s1ap/Cause/radioNetwork/deeper",
+            "/s1ap/Cause/@id=1",
+            "/message/protocolIEs/first",
+        ] {
+            assert_eq!(
+                kind(inspect::select(&view, path)),
+                ErrorKind::NoSuchMember,
+                "{path}"
+            );
+        }
+        // An edit at such a path, and the view is as it was.
+        let before = view.clone();
+        let edit = inspect::set(&mut view, "/s1ap/Cause/radioNetwrok", json!(1));
+        assert_eq!(kind(edit), ErrorKind::NoSuchMember);
+        assert_eq!(view, before);
+        // An IE that the object set of the message does not have, without a view.
+        let checked = inspect::check_path("UEContextReleaseRequest", "/s1ap/GUMMEI-ID");
+        assert_eq!(kind(checked), ErrorKind::NoSuchMember);
+        // A member that the type of a written value does not have.
+        let error = inspect::message_from_tree(
+            &json!({"message": "S1SetupRequest", "ies": [{"Global-ENB-ID": {
+                "pLMNidentity": "208-93",
+                "eNB-ID": {"macroENB-ID": "123450"},
+                "other": 2,
+            }}]}),
+        )
+        .unwrap_err();
+        assert_eq!(error.kind(), ErrorKind::NoSuchMember);
+        assert_eq!(
+            error.to_string(),
+            "this is not a value of Global-ENB-ID: \"other\" is not a member that its type has"
+        );
+    }
+
+    #[test]
+    fn an_edit_whose_path_selects_nothing_is_an_error() {
+        let mut view = view();
+        let before = view.clone();
+        // An IE that the message could have and does not have, and a position after
+        // its last IE: a selection has nothing there, and an edit says so.
+        for path in ["/s1ap/GWContextReleaseIndication/value", "/s1ap/7"] {
+            assert_eq!(inspect::select(&view, path), Ok(vec![]), "{path}");
+            let edit = inspect::set(&mut view, path, json!(1));
+            assert_eq!(kind(edit), ErrorKind::NothingSelected, "{path}");
+        }
+        let removed = inspect::remove(&mut view, "/s1ap/GWContextReleaseIndication");
+        assert_eq!(kind(removed), ErrorKind::NothingSelected);
+        assert_eq!(view, before);
+    }
+
+    #[test]
+    fn octets_that_carry_a_type_are_not_opened_until_they_are() {
+        let name = "SourceeNB-ToTargeteNB-TransparentContainer";
+        let required = json!({"message": "HandoverRequired", "ies": [
+            {"Source-ToTarget-TransparentContainer": {name: {
+                "rRC-Container": "0102",
+                "targetCell-ID": {"pLMNidentity": "208-93", "cell-ID": 4660},
+                "uE-HistoryInformation": [{"uTRAN-Cell": "00"}],
+            }}},
+        ]});
+        let pdu = inspect::message_from_tree(&required).unwrap();
+        let mut view = inspect::message_view(&pdu).unwrap();
+        let cell =
+            format!("/s1ap/Source-ToTarget-TransparentContainer/{name}/targetCell-ID/cell-ID");
+
+        let error = inspect::select(&view, &cell).unwrap_err();
+        assert_eq!(error.kind(), ErrorKind::NotOpened);
+        let edit = inspect::set(&mut view, &cell, json!(7));
+        assert_eq!(kind(edit), ErrorKind::NotOpened);
+
+        // The kind says what to do about it.
+        inspect::open(&mut view, &cell).unwrap();
+        assert_eq!(inspect::select(&view, &cell), Ok(vec![&json!(4660)]));
+    }
+
+    #[test]
+    fn a_path_into_what_did_not_decode_says_so() {
+        // An IE whose identifier has no type keeps its octets in a view.
+        let unknown = json!([{"65000": {"octets": "c0ffee"}, "criticality": "ignore"}]);
+        let view = inspect::message_view(&written(unknown).unwrap()).unwrap();
+        assert_eq!(
+            inspect::select(&view, "/s1ap/@id=65000/octets"),
+            Ok(vec![&json!("C0FFEE")])
+        );
+        let error = inspect::select(&view, "/s1ap/@id=65000/value/member").unwrap_err();
+        assert_eq!(error.kind(), ErrorKind::UndecodableIe);
+        assert_eq!(
+            error.to_string(),
+            "the IE did not decode at /s1ap/@id=65000/value/member"
+        );
+    }
+
+    #[test]
+    fn a_value_that_is_not_of_its_type_is_a_value_error() {
+        // A string where the type has a number, a name that the ENUMERATED does not
+        // have, a number outside the constraint of its type, and octets that are no
+        // hexadecimal.
+        let string = written(json!([{"MME-UE-S1AP-ID": "forty-two"}])).unwrap_err();
+        let name = written(json!([{"Cause": {"radioNetwork": "no-such-cause"}}])).unwrap_err();
+        let outside = written(json!([{"MME-UE-S1AP-ID": 1u64 << 32}])).unwrap_err();
+        let octets = written(json!([{"MME-UE-S1AP-ID": {"octets": "zz"}}])).unwrap_err();
+        for error in [&string, &name, &outside, &octets] {
+            assert_eq!(error.kind(), ErrorKind::Value, "{error}");
+            // The wording of the codec is the source, where the codec said it.
+            assert!(!error.to_string().contains("Codec"), "{error}");
+        }
+        assert_eq!(
+            string.to_string(),
+            "this is not a value of MME-UE-S1AP-ID: a number below 2^63 is expected, and \"forty-two\" is written"
+        );
+        assert_eq!(
+            name.to_string(),
+            "this is not a value of Cause, at radioNetwork: \"no-such-cause\" is no value of the \
+             ENUMERATED"
+        );
+        assert_eq!(
+            outside.to_string(),
+            "this is not a value of MME-UE-S1AP-ID: the number does not fit in 32 bits"
+        );
+        assert_eq!(
+            octets.to_string(),
+            "\"zz\" is not octets: octets are written in hexadecimal, two digits for each"
+        );
+
+        // A value of a member, by the names that ASN.1 gives the members on the way:
+        // a PLMN identity that is none, and a number where the type has a CHOICE.
+        let setup = |plmn: Value, gnb: Value| {
+            inspect::message_from_tree(
+                &json!({"message": "S1SetupRequest", "ies": [{"Global-ENB-ID": {
+                    "pLMNidentity": plmn,
+                    "eNB-ID": gnb,
+                }}]}),
+            )
+        };
+        assert!(setup(json!("208-93"), json!({"macroENB-ID": "123450"})).is_ok());
+        let plmn = setup(json!("20-93"), json!({"macroENB-ID": "123450"})).unwrap_err();
+        assert_eq!(plmn.kind(), ErrorKind::Value);
+        assert_eq!(
+            plmn.to_string(),
+            "20-93: a PLMN identity is MCC-MNC, as 208-93"
+        );
+        let member = setup(json!("208-93"), json!(5)).unwrap_err();
+        assert_eq!(member.kind(), ErrorKind::Value);
+        assert_eq!(
+            member.to_string(),
+            "this is not a value of Global-ENB-ID, at eNB-ID: an object is expected, and 5 is written"
+        );
+        let rasn = std::error::Error::source(&member).expect("the error of rasn");
+        assert!(rasn.to_string().contains("Codec: JER"), "{rasn}");
+    }
+
+    #[test]
+    fn json_that_is_no_tree_and_no_view_is_a_form_error() {
+        // A tree is an object with the name of a message and its IEs, each one member:
+        // an IE that the message does not have says its criticality.
+        let message = "UEContextReleaseRequest";
+        for tree in [
+            json!([]),
+            json!({"ies": []}),
+            json!({"message": message}),
+            json!({"message": message, "ies": [], "other": 1}),
+            json!({"message": message, "ies": [{"a": 1, "b": 2}]}),
+            json!({"message": message, "ies": [{"eNBname": "enb-1"}]}),
+        ] {
+            let error = inspect::message_from_tree(&tree).unwrap_err();
+            assert_eq!(error.kind(), ErrorKind::Form, "{tree}: {error}");
+        }
+
+        // A view is an object with a procedure code, a direction, a criticality and a
+        // message.
+        let view = view();
+        let without = |member: &str| {
+            let mut view = view.clone();
+            view.as_object_mut().unwrap().remove(member);
+            view
+        };
+        let with = |member: &str, value: Value| {
+            let mut view = view.clone();
+            view[member] = value;
+            view
+        };
+        for view in [
+            json!(1),
+            without("message"),
+            without("direction"),
+            without("procedure_code"),
+            with("direction", json!("Sideways")),
+            with("procedure_code", json!(256)),
+            with("other", json!(1)),
+        ] {
+            let error = inspect::message_from_view(&view).unwrap_err();
+            assert_eq!(error.kind(), ErrorKind::Form, "{error}");
+        }
+
+        // An IE is written with its value or with its octets.
+        let both = json!({"id": "Cause", "criticality": "ignore", "value": 1, "octets": "00"});
+        let insert = inspect::insert(&mut view.clone(), "/s1ap/-", both);
+        assert_eq!(kind(insert), ErrorKind::Form);
+    }
+
+    #[test]
+    fn an_edit_that_is_refused_is_an_edit_error() {
+        let mut view = view();
+        // A member that its type always has, the value of an IE and the alternative of
+        // a CHOICE are not taken out, and nothing is inserted where there is no list.
+        for path in [
+            "/s1ap/Cause/criticality",
+            "/s1ap/Cause/value",
+            "/s1ap/Cause/radioNetwork",
+        ] {
+            let removed = inspect::remove(&mut view, path);
+            assert_eq!(kind(removed), ErrorKind::Edit, "{path}");
+        }
+        let inserted = inspect::insert(&mut view, "/s1ap/Cause/criticality", json!("reject"));
+        assert_eq!(kind(inserted), ErrorKind::Edit);
+
+        // The octets of a value that an edit changed are no longer its octets.
+        inspect::set(&mut view, "/s1ap/Cause/nas", json!("normal-release")).unwrap();
+        let octets = inspect::select(&view, "/s1ap/Cause/octets");
+        assert_eq!(kind(octets), ErrorKind::Edit);
+    }
+
+    #[test]
+    fn what_is_over_the_limits_of_the_inspection_is_a_limit_error() {
+        let view = view();
+        // A path of more than 64 segments, and one of more than 4096 octets.
+        let long = "/0".repeat(65);
+        assert_eq!(kind(inspect::select(&view, &long)), ErrorKind::Limit);
+        let wide = format!("/{}", "a".repeat(4096));
+        assert_eq!(kind(inspect::select(&view, &wide)), ErrorKind::Limit);
+
+        // A tree that is nested deeper than a tree is read.
+        let mut deep = json!(1);
+        for _ in 0..300 {
+            deep = json!([deep]);
+        }
+        assert_eq!(
+            kind(written(json!([{"MME-UE-S1AP-ID": deep}]))),
+            ErrorKind::Limit
+        );
+
+        // A private message has no list of IEs to show as a tree: its view has it.
+        let private =
+            S1AP_PDU::decode(&hex::decode("002740090000000000000001a1").unwrap()).unwrap();
+        let error = inspect::message_tree(&private).unwrap_err();
+        assert_eq!(error.kind(), ErrorKind::Limit);
+        assert!(inspect::message_view(&private).is_ok());
+    }
+
+    #[test]
+    fn a_message_that_does_not_decode_is_a_decode_error() {
+        // A PDU whose octets are not the message of its procedure.
+        let S1AP_PDU::initiatingMessage(mut held) = release_request() else {
+            panic!("an initiating message");
+        };
+        held.value = Any::new(vec![0xff]);
+        let pdu = S1AP_PDU::initiatingMessage(held);
+        let error = inspect::message_view(&pdu).unwrap_err();
+        assert_eq!(error.kind(), ErrorKind::Decode);
+        assert_eq!(kind(inspect::message_tree(&pdu)), ErrorKind::Decode);
+
+        // The octets that a view was received as, replaced by others, and edited.
+        let mut view = view();
+        view["_raw_message"] = json!("ff");
+        inspect::set(&mut view, "/s1ap/Cause/nas", json!("normal-release")).unwrap();
+        assert_eq!(kind(inspect::message_from_view(&view)), ErrorKind::Decode);
+    }
+}

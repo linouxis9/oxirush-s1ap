@@ -115,7 +115,12 @@ fn a_new_ie_takes_a_typed_value_of_the_type_of_its_identifier() {
     );
     // A value that the type does not have, and an identifier without a type.
     assert!(added(2, serde_json::json!({"radioNetwork": "no-such-cause"})).is_err());
-    assert!(added(60000, cause).unwrap_err().contains("_raw_value"));
+    assert!(
+        added(60000, cause)
+            .unwrap_err()
+            .to_string()
+            .contains("_raw_value")
+    );
 }
 
 #[test]
@@ -208,8 +213,11 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
             Ok(shown) => shown,
             // A private message has no IEs of the protocol to name.
             Err(reason) => {
+                assert_eq!(reason.kind(), oxirush_s1ap::ErrorKind::Limit);
                 assert!(
-                    reason.contains("PrivateMessage has no list of IEs"),
+                    reason
+                        .to_string()
+                        .contains("PrivateMessage has no list of IEs"),
                     "{reason}"
                 );
                 continue;
@@ -257,7 +265,8 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
     );
     // What is not a message, not an IE, or an IE of another message without its
     // criticality, is refused with what is wrong.
-    let refused = |tree: serde_json::Value| inspect::message_from_tree(&tree).unwrap_err();
+    let refused =
+        |tree: serde_json::Value| inspect::message_from_tree(&tree).unwrap_err().to_string();
     let named = |message: &str, ie: &str| serde_json::json!({"message": message, "ies": [{ie: 1}]});
     assert!(
         refused(named("UEContextReleaseRequst", "MME-UE-S1AP-ID")).contains("is not a message")
@@ -358,7 +367,7 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
     let mut unassigned = bearer.clone();
     unassigned["iE-Extensions"] = json!([{"BearerType": "non-IP"}]);
     let unassigned = request(&json!({"E-RABToBeSetupItemBearerSUReq": unassigned}));
-    let error = written(&unassigned).unwrap_err();
+    let error = written(&unassigned).unwrap_err().to_string();
     assert!(
         error.contains("BearerType says its \"criticality\""),
         "{error}"
@@ -372,7 +381,7 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
         ]})
     };
     let mut connection = json!({"UE-associatedLogicalS1-ConnectionItem": {"mME-UE-S1AP-ID": 1}});
-    let error = written(&reset(&connection)).unwrap_err();
+    let error = written(&reset(&connection)).unwrap_err().to_string();
     assert!(error.contains("Item says its \"criticality\""), "{error}");
     connection["criticality"] = json!("reject");
     let pdu = inspect::message_from_tree(&reset(&connection)).unwrap();
@@ -400,7 +409,9 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
     assert_eq!(inspect::select(&view, &container).unwrap(), [&json!("00")]);
     assert_eq!(inspect::message_tree(&pdu).unwrap(), transfer);
     // What is in the place of an IE and is none is refused.
-    let error = written(&request(&json!({"a": 1, "b": 2}))).unwrap_err();
+    let error = written(&request(&json!({"a": 1, "b": 2})))
+        .unwrap_err()
+        .to_string();
     assert!(error.contains("one IE"), "{error}");
 }
 
@@ -451,7 +462,9 @@ fn the_value_of_an_ie_may_be_left_out_of_a_path() {
     let mut edited = view.clone();
     let second = inspect::select(&view, &short).unwrap()[0].clone();
     inspect::set(&mut edited, &format!("{short}/e-RAB-ID"), json!(5)).unwrap();
-    let error = inspect::select(&edited, &format!("{list}/octets")).unwrap_err();
+    let error = inspect::select(&edited, &format!("{list}/octets"))
+        .unwrap_err()
+        .to_string();
     assert!(error.contains("the value was edited"), "{error}");
     inspect::insert(&mut edited, &format!("{list}/-"), second.clone()).unwrap();
     inspect::insert(&mut edited, &format!("{list}/0"), second).unwrap();
@@ -463,7 +476,12 @@ fn the_value_of_an_ie_may_be_left_out_of_a_path() {
     let messages = inspect::select(&after, &format!("{list}/value/*/nAS-PDU")).unwrap();
     assert_eq!(messages, [&json!("0760"), &json!("076002")]);
     let error = inspect::set(&mut edited, &format!("{list}/0/nAS-PDU"), Value::Null);
-    assert!(error.unwrap_err().contains("its type always has it"));
+    assert!(
+        error
+            .unwrap_err()
+            .to_string()
+            .contains("its type always has it")
+    );
     // A name that neither has is refused with the members of both, and the view is as
     // it was.
     let before = edited.clone();
@@ -472,15 +490,20 @@ fn the_value_of_an_ie_may_be_left_out_of_a_path() {
             format!("{list}/0/misspelled"),
             "is not a member of ERABToBeSetupItemBearerSUReq, which has e-RAB-ID",
         ),
-        (format!("{list}/misspelled"), "array index must be numeric"),
+        (format!("{list}/misspelled"), "is not a position in a list"),
         (
             "/s1ap/eNB-UE-S1AP-ID/valeu".to_string(),
             "\"valeu\" is not a member of this value, which has none",
         ),
     ] {
         for error in [
-            inspect::select(&edited, &path).map(|_| ()).unwrap_err(),
-            inspect::set(&mut edited, &path, json!(1)).unwrap_err(),
+            inspect::select(&edited, &path)
+                .map(|_| ())
+                .unwrap_err()
+                .to_string(),
+            inspect::set(&mut edited, &path, json!(1))
+                .unwrap_err()
+                .to_string(),
         ] {
             assert!(error.contains(value), "{path}: {error}");
             let own = "; an IE itself has id, criticality, value, octets";
@@ -542,7 +565,7 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     // opened before it does.
     let cell = format!("{ie}/{name}/targetCell-ID/cell-ID");
     assert_eq!(inspect::check_path("HandoverRequired", &cell), Ok(()));
-    let error = inspect::select(&view, &cell).unwrap_err();
+    let error = inspect::select(&view, &cell).unwrap_err().to_string();
     assert!(error.contains("open decodes them"), "{error}");
     inspect::open(&mut view, &cell).unwrap();
     assert_eq!(inspect::select(&view, &cell).unwrap(), [&json!(4660)]);
@@ -565,7 +588,9 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     // An edit changes what the view has: octets are opened before it goes into them.
     let mut view = inspect::message_view(&pdu).unwrap();
     for path in [cell.clone(), cell.replace(name, &format!("value/{name}"))] {
-        let error = inspect::set(&mut view, &path, json!(7)).unwrap_err();
+        let error = inspect::set(&mut view, &path, json!(7))
+            .unwrap_err()
+            .to_string();
         assert!(error.contains("open decodes them"), "{error}");
     }
     inspect::open(&mut view, &cell).unwrap();
@@ -607,7 +632,7 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     let other = inspect::message_from_tree(&required(json!("FF"))).unwrap();
     let mut view = inspect::message_view(&other).unwrap();
     inspect::open(&mut view, &cell).unwrap();
-    let error = inspect::select(&view, &cell).unwrap_err();
+    let error = inspect::select(&view, &cell).unwrap_err().to_string();
     assert!(error.contains("the transfer did not decode"), "{error}");
     assert_eq!(inspect::message_from_view(&view).unwrap(), other);
     // A path that goes through no such name opens nothing.
@@ -617,7 +642,7 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     // The name is one of a type that the IE may carry, and the secondary container,
     // which a handover to GERAN has, carries none of this specification.
     let written = inspect::message_from_tree(&required(back));
-    let error = written.unwrap_err();
+    let error = written.unwrap_err().to_string();
     assert!(
         error.contains(&format!("for a type that they carry: {name}")),
         "{error}"
@@ -627,12 +652,15 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
         format!("{ie}/rRC-Container"),
     ] {
         let error = inspect::check_path("HandoverRequired", &path).unwrap_err();
-        assert!(error.contains(&format!("which has {name}, at")), "{error}");
+        let text = error.to_string();
+        assert!(text.contains(&format!("which has {name}, at")), "{error}");
         assert_eq!(inspect::select(&view, &path), Err(error.clone()), "{path}");
         assert_eq!(inspect::open(&mut view, &path), Err(error), "{path}");
     }
     let secondary = format!("/s1ap/Source-ToTarget-TransparentContainer-Secondary/{name}");
-    let error = inspect::check_path("HandoverRequired", &secondary).unwrap_err();
+    let error = inspect::check_path("HandoverRequired", &secondary)
+        .unwrap_err()
+        .to_string();
     assert!(error.contains("which has none"), "{error}");
 }
 
@@ -724,9 +752,10 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
     let other = format!("{list}/0/E-RABItem/e-RAB-ID");
     let error = inspect::select(&view, &other).unwrap_err();
     let which = "this IE is E-RABToBeSetupItemBearerSUReq, not E-RABItem: ";
-    assert!(error.starts_with(which), "{error}");
+    let text = error.to_string();
+    assert!(text.starts_with(which), "{error}");
     assert!(
-        error.contains("is not a member of ERABToBeSetupItemBearerSUReq"),
+        text.contains("is not a member of ERABToBeSetupItemBearerSUReq"),
         "{error}"
     );
     assert_eq!(inspect::set(&mut view, &other, json!(5)), Err(error));
@@ -735,7 +764,7 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
     assert_eq!(inspect::check_path(name, &tunnel), Ok(()));
     assert_eq!(inspect::check_path(name, &other), Ok(()));
     let wrong = format!("{list}/0/E-RABToBeSetupItemBearerSUReq/gTP-TEIDs");
-    let error = inspect::check_path(name, &wrong).unwrap_err();
+    let error = inspect::check_path(name, &wrong).unwrap_err().to_string();
     assert!(
         error.contains("is not a member of ERABToBeSetupItemBearerSUReq"),
         "{error}"
@@ -799,7 +828,7 @@ fn ie(view: &mut serde_json::Value, id: u16) -> &mut serde_json::Value {
 }
 
 /// The view of a message that has `entries` for IEs, encoded and decoded again.
-fn sent(entries: &[serde_json::Value]) -> Result<serde_json::Value, String> {
+fn sent(entries: &[serde_json::Value]) -> Result<serde_json::Value, oxirush_s1ap::Error> {
     let pdu = build_s1ap!(
         InitiatingMessage,
         UEContextReleaseRequest,
@@ -1221,10 +1250,10 @@ fn a_path_that_names_nothing_is_refused_and_changes_nothing() {
         ),
         ("/s1ap/+0/id", "\"+0\" is not an IE of S1AP"),
         ("/s1ap/00/id", "\"00\" is not an IE of S1AP"),
-        ("s1ap/Cause", "must start with /"),
-        ("/s1ap/@id=70000", "IE id must be u16"),
+        ("s1ap/Cause", "a path starts with \"/\""),
+        ("/s1ap/@id=70000", "is not the identifier of an IE"),
     ] {
-        let error = inspect::select(&view, path).unwrap_err();
+        let error = inspect::select(&view, path).unwrap_err().to_string();
         assert!(error.contains(reason), "{path}: {error}");
     }
     for (path, reason) in [
@@ -1232,7 +1261,9 @@ fn a_path_that_names_nothing_is_refused_and_changes_nothing() {
         ("/s1ap/GUMMEI-ID/value", "selected no field"),
         ("/s1ap/7/value", "selected no field"),
     ] {
-        let error = inspect::set(&mut view, path, json!(1)).unwrap_err();
+        let error = inspect::set(&mut view, path, json!(1))
+            .unwrap_err()
+            .to_string();
         assert!(error.contains(reason), "{path}: {error}");
     }
     assert!(inspect::remove(&mut view, "/s1ap/GUMMEI-ID").is_err());
@@ -1291,7 +1322,7 @@ fn an_edit_changes_what_is_sent_or_is_refused() {
         inspect::remove(&mut view, "/s1ap/eNB-UE-S1AP-ID/value"),
         inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", Value::Null),
     ] {
-        let error = edit.unwrap_err();
+        let error = edit.unwrap_err().to_string();
         assert!(error.contains("value is not taken out"), "{error}");
     }
     assert_eq!(view, before);
@@ -1302,7 +1333,7 @@ fn an_edit_changes_what_is_sent_or_is_refused() {
     let octets = "/s1ap/eNB-UE-S1AP-ID/octets";
     let received = inspect::select(&view, octets).unwrap()[0].clone();
     inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", json!(9)).unwrap();
-    let error = inspect::select(&view, octets).unwrap_err();
+    let error = inspect::select(&view, octets).unwrap_err().to_string();
     assert!(error.contains("the value was edited"), "{error}");
     assert_eq!(
         inspect::select(&view, "/s1ap/MME-UE-S1AP-ID/octets")
@@ -1353,7 +1384,9 @@ fn null_takes_an_optional_member_out() {
     inspect::set(&mut edited, nas, Value::Null).unwrap();
     let none = Vec::<&Value>::new();
     assert_eq!(inspect::select(&sent(&edited).unwrap(), nas).unwrap(), none);
-    let error = inspect::set(&mut edited, nas, Value::Null).unwrap_err();
+    let error = inspect::set(&mut edited, nas, Value::Null)
+        .unwrap_err()
+        .to_string();
     assert!(error.contains("selected no field"), "{error}");
 }
 
@@ -1587,16 +1620,20 @@ fn a_member_that_is_absent_selects_nothing_and_one_that_its_type_has_not_is_an_e
     assert_eq!(select("/s1ap/Cause/value/nas").unwrap(), none);
     // What follows an IE or a member that is not there is still a path of its type.
     assert_eq!(select("/s1ap/GUMMEI-ID/value/mME-Code").unwrap(), none);
-    let error = select("/s1ap/GUMMEI-ID/value/misspelled").unwrap_err();
+    let error = select("/s1ap/GUMMEI-ID/value/misspelled")
+        .unwrap_err()
+        .to_string();
     let members = "is not a member of GUMMEI, which has pLMN-Identity, mME-Group-ID, mME-Code, \
                    iE-Extensions";
     assert!(error.contains(members), "{error}");
-    let error = select("/s1ap/Cause/value/nas/deeper").unwrap_err();
+    let error = select("/s1ap/Cause/value/nas/deeper")
+        .unwrap_err()
+        .to_string();
     assert!(error.contains("which has none"), "{error}");
     // After `*`, a member is an error when no value can have it.
     assert_eq!(select("/s1ap/*/value/radioNetwork").unwrap(), [&cause]);
     assert_eq!(select("/s1ap/*/value/*").unwrap(), [&cause]);
-    let error = select("/s1ap/*/value/misspelled").unwrap_err();
+    let error = select("/s1ap/*/value/misspelled").unwrap_err().to_string();
     assert!(error.contains("is not a member of"), "{error}");
     // An optional member that is not there, and a list of values that has no IEs to name.
     let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
@@ -1604,14 +1641,18 @@ fn a_member_that_is_absent_selects_nothing_and_one_that_its_type_has_not_is_an_e
     let item = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/E-RABToBeSetupItemCtxtSUReq/value";
     let nas = inspect::select(&setup, &format!("{item}/nAS-PDU")).unwrap();
     assert_eq!(nas, none);
-    let error = inspect::select(&setup, &format!("{item}/nas-pdu-typo")).unwrap_err();
+    let error = inspect::select(&setup, &format!("{item}/nas-pdu-typo"))
+        .unwrap_err()
+        .to_string();
     assert!(
         error.contains("is not a member of ERABToBeSetupItemCtxtSUReq, which has e-RAB-ID"),
         "{error}"
     );
     let pdu = S1AP_PDU::decode(&fixture("S1SetupRequest")).unwrap();
     let setup = inspect::message_view(&pdu).unwrap();
-    let error = inspect::select(&setup, "/s1ap/SupportedTAs/value/Cause/value").unwrap_err();
+    let error = inspect::select(&setup, "/s1ap/SupportedTAs/value/Cause/value")
+        .unwrap_err()
+        .to_string();
     assert!(error.contains("go by position"), "{error}");
 }
 
@@ -1620,11 +1661,17 @@ fn an_edit_names_a_member_that_the_type_has_and_keeps_what_it_always_has() {
     use serde_json::{Value, json};
     let mut view = inspect::message_view(&release_with_cause()).unwrap();
     let before = view.clone();
-    let error = inspect::set(&mut view, "/s1ap/Cause/value/misspelled", json!(1)).unwrap_err();
+    let error = inspect::set(&mut view, "/s1ap/Cause/value/misspelled", json!(1))
+        .unwrap_err()
+        .to_string();
     assert!(error.contains("is not a member of Cause"), "{error}");
-    let error = inspect::remove(&mut view, "/s1ap/Cause/value/radioNetwork").unwrap_err();
+    let error = inspect::remove(&mut view, "/s1ap/Cause/value/radioNetwork")
+        .unwrap_err()
+        .to_string();
     assert!(error.contains("a CHOICE has one alternative"), "{error}");
-    let error = inspect::remove(&mut view, "/s1ap/Cause/criticality").unwrap_err();
+    let error = inspect::remove(&mut view, "/s1ap/Cause/criticality")
+        .unwrap_err()
+        .to_string();
     assert!(error.contains("its type always has it"), "{error}");
     assert_eq!(view, before);
     // An alternative takes the place of the one that is there.
@@ -1636,9 +1683,13 @@ fn an_edit_names_a_member_that_the_type_has_and_keeps_what_it_always_has() {
     let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
     let mut setup = inspect::message_view(&pdu).unwrap();
     let item = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/0/value";
-    let error = inspect::remove(&mut setup, &format!("{item}/e-RAB-ID")).unwrap_err();
+    let error = inspect::remove(&mut setup, &format!("{item}/e-RAB-ID"))
+        .unwrap_err()
+        .to_string();
     assert!(error.contains("its type always has it"), "{error}");
-    let error = inspect::set(&mut setup, &format!("{item}/e-RAB-ID"), Value::Null).unwrap_err();
+    let error = inspect::set(&mut setup, &format!("{item}/e-RAB-ID"), Value::Null)
+        .unwrap_err()
+        .to_string();
     assert!(error.contains("its type always has it"), "{error}");
     inspect::set(&mut setup, &format!("{item}/nas_pdu"), json!("0102")).unwrap();
     let sent = inspect::message_view(&inspect::message_from_view(&setup).unwrap()).unwrap();
@@ -1818,7 +1869,7 @@ fn a_path_is_checked_against_a_message_without_a_view() {
         (
             "InitialContextSetupRequest",
             "/s1ap/E-RABToBeSetupListCtxtSUReq/misspelled",
-            "array index must be numeric",
+            "is not a position in a list",
         ),
         (
             "InitialContextSetupRequest",
@@ -1841,7 +1892,7 @@ fn a_path_is_checked_against_a_message_without_a_view() {
             "go by position",
         ),
     ] {
-        let error = inspect::check_path(message, path).unwrap_err();
+        let error = inspect::check_path(message, path).unwrap_err().to_string();
         assert!(error.contains(reason), "{message} {path}: {error}");
     }
 }
@@ -1905,11 +1956,11 @@ fn an_ie_is_written_by_its_name_and_its_octets_wherever_a_view_has_ies() {
     // A name that no IE has is refused, and so are a value and octets together.
     let mut edited = view.clone();
     edited["message"]["protocolIEs"][0]["id"] = json!("NoSuchIE");
-    let error = inspect::message_from_view(&edited).unwrap_err();
+    let error = inspect::message_from_view(&edited).unwrap_err().to_string();
     assert!(error.contains("is not an IE of S1AP"), "{error}");
     let mut edited = view.clone();
     edited["message"]["protocolIEs"][0]["octets"] = json!("00");
-    let error = inspect::message_from_view(&edited).unwrap_err();
+    let error = inspect::message_from_view(&edited).unwrap_err().to_string();
     assert!(
         error.contains("its value or its octets, not both"),
         "{error}"
@@ -1938,11 +1989,15 @@ fn the_octets_of_an_ie_without_a_value_have_a_path() {
 fn a_private_message_has_no_ies_under_the_root() {
     let pdu = S1AP_PDU::decode(&fixture("PrivateMessage")).unwrap();
     let view = inspect::message_view(&pdu).unwrap();
-    let error = inspect::select(&view, "/s1ap/Cause").unwrap_err();
+    let error = inspect::select(&view, "/s1ap/Cause")
+        .unwrap_err()
+        .to_string();
     let reason = "a message PrivateMessage has no IEs under /s1ap: it has privateIEs";
     assert!(error.contains(reason), "{error}");
     assert!(!error.contains("protocolIEs"), "{error}");
-    let error = inspect::check_path("PrivateMessage", "/s1ap/Cause").unwrap_err();
+    let error = inspect::check_path("PrivateMessage", "/s1ap/Cause")
+        .unwrap_err()
+        .to_string();
     assert!(error.contains(reason), "{error}");
     assert!(inspect::select(&view, "/message/privateIEs/0/id/local").is_ok());
     assert!(inspect::check_path("PrivateMessage", "/message/privateIEs/0/id/global").is_ok());
@@ -1954,7 +2009,7 @@ fn the_identifier_that_the_octets_were_decoded_as_is_a_number() {
     let mut view = inspect::message_view(&release_with_cause()).unwrap();
     inspect::set(&mut view, "/s1ap/Cause/value/nas", json!("detach")).unwrap();
     ie(&mut view, 2)["_original_id"] = json!("two");
-    let error = inspect::message_from_view(&view).unwrap_err();
+    let error = inspect::message_from_view(&view).unwrap_err().to_string();
     assert!(error.contains("_original_id is the identifier"), "{error}");
 }
 

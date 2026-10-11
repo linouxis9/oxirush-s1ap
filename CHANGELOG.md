@@ -183,6 +183,19 @@ is not source compatible with 0.2.0.
   The name of another IE there is an error that says which IE the entry is,
   and `inspect::check_path` reads what follows a position and a name against
   the type of that IE.
+- With the `inspect` feature, every function that can fail returns the
+  `Error` of the crate, and its kind says what a caller can do: `Path` for a
+  path that is not well formed, `NoSuchMember` for a name that the type at
+  its place cannot have, `NothingSelected` for an edit that selects nothing,
+  `NotOpened` for a path through the type that octets carry before
+  `inspect::open` decoded them, `Value` for a JSON value that is not a value
+  of its ASN.1 type, `Form` for JSON that is no tree and no view, `Edit` for
+  an edit that is refused, `Limit` for what is over the limits of the
+  inspection, and `UnknownMessage` and `UnknownIe`. The message of a `Value`
+  says at which member the value is wrong, by the names that the value has:
+  `this is not a value of Cause, at radioNetwork: "no-such-cause" is no
+  value of the ENUMERATED`. The revisions of this version before the release
+  returned a `String`, which for such a value was the text of rasn.
 
 ### Changed
 
