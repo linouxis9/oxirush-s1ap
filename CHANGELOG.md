@@ -50,6 +50,10 @@ is not source compatible with 0.2.0.
   message of a name, in any case, and `inspect::message_names` all of them.
 - The `S1_Message` IE name, for the one IE whose type is an inline
   `OCTET STRING`.
+- The macros take `ENB_UE_S1AP_ID`, the alias that the crate gives the type
+  of id-eNB-UE-S1AP-ID, wherever they take `eNB_UE_S1AP_ID`, the name of the
+  IE: an alias of a type names the IE that the name of the type names. The
+  alias did not compile as an IE name.
 - The `sized` module: the `OCTET STRING` and `BIT STRING` types whose length
   determinant takes two octets.
 - `oxirush_s1ap::rasn`, the `rasn` that the crate is built with: a crate that

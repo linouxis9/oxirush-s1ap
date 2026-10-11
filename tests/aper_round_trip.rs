@@ -235,6 +235,51 @@ fn extraction_binding_may_share_the_field_name() -> Result<(), MissingIeError> {
     Ok(())
 }
 
+/// The crate names the type of id-eNB-UE-S1AP-ID `ENB_UE_S1AP_ID`, and the macros
+/// take that alias wherever they take `eNB_UE_S1AP_ID`, the name of the IE.
+#[test]
+fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), MissingIeError> {
+    use oxirush_s1ap::{build_s1ap_ie, with_s1ap_ie_mut};
+
+    // The alias is the type, and the two names are one entry.
+    let id: ENB_UE_S1AP_ID = ENBUES1APID(7);
+    let by_alias = build_s1ap_ie!(UEContextReleaseRequest, REJECT ENB_UE_S1AP_ID(id));
+    let by_name = build_s1ap_ie!(UEContextReleaseRequest, REJECT eNB_UE_S1AP_ID(7u32));
+    assert_eq!(by_alias, by_name);
+    assert_eq!(by_alias.id, ID_E_NB_UE_S1_AP_ID);
+
+    // A PDU that is built by the alias is the octets of one built by the name.
+    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(42u32),
+        REJECT ENB_UE_S1AP_ID(7u32),
+    );
+    let named = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(42u32),
+        REJECT eNB_UE_S1AP_ID(7u32),
+    );
+    assert_eq!(pdu.encode().unwrap(), named.encode().unwrap());
+
+    // The alias reads the IE, and changes it.
+    let mut request: UEContextReleaseRequest = pdu.decode_value().expect("decode message");
+    extract_s1ap_ies!(&request, UEContextReleaseRequest,
+        req read: u32 = ENB_UE_S1AP_ID(id),
+        opt absent: Cause = Cause(cause) => cause,
+    );
+    assert_eq!((read, absent), (7, None));
+    assert!(with_s1ap_ie_mut!(
+        request,
+        UEContextReleaseRequest,
+        ENB_UE_S1AP_ID(id) = 9u32
+    ));
+    extract_s1ap_ies!(&request, UEContextReleaseRequest,
+        req changed: u32 = eNB_UE_S1AP_ID(id),
+    );
+    assert_eq!(changed, 9);
+    Ok(())
+}
+
 /// A message with the identifier that the functions below require, or without it.
 fn release_request(id: Option<u32>) -> UEContextReleaseRequest {
     let ies = id

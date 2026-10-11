@@ -45,8 +45,10 @@
 //! ```
 //!
 //! IEs are named after their `id-` constant. The name of a type is an alias
-//! only for the one IE of that type: the type of both id-GUMMEI-ID and
-//! id-SourceMME-GUMMEI is addressed by the IE names.
+//! only for the one IE of that type, and so is an alias that the crate gives
+//! the type: id-eNB-UE-S1AP-ID is `eNB_UE_S1AP_ID`, `ENBUES1APID` and
+//! `ENB_UE_S1AP_ID`. The type of both id-GUMMEI-ID and id-SourceMME-GUMMEI is
+//! addressed by the IE names.
 //!
 //! ```
 //! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
@@ -311,16 +313,17 @@ pub(crate) use presence;
 
 /// The IEs of the protocol, which `src/registry.rs` lists from the ASN.1: the identifier,
 /// the name that ASN.1 gives it and the type of each, the type that its octets contain,
-/// then the names that the macros take it by. An identifier that has several types has
-/// its name alone. An IE that a value holds alone, in a single container, has its
-/// criticality after its identifier when its object sets give it one.
+/// then the names that the macros take it by: its own, then those of its type. An
+/// identifier that has several types has its name alone. An IE that a value holds alone,
+/// in a single container, has its criticality after its identifier when its object sets
+/// give it one.
 ///
 /// The identifier and the type that a name stands for in the macros and, with the
 /// `inspect` feature, the names and the types of a tree and the criticality of an IE in
 /// a single container all come from these lines.
 macro_rules! ies {
     ($($id:literal $($item:ident)? $name:literal
-        $($ie:path $(, $contents:path)? $(=> $own:ident $($alias:ident)?)?)?;
+        $($ie:path $(, $contents:path)? $(=> $own:ident $($alias:ident)*)?)?;
     )*) => {
         /// The identifier and the type of each IE, by the names that the macros take.
         #[doc(hidden)]
@@ -329,7 +332,7 @@ macro_rules! ies {
             use $crate::macros::Ie;
             $($($(
                 pub type $own = Ie<$id, $ie>;
-                $(pub type $alias = Ie<$id, $ie>;)?
+                $(pub type $alias = Ie<$id, $ie>;)*
             )?)?)*
         }
 

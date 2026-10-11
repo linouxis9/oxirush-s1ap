@@ -217,12 +217,12 @@ Unsuccessful_S1Setup is not handled here
 | Each IE | `CRITICALITY IeName(value)`: the name gives the identifier, and the value is converted with `.into()` |
 
 The name of an IE is its ASN.1 identifier without `id-` and with `_` for `-`,
-in the case of the ASN.1: `id-eNB-UE-S1AP-ID` is `eNB_UE_S1AP_ID`, and not
-`ENB_UE_S1AP_ID`, which is the alias of its type. The name of a type stands
-for the IE of that type where one IE alone has it, as `ENBUES1APID` for
-`eNB_UE_S1AP_ID`. A name that the crate does not have does not compile, and a
-value that does not encode, such as an integer outside its constraint, is a
-panic.
+in the case of the ASN.1: `id-eNB-UE-S1AP-ID` is `eNB_UE_S1AP_ID`. The name
+of a type stands for the IE of that type where one IE alone has it, and so
+does an alias of the type: `ENBUES1APID` and `ENB_UE_S1AP_ID` are
+`eNB_UE_S1AP_ID` too. A name that the crate does not have does not compile,
+and a value that does not encode, such as an integer outside its constraint,
+is a panic.
 
 A criticality says what a receiver does with what it does not comprehend
 (TS 36.413 clause 10.3.2). The specification assigns one to each procedure
