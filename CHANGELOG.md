@@ -163,6 +163,11 @@ is not source compatible with 0.2.0.
   IE that was added are set at its path. An `_original_id` that is no number
   is refused.
 - `paths` lists the `octets` of an IE that has no value beside them.
+- An IE whose value JER does not read back as it is stays its octets beside
+  a `_decode_error`. rasn's JER writes a `BIT STRING` of one extensible size
+  as its octets, without its length: an algorithm mask of 20 bits and one of
+  24 were shown as the same value, an edit of their IE was refused, and the
+  tree of their PDU was not written back.
 - `with_s1ap_ie_mut!` changes the IE that `extract_s1ap_ies!` reads when a
   message has it twice, the last that decodes: it changed the first, or
   nothing when the first did not decode.
