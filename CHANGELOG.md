@@ -82,6 +82,15 @@ is not source compatible with 0.2.0.
   [{"E-RABToBeSetupItemBearerSUReq": {"e-RAB-ID": 5, …}}]}`, and
   `inspect::message_from_tree` reads that form. What is written with the
   word is taken as it was.
+- With the `inspect` feature, the content of a handover's transparent
+  container, which TS 36.413 gives by reference where the ASN.1 has an
+  `OCTET STRING`. The octets of `Source-ToTarget-TransparentContainer` and
+  `Target-ToSource-TransparentContainer` are written by the name of the eNB
+  type that they carry, as in `{"Source-ToTarget-TransparentContainer":
+  {"SourceeNB-ToTargeteNB-TransparentContainer": {…}}}`, and a path goes
+  through that name. `inspect::open` decodes, in a tree, the octets that a
+  path takes so, and nothing else does: a tree shows them as octets until
+  then, as nothing in a message says what they carry.
 
 ### Changed
 

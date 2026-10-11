@@ -8,6 +8,21 @@ use rasn_compiler::OutputMode;
 use rasn_compiler::prelude::{Compiler, RasnBackend, RasnConfig};
 use regex::Regex;
 
+/// The IEs whose octets ASN.1 leaves open, each with the type of this module that TS
+/// 36.413 gives them for a handover between eNBs: clauses 9.2.1.56 and 9.2.1.57. For
+/// another target system the octets are those of its own specification, and so are
+/// those of the secondary containers, which a handover to GERAN has.
+const CARRIED: &[(&str, &str)] = &[
+    (
+        "Source-ToTarget-TransparentContainer",
+        "SourceeNB-ToTargeteNB-TransparentContainer",
+    ),
+    (
+        "Target-ToSource-TransparentContainer",
+        "TargeteNB-ToSourceeNB-TransparentContainer",
+    ),
+];
+
 pub fn generate_s1ap() -> Result<()> {
     let mut files: Vec<PathBuf> = fs::read_dir("s1ap")
         .context("read S1AP ASN.1 source directory")?
@@ -90,7 +105,7 @@ fn post_process(path: &Path, asn_files: &[PathBuf]) -> Result<()> {
     fs::write("src/registry.rs", registry.list()?)?;
     fs::write(
         "src/inspect_registry.rs",
-        crate::inspection::generate("S1AP", &generated, &asn, &registry)?,
+        crate::inspection::generate("S1AP", &generated, &asn, &registry, CARRIED)?,
     )?;
     fs::write(path, generated).context("write post-processed S1AP bindings")
 }

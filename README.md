@@ -231,6 +231,30 @@ assigns, and that of a single container, and no other. `message_from_tree`
 also takes a value as `inspect_pdu` shows it, with an entry of `id`,
 `criticality` and `value` for an IE, and the two forms in one message.
 
+The content of a handover's transparent container is written and selected by
+the name of its type. TS 36.413 gives it by reference where the ASN.1 has an
+`OCTET STRING`, so a tree shows the octets, and the one that writes or reads
+them says what they carry between eNBs:
+
+```json
+{"Source-ToTarget-TransparentContainer":
+  {"SourceeNB-ToTargeteNB-TransparentContainer":
+    {"rRC-Container": "0102",
+     "targetCell-ID": {"pLMNidentity": "208-93", "cell-ID": 4660},
+     "uE-HistoryInformation": [{"uTRAN-Cell": "00"}]}}}
+```
+
+`message_from_tree` encodes that value as the type, and so does `encode_pdu`
+for one that `set` or `insert` wrote. A path goes through the same name, as
+`/s1ap/Source-ToTarget-TransparentContainer/SourceeNB-ToTargeteNB-TransparentContainer/targetCell-ID`:
+`check_path` reads it against the types, and `inspect::open(&mut tree, path)`
+decodes the octets in a tree, after which `select`, `paths` and the edits go
+into them.
+`Target-ToSource-TransparentContainer` carries a
+`TargeteNB-ToSourceeNB-TransparentContainer` the same way (TS 36.413 clauses
+9.2.1.56 and 9.2.1.57). The `rRC-Container` stays octets: it is a message of
+RRC.
+
 `inspect::message_name(&pdu)` is the name that ASN.1 gives the message of a
 PDU, such as `E-RABSetupRequest`, and `inspect::message_named` finds
 the `direction` and the `procedure_code` that a tree has for a message from
@@ -322,7 +346,7 @@ it the list of the types: one line for each SEQUENCE and each CHOICE with its
 members, which the paths of the inspection are read against. Commit the
 three files after regenerating them. Do not edit them by hand.
 
-The checked-in files were last regenerated on 2026-10-10, with the generator
+The checked-in files were last regenerated on 2026-10-11, with the generator
 of that revision and the rustfmt of Rust 1.88, from the ASN.1 named above:
 the three files came out as they are committed, octet for octet. No CI job
 regenerates them, as the ASN.1 is not in the repository.
