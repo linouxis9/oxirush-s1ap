@@ -150,7 +150,7 @@ without debug information.
 | Codec | Aligned PER encoding and decoding through `rasn`, with the corrections of [rasn integration](#rasn-integration) |
 | Names | Flat re-exports of the generated types, and the aliases `S1AP_PDU`, `MME_UE_S1AP_ID` and `ENB_UE_S1AP_ID`. IE identifiers, procedure codes, procedure names, directions and the kinds of a PDU (`S1apPduKind`) come from the ASN.1 |
 | Macros | `build_s1ap!`, `build_s1ap_ie!`, `extract_s1ap_ies!` and `with_s1ap_ie_mut!`: typed values in and out of the open types |
-| Helpers | PLMN, core network, tracking area, cell and radio node identities, strings of bits and UE security capabilities |
+| Helpers | PLMN, core network, tracking area, cell and radio node identities, bit strings and UE security capabilities |
 | `inspect` | A decoded PDU as a JSON tree, in which a message is shown and written as its name and its IEs, and as a view that is read and edited by paths and encoded again |
 
 ## What the crate does not cover
@@ -283,8 +283,8 @@ assert!(updated);
 `ProtocolIEField`. `with_s1ap_ie_mut!` decodes one IE, changes it and encodes
 it again, and says whether it did: `= value` sets the `.0` of a newtype, and
 `=> expression` changes the decoded value and gives the `bool` that the macro
-returns. Of an IE that a message has twice, it and `extract_s1ap_ies!` take
-the same one: the last that decodes.
+returns. When a message has the same IE twice, `with_s1ap_ie_mut!` and
+`extract_s1ap_ies!` both use the last one that decodes.
 
 ### Identities and capabilities
 
@@ -298,7 +298,7 @@ let tracking_area = tai(network.clone(), &[0x00, 0x01]); // TAC
 let cell = eutran_cgi(network.clone(), 0x12345, 7); // macro eNB, cell
 let enb = global_enb_id(network, 0x12345);
 
-// A string of bits from octets, and the algorithms of a UE: the first octet
+// A bit string from octets, and the algorithms of a UE: the first octet
 // of its encryption bitmap, then of its integrity bitmap
 let algorithm_mask = bytes_to_bitvec(&[0xe0]);
 let capabilities = ue_security_capabilities(&[0xe0, 0xe0]);
@@ -725,7 +725,7 @@ let container = format!("/s1ap/Source-ToTarget-TransparentContainer/{name}");
 let cell = format!("{container}/targetCell-ID/cell-ID");
 assert_eq!(inspect::check_path("HandoverRequired", &cell), Ok(()));
 
-// It is an error until `open` decoded the octets, and selects after
+// The path is an error until `open` has decoded the octets, and selects the value after that
 assert!(inspect::select(&view, &cell).unwrap_err().contains("open decodes them"));
 inspect::open(&mut view, &cell).unwrap();
 assert_eq!(inspect::select(&view, &cell).unwrap(), [&json!(4660)]);
@@ -760,7 +760,7 @@ headings that the rows link to.
 | [Paths] | A JSON pointer into the view, where `/s1ap` stands for the IEs of the message and `*` for each entry of a list or each member of a value. |
 | An IE | The name that ASN.1 gives it after `id-`, its position (`/s1ap/0`) or its identifier (`/s1ap/@id=8`); `-` is the end of the list. A name selects each IE of that name. After the position of an IE, its name may follow, so the names and the positions that a tree shows, joined, are a path; that of another IE is an error that says which IE is there. |
 | Under an IE | `id`, `criticality`, the typed `value`, and `octets`: what it was received as, in hexadecimal. The members that start with `_` keep what was received. |
-| `value`, `decoded` | May be left out of a path. A segment is first a member of the IE or of the transfer itself: `/s1ap/Cause/*` is the members of the IE. A member of a value that has the name of one of them is reached after `value`, and only a string of bits whose size varies has one, its `value`: `value/value`. |
+| `value`, `decoded` | May be left out of a path. A segment is first a member of the IE or of the transfer itself: `/s1ap/Cause/*` is the members of the IE. If a value has a member with one of those names, write `value` before it. Only a bit string whose size varies has such a member, its own `value`, so its path ends in `value/value`. |
 | [Names] | Letters and digits, whatever their case and whatever is between them, for the root, the IEs, the members of a value, the messages and the values of an `ENUMERATED`: `/S1AP/enb_ue_s1ap_id` is `/s1ap/eNB-UE-S1AP-ID`. |
 | [What is not there] | An IE that the message does not have, an `OPTIONAL` member that is absent and another alternative of a `CHOICE` select nothing. A name that the type cannot have is an error, which lists the members of the value, then those of its IE or transfer. |
 | [Edits] | `set` writes a member by its ASN.1 name, or an alternative of a `CHOICE` in place of the one that is there. `null` or `remove` takes an optional member out, and `insert` adds before the entry that the path selects, or at `-`. An edit that selects nothing is an error, and the view is as it was. |
@@ -784,12 +784,12 @@ written, and take them so.
 | `IMSI` | its digits. A string of digits alone is always the digits, also where an even number of them could be the octets that JER writes |
 | `TAC`, `FiveGSTAC`, `LAC`, `RAC`, `CI`, `GTP-TEID`, `M-TMSI`, `MME-Group-ID`, `MME-Code`, `Port-Number`, `CellIdentity`, `NRCellIdentity`, `UL-NAS-Count` | a number, also read as a `"0x…"` string |
 | `ENUMERATED` | the name of the value, read in any case |
-| a string of bits whose size varies, as the identifier of a gNB | `{"value": "000004", "length": 22}`: the octets that hold it, in hexadecimal, and its length in bits |
+| a bit string whose size varies, as the identifier of a gNB | `{"value": "000004", "length": 22}`: the octets that hold it, in hexadecimal, and its length in bits |
 | the other strings: keys and algorithm masks, the NAS-PDU and the other containers, the identifiers of an eNB, whose length says which kind they are | hexadecimal, read in either case |
 
 Each is also read as JER writes it, and a value that does not fit its
 notation, such as a transport layer address of another length, stays as JER
-writes it. The octets of a string of bits start with its first bit:
+writes it. The octets of a bit string start with its first bit:
 `"000010"` is the macro eNB identifier 1, in 20 bits, and `"000004"` the
 number 1 in 22 bits.
 
@@ -827,7 +827,7 @@ NGAP.
 | `tests/decode_allocation.rs` | Decoding reserves memory for the elements that it reads, not for the count that a length determinant claims. |
 | `tests/inspection.rs` | Each of the 101 messages is the same octets through its view, and through its tree where it has IEs to name. Each path of each selects its value, with and without `value`, and is one that `check_path` takes. Edits, written trees, criticalities, and the identifiers of the registry against the constants of the bindings. |
 | `tests/shared_files.rs` | The files that this crate shares with `oxirush-ngap` are as they were last mirrored. |
-| The unit tests of the paths | No two names that a path takes can be taken for each other, and a value has no member that is named as one of its IE, but the `value` of a string of bits. |
+| The unit tests of the paths | No two names that a path takes can be mistaken for each other. No value has a member with the same name as a member of its IE, except the `value` of a bit string. |
 | The Rust blocks of this page | They compile and run as documentation tests, with the `inspect` feature, and `tests/readme.rs` compares what each prints with the output shown under it. |
 
 ```bash

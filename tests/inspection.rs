@@ -275,7 +275,7 @@ fn redundant(value: &serde_json::Value, found: &mut Vec<String>) {
             for (name, member) in members {
                 let wraps = match name.as_str() {
                     "decoded" | "id" | "extensionValue" | "criticality" => true,
-                    // A string of bits whose size varies has a `value` and a `length`.
+                    // A bit string whose size varies has a `value` and a `length`.
                     "value" => !members.contains_key("length"),
                     name => name.starts_with('_'),
                 };
@@ -485,7 +485,7 @@ fn the_value_of_an_ie_may_be_left_out_of_a_path() {
     }
     assert_eq!(edited, before);
     // A member of a value that is named as one of its IE is that of the IE: the `value`
-    // of a string of bits whose size varies is reached after `value`.
+    // of a bit string whose size varies is reached after `value`.
     let address = json!({"value": "0A0000", "length": 24});
     let entry =
         json!({"id": "TraceCollectionEntityIPAddress", "criticality": "ignore", "value": address});
@@ -690,7 +690,7 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
                     whole += 1;
                     continue;
                 }
-                // A string of bits whose size varies that is the value of an IE has a
+                // A bit string whose size varies that is the value of an IE has a
                 // member that is named as one of the IE: its `value` is after `value`.
                 if path.ends_with("/value") && selected[0].get("length").is_some() {
                     let after = inspect::select(&view, &format!("{path}/value")).expect(&at);
