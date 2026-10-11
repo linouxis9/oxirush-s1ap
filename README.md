@@ -156,7 +156,7 @@ without debug information.
 | RRC, other systems | An RRC container stays octets. The container of a handover is read as the eNB type of TS 36.413 alone ([below](#the-container-of-a-handover)). |
 | `inspect`: two values | An IE with an integer of 2^63 or more stays octets beside a `_decode_error`, and so does one with a `BIT STRING` of another size than the one that its extensible type gives, as an algorithm mask of 24 bits: rasn's JER does not represent them. |
 | `inspect`: criticalities | The tables have those of the object set of each message of a procedure, and of each single container whose object sets agree. Anywhere else an IE says its own, as the [rules](#rules) list. |
-| `inspect`: `check_path` | What the types do not say is not refused: the value of an IE selected by `@id=N` whose identifier is unknown or has several types, the entries of a container of a value when they are selected by position, and a segment under such an IE. |
+| `inspect`: `check_path` | What the types do not say is not refused: the value of an IE selected by `@id=N` whose identifier is unknown, the entries of a container of a value when they are selected by position, and a segment under such an IE. |
 
 ## Typed API
 
@@ -516,7 +516,7 @@ println!("{}", inspect::message_tree(&edited).unwrap());
 
 ```text
 0012401000000200000002002afde80003c0ffee
-{"_decode_error":"S1AP IE 65000 is unknown or has several types","_original_id":65000,"_raw_value":"C0FFEE","criticality":"reject","id":65000,"value":"C0FFEE"}
+{"_decode_error":"S1AP IE 65000 is unknown","_original_id":65000,"_raw_value":"C0FFEE","criticality":"reject","id":65000,"value":"C0FFEE"}
 {"ies":[{"MME-UE-S1AP-ID":255},{"65000":{"octets":"C0FFEE"},"criticality":"reject"}],"message":"UEContextReleaseRequest"}
 ```
 

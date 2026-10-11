@@ -136,6 +136,9 @@ is not source compatible with 0.2.0.
   taken out: that edit returned without an error and sent the octets
   received. The `octets` of an IE whose value an edit changed are an error to
   select, and `*` leaves out the members that start with `_`.
+- The error of an identifier that no object set has is `S1AP IE N is unknown`,
+  where it said `is unknown or has several types`: no identifier of TS 36.413
+  has two.
 - The name of an ENUMERATED value of the PDU itself, its `criticality`, is
   taken whatever its case, as those of its IEs are.
 - What is nested deeper than 64 levels stays as its octets beside a
