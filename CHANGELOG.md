@@ -32,16 +32,19 @@ is not source compatible with 0.2.0.
 
 ### Added
 
-- The optional `inspect` feature: a decoded PDU as a `serde_json` tree in the
-  ASN.1 JSON encoding, which can be edited and encoded again. What is not
+- The optional `inspect` feature: `inspect::message_view` gives a decoded PDU
+  as its view, a `serde_json` value in the ASN.1 JSON encoding, which is
+  edited and which `inspect::message_from_view` encodes again. What is not
   edited keeps the octets received, and an IE is added by its typed value or
-  by its octets. A PLMN identity, a transport layer address, an IMSI and the
-  usual identifiers read and write as they are usually written, and an
-  `ENUMERATED` value is named in any case.
-- With the `inspect` feature, the values of a tree by their paths:
+  by its octets. Before the release, the revisions of this version named the
+  two functions `inspect_pdu` and `encode_pdu`, and called the view a tree.
+  A PLMN identity, a transport layer address, an IMSI and the usual
+  identifiers read and write as they are usually written, and an `ENUMERATED`
+  value is named in any case.
+- With the `inspect` feature, the values of a view by their paths:
   `inspect::paths` gives each value with the path that selects it,
   `inspect::select` the values at a path, and `inspect::set`, `remove` and
-  `insert` edit a tree at a path. `/s1ap` stands for the IEs of the message,
+  `insert` edit a view at a path. `/s1ap` stands for the IEs of the message,
   and an IE goes by its name, as in `/s1ap/eNB-UE-S1AP-ID/value`, by its
   position or by its identifier.
 - With the `inspect` feature, `inspect::message_name` gives the name that
@@ -61,7 +64,7 @@ is not source compatible with 0.2.0.
   of the codec takes them from there, where it had to depend on the same
   `rasn` itself. The examples do.
 - With the `inspect` feature, `inspect::check_path`: whether a path can select
-  anything in a message of a name, without a tree. The IE has to be one of
+  anything in a message of a name, without a view. The IE has to be one of
   the object set of the message, and each segment under it a member that the
   type of the value has. `src/inspect_registry.rs` lists what each type has,
   from the bindings: one line for each SEQUENCE and each CHOICE.
@@ -75,9 +78,10 @@ is not source compatible with 0.2.0.
   it one. The list of `src/registry.rs` has it on the line of the IE.
 - With the `inspect` feature, `inspect::enumerated_at` gives the names that
   the value at a path of a message can have when its type is an `ENUMERATED`,
-  from the bindings, without a tree: a caller can refuse a name that no
+  from the bindings, without a view: a caller can refuse a name that no
   message has before it compares one.
-- With the `inspect` feature, a message as its name and its IEs by name:
+- With the `inspect` feature, the tree of a PDU: the short form, in which a
+  message is shown and written as its name and its IEs by name.
   `inspect::message_from_tree` makes a PDU from `{"message": NAME, "ies":
   [{NAME: VALUE}, …]}`, with the procedure code, the direction and the
   criticalities that the specification assigns, and `inspect::message_tree`
@@ -96,8 +100,8 @@ is not source compatible with 0.2.0.
   `Target-ToSource-TransparentContainer` are written by the name of the eNB
   type that they carry, as in `{"Source-ToTarget-TransparentContainer":
   {"SourceeNB-ToTargeteNB-TransparentContainer": {…}}}`, and a path goes
-  through that name. `inspect::open` decodes, in a tree, the octets that a
-  path takes so, and nothing else does: a tree shows them as octets until
+  through that name. `inspect::open` decodes, in a view, the octets that a
+  path takes so, and nothing else does: a view shows them as octets until
   then, as nothing in a message says what they carry.
 - With the `inspect` feature, a path may say which IE an entry is. After an
   entry of a list of IEs, or an IE that a value holds alone, the name of that
@@ -126,7 +130,7 @@ is not source compatible with 0.2.0.
   can have, as its ASN.1 object set lists them, each with its identifier and
   whether its presence is mandatory. The list of `src/registry.rs` has them
   on the line of each message.
-- An edit at a path of an inspection tree changes what is sent or is refused.
+- An edit at a path of an inspection view changes what is sent or is refused.
   `set` with `null` takes an optional member out, as its documentation said,
   where it wrote a `null` that did not encode. The value of an IE is not
   taken out: that edit returned without an error and sent the octets
@@ -135,8 +139,8 @@ is not source compatible with 0.2.0.
 - The name of an ENUMERATED value of the PDU itself, its `criticality`, is
   taken whatever its case, as those of its IEs are.
 - What is nested deeper than 64 levels stays as its octets beside a
-  `_decode_error`: `inspect_pdu` refused the whole PDU.
-- A path of an inspection tree selects nothing for an OPTIONAL member that
+  `_decode_error`: `message_view` refused the whole PDU.
+- A path of an inspection view selects nothing for an OPTIONAL member that
   is absent and for another alternative of a CHOICE, and a name that the type
   of a value cannot have is an error that lists the members of the type: both
   were the same error. What follows an absent value in a path is checked
@@ -150,14 +154,14 @@ is not source compatible with 0.2.0.
   and of messages were: `/s1ap/cause/value/radionetwork`. A position is a
   number as decimal writes it: `+1` and `01` are not.
 - `set` refuses a name that the type of a value does not have, where the
-  error came from `encode_pdu`, and writes a member by the name that ASN.1
-  gives it. A member that its type always has is not taken out, and an
+  error came from `message_from_view`, and writes a member by the name that
+  ASN.1 gives it. A member that its type always has is not taken out, and an
   alternative of a CHOICE takes the place of the one that is there.
 - An IE is written with the name of its IE as `id` and with its `octets`
-  wherever a tree has IEs: `encode_pdu` takes them in any entry, where only
-  `set` and `insert` on a path under `/s1ap` did, and the `octets` of an IE
-  that was added are set at its path. An `_original_id` that is no number is
-  refused.
+  wherever a view has IEs: `message_from_view` takes them in any entry, where
+  only `set` and `insert` on a path under `/s1ap` did, and the `octets` of an
+  IE that was added are set at its path. An `_original_id` that is no number
+  is refused.
 - `paths` lists the `octets` of an IE that has no value beside them.
 - `with_s1ap_ie_mut!` changes the IE that `extract_s1ap_ies!` reads when a
   message has it twice, the last that decodes: it changed the first, or

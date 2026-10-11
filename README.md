@@ -57,16 +57,16 @@ JSON, which is read, edited and written by the names of the specification:
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
 use serde_json::json;
 
-// The same message, shown as its name and its IEs by name
+// The same message as a tree: its name and its IEs by name
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
 let pdu = S1AP_PDU::decode(&bytes).unwrap();
 println!("{}", inspect::message_tree(&pdu).unwrap());
 
-// Its tree is edited at a path, and is a PDU again
-let mut tree = inspect::inspect_pdu(&pdu).unwrap();
+// Its view is edited at a path, and is a PDU again
+let mut view = inspect::message_view(&pdu).unwrap();
 let lost = json!("radio-connection-with-ue-lost");
-inspect::set(&mut tree, "/s1ap/Cause/radioNetwork", lost).unwrap();
-let edited = inspect::encode_pdu(&tree).unwrap();
+inspect::set(&mut view, "/s1ap/Cause/radioNetwork", lost).unwrap();
+let edited = inspect::message_from_view(&view).unwrap();
 println!("{}", inspect::message_tree(&edited).unwrap());
 
 // Its octets are those that the typed example built
@@ -86,7 +86,7 @@ and its README has the sections of this one.
 [Covered](#what-the-crate-covers) ·
 [Not covered](#what-the-crate-does-not-cover) ·
 [Typed API](#typed-api) ·
-[JSON cookbook](#json-trees-and-paths) ·
+[JSON cookbook](#json-trees-views-and-paths) ·
 [Rules](#rules) ·
 [Examples](#examples) ·
 [Specifications](#specifications) ·
@@ -105,7 +105,7 @@ oxirush-s1ap = "0.3"
 
 | Feature | Adds | Through |
 |---------|------|---------|
-| `inspect` | A PDU as a `serde_json::Value`: its tree, the paths of its values, and a message written from its name and its IEs | `serde_json` |
+| `inspect` | A PDU as a `serde_json::Value`: its tree, in which a message is shown and written as its name and its IEs, its view and the paths of its values | `serde_json` |
 
 No feature is on by default. The minimum supported Rust version is 1.88. The
 examples of this page also use the `hex` crate, and `serde_json` for JSON.
@@ -145,7 +145,7 @@ information.
 | Names | Flat re-exports of the generated types, and the aliases `S1AP_PDU`, `MME_UE_S1AP_ID` and `ENB_UE_S1AP_ID`. IE identifiers, procedure codes, procedure names, directions and the kinds of a PDU (`S1apPduKind`) come from the ASN.1 |
 | Macros | `build_s1ap!`, `build_s1ap_ie!`, `extract_s1ap_ies!` and `with_s1ap_ie_mut!`: typed values in and out of the open types |
 | Helpers | PLMN, core network, tracking area, cell and radio node identities, strings of bits and UE security capabilities |
-| `inspect` | A decoded PDU as a JSON tree that is read and edited by paths and encoded again, and a message written from its name and its IEs |
+| `inspect` | A decoded PDU as a JSON tree, in which a message is shown and written as its name and its IEs, and as a view that is read and edited by paths and encoded again |
 
 ## What the crate does not cover
 
@@ -314,20 +314,20 @@ let capabilities = ue_security_capabilities(&[0xe0, 0xe0]);
 | `ERABID` | E-RAB identifier |
 | `NASPDU` | An EPS NAS message, as octets |
 
-## JSON: trees and paths
+## JSON: trees, views and paths
 
 With the `inspect` feature a PDU is a `serde_json::Value` in two forms. A
-tree keeps what was received, and is read and edited by paths. A message is
-the short form, in which a PDU is written and shown. The errors of these
-functions are `String`s.
+tree is the short form, in which a message is shown and written: its name
+and its IEs by name. A view keeps what was received, and is read and edited
+by paths. The errors of these functions are `String`s.
 
-| | Tree | Message |
-|---|------|---------|
-| From a PDU | [`inspect_pdu`] | [`message_tree`] |
-| An IE is | an entry: its `id`, its `criticality`, its typed `value`, and what was received | its name with its value |
-| It has | the procedure code, the direction, the criticality and the message, in the ASN.1 JSON encoding | the name of the message and its IEs, without what the specification assigns |
-| Read and edited | by paths: [`select`], [`paths`], [`set`], [`insert`], [`remove`], [`open`] | as JSON |
-| Back to a PDU | [`encode_pdu`]: what was not edited keeps the octets received | [`message_from_tree`]: a message written from the form alone |
+| | Tree | View |
+|---|------|------|
+| From a PDU | [`message_tree`] | [`message_view`] |
+| An IE is | its name with its value | an entry: its `id`, its `criticality`, its typed `value`, and what was received |
+| It has | the name of the message and its IEs, without what the specification assigns | the procedure code, the direction, the criticality and the message, in the ASN.1 JSON encoding |
+| Read and edited | as JSON | by paths: [`select`], [`paths`], [`set`], [`insert`], [`remove`], [`open`] |
+| Back to a PDU | [`message_from_tree`]: a message written from the tree alone | [`message_from_view`]: what was not edited keeps the octets received |
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
@@ -336,10 +336,10 @@ use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
 let pdu = S1AP_PDU::decode(&bytes).unwrap();
 
-// As a message, then its third IE as the tree has it
+// Its tree, then its third IE as the view has it
 println!("{}", inspect::message_tree(&pdu).unwrap());
-let tree = inspect::inspect_pdu(&pdu).unwrap();
-println!("{}", tree["message"]["protocolIEs"][2]);
+let view = inspect::message_view(&pdu).unwrap();
+println!("{}", view["message"]["protocolIEs"][2]);
 ```
 
 ```json
@@ -358,10 +358,10 @@ use serde_json::json;
 
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
 let pdu = S1AP_PDU::decode(&bytes).unwrap();
-let tree = inspect::inspect_pdu(&pdu).unwrap();
+let view = inspect::message_view(&pdu).unwrap();
 
 // `/s1ap` is the IEs of the message, and an IE goes by its name
-let select = |path| inspect::select(&tree, path).unwrap();
+let select = |path| inspect::select(&view, path).unwrap();
 assert_eq!(select("/s1ap/eNB-UE-S1AP-ID/value"), [&json!(7)]);
 assert_eq!(select("/s1ap/Cause/radioNetwork"), [&json!("user-inactivity")]);
 assert_eq!(select("/s1ap/Cause/octets"), [&json!("0280")]);
@@ -377,7 +377,7 @@ assert!(select("/s1ap/Cause/nas").is_empty());
 assert!(select("/s1ap/GUMMEI-ID/mME-Code").is_empty());
 
 // Each value with the path that selects it
-for (path, value) in inspect::paths(&tree) {
+for (path, value) in inspect::paths(&view) {
     println!("{path} = {value}");
 }
 ```
@@ -405,21 +405,21 @@ use serde_json::json;
 
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
 let pdu = S1AP_PDU::decode(&bytes).unwrap();
-let mut tree = inspect::inspect_pdu(&pdu).unwrap();
+let mut view = inspect::message_view(&pdu).unwrap();
 
 // A value, and another alternative of a CHOICE in place of the one that is there
-inspect::set(&mut tree, "/s1ap/eNB-UE-S1AP-ID/value", json!(9)).unwrap();
-inspect::set(&mut tree, "/s1ap/Cause/nas", json!("Normal Release")).unwrap();
-let edited = inspect::encode_pdu(&tree).unwrap();
+inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", json!(9)).unwrap();
+inspect::set(&mut view, "/s1ap/Cause/nas", json!("Normal Release")).unwrap();
+let edited = inspect::message_from_view(&view).unwrap();
 println!("{}", inspect::message_tree(&edited).unwrap());
 
 // What was not edited is the octets that were received
-let after = inspect::inspect_pdu(&edited).unwrap();
+let after = inspect::message_view(&edited).unwrap();
 let octets = inspect::select(&after, "/s1ap/MME-UE-S1AP-ID/octets").unwrap();
 assert_eq!(octets, [&json!("002A")]);
 
-// A name that the type does not have is refused, and the tree is as it was
-let wrong = inspect::set(&mut tree, "/s1ap/Cause/radioNetwrok", json!("unspecified"));
+// A name that the type does not have is refused, and the view is as it was
+let wrong = inspect::set(&mut view, "/s1ap/Cause/radioNetwrok", json!("unspecified"));
 println!("{}", wrong.unwrap_err());
 ```
 
@@ -436,20 +436,20 @@ use serde_json::json;
 
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
 let pdu = S1AP_PDU::decode(&bytes).unwrap();
-let mut tree = inspect::inspect_pdu(&pdu).unwrap();
+let mut view = inspect::message_view(&pdu).unwrap();
 
 // An IE is added at the end, by its name and its typed value
 let name = json!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
-inspect::insert(&mut tree, "/s1ap/-", name).unwrap();
+inspect::insert(&mut view, "/s1ap/-", name).unwrap();
 
 // Before another IE, by its number and its octets
 let unknown = json!({"id": 60000, "criticality": "ignore", "octets": "c0ffee"});
-inspect::insert(&mut tree, "/s1ap/Cause", unknown).unwrap();
+inspect::insert(&mut view, "/s1ap/Cause", unknown).unwrap();
 
 // An IE is taken out by its name
-inspect::remove(&mut tree, "/s1ap/MME-UE-S1AP-ID").unwrap();
+inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID").unwrap();
 
-let edited = inspect::encode_pdu(&tree).unwrap();
+let edited = inspect::message_from_view(&view).unwrap();
 println!("{}", inspect::message_tree(&edited).unwrap()["ies"]);
 ```
 
@@ -463,7 +463,7 @@ println!("{}", inspect::message_tree(&edited).unwrap()["ies"]);
 use oxirush_s1ap::inspect;
 use serde_json::json;
 
-// The name of the message, whatever its case and its separators, then its IEs
+// A tree: the name of the message, whatever its case and its separators, then its IEs
 let request = json!({
     "message": "ue context release request",
     "ies": [
@@ -479,9 +479,9 @@ let pdu = inspect::message_from_tree(&request).unwrap();
 println!("{}", hex::encode(pdu.encode().unwrap()));
 
 // The name gave the direction, the procedure code and the criticalities
-let tree = inspect::inspect_pdu(&pdu).unwrap();
-println!("{} {} {}", tree["direction"], tree["procedure_code"], tree["criticality"]);
-println!("{}", json!(inspect::select(&tree, "/s1ap/*/criticality").unwrap()));
+let view = inspect::message_view(&pdu).unwrap();
+println!("{} {} {}", view["direction"], view["procedure_code"], view["criticality"]);
+println!("{}", json!(inspect::select(&view, "/s1ap/*/criticality").unwrap()));
 ```
 
 ```text
@@ -504,13 +504,13 @@ let request = json!({"message": "UEContextReleaseRequest", "ies": [
 let pdu = inspect::message_from_tree(&request).unwrap();
 println!("{}", hex::encode(pdu.encode().unwrap()));
 
-// A tree shows an IE that does not decode by its octets, and says why
-let mut tree = inspect::inspect_pdu(&pdu).unwrap();
-println!("{}", tree["message"]["protocolIEs"][1]);
+// A view shows an IE that does not decode by its octets, and says why
+let mut view = inspect::message_view(&pdu).unwrap();
+println!("{}", view["message"]["protocolIEs"][1]);
 
-// In a tree, the `octets` of an IE are set in place of its value
-inspect::set(&mut tree, "/s1ap/MME-UE-S1AP-ID/octets", json!("00ff")).unwrap();
-let edited = inspect::encode_pdu(&tree).unwrap();
+// In a view, the `octets` of an IE are set in place of its value
+inspect::set(&mut view, "/s1ap/MME-UE-S1AP-ID/octets", json!("00ff")).unwrap();
+let edited = inspect::message_from_view(&view).unwrap();
 println!("{}", inspect::message_tree(&edited).unwrap());
 ```
 
@@ -533,20 +533,20 @@ let twice = json!({"message": "UEContextReleaseRequest", "ies": [
     {"MME-UE-S1AP-ID": 2},
 ]});
 let pdu = inspect::message_from_tree(&twice).unwrap();
-let mut tree = inspect::inspect_pdu(&pdu).unwrap();
+let mut view = inspect::message_view(&pdu).unwrap();
 
 // The name selects both, in the order of the message
-let both = inspect::select(&tree, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
+let both = inspect::select(&view, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
 assert_eq!(both, [&json!(1), &json!(2)]);
 
 // Each has its position, which is how `paths` names it, and its name may follow
-inspect::set(&mut tree, "/s1ap/2/MME-UE-S1AP-ID/value", json!(3)).unwrap();
+inspect::set(&mut view, "/s1ap/2/MME-UE-S1AP-ID/value", json!(3)).unwrap();
 
 // After a position, the name of another IE is an error that says which IE is there
-println!("{}", inspect::select(&tree, "/s1ap/2/eNB-UE-S1AP-ID/value").unwrap_err());
+println!("{}", inspect::select(&view, "/s1ap/2/eNB-UE-S1AP-ID/value").unwrap_err());
 
 // The values, each with its path
-for (path, value) in inspect::paths(&tree) {
+for (path, value) in inspect::paths(&view) {
     if path.ends_with("/value") {
         println!("{path} = {value}");
     }
@@ -576,32 +576,32 @@ let command = json!({"message": "E-RABReleaseCommand", "ies": [
     ]},
 ]});
 let pdu = inspect::message_from_tree(&command).unwrap();
-let mut tree = inspect::inspect_pdu(&pdu).unwrap();
+let mut view = inspect::message_view(&pdu).unwrap();
 
 // An item by its position or by its name, which selects each item of that name
-let select = |tree, path| -> Vec<Value> {
-    let selected = inspect::select(tree, path).unwrap();
+let select = |view, path| -> Vec<Value> {
+    let selected = inspect::select(view, path).unwrap();
     selected.into_iter().cloned().collect()
 };
-assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/1/e-RAB-ID"), [json!(6)]);
-assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/E-RABItem/e-RAB-ID"), [json!(5), json!(6)]);
+assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/e-RAB-ID"), [json!(6)]);
+assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/E-RABItem/e-RAB-ID"), [json!(5), json!(6)]);
 
 // The same value by the path that says each `value`
-assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/value/1/value/e-RAB-ID"), [json!(6)]);
+assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/value/1/value/e-RAB-ID"), [json!(6)]);
 
-// And by the names that the message shows, joined: the item by its position, then its name
-assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/1/E-RABItem/e-RAB-ID"), [json!(6)]);
+// And by the names that the tree shows, joined: the item by its position, then its name
+assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/E-RABItem/e-RAB-ID"), [json!(6)]);
 
 // The criticality of an item is the one of its object set
-assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/0/criticality"), [json!("ignore")]);
+assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/0/criticality"), [json!("ignore")]);
 
 // An item is added at the end, as the IE that it is, and one is taken out
 let item = json!({"e-RAB-ID": 7, "cause": {"radioNetwork": "unspecified"}});
 let item = json!({"id": "E-RABItem", "criticality": "ignore", "value": item});
-inspect::insert(&mut tree, "/s1ap/E-RABToBeReleasedList/-", item).unwrap();
-inspect::remove(&mut tree, "/s1ap/E-RABToBeReleasedList/0").unwrap();
+inspect::insert(&mut view, "/s1ap/E-RABToBeReleasedList/-", item).unwrap();
+inspect::remove(&mut view, "/s1ap/E-RABToBeReleasedList/0").unwrap();
 
-let edited = inspect::encode_pdu(&tree).unwrap();
+let edited = inspect::message_from_view(&view).unwrap();
 println!("{}", inspect::message_tree(&edited).unwrap());
 ```
 
@@ -635,14 +635,14 @@ assert_eq!(choice, Ok(None));
 ```
 
 A name is written in any case and with any separators, as `"Normal Release"`
-above; a tree and a message show it as the specification spells it.
+above; a tree and a view show it as the specification spells it.
 
 ### Check a path before use
 
 ```rust
 use oxirush_s1ap::inspect;
 
-// Whether a path can select anything in a message of a name, without a tree
+// Whether a path can select anything in a message of a name, without a view
 let check = |path| inspect::check_path("UEContextReleaseRequest", path);
 assert_eq!(check("/s1ap/Cause/nas"), Ok(()));
 assert_eq!(check("/s1ap/*/radioNetwork"), Ok(()));
@@ -662,7 +662,7 @@ for wrong in ["/s1ap/Cause/radioNetwrok", "/s1ap/eNB-UE-S1AP-ID/valeu", "/s1ap/G
 ### The messages and their IEs
 
 What ASN.1 says of each message, which `check_path` reads, is also given as
-it is, without a tree:
+it is, without a view:
 
 | Function | Gives |
 |----------|-------|
@@ -677,8 +677,8 @@ it is, without a tree:
 TS 36.413 gives the content of two IEs by reference, where the ASN.1 has an
 `OCTET STRING`: between eNBs they carry a type of this specification, and for
 another target system octets of its own. Nothing in a message says which, so
-a tree shows the octets, and the one that writes or reads them names the
-type.
+a tree and a view show the octets, and the one that writes or reads them
+names the type.
 
 | The octets of | carry a | Clause |
 |---------------|---------|--------|
@@ -701,28 +701,28 @@ let required = json!({"message": "HandoverRequired", "ies": [
     }}},
 ]});
 
-// A message shows the octets that the container was encoded as
+// A tree shows the octets that the container was encoded as
 let pdu = inspect::message_from_tree(&required).unwrap();
 println!("{}", inspect::message_tree(&pdu).unwrap()["ies"][2]);
 
 // Read: a path goes through the name of the type
-let mut tree = inspect::inspect_pdu(&pdu).unwrap();
+let mut view = inspect::message_view(&pdu).unwrap();
 let container = format!("/s1ap/Source-ToTarget-TransparentContainer/{name}");
 let cell = format!("{container}/targetCell-ID/cell-ID");
 assert_eq!(inspect::check_path("HandoverRequired", &cell), Ok(()));
 
 // It is an error until `open` decoded the octets, and selects after
-assert!(inspect::select(&tree, &cell).unwrap_err().contains("open decodes them"));
-inspect::open(&mut tree, &cell).unwrap();
-assert_eq!(inspect::select(&tree, &cell).unwrap(), [&json!(4660)]);
+assert!(inspect::select(&view, &cell).unwrap_err().contains("open decodes them"));
+inspect::open(&mut view, &cell).unwrap();
+assert_eq!(inspect::select(&view, &cell).unwrap(), [&json!(4660)]);
 
 // What the octets carry, decoded
 let decoded = format!("{container}/decoded");
-println!("{}", inspect::select(&tree, &decoded).unwrap()[0]);
+println!("{}", inspect::select(&view, &decoded).unwrap()[0]);
 
 // An edit goes into it, and what is not edited is sent as it was received
-inspect::set(&mut tree, &cell, json!(7)).unwrap();
-let edited = inspect::encode_pdu(&tree).unwrap();
+inspect::set(&mut view, &cell, json!(7)).unwrap();
+let edited = inspect::message_from_view(&view).unwrap();
 println!("{}", inspect::message_tree(&edited).unwrap()["ies"][2]);
 ```
 
@@ -743,24 +743,24 @@ headings that the rows link to.
 
 | Subject | Rule |
 |---------|------|
-| [Paths] | A JSON pointer into the tree, where `/s1ap` stands for the IEs of the message and `*` for each entry of a list or each member of a value. |
-| An IE | The name that ASN.1 gives it after `id-`, its position (`/s1ap/0`) or its identifier (`/s1ap/@id=8`); `-` is the end of the list. A name selects each IE of that name. After the position of an IE, its name may follow, so the names and the positions that a message shows, joined, are a path; that of another IE is an error that says which IE is there. |
+| [Paths] | A JSON pointer into the view, where `/s1ap` stands for the IEs of the message and `*` for each entry of a list or each member of a value. |
+| An IE | The name that ASN.1 gives it after `id-`, its position (`/s1ap/0`) or its identifier (`/s1ap/@id=8`); `-` is the end of the list. A name selects each IE of that name. After the position of an IE, its name may follow, so the names and the positions that a tree shows, joined, are a path; that of another IE is an error that says which IE is there. |
 | Under an IE | `id`, `criticality`, the typed `value`, and `octets`: what it was received as, in hexadecimal. The members that start with `_` keep what was received. |
 | `value`, `decoded` | May be left out of a path. A segment is first a member of the IE or of the transfer itself: `/s1ap/Cause/*` is the members of the IE. A member of a value that has the name of one of them is reached after `value`, and only a string of bits whose size varies has one, its `value`: `value/value`. |
 | [Names] | Letters and digits, whatever their case and whatever is between them, for the root, the IEs, the members of a value, the messages and the values of an `ENUMERATED`: `/S1AP/enb_ue_s1ap_id` is `/s1ap/eNB-UE-S1AP-ID`. |
 | [What is not there] | An IE that the message does not have, an `OPTIONAL` member that is absent and another alternative of a `CHOICE` select nothing. A name that the type cannot have is an error, which lists the members of the value, then those of its IE or transfer. |
-| [Edits] | `set` writes a member by its ASN.1 name, or an alternative of a `CHOICE` in place of the one that is there. `null` or `remove` takes an optional member out, and `insert` adds before the entry that the path selects, or at `-`. An edit that selects nothing is an error, and the tree is as it was. |
+| [Edits] | `set` writes a member by its ASN.1 name, or an alternative of a `CHOICE` in place of the one that is there. `null` or `remove` takes an optional member out, and `insert` adds before the entry that the path selects, or at `-`. An edit that selects nothing is an error, and the view is as it was. |
 | Octets | What is not edited keeps the octets received. An edit is refused when the value around it does not encode back to them, as with an addition of a later release. The value of an IE or of a transfer is not taken out: the IE is removed, or its `octets` are set. |
-| An IE that is written | `{"id", "criticality", "value"}`, or `octets` in place of `value`. The `id` is a number or a name, and the value has the type of the IE whatever JSON it is. |
+| An IE that is written in a view | `{"id", "criticality", "value"}`, or `octets` in place of `value`. The `id` is a number or a name, and the value has the type of the IE whatever JSON it is. |
 | A transfer that is written | Its decoded value, alone or as `decoded`, or its octets, in hexadecimal or as `octets`. |
-| A message that is written | The name gives the procedure code, the direction and the criticalities. An IE says its `criticality` where no table has it: when the message does not have it, when two object sets give an item two, and in an extension container. |
+| A tree that is written | The name of the message gives the procedure code, the direction and the criticalities. An IE says its `criticality` where no table has it: when the message does not have it, when two object sets give an item two, and in an extension container. |
 | What does not decode | An IE or a transfer that is unknown, does not decode or is nested deeper than 64 levels stays octets beside a `_decode_error`, and the rest of the PDU is read. |
-| [Octets that carry a type] | The container of a handover is written as `{NAME: VALUE}` by the name of its type, and read once [`open`] decoded it in the tree. |
-| [`check_path`], [`enumerated_at`] | Read a path against the types of a message of a name, without a tree: under `/s1ap`, the IE is one of the object set of the message. |
+| [Octets that carry a type] | The container of a handover is written as `{NAME: VALUE}` by the name of its type, and read once [`open`] decoded it in the view. |
+| [`check_path`], [`enumerated_at`] | Read a path against the types of a message of a name, without a view: under `/s1ap`, the IE is one of the object set of the message. |
 
 ### Values
 
-A tree and a message show the values of some types as they are usually
+A tree and a view show the values of some types as they are usually
 written, and take them so.
 
 | Type | Notation |
@@ -811,7 +811,7 @@ NGAP.
 | `tests/aper_round_trip.rs` | The macros, and the encodings where the codec departs from rasn's: constrained lists, the lists of E-RABs and of cells, and their size constraints. |
 | `tests/unknown_extensions.rs` | The additions of a later release to an extensible `SEQUENCE` are skipped, and what follows them is read. |
 | `tests/decode_allocation.rs` | Decoding reserves memory for the elements that it reads, not for the count that a length determinant claims. |
-| `tests/inspection.rs` | Each of the 101 messages is the same octets through its tree, and through its shown message where it has IEs to name. Each path of each selects its value, with and without `value`, and is one that `check_path` takes. Edits, written messages, criticalities, and the identifiers of the registry against the constants of the bindings. |
+| `tests/inspection.rs` | Each of the 101 messages is the same octets through its view, and through its tree where it has IEs to name. Each path of each selects its value, with and without `value`, and is one that `check_path` takes. Edits, written trees, criticalities, and the identifiers of the registry against the constants of the bindings. |
 | `tests/shared_files.rs` | The files that this crate shares with `oxirush-ngap` are as they were last mirrored. |
 | The unit tests of the paths | No two names that a path takes can be taken for each other, and a value has no member that is named as one of its IE, but the `value` of a string of bits. |
 | The Rust blocks of this page | They compile and run as documentation tests, with the `inspect` feature. |
@@ -910,8 +910,8 @@ Licensed under the Apache License, Version 2.0. See [LICENSE](https://github.com
 [What is not there]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/index.html#what-is-not-there
 [Edits]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/index.html#edits
 [Octets that carry a type]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/index.html#octets-that-carry-a-type
-[`inspect_pdu`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/fn.inspect_pdu.html
-[`encode_pdu`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/fn.encode_pdu.html
+[`message_view`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/fn.message_view.html
+[`message_from_view`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/fn.message_from_view.html
 [`message_tree`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/fn.message_tree.html
 [`message_from_tree`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/fn.message_from_tree.html
 [`select`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/fn.select.html
