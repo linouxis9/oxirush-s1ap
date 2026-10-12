@@ -13831,12 +13831,28 @@ pub use crate::registry::S1apPduKind;
 impl S1APPDU {
     /// The octets of this PDU, in aligned PER.
     pub fn encode(&self) -> Result<Vec<u8>, crate::Error> {
-        rasn::aper::encode(self).map_err(crate::Error::encoding::<Self>)
+        // Octet by octet, and by the codec of rasn for what that leaves: a message of
+        // 16384 octets or more, and the error of what does not encode.
+        let message = self.value().as_bytes();
+        let (code, criticality) = (self.procedure_code(), self.criticality());
+        match crate::wire::pdu_octets(self.alternative(), code, criticality, message) {
+            Some(octets) => Ok(octets),
+            None => rasn::aper::encode(self).map_err(crate::Error::encoding::<Self>),
+        }
     }
     /// The PDU that `bytes` are, in aligned PER: the octets of one PDU, whole, and no
     /// octet after it.
     pub fn decode(bytes: &[u8]) -> Result<Self, crate::Error> {
-        crate::per::decode_complete(bytes)
+        // Octet by octet, and by the codec of rasn for what that leaves, which reads it
+        // or says why it does not.
+        let read = crate::wire::pdu(bytes).and_then(|(alternative, code, criticality, message)| {
+            let message = rasn::types::Any::new(message.to_vec());
+            Self::of_alternative(alternative, code, criticality, message)
+        });
+        match read {
+            Some(pdu) => Ok(pdu),
+            None => crate::per::decode_complete(bytes),
+        }
     }
     /// The message that this PDU holds, as its type `T`.
     ///
@@ -13873,12 +13889,15 @@ impl S1APPDU {
         if (direction, code) != (T::DIRECTION, T::PROCEDURE_CODE) {
             return Err(crate::Error::wrong_message(T::NAME, direction, code));
         }
-        let value = match self {
-            S1APPDU::initiatingMessage(message) => &message.value,
-            S1APPDU::successfulOutcome(message) => &message.value,
-            S1APPDU::unsuccessfulOutcome(message) => &message.value,
-        };
-        decode_open_type(value)
+        // A message of protocol IEs is read octet by octet, and what that leaves by the
+        // codec of rasn, which reads it or says why it does not.
+        let value = self.value();
+        let read = T::__OF_PROTOCOL_IES
+            .and_then(|of| Some(of(crate::wire::protocol_ies(value.as_bytes())?)));
+        match read {
+            Some(message) => Ok(message),
+            None => decode_open_type(value),
+        }
     }
     /// Return the procedure code of this PDU.
     pub fn procedure_code(&self) -> u8 {

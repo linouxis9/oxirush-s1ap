@@ -67,6 +67,7 @@ mod per;
 pub mod registry;
 pub mod s1ap;
 pub mod sized;
+mod wire;
 
 /// The ASN.1 library that the bindings are made of, at the version that this crate is
 /// built with. The values of the bindings are its types, such as `Integer`,

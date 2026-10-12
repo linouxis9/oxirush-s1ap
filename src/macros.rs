@@ -222,8 +222,14 @@ pub fn __pdu<M: Message, const N: usize>(
     ies: [Result<ProtocolIEField, Error>; N],
     new: fn(ProtocolIEContainer) -> M,
 ) -> Result<S1AP_PDU, Error> {
-    let ies = ies.into_iter().collect::<Result<Vec<_>, Error>>()?;
-    let value = crate::per::encode_open_type(&new(ProtocolIEContainer(ies)))?;
+    let ies = ProtocolIEContainer(ies.into_iter().collect::<Result<Vec<_>, Error>>()?);
+    // A message of protocol IEs is written octet by octet, and what that leaves by the
+    // codec of rasn: a value of 16384 octets or more, and the error of what does not
+    // encode.
+    let value = match crate::wire::message_octets(&ies) {
+        Some(octets) => Any::new(octets),
+        None => crate::per::encode_open_type(&new(ies))?,
+    };
     let procedure_code = ProcedureCode(M::PROCEDURE_CODE);
     Ok(match M::DIRECTION {
         "InitiatingMessage" => S1AP_PDU::initiatingMessage(InitiatingMessage {
@@ -323,6 +329,8 @@ macro_rules! procedures {
                 const NAME: &'static str = $initiating_name;
                 const DIRECTION: &'static str = "InitiatingMessage";
                 const PROCEDURE_CODE: u8 = $code;
+                const __OF_PROTOCOL_IES: Option<fn(ProtocolIEContainer) -> Self> =
+                    $crate::macros::of_protocol_ies!($initiating_type $([$($initiating_ie),*])?);
             }
         )?)*
         $($(
@@ -331,6 +339,8 @@ macro_rules! procedures {
                 const NAME: &'static str = $successful_name;
                 const DIRECTION: &'static str = "SuccessfulOutcome";
                 const PROCEDURE_CODE: u8 = $code;
+                const __OF_PROTOCOL_IES: Option<fn(ProtocolIEContainer) -> Self> =
+                    $crate::macros::of_protocol_ies!($successful_type $([$($successful_ie),*])?);
             }
         )?)*
         $($(
@@ -339,6 +349,8 @@ macro_rules! procedures {
                 const NAME: &'static str = $unsuccessful_name;
                 const DIRECTION: &'static str = "UnsuccessfulOutcome";
                 const PROCEDURE_CODE: u8 = $code;
+                const __OF_PROTOCOL_IES: Option<fn(ProtocolIEContainer) -> Self> =
+                    $crate::macros::of_protocol_ies!($unsuccessful_type $([$($unsuccessful_ie),*])?);
             }
         )?)*
 
@@ -383,8 +395,12 @@ macro_rules! procedures {
             }
         }
 
-        /// The criticality of the bindings, for the code that the two protocols share.
-        pub(crate) use $crate::s1ap::Criticality;
+        /// The types of the bindings that the code which the two protocols share names.
+        pub(crate) use $crate::s1ap::{
+            Criticality, ProtocolIEContainer, ProtocolIEField, ProtocolIEID,
+        };
+        #[cfg(test)]
+        pub(crate) use $crate::s1ap::S1AP_PDU as Pdu;
 
         /// The criticality that ASN.1 assigns to the procedure of a code.
         pub(crate) fn procedure_criticality(code: u8) -> Option<Criticality> {
@@ -471,6 +487,18 @@ macro_rules! procedures {
     };
 }
 pub(crate) use procedures;
+
+/// How a message is made of its protocol IEs: nothing for a message that has no
+/// container of them, which the registry lists without an object set.
+macro_rules! of_protocol_ies {
+    ($message:path) => {
+        None
+    };
+    ($message:path [$($ie:literal),*]) => {
+        Some(<$message>::new)
+    };
+}
+pub(crate) use of_protocol_ies;
 
 /// The IEs of an object set, each as its identifier, the criticality that the set
 /// assigns it and whether its presence is mandatory: none for a message that has no
