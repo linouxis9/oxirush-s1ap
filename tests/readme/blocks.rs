@@ -50,6 +50,8 @@ pub const BLOCKS: &[fn()] = &[
     block_19,
     block_20,
     block_21,
+    block_22,
+    block_23,
 ];
 
 /// The Rust block 1 of README.md.
@@ -143,6 +145,82 @@ fn block_3() {
 
 /// The Rust block 4 of README.md.
 fn block_4() {
+    use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies, s1ap::*};
+
+    // What a node keeps of a UE after its first message
+    struct Ue {
+        enb_id: u32,
+        nas: NASPDU<'static>,
+    }
+
+    fn admit(pdu: &S1AP_PDU) -> Result<Ue, Error> {
+        // `message` borrows from `pdu`, and `nas` from `message`
+        let message: InitialUEMessage = pdu.decode_value()?;
+        extract_s1ap_ies!(message, InitialUEMessage,
+            req enb_id: u32 = eNB_UE_S1AP_ID(id),
+            req nas: NASPDU = NAS_PDU(nas) => nas,
+        );
+        // Kept beyond the PDU: the octets are copied here, once
+        Ok(Ue { enb_id, nas: nas.into_owned() })
+    }
+
+    fn main() -> Result<(), Error> {
+        let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, IGNORE, InitialUEMessage,
+            REJECT eNB_UE_S1AP_ID(7u32),
+            REJECT NAS_PDU(vec![0x07, 0x41, 0x71]),
+        )?;
+        let ue = admit(&pdu)?;
+        drop(pdu);
+        println!("UE {}: a NAS-PDU of {} octets", ue.enb_id, ue.nas.0.len());
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 5 of README.md.
+fn block_5() {
+    use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies, s1ap::*};
+
+    async fn deliver(nas: &[u8]) {
+        println!("a NAS-PDU of {} octets", nas.len());
+    }
+
+    async fn handle(received: Vec<u8>) -> Result<(), Error> {
+        // Nothing of `received` is copied
+        let pdu = S1APPDU::decode_borrowed(&received)?;
+        let message: UplinkNASTransport = pdu.decode_value()?;
+        extract_s1ap_ies!(message, UplinkNASTransport,
+            req nas: NASPDU = NAS_PDU(nas) => nas,
+        );
+        deliver(&nas.0).await;
+        Ok(())
+    }
+
+    fn main() -> Result<(), Error> {
+        let transport = build_s1ap!(InitiatingMessage, uplinkNASTransport, IGNORE, UplinkNASTransport,
+            REJECT MME_UE_S1AP_ID(1u32),
+            REJECT eNB_UE_S1AP_ID(7u32),
+            REJECT NAS_PDU(vec![0x07, 0x5e, 0x03]),
+        )?;
+        let handler = handle(transport.encode()?);
+
+        // A runtime may move the handler to another thread
+        fn is_send(_: &impl Send) {}
+        is_send(&handler);
+
+        // Polled here without a runtime: this handler never waits
+        let mut handler = std::pin::pin!(handler);
+        let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+        assert!(handler.as_mut().poll(&mut context).is_ready());
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 6 of README.md.
+fn block_6() {
     use oxirush_s1ap::{Error, extract_s1ap_ies, s1ap::*};
 
     fn handle(request: &UEContextReleaseRequest) -> Result<(), Error> {
@@ -157,8 +235,8 @@ fn block_4() {
     }
 }
 
-/// The Rust block 5 of README.md.
-fn block_5() {
+/// The Rust block 7 of README.md.
+fn block_7() {
     use oxirush_s1ap::{extract_s1ap_ies, s1ap::*};
 
     // The cause of a request, when it has one that is read
@@ -179,8 +257,8 @@ fn block_5() {
     }
 }
 
-/// The Rust block 6 of README.md.
-fn block_6() {
+/// The Rust block 8 of README.md.
+fn block_8() {
     use oxirush_s1ap::{build_s1ap_ie, s1ap::*, with_s1ap_ie_mut};
 
     // A message with one IE, which is built alone
@@ -195,8 +273,8 @@ fn block_6() {
     assert_eq!(updated, Ok(true));
 }
 
-/// The Rust block 7 of README.md.
-fn block_7() {
+/// The Rust block 9 of README.md.
+fn block_9() {
     use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
 
     fn main() -> Result<(), oxirush_s1ap::Error> {
@@ -224,8 +302,8 @@ fn block_7() {
     main().unwrap();
 }
 
-/// The Rust block 8 of README.md.
-fn block_8() {
+/// The Rust block 10 of README.md.
+fn block_10() {
     use oxirush_s1ap::{build_s1ap, s1ap::*};
 
     fn main() -> Result<(), oxirush_s1ap::Error> {
@@ -253,8 +331,8 @@ fn block_8() {
     main().unwrap();
 }
 
-/// The Rust block 9 of README.md.
-fn block_9() {
+/// The Rust block 11 of README.md.
+fn block_11() {
     use oxirush_s1ap::helpers::*;
 
     // A PLMN from its MCC and its MNC, and what is identified within it
@@ -274,8 +352,8 @@ fn block_9() {
     println!("{}", global_enb_id(network, 0x100000).unwrap_err());
 }
 
-/// The Rust block 10 of README.md.
-fn block_10() {
+/// The Rust block 12 of README.md.
+fn block_12() {
     use oxirush_s1ap::{ErrorKind, s1ap::*};
 
     // A UE CONTEXT RELEASE REQUEST is not decoded as an S1 SETUP REQUEST
@@ -291,8 +369,8 @@ fn block_10() {
     println!("{short}");
 }
 
-/// The Rust block 11 of README.md.
-fn block_11() {
+/// The Rust block 13 of README.md.
+fn block_13() {
     use oxirush_s1ap::s1ap::S1AP_PDU;
 
     // UE CONTEXT RELEASE REQUEST
@@ -305,8 +383,8 @@ fn block_11() {
     println!("{}", view["message"]["protocolIEs"][2]);
 }
 
-/// The Rust block 12 of README.md.
-fn block_12() {
+/// The Rust block 14 of README.md.
+fn block_14() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -336,8 +414,8 @@ fn block_12() {
     }
 }
 
-/// The Rust block 13 of README.md.
-fn block_13() {
+/// The Rust block 15 of README.md.
+fn block_15() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -361,8 +439,8 @@ fn block_13() {
     println!("{}", wrong.unwrap_err());
 }
 
-/// The Rust block 14 of README.md.
-fn block_14() {
+/// The Rust block 16 of README.md.
+fn block_16() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -385,8 +463,8 @@ fn block_14() {
     println!("{}", edited.to_tree().unwrap()["ies"]);
 }
 
-/// The Rust block 15 of README.md.
-fn block_15() {
+/// The Rust block 17 of README.md.
+fn block_17() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -411,8 +489,8 @@ fn block_15() {
     println!("{}", json!(inspect::select(&view, "/s1ap/*/criticality").unwrap()));
 }
 
-/// The Rust block 16 of README.md.
-fn block_16() {
+/// The Rust block 18 of README.md.
+fn block_18() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -434,8 +512,8 @@ fn block_16() {
     println!("{}", edited.to_tree().unwrap());
 }
 
-/// The Rust block 17 of README.md.
-fn block_17() {
+/// The Rust block 19 of README.md.
+fn block_19() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -466,8 +544,8 @@ fn block_17() {
     }
 }
 
-/// The Rust block 18 of README.md.
-fn block_18() {
+/// The Rust block 20 of README.md.
+fn block_20() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::{Value, json};
 
@@ -508,8 +586,8 @@ fn block_18() {
     println!("{}", edited.to_tree().unwrap());
 }
 
-/// The Rust block 19 of README.md.
-fn block_19() {
+/// The Rust block 21 of README.md.
+fn block_21() {
     use oxirush_s1ap::inspect;
 
     // The names that the value at a path can have, as the specification spells them
@@ -521,8 +599,8 @@ fn block_19() {
     assert_eq!(choice, Ok(None));
 }
 
-/// The Rust block 20 of README.md.
-fn block_20() {
+/// The Rust block 22 of README.md.
+fn block_22() {
     use oxirush_s1ap::inspect;
 
     // Whether a path can select anything in a message of a name, without a view
@@ -536,8 +614,8 @@ fn block_20() {
     }
 }
 
-/// The Rust block 21 of README.md.
-fn block_21() {
+/// The Rust block 23 of README.md.
+fn block_23() {
     use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 

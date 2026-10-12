@@ -180,11 +180,13 @@ pub mod s1_ap_common_data_types {
         const NAME: &'static str = "ProcedureCode";
     }
     impl<'a> Decode<'a> for ProcedureCode {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 255)? as u8))
         }
     }
     impl Encode for ProcedureCode {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 255)?;
             Ok(())
@@ -212,11 +214,13 @@ pub mod s1_ap_common_data_types {
         const NAME: &'static str = "ProtocolExtensionID";
     }
     impl<'a> Decode<'a> for ProtocolExtensionID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 65535)? as u16))
         }
     }
     impl Encode for ProtocolExtensionID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 65535)?;
             Ok(())
@@ -246,11 +250,13 @@ pub mod s1_ap_common_data_types {
         const NAME: &'static str = "ProtocolIE-ID";
     }
     impl<'a> Decode<'a> for ProtocolIEID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 65535)? as u16))
         }
     }
     impl Encode for ProtocolIEID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 65535)?;
             Ok(())
@@ -858,7 +864,8 @@ pub mod s1_ap_containers {
                 value,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ProtocolIEField<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ProtocolIEField<'static> {
             ProtocolIEField {
                 id: self.id,
@@ -871,6 +878,7 @@ pub mod s1_ap_containers {
         const NAME: &'static str = "ProtocolIE-Field";
     }
     impl<'a> Decode<'a> for ProtocolIEField<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let id = match ProtocolIEID::decode(reader) {
                 Ok(value) => value,
@@ -892,6 +900,7 @@ pub mod s1_ap_containers {
         }
     }
     impl Encode for ProtocolIEField<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             self.id.encode(writer)?;
             self.criticality.encode(writer)?;
@@ -924,7 +933,8 @@ pub mod s1_ap_containers {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ProtocolIEContainer<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ProtocolIEContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ProtocolIEContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ProtocolIEContainer<'static> {
             ProtocolIEContainer(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -988,7 +998,8 @@ pub mod s1_ap_containers {
                 extension_value,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ProtocolExtensionField<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ProtocolExtensionField<'static> {
             ProtocolExtensionField {
                 id: self.id,
@@ -1001,6 +1012,7 @@ pub mod s1_ap_containers {
         const NAME: &'static str = "ProtocolExtensionField";
     }
     impl<'a> Decode<'a> for ProtocolExtensionField<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let id = match ProtocolExtensionID::decode(reader) {
                 Ok(value) => value,
@@ -1022,6 +1034,7 @@ pub mod s1_ap_containers {
         }
     }
     impl Encode for ProtocolExtensionField<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             self.id.encode(writer)?;
             self.criticality.encode(writer)?;
@@ -1055,7 +1068,8 @@ pub mod s1_ap_containers {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ProtocolExtensionContainer<'a>(pub Vec<ProtocolExtensionField<'a>>);
     impl<'a> ProtocolExtensionContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ProtocolExtensionContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ProtocolExtensionContainer<'static> {
             ProtocolExtensionContainer(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -1140,7 +1154,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `AdditionalGUTI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AdditionalGUTI<'static> {
             AdditionalGUTI {
                 g_ummei: self.g_ummei.into_owned(),
@@ -1269,15 +1284,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl AdditionalRRMPriorityIndex {
+        /// The string of the 32 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 32 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 32).map(Self)
+        }
+    }
     impl AsnType for AdditionalRRMPriorityIndex {
         const NAME: &'static str = "AdditionalRRMPriorityIndex";
     }
     impl<'a> Decode<'a> for AdditionalRRMPriorityIndex {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(32, 32)?))
         }
     }
     impl Encode for AdditionalRRMPriorityIndex {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 32, 32)?;
             Ok(())
@@ -1357,7 +1384,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `AllocationAndRetentionPriority<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AllocationAndRetentionPriority<'static> {
             AllocationAndRetentionPriority {
                 priority_level: self.priority_level,
@@ -1471,7 +1499,8 @@ pub mod s1_ap_ies {
         tAIBased(TAIBasedMDT<'a>),
     }
     impl<'a> AreaScopeOfMDT<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `AreaScopeOfMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AreaScopeOfMDT<'static> {
             match self {
                 Self::cellBased(value) => AreaScopeOfMDT::cellBased(value.into_owned()),
@@ -1585,7 +1614,8 @@ pub mod s1_ap_ies {
         pLMNAreaBased(PLMNAreaBasedQMC<'a>),
     }
     impl<'a> AreaScopeOfQMC<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `AreaScopeOfQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AreaScopeOfQMC<'static> {
             match self {
                 Self::cellBased(value) => AreaScopeOfQMC::cellBased(value.into_owned()),
@@ -1699,7 +1729,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `AssistanceDataForCECapableUEs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AssistanceDataForCECapableUEs<'static> {
             AssistanceDataForCECapableUEs {
                 cell_identifier_and_celevel_for_cecapable_ues: self
@@ -1806,7 +1837,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `AssistanceDataForPaging<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AssistanceDataForPaging<'static> {
             AssistanceDataForPaging {
                 assistance_data_for_recommended_cells: self
@@ -1966,7 +1998,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `AssistanceDataForRecommendedCells<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AssistanceDataForRecommendedCells<'static> {
             AssistanceDataForRecommendedCells {
                 recommended_cells_for_paging: self.recommended_cells_for_paging.into_owned(),
@@ -2143,7 +2176,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `BearersSubjectToDLDiscardingItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BearersSubjectToDLDiscardingItem<'static> {
             BearersSubjectToDLDiscardingItem {
                 e_rab_id: self.e_rab_id,
@@ -2226,7 +2260,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToDLDiscardingList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> BearersSubjectToDLDiscardingList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `BearersSubjectToDLDiscardingList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BearersSubjectToDLDiscardingList<'static> {
             BearersSubjectToDLDiscardingList(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -2292,7 +2327,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `BearersSubjectToEarlyStatusTransferItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BearersSubjectToEarlyStatusTransferItem<'static> {
             BearersSubjectToEarlyStatusTransferItem {
                 e_rab_id: self.e_rab_id,
@@ -2381,7 +2417,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToEarlyStatusTransferList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> BearersSubjectToEarlyStatusTransferList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `BearersSubjectToEarlyStatusTransferList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BearersSubjectToEarlyStatusTransferList<'static> {
             BearersSubjectToEarlyStatusTransferList(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -2453,7 +2490,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `BearersSubjectToStatusTransferItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BearersSubjectToStatusTransferItem<'static> {
             BearersSubjectToStatusTransferItem {
                 e_rab_id: self.e_rab_id,
@@ -2580,7 +2618,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToStatusTransferList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> BearersSubjectToStatusTransferList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `BearersSubjectToStatusTransferList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BearersSubjectToStatusTransferList<'static> {
             BearersSubjectToStatusTransferList(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -2638,11 +2677,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "BitRate";
     }
     impl<'a> Decode<'a> for BitRate {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 10000000000)?))
         }
     }
     impl Encode for BitRate {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 0, 10000000000)?;
             Ok(())
@@ -2702,7 +2743,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BluetoothMeasConfigNameList<'a>(pub Vec<BluetoothName<'a>>);
     impl<'a> BluetoothMeasConfigNameList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `BluetoothMeasConfigNameList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BluetoothMeasConfigNameList<'static> {
             BluetoothMeasConfigNameList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -2812,7 +2854,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `BluetoothMeasurementConfiguration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BluetoothMeasurementConfiguration<'static> {
             BluetoothMeasurementConfiguration {
                 bluetooth_meas_config: self.bluetooth_meas_config,
@@ -2944,7 +2987,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BluetoothName<'a>(pub Octets<'a>);
     impl<'a> BluetoothName<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `BluetoothName<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BluetoothName<'static> {
             BluetoothName(self.0.into_owned())
         }
@@ -2968,11 +3012,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "BluetoothName";
     }
     impl<'a> Decode<'a> for BluetoothName<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(1, 248)?))
         }
     }
     impl Encode for BluetoothName<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 1, 248)?;
             Ok(())
@@ -2995,7 +3041,8 @@ pub mod s1_ap_ies {
         emergencyAreaID_Cancelled(EmergencyAreaIDCancelled<'a>),
     }
     impl<'a> BroadcastCancelledAreaList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `BroadcastCancelledAreaList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BroadcastCancelledAreaList<'static> {
             match self {
                 Self::cellID_Cancelled(value) => {
@@ -3105,7 +3152,8 @@ pub mod s1_ap_ies {
         emergencyAreaID_Broadcast(EmergencyAreaIDBroadcast<'a>),
     }
     impl<'a> BroadcastCompletedAreaList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `BroadcastCompletedAreaList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BroadcastCompletedAreaList<'static> {
             match self {
                 Self::cellID_Broadcast(value) => {
@@ -3295,7 +3343,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CELevel<'a>(pub Octets<'a>);
     impl<'a> CELevel<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CELevel<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CELevel<'static> {
             CELevel(self.0.into_owned())
         }
@@ -3319,11 +3368,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "CELevel";
     }
     impl<'a> Decode<'a> for CELevel<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for CELevel<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -3363,7 +3414,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CGI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CGI<'static> {
             CGI {
                 p_lmnidentity: self.p_lmnidentity,
@@ -3483,11 +3535,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "CI";
     }
     impl<'a> Decode<'a> for CI {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<2>()?))
         }
     }
     impl Encode for CI {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -3590,7 +3644,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CNTypeRestrictions<'a>(pub Vec<CNTypeRestrictionsItem<'a>>);
     impl<'a> CNTypeRestrictions<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CNTypeRestrictions<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CNTypeRestrictions<'static> {
             CNTypeRestrictions(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -3654,7 +3709,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CNTypeRestrictionsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CNTypeRestrictionsItem<'static> {
             CNTypeRestrictionsItem {
                 p_lmn_identity: self.p_lmn_identity,
@@ -3752,7 +3808,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `COUNTValueExtended<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> COUNTValueExtended<'static> {
             COUNTValueExtended {
                 p_dcp_snextended: self.p_dcp_snextended,
@@ -3851,7 +3908,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `COUNTvalue<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> COUNTvalue<'static> {
             COUNTvalue {
                 p_dcp_sn: self.p_dcp_sn,
@@ -3949,7 +4007,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `COUNTvaluePDCPSNlength18<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> COUNTvaluePDCPSNlength18<'static> {
             COUNTvaluePDCPSNlength18 {
                 p_dcp_snlength18: self.p_dcp_snlength18,
@@ -4087,15 +4146,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl CSGId {
+        /// The string of the 27 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 27 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 27).map(Self)
+        }
+    }
     impl AsnType for CSGId {
         const NAME: &'static str = "CSG-Id";
     }
     impl<'a> Decode<'a> for CSGId {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(27, 27)?))
         }
     }
     impl Encode for CSGId {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 27, 27)?;
             Ok(())
@@ -4113,7 +4184,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CSGIdList<'a>(pub Vec<CSGIdListItem<'a>>);
     impl<'a> CSGIdList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CSGIdList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CSGIdList<'static> {
             CSGIdList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -4171,7 +4243,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CSGIdListItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CSGIdListItem<'static> {
             CSGIdListItem {
                 c_sg_id: self.c_sg_id,
@@ -4286,7 +4359,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CancelledCellinEAI<'a>(pub Vec<CancelledCellinEAIItem<'a>>);
     impl<'a> CancelledCellinEAI<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CancelledCellinEAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CancelledCellinEAI<'static> {
             CancelledCellinEAI(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -4350,7 +4424,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CancelledCellinEAIItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CancelledCellinEAIItem<'static> {
             CancelledCellinEAIItem {
                 e_cgi: self.e_cgi.into_owned(),
@@ -4434,7 +4509,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CancelledCellinTAI<'a>(pub Vec<CancelledCellinTAIItem<'a>>);
     impl<'a> CancelledCellinTAI<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CancelledCellinTAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CancelledCellinTAI<'static> {
             CancelledCellinTAI(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -4498,7 +4574,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CancelledCellinTAIItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CancelledCellinTAIItem<'static> {
             CancelledCellinTAIItem {
                 e_cgi: self.e_cgi.into_owned(),
@@ -5187,7 +5264,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXMEID<'a>(pub Octets<'a>);
     impl<'a> Cdma2000OneXMEID<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `Cdma2000OneXMEID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Cdma2000OneXMEID<'static> {
             Cdma2000OneXMEID(self.0.into_owned())
         }
@@ -5211,11 +5289,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Cdma2000OneXMEID";
     }
     impl<'a> Decode<'a> for Cdma2000OneXMEID<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for Cdma2000OneXMEID<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -5233,7 +5313,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXMSI<'a>(pub Octets<'a>);
     impl<'a> Cdma2000OneXMSI<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `Cdma2000OneXMSI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Cdma2000OneXMSI<'static> {
             Cdma2000OneXMSI(self.0.into_owned())
         }
@@ -5257,11 +5338,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Cdma2000OneXMSI";
     }
     impl<'a> Decode<'a> for Cdma2000OneXMSI<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for Cdma2000OneXMSI<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -5279,7 +5362,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXPilot<'a>(pub Octets<'a>);
     impl<'a> Cdma2000OneXPilot<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `Cdma2000OneXPilot<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Cdma2000OneXPilot<'static> {
             Cdma2000OneXPilot(self.0.into_owned())
         }
@@ -5303,11 +5387,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Cdma2000OneXPilot";
     }
     impl<'a> Decode<'a> for Cdma2000OneXPilot<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for Cdma2000OneXPilot<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -5325,7 +5411,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXRAND<'a>(pub Octets<'a>);
     impl<'a> Cdma2000OneXRAND<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `Cdma2000OneXRAND<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Cdma2000OneXRAND<'static> {
             Cdma2000OneXRAND(self.0.into_owned())
         }
@@ -5349,11 +5436,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Cdma2000OneXRAND";
     }
     impl<'a> Decode<'a> for Cdma2000OneXRAND<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for Cdma2000OneXRAND<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -5390,7 +5479,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `Cdma2000OneXSRVCCInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Cdma2000OneXSRVCCInfo<'static> {
             Cdma2000OneXSRVCCInfo {
                 cdma2000_one_xmeid: self.cdma2000_one_xmeid.into_owned(),
@@ -5490,7 +5580,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000PDU<'a>(pub Octets<'a>);
     impl<'a> Cdma2000PDU<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `Cdma2000PDU<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Cdma2000PDU<'static> {
             Cdma2000PDU(self.0.into_owned())
         }
@@ -5514,11 +5605,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Cdma2000PDU";
     }
     impl<'a> Decode<'a> for Cdma2000PDU<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for Cdma2000PDU<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -5579,7 +5672,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000SectorID<'a>(pub Octets<'a>);
     impl<'a> Cdma2000SectorID<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `Cdma2000SectorID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Cdma2000SectorID<'static> {
             Cdma2000SectorID(self.0.into_owned())
         }
@@ -5603,11 +5697,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Cdma2000SectorID";
     }
     impl<'a> Decode<'a> for Cdma2000SectorID<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for Cdma2000SectorID<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -5726,7 +5822,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellBasedMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellBasedMDT<'static> {
             CellBasedMDT {
                 cell_id_listfor_mdt: self.cell_id_listfor_mdt.into_owned(),
@@ -5811,7 +5908,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellBasedQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellBasedQMC<'static> {
             CellBasedQMC {
                 cell_id_listfor_qmc: self.cell_id_listfor_qmc.into_owned(),
@@ -5883,7 +5981,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIDBroadcast<'a>(pub Vec<CellIDBroadcastItem<'a>>);
     impl<'a> CellIDBroadcast<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIDBroadcast<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellIDBroadcast<'static> {
             CellIDBroadcast(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -5944,7 +6043,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIDBroadcastItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellIDBroadcastItem<'static> {
             CellIDBroadcastItem {
                 e_cgi: self.e_cgi.into_owned(),
@@ -6016,7 +6116,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIDCancelled<'a>(pub Vec<CellIDCancelledItem<'a>>);
     impl<'a> CellIDCancelled<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIDCancelled<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellIDCancelled<'static> {
             CellIDCancelled(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -6080,7 +6181,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIDCancelledItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellIDCancelledItem<'static> {
             CellIDCancelledItem {
                 e_cgi: self.e_cgi.into_owned(),
@@ -6164,7 +6266,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIdListforMDT<'a>(pub Vec<EUTRANCGI<'a>>);
     impl<'a> CellIdListforMDT<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIdListforMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellIdListforMDT<'static> {
             CellIdListforMDT(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -6212,7 +6315,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIdListforQMC<'a>(pub Vec<EUTRANCGI<'a>>);
     impl<'a> CellIdListforQMC<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIdListforQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellIdListforQMC<'static> {
             CellIdListforQMC(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -6276,7 +6380,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIdentifierAndCELevelForCECapableUEs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellIdentifierAndCELevelForCECapableUEs<'static> {
             CellIdentifierAndCELevelForCECapableUEs {
                 global_cell_id: self.global_cell_id.into_owned(),
@@ -6363,15 +6468,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl CellIdentity {
+        /// The string of the 28 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 28 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 28).map(Self)
+        }
+    }
     impl AsnType for CellIdentity {
         const NAME: &'static str = "CellIdentity";
     }
     impl<'a> Decode<'a> for CellIdentity {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(28, 28)?))
         }
     }
     impl Encode for CellIdentity {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 28, 28)?;
             Ok(())
@@ -6402,7 +6519,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellType<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellType<'static> {
             CellType {
                 cell_size: self.cell_size,
@@ -6474,7 +6592,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CoarseUELocation<'a>(pub Octets<'a>);
     impl<'a> CoarseUELocation<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CoarseUELocation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CoarseUELocation<'static> {
             CoarseUELocation(self.0.into_owned())
         }
@@ -6498,11 +6617,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "CoarseUELocation";
     }
     impl<'a> Decode<'a> for CoarseUELocation<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for CoarseUELocation<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -6562,7 +6683,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CompletedCellinEAI<'a>(pub Vec<CompletedCellinEAIItem<'a>>);
     impl<'a> CompletedCellinEAI<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CompletedCellinEAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CompletedCellinEAI<'static> {
             CompletedCellinEAI(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -6623,7 +6745,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CompletedCellinEAIItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CompletedCellinEAIItem<'static> {
             CompletedCellinEAIItem {
                 e_cgi: self.e_cgi.into_owned(),
@@ -6695,7 +6818,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CompletedCellinTAI<'a>(pub Vec<CompletedCellinTAIItem<'a>>);
     impl<'a> CompletedCellinTAI<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CompletedCellinTAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CompletedCellinTAI<'static> {
             CompletedCellinTAI(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -6756,7 +6880,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CompletedCellinTAIItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CompletedCellinTAIItem<'static> {
             CompletedCellinTAIItem {
                 e_cgi: self.e_cgi.into_owned(),
@@ -6885,7 +7010,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ConnectedengNBItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ConnectedengNBItem<'static> {
             ConnectedengNBItem {
                 en_g_nb_id: self.en_g_nb_id.into_owned(),
@@ -6968,7 +7094,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ConnectedengNBList<'a>(pub Vec<ConnectedengNBItem<'a>>);
     impl<'a> ConnectedengNBList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ConnectedengNBList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ConnectedengNBList<'static> {
             ConnectedengNBList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -7032,7 +7159,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ContextatSource<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ContextatSource<'static> {
             ContextatSource {
                 source_ng_ran_node_id: self.source_ng_ran_node_id.into_owned(),
@@ -7125,11 +7253,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Correlation-ID";
     }
     impl<'a> Decode<'a> for CorrelationID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<4>()?))
         }
     }
     impl Encode for CorrelationID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -7211,7 +7341,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CriticalityDiagnostics<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CriticalityDiagnostics<'static> {
             CriticalityDiagnostics {
                 procedure_code: self.procedure_code,
@@ -7390,7 +7521,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CriticalityDiagnosticsIEItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CriticalityDiagnosticsIEItem<'static> {
             CriticalityDiagnosticsIEItem {
                 i_ecriticality: self.i_ecriticality,
@@ -7485,7 +7617,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CriticalityDiagnosticsIEList<'a>(pub Vec<CriticalityDiagnosticsIEItem<'a>>);
     impl<'a> CriticalityDiagnosticsIEList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CriticalityDiagnosticsIEList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CriticalityDiagnosticsIEList<'static> {
             CriticalityDiagnosticsIEList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -7590,7 +7723,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DAPSRequestInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DAPSRequestInfo<'static> {
             DAPSRequestInfo {
                 d_apsindicator: self.d_apsindicator,
@@ -7720,7 +7854,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DAPSResponseInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DAPSResponseInfo<'static> {
             DAPSResponseInfo {
                 dapsresponseindicator: self.dapsresponseindicator,
@@ -7816,7 +7951,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DAPSResponseInfoItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DAPSResponseInfoItem<'static> {
             DAPSResponseInfoItem {
                 e_rab_id: self.e_rab_id,
@@ -7899,7 +8035,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DAPSResponseInfoList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> DAPSResponseInfoList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DAPSResponseInfoList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DAPSResponseInfoList<'static> {
             DAPSResponseInfoList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -7955,11 +8092,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "DCN-ID";
     }
     impl<'a> Decode<'a> for DCNID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 65535)? as u16))
         }
     }
     impl Encode for DCNID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 65535)?;
             Ok(())
@@ -7994,7 +8133,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DLCPSecurityInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DLCPSecurityInformation<'static> {
             DLCPSecurityInformation {
                 dl_nas_mac: self.dl_nas_mac,
@@ -8112,15 +8252,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl DLNASMAC {
+        /// The string of the 16 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 16 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 16).map(Self)
+        }
+    }
     impl AsnType for DLNASMAC {
         const NAME: &'static str = "DL-NAS-MAC";
     }
     impl<'a> Decode<'a> for DLNASMAC {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(16, 16)?))
         }
     }
     impl Encode for DLNASMAC {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 16, 16)?;
             Ok(())
@@ -8143,7 +8295,8 @@ pub mod s1_ap_ies {
         dLCOUNTValuePDCP_SNlength18(COUNTvaluePDCPSNlength18<'a>),
     }
     impl<'a> DLCOUNTPDCPSNlength<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DLCOUNTPDCPSNlength<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DLCOUNTPDCPSNlength<'static> {
             match self {
                 Self::dLCOUNTValuePDCP_SNlength12(value) => {
@@ -8255,7 +8408,8 @@ pub mod s1_ap_ies {
         discardDLCOUNTValuePDCP_SNlength18(COUNTvaluePDCPSNlength18<'a>),
     }
     impl<'a> DLDiscarding<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DLDiscarding<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DLDiscarding<'static> {
             match self {
                 Self::discardDLCOUNTValuePDCP_SNlength12(value) => {
@@ -8452,15 +8606,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl DataCodingScheme {
+        /// The string of the 8 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 8 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 8).map(Self)
+        }
+    }
     impl AsnType for DataCodingScheme {
         const NAME: &'static str = "DataCodingScheme";
     }
     impl<'a> Decode<'a> for DataCodingScheme {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(8, 8)?))
         }
     }
     impl Encode for DataCodingScheme {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 8, 8)?;
             Ok(())
@@ -8486,11 +8652,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "DataSize";
     }
     impl<'a> Decode<'a> for DataSize {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned_extensible(1, 4095)?))
         }
     }
     impl Encode for DataSize {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned_extensible(self.0, 1, 4095);
             Ok(())
@@ -8558,11 +8726,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "E-RAB-ID";
     }
     impl<'a> Decode<'a> for ERABID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned_extensible(0, 15)?))
         }
     }
     impl Encode for ERABID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned_extensible(self.0, 0, 15);
             Ok(())
@@ -8580,7 +8750,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABInformationList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABInformationList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABInformationList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABInformationList<'static> {
             ERABInformationList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -8644,7 +8815,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABInformationListItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABInformationListItem<'static> {
             ERABInformationListItem {
                 e_rab_id: self.e_rab_id,
@@ -8753,7 +8925,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABItem<'static> {
             ERABItem {
                 e_rab_id: self.e_rab_id,
@@ -8854,7 +9027,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABLevelQoSParameters<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABLevelQoSParameters<'static> {
             ERABLevelQoSParameters {
                 q_ci: self.q_ci,
@@ -8972,7 +9146,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABList<'static> {
             ERABList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -9036,7 +9211,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSecurityResultItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSecurityResultItem<'static> {
             ERABSecurityResultItem {
                 e_rab_id: self.e_rab_id,
@@ -9119,7 +9295,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSecurityResultList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABSecurityResultList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSecurityResultList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSecurityResultList<'static> {
             ERABSecurityResultList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -9189,7 +9366,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABUsageReportItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABUsageReportItem<'static> {
             ERABUsageReportItem {
                 start_timestamp: self.start_timestamp,
@@ -9308,7 +9486,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABUsageReportList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABUsageReportList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABUsageReportList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABUsageReportList<'static> {
             ERABUsageReportList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -9364,11 +9543,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "E-UTRAN-Trace-ID";
     }
     impl<'a> Decode<'a> for EUTRANTraceID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<8>()?))
         }
     }
     impl Encode for EUTRANTraceID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -9395,11 +9576,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "EARFCN";
     }
     impl<'a> Decode<'a> for EARFCN {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned_extensible(0, 262143)?))
         }
     }
     impl Encode for EARFCN {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned_extensible(self.0, 0, 262143);
             Ok(())
@@ -9417,7 +9600,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ECGI_List<'a>(pub Vec<EUTRANCGI<'a>>);
     impl<'a> ECGI_List<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ECGI_List<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ECGI_List<'static> {
             ECGI_List(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -9465,7 +9649,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ECGIList<'a>(pub Vec<EUTRANCGI<'a>>);
     impl<'a> ECGIList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ECGIList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ECGIList<'static> {
             ECGIList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -9513,7 +9698,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ECGIListForRestart<'a>(pub Vec<EUTRANCGI<'a>>);
     impl<'a> ECGIListForRestart<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ECGIListForRestart<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ECGIListForRestart<'static> {
             ECGIListForRestart(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -9622,7 +9808,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENDCSONConfigurationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENDCSONConfigurationTransfer<'static> {
             ENDCSONConfigurationTransfer {
                 transfertype: self.transfertype.into_owned(),
@@ -9737,7 +9924,8 @@ pub mod s1_ap_ies {
         reply(ENDCTransferTypeReply<'a>),
     }
     impl<'a> ENDCSONTransferType<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENDCSONTransferType<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENDCSONTransferType<'static> {
             match self {
                 Self::request(value) => ENDCSONTransferType::request(value.into_owned()),
@@ -9822,7 +10010,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENDCSONeNBIdentification<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENDCSONeNBIdentification<'static> {
             ENDCSONeNBIdentification {
                 globale_nbid: self.globale_nbid.into_owned(),
@@ -9921,7 +10110,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENDCSONengNBIdentification<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENDCSONengNBIdentification<'static> {
             ENDCSONengNBIdentification {
                 globaleng_nbid: self.globaleng_nbid.into_owned(),
@@ -10020,7 +10210,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENDCTransferTypeReply<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENDCTransferTypeReply<'static> {
             ENDCTransferTypeReply {
                 sourceeng_nb: self.sourceeng_nb.into_owned(),
@@ -10128,7 +10319,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENDCTransferTypeRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENDCTransferTypeRequest<'static> {
             ENDCTransferTypeRequest {
                 sourcee_nb: self.sourcee_nb.into_owned(),
@@ -10297,7 +10489,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBEarlyStatusTransferTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBEarlyStatusTransferTransparentContainer<'static> {
             ENBEarlyStatusTransferTransparentContainer {
                 bearers_subject_to_early_status_transfer_list: self
@@ -10504,7 +10697,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBStatusTransferTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBStatusTransferTransparentContainer<'static> {
             ENBStatusTransferTransparentContainer {
                 bearers_subject_to_status_transfer_list: self
@@ -10597,11 +10791,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "ENB-UE-S1AP-ID";
     }
     impl<'a> Decode<'a> for ENBUES1APID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 16777215)? as u32))
         }
     }
     impl Encode for ENBUES1APID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 16777215)?;
             Ok(())
@@ -10623,7 +10819,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBIndirectX2TransportLayerAddresses<'a>(pub Vec<TransportLayerAddress<'a>>);
     impl<'a> ENBIndirectX2TransportLayerAddresses<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBIndirectX2TransportLayerAddresses<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBIndirectX2TransportLayerAddresses<'static> {
             ENBIndirectX2TransportLayerAddresses(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -10689,7 +10886,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBX2ExtTLA<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBX2ExtTLA<'static> {
             ENBX2ExtTLA {
                 i_psec_tla: self.i_psec_tla.map(|value| value.into_owned()),
@@ -10791,7 +10989,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2ExtTLAs<'a>(pub Vec<ENBX2ExtTLA<'a>>);
     impl<'a> ENBX2ExtTLAs<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBX2ExtTLAs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBX2ExtTLAs<'static> {
             ENBX2ExtTLAs(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -10839,7 +11038,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2GTPTLAs<'a>(pub Vec<TransportLayerAddress<'a>>);
     impl<'a> ENBX2GTPTLAs<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBX2GTPTLAs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBX2GTPTLAs<'static> {
             ENBX2GTPTLAs(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -10887,7 +11087,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2TLAs<'a>(pub Vec<TransportLayerAddress<'a>>);
     impl<'a> ENBX2TLAs<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBX2TLAs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBX2TLAs<'static> {
             ENBX2TLAs(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -10935,7 +11136,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBname<'a>(pub Cow<'a, str>);
     impl<'a> ENBname<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBname<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBname<'static> {
             ENBname(Cow::Owned(self.0.into_owned()))
         }
@@ -10959,11 +11161,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "ENBname";
     }
     impl<'a> Decode<'a> for ENBname<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.printable_string_extensible(1, 150)?))
         }
     }
     impl Encode for ENBname<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.printable_string_extensible(&self.0, 1, 150)?;
             Ok(())
@@ -11039,7 +11243,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `EUTRANCGI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> EUTRANCGI<'static> {
             EUTRANCGI {
                 p_lmnidentity: self.p_lmnidentity,
@@ -11129,11 +11334,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "EUTRANRoundTripDelayEstimationInfo";
     }
     impl<'a> Decode<'a> for EUTRANRoundTripDelayEstimationInfo {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 2047)? as u16))
         }
     }
     impl Encode for EUTRANRoundTripDelayEstimationInfo {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 2047)?;
             Ok(())
@@ -11163,11 +11370,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "EmergencyAreaID";
     }
     impl<'a> Decode<'a> for EmergencyAreaID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<3>()?))
         }
     }
     impl Encode for EmergencyAreaID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -11185,7 +11394,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDBroadcast<'a>(pub Vec<EmergencyAreaIDBroadcastItem<'a>>);
     impl<'a> EmergencyAreaIDBroadcast<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `EmergencyAreaIDBroadcast<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> EmergencyAreaIDBroadcast<'static> {
             EmergencyAreaIDBroadcast(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -11249,7 +11459,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `EmergencyAreaIDBroadcastItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> EmergencyAreaIDBroadcastItem<'static> {
             EmergencyAreaIDBroadcastItem {
                 emergency_area_id: self.emergency_area_id,
@@ -11335,7 +11546,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDCancelled<'a>(pub Vec<EmergencyAreaIDCancelledItem<'a>>);
     impl<'a> EmergencyAreaIDCancelled<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `EmergencyAreaIDCancelled<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> EmergencyAreaIDCancelled<'static> {
             EmergencyAreaIDCancelled(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -11399,7 +11611,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `EmergencyAreaIDCancelledItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> EmergencyAreaIDCancelledItem<'static> {
             EmergencyAreaIDCancelledItem {
                 emergency_area_id: self.emergency_area_id,
@@ -11611,7 +11824,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EnGNBID<'a>(pub BitString<'a>);
     impl<'a> EnGNBID<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `EnGNBID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> EnGNBID<'static> {
             EnGNBID(self.0.into_owned())
         }
@@ -11625,11 +11839,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "En-gNB-ID";
     }
     impl<'a> Decode<'a> for EnGNBID<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bit_string_extensible(22, 32)?))
         }
     }
     impl Encode for EnGNBID<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string_extensible(&self.0, 22, 32);
             Ok(())
@@ -11647,7 +11863,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EncryptionAlgorithms<'a>(pub BitString<'a>);
     impl<'a> EncryptionAlgorithms<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `EncryptionAlgorithms<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> EncryptionAlgorithms<'static> {
             EncryptionAlgorithms(self.0.into_owned())
         }
@@ -11661,11 +11878,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "EncryptionAlgorithms";
     }
     impl<'a> Decode<'a> for EncryptionAlgorithms<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bit_string_extensible(16, 16)?))
         }
     }
     impl Encode for EncryptionAlgorithms<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string_extensible(&self.0, 16, 16);
             Ok(())
@@ -11829,7 +12048,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `EventL1LoggedMDTConfig<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> EventL1LoggedMDTConfig<'static> {
             EventL1LoggedMDTConfig {
                 l1_threshold: self.l1_threshold.into_owned(),
@@ -11977,7 +12197,8 @@ pub mod s1_ap_ies {
         choice_Extensions(ProtocolIEField<'a>),
     }
     impl<'a> EventTrigger<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `EventTrigger<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> EventTrigger<'static> {
             match self {
                 Self::outOfCoverage(value) => EventTrigger::outOfCoverage(value),
@@ -12140,11 +12361,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "ExpectedActivityPeriod";
     }
     impl<'a> Decode<'a> for ExpectedActivityPeriod {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned_extensible(1, 181)?))
         }
     }
     impl Encode for ExpectedActivityPeriod {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned_extensible(self.0, 1, 181);
             Ok(())
@@ -12234,11 +12457,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "ExpectedIdlePeriod";
     }
     impl<'a> Decode<'a> for ExpectedIdlePeriod {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned_extensible(1, 181)?))
         }
     }
     impl Encode for ExpectedIdlePeriod {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned_extensible(self.0, 1, 181);
             Ok(())
@@ -12278,7 +12503,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ExpectedUEActivityBehaviour<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ExpectedUEActivityBehaviour<'static> {
             ExpectedUEActivityBehaviour {
                 expected_activity_period: self.expected_activity_period,
@@ -12441,7 +12667,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ExpectedUEBehaviour<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ExpectedUEBehaviour<'static> {
             ExpectedUEBehaviour {
                 expected_activity: self.expected_activity.map(|value| value.into_owned()),
@@ -12554,15 +12781,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl ExtendedUEIdentityIndexValue {
+        /// The string of the 14 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 14 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 14).map(Self)
+        }
+    }
     impl AsnType for ExtendedUEIdentityIndexValue {
         const NAME: &'static str = "Extended-UEIdentityIndexValue";
     }
     impl<'a> Decode<'a> for ExtendedUEIdentityIndexValue {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(14, 14)?))
         }
     }
     impl Encode for ExtendedUEIdentityIndexValue {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 14, 14)?;
             Ok(())
@@ -12588,6 +12827,7 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "ExtendedBitRate";
     }
     impl<'a> Decode<'a> for ExtendedBitRate {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(
                 reader.unsigned_extensible(10000000001, 4000000000000)?,
@@ -12595,6 +12835,7 @@ pub mod s1_ap_ies {
         }
     }
     impl Encode for ExtendedBitRate {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned_extensible(self.0, 10000000001, 4000000000000);
             Ok(())
@@ -12620,11 +12861,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "ExtendedRNC-ID";
     }
     impl<'a> Decode<'a> for ExtendedRNCID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(4096, 65535)? as u16))
         }
     }
     impl Encode for ExtendedRNCID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 4096, 65535)?;
             Ok(())
@@ -12654,11 +12897,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "ExtendedRepetitionPeriod";
     }
     impl<'a> Decode<'a> for ExtendedRepetitionPeriod {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(4096, 131071)? as u32))
         }
     }
     impl Encode for ExtendedRepetitionPeriod {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 4096, 131071)?;
             Ok(())
@@ -12689,11 +12934,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "FiveGSTAC";
     }
     impl<'a> Decode<'a> for FiveGSTAC {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<3>()?))
         }
     }
     impl Encode for FiveGSTAC {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -12727,7 +12974,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `FiveGSTAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> FiveGSTAI<'static> {
             FiveGSTAI {
                 p_lmnidentity: self.p_lmnidentity,
@@ -12818,11 +13066,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "FiveQI";
     }
     impl<'a> Decode<'a> for FiveQI {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned_extensible(0, 255)?))
         }
     }
     impl Encode for FiveQI {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned_extensible(self.0, 0, 255);
             Ok(())
@@ -12943,7 +13193,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenLAs<'a>(pub Vec<ForbiddenLAsItem<'a>>);
     impl<'a> ForbiddenLAs<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ForbiddenLAs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ForbiddenLAs<'static> {
             ForbiddenLAs(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -13007,7 +13258,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ForbiddenLAsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ForbiddenLAsItem<'static> {
             ForbiddenLAsItem {
                 p_lmn_identity: self.p_lmn_identity,
@@ -13132,7 +13384,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenTAs<'a>(pub Vec<ForbiddenTAsItem<'a>>);
     impl<'a> ForbiddenTAs<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ForbiddenTAs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ForbiddenTAs<'static> {
             ForbiddenTAs(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -13196,7 +13449,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ForbiddenTAsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ForbiddenTAsItem<'static> {
             ForbiddenTAsItem {
                 p_lmn_identity: self.p_lmn_identity,
@@ -13302,7 +13556,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `GBRQosInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> GBRQosInformation<'static> {
             GBRQosInformation {
                 e_rab_maximum_bitrate_dl: self.e_rab_maximum_bitrate_dl,
@@ -13444,7 +13699,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `GERANCellID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> GERANCellID<'static> {
             GERANCellID {
                 l_ai: self.l_ai.into_owned(),
@@ -13549,7 +13805,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `GNB<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> GNB<'static> {
             GNB {
                 global_g_nb_id: self.global_g_nb_id.into_owned(),
@@ -13629,11 +13886,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "GNB-ID";
     }
     impl<'a> Decode<'a> for GNBID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(22, 32)?))
         }
     }
     impl Encode for GNBID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 22, 32)?;
             Ok(())
@@ -13706,11 +13965,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "GTP-TEID";
     }
     impl<'a> Decode<'a> for GTPTEID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<4>()?))
         }
     }
     impl Encode for GTPTEID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -13747,7 +14008,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `GUMMEI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> GUMMEI<'static> {
             GUMMEI {
                 p_lmn_identity: self.p_lmn_identity,
@@ -13842,7 +14104,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GUMMEIList<'a>(pub Vec<GUMMEI<'a>>);
     impl<'a> GUMMEIList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `GUMMEIList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> GUMMEIList<'static> {
             GUMMEIList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -13992,7 +14255,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `GlobalENBID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> GlobalENBID<'static> {
             GlobalENBID {
                 p_lmnidentity: self.p_lmnidentity,
@@ -14090,7 +14354,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `GlobalGNBID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> GlobalGNBID<'static> {
             GlobalGNBID {
                 p_lmn_identity: self.p_lmn_identity,
@@ -14176,7 +14441,8 @@ pub mod s1_ap_ies {
         ng_eNB(NGENB<'a>),
     }
     impl<'a> GlobalRANNODEID<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `GlobalRANNODEID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> GlobalRANNODEID<'static> {
             match self {
                 Self::gNB(value) => GlobalRANNODEID::gNB(value.into_owned()),
@@ -14255,7 +14521,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `GlobalEnGNBID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> GlobalEnGNBID<'static> {
             GlobalEnGNBID {
                 p_lmnidentity: self.p_lmnidentity,
@@ -14346,11 +14613,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "HFN";
     }
     impl<'a> Decode<'a> for HFN {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 1048575)? as u32))
         }
     }
     impl Encode for HFN {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 1048575)?;
             Ok(())
@@ -14380,11 +14649,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "HFNModified";
     }
     impl<'a> Decode<'a> for HFNModified {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 131071)? as u32))
         }
     }
     impl Encode for HFNModified {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 131071)?;
             Ok(())
@@ -14414,11 +14685,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "HFNforPDCP-SNlength18";
     }
     impl<'a> Decode<'a> for HFNforPDCPSNlength18 {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 16383)? as u16))
         }
     }
     impl Encode for HFNforPDCPSNlength18 {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 16383)?;
             Ok(())
@@ -14508,7 +14781,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverRestrictionList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverRestrictionList<'static> {
             HandoverRestrictionList {
                 serving_plmn: self.serving_plmn,
@@ -14745,11 +15019,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "HandoverWindowDuration";
     }
     impl<'a> Decode<'a> for HandoverWindowDuration {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(1, 6000)? as u16))
         }
     }
     impl Encode for HandoverWindowDuration {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 1, 6000)?;
             Ok(())
@@ -14779,11 +15055,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "HandoverWindowStart";
     }
     impl<'a> Decode<'a> for HandoverWindowStart {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 1048575)? as u32))
         }
     }
     impl Encode for HandoverWindowStart {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 1048575)?;
             Ok(())
@@ -14813,11 +15091,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Hysteresis";
     }
     impl<'a> Decode<'a> for Hysteresis {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 30)? as u8))
         }
     }
     impl Encode for Hysteresis {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 30)?;
             Ok(())
@@ -14964,7 +15244,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IMSI<'a>(pub Octets<'a>);
     impl<'a> IMSI<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `IMSI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> IMSI<'static> {
             IMSI(self.0.into_owned())
         }
@@ -14988,11 +15269,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "IMSI";
     }
     impl<'a> Decode<'a> for IMSI<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(3, 8)?))
         }
     }
     impl Encode for IMSI<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 3, 8)?;
             Ok(())
@@ -15074,7 +15357,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ImmediateMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ImmediateMDT<'static> {
             ImmediateMDT {
                 measurements_to_activate: self.measurements_to_activate,
@@ -15231,7 +15515,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `InformationOnRecommendedCellsAndENBsForPaging<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InformationOnRecommendedCellsAndENBsForPaging<'static> {
             InformationOnRecommendedCellsAndENBsForPaging {
                 recommended_cells_for_paging: self.recommended_cells_for_paging.into_owned(),
@@ -15328,7 +15613,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IntegrityProtectionAlgorithms<'a>(pub BitString<'a>);
     impl<'a> IntegrityProtectionAlgorithms<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `IntegrityProtectionAlgorithms<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> IntegrityProtectionAlgorithms<'static> {
             IntegrityProtectionAlgorithms(self.0.into_owned())
         }
@@ -15342,11 +15628,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "IntegrityProtectionAlgorithms";
     }
     impl<'a> Decode<'a> for IntegrityProtectionAlgorithms<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bit_string_extensible(16, 16)?))
         }
     }
     impl Encode for IntegrityProtectionAlgorithms<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string_extensible(&self.0, 16, 16);
             Ok(())
@@ -15459,11 +15747,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "IntendedNumberOfPagingAttempts";
     }
     impl<'a> Decode<'a> for IntendedNumberOfPagingAttempts {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned_extensible(1, 16)?))
         }
     }
     impl Encode for IntendedNumberOfPagingAttempts {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned_extensible(self.0, 1, 16);
             Ok(())
@@ -15579,7 +15869,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `InterSystemMeasurementItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InterSystemMeasurementItem<'static> {
             InterSystemMeasurementItem {
                 freq_band_indicator_nr: self.freq_band_indicator_nr,
@@ -15859,7 +16150,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct InterSystemMeasurementList<'a>(pub Vec<InterSystemMeasurementItem<'a>>);
     impl<'a> InterSystemMeasurementList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `InterSystemMeasurementList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InterSystemMeasurementList<'static> {
             InterSystemMeasurementList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -15923,7 +16215,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `InterSystemMeasurementParameters<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InterSystemMeasurementParameters<'static> {
             InterSystemMeasurementParameters {
                 measurement_duration: self.measurement_duration,
@@ -16036,15 +16329,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl InterfacesToTrace {
+        /// The string of the 8 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 8 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 8).map(Self)
+        }
+    }
     impl AsnType for InterfacesToTrace {
         const NAME: &'static str = "InterfacesToTrace";
     }
     impl<'a> Decode<'a> for InterfacesToTrace {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(8, 8)?))
         }
     }
     impl Encode for InterfacesToTrace {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 8, 8)?;
             Ok(())
@@ -16084,7 +16389,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `IntersystemMeasurementConfiguration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> IntersystemMeasurementConfiguration<'static> {
             IntersystemMeasurementConfiguration {
                 r_srp: self.r_srp,
@@ -16244,7 +16550,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IntersystemSONConfigurationTransfer<'a>(pub Octets<'a>);
     impl<'a> IntersystemSONConfigurationTransfer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `IntersystemSONConfigurationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> IntersystemSONConfigurationTransfer<'static> {
             IntersystemSONConfigurationTransfer(self.0.into_owned())
         }
@@ -16268,11 +16575,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "IntersystemSONConfigurationTransfer";
     }
     impl<'a> Decode<'a> for IntersystemSONConfigurationTransfer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for IntersystemSONConfigurationTransfer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -16333,7 +16642,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct L3Information<'a>(pub Octets<'a>);
     impl<'a> L3Information<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `L3Information<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> L3Information<'static> {
             L3Information(self.0.into_owned())
         }
@@ -16357,11 +16667,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "L3-Information";
     }
     impl<'a> Decode<'a> for L3Information<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for L3Information<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -16388,11 +16700,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "LAC";
     }
     impl<'a> Decode<'a> for LAC {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<2>()?))
         }
     }
     impl Encode for LAC {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -16426,7 +16740,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LAI<'static> {
             LAI {
                 p_lmnidentity: self.p_lmnidentity,
@@ -16508,7 +16823,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LHNID<'a>(pub Octets<'a>);
     impl<'a> LHNID<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LHNID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LHNID<'static> {
             LHNID(self.0.into_owned())
         }
@@ -16532,11 +16848,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "LHN-ID";
     }
     impl<'a> Decode<'a> for LHNID<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(32, 256)?))
         }
     }
     impl Encode for LHNID<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 32, 256)?;
             Ok(())
@@ -16555,7 +16873,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LPPaPDU<'a>(pub Octets<'a>);
     impl<'a> LPPaPDU<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LPPaPDU<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LPPaPDU<'static> {
             LPPaPDU(self.0.into_owned())
         }
@@ -16579,11 +16898,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "LPPa-PDU";
     }
     impl<'a> Decode<'a> for LPPaPDU<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for LPPaPDU<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -16662,7 +16983,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LTENTNTAIInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LTENTNTAIInformation<'static> {
             LTENTNTAIInformation {
                 serving_plmn: self.serving_plmn,
@@ -16780,7 +17102,8 @@ pub mod s1_ap_ies {
         nG_RAN_Cell(LastVisitedNGRANCellInformation<'a>),
     }
     impl<'a> LastVisitedCellItem<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LastVisitedCellItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LastVisitedCellItem<'static> {
             match self {
                 Self::e_UTRAN_Cell(value) => LastVisitedCellItem::e_UTRAN_Cell(value.into_owned()),
@@ -16922,7 +17245,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LastVisitedEUTRANCellInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LastVisitedEUTRANCellInformation<'static> {
             LastVisitedEUTRANCellInformation {
                 global_cell_id: self.global_cell_id.into_owned(),
@@ -17074,7 +17398,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedNGRANCellInformation<'a>(pub Octets<'a>);
     impl<'a> LastVisitedNGRANCellInformation<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LastVisitedNGRANCellInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LastVisitedNGRANCellInformation<'static> {
             LastVisitedNGRANCellInformation(self.0.into_owned())
         }
@@ -17098,11 +17423,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "LastVisitedNGRANCellInformation";
     }
     impl<'a> Decode<'a> for LastVisitedNGRANCellInformation<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for LastVisitedNGRANCellInformation<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -17136,7 +17463,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LastVisitedPSCellInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LastVisitedPSCellInformation<'static> {
             LastVisitedPSCellInformation {
                 p_scell_id: self.p_scell_id.map(|value| value.into_owned()),
@@ -17232,7 +17560,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedPSCellList<'a>(pub Vec<LastVisitedPSCellInformation<'a>>);
     impl<'a> LastVisitedPSCellList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LastVisitedPSCellList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LastVisitedPSCellList<'static> {
             LastVisitedPSCellList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -17280,7 +17609,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedUTRANCellInformation<'a>(pub Octets<'a>);
     impl<'a> LastVisitedUTRANCellInformation<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LastVisitedUTRANCellInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LastVisitedUTRANCellInformation<'static> {
             LastVisitedUTRANCellInformation(self.0.into_owned())
         }
@@ -17304,11 +17634,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "LastVisitedUTRANCellInformation";
     }
     impl<'a> Decode<'a> for LastVisitedUTRANCellInformation<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for LastVisitedUTRANCellInformation<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -17435,7 +17767,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ListeningSubframePattern<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ListeningSubframePattern<'static> {
             ListeningSubframePattern {
                 pattern_period: self.pattern_period,
@@ -17545,7 +17878,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LoggedMBSFNMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LoggedMBSFNMDT<'static> {
             LoggedMBSFNMDT {
                 logging_interval: self.logging_interval,
@@ -17674,7 +18008,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LoggedMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LoggedMDT<'static> {
             LoggedMDT {
                 logging_interval: self.logging_interval,
@@ -17763,7 +18098,8 @@ pub mod s1_ap_ies {
         eventTrigger(EventTrigger<'a>),
     }
     impl<'a> LoggedMDTTrigger<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LoggedMDTTrigger<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LoggedMDTTrigger<'static> {
             match self {
                 Self::periodical(value) => LoggedMDTTrigger::periodical(value),
@@ -17951,11 +18287,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "M-TMSI";
     }
     impl<'a> Decode<'a> for MTMSI {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<4>()?))
         }
     }
     impl Encode for MTMSI {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -17989,7 +18327,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `M1PeriodicReporting<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> M1PeriodicReporting<'static> {
             M1PeriodicReporting {
                 report_interval: self.report_interval,
@@ -18135,7 +18474,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `M1ThresholdEventA2<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> M1ThresholdEventA2<'static> {
             M1ThresholdEventA2 {
                 measurement_threshold: self.measurement_threshold,
@@ -18222,7 +18562,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `M3Configuration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> M3Configuration<'static> {
             M3Configuration {
                 m3period: self.m3period,
@@ -18375,7 +18716,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `M4Configuration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> M4Configuration<'static> {
             M4Configuration {
                 m4period: self.m4period,
@@ -18586,7 +18928,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `M5Configuration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> M5Configuration<'static> {
             M5Configuration {
                 m5period: self.m5period,
@@ -18800,7 +19143,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `M6Configuration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> M6Configuration<'static> {
             M6Configuration {
                 m6report_interval: self.m6report_interval,
@@ -19100,7 +19444,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `M7Configuration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> M7Configuration<'static> {
             M7Configuration {
                 m7period: self.m7period,
@@ -19250,11 +19595,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "M7period";
     }
     impl<'a> Decode<'a> for M7period {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned_extensible(1, 60)?))
         }
     }
     impl Encode for M7period {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned_extensible(self.0, 1, 60);
             Ok(())
@@ -19272,7 +19619,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MBSFNResultToLog<'a>(pub Vec<MBSFNResultToLogInfo<'a>>);
     impl<'a> MBSFNResultToLog<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MBSFNResultToLog<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MBSFNResultToLog<'static> {
             MBSFNResultToLog(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -19336,7 +19684,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MBSFNResultToLogInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MBSFNResultToLogInfo<'static> {
             MBSFNResultToLogInfo {
                 m_bsfn_area_id: self.m_bsfn_area_id,
@@ -19507,7 +19856,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MDTConfiguration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MDTConfiguration<'static> {
             MDTConfiguration {
                 mdt_activation: self.mdt_activation,
@@ -19607,7 +19957,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MDTConfigurationNR<'a>(pub Octets<'a>);
     impl<'a> MDTConfigurationNR<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MDTConfigurationNR<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MDTConfigurationNR<'static> {
             MDTConfigurationNR(self.0.into_owned())
         }
@@ -19631,11 +19982,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "MDT-ConfigurationNR";
     }
     impl<'a> Decode<'a> for MDTConfigurationNR<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for MDTConfigurationNR<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -19657,15 +20010,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl MDTLocationInfo {
+        /// The string of the 8 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 8 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 8).map(Self)
+        }
+    }
     impl AsnType for MDTLocationInfo {
         const NAME: &'static str = "MDT-Location-Info";
     }
     impl<'a> Decode<'a> for MDTLocationInfo {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(8, 8)?))
         }
     }
     impl Encode for MDTLocationInfo {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 8, 8)?;
             Ok(())
@@ -19688,7 +20053,8 @@ pub mod s1_ap_ies {
         mDTMode_Extension(ProtocolIEField<'a>),
     }
     impl<'a> MDTMode<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MDTMode<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MDTMode<'static> {
             match self {
                 Self::immediateMDT(value) => MDTMode::immediateMDT(value.into_owned()),
@@ -19840,11 +20206,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "MME-Code";
     }
     impl<'a> Decode<'a> for MMECode {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<1>()?))
         }
     }
     impl Encode for MMECode {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -19870,11 +20238,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "MME-Group-ID";
     }
     impl<'a> Decode<'a> for MMEGroupID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<2>()?))
         }
     }
     impl Encode for MMEGroupID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -19900,11 +20270,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "MME-UE-S1AP-ID";
     }
     impl<'a> Decode<'a> for MMEUES1APID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 4294967295)? as u32))
         }
     }
     impl Encode for MMEUES1APID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 4294967295)?;
             Ok(())
@@ -19930,7 +20302,8 @@ pub mod s1_ap_ies {
         tAI(TAI<'a>),
     }
     impl<'a> MMEPagingTarget<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEPagingTarget<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEPagingTarget<'static> {
             match self {
                 Self::global_ENB_ID(value) => MMEPagingTarget::global_ENB_ID(value.into_owned()),
@@ -20039,7 +20412,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MMEname<'a>(pub Cow<'a, str>);
     impl<'a> MMEname<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEname<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEname<'static> {
             MMEname(Cow::Owned(self.0.into_owned()))
         }
@@ -20063,11 +20437,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "MMEname";
     }
     impl<'a> Decode<'a> for MMEname<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.printable_string_extensible(1, 150)?))
         }
     }
     impl Encode for MMEname<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.printable_string_extensible(&self.0, 1, 150)?;
             Ok(())
@@ -20085,7 +20461,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MSClassmark2<'a>(pub Octets<'a>);
     impl<'a> MSClassmark2<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MSClassmark2<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MSClassmark2<'static> {
             MSClassmark2(self.0.into_owned())
         }
@@ -20109,11 +20486,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "MSClassmark2";
     }
     impl<'a> Decode<'a> for MSClassmark2<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for MSClassmark2<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -20131,7 +20510,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MSClassmark3<'a>(pub Octets<'a>);
     impl<'a> MSClassmark3<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MSClassmark3<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MSClassmark3<'static> {
             MSClassmark3(self.0.into_owned())
         }
@@ -20155,11 +20535,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "MSClassmark3";
     }
     impl<'a> Decode<'a> for MSClassmark3<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for MSClassmark3<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -20224,15 +20606,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl MaskedIMEISV {
+        /// The string of the 64 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 64 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 64).map(Self)
+        }
+    }
     impl AsnType for MaskedIMEISV {
         const NAME: &'static str = "Masked-IMEISV";
     }
     impl<'a> Decode<'a> for MaskedIMEISV {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(64, 64)?))
         }
     }
     impl Encode for MaskedIMEISV {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 64, 64)?;
             Ok(())
@@ -20321,7 +20715,8 @@ pub mod s1_ap_ies {
         choice_Extensions(ProtocolIEField<'a>),
     }
     impl<'a> MeasurementThresholdL1LoggedMDT<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MeasurementThresholdL1LoggedMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MeasurementThresholdL1LoggedMDT<'static> {
             match self {
                 Self::threshold_RSRP(value) => {
@@ -20424,15 +20819,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl MeasurementsToActivate {
+        /// The string of the 8 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 8 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 8).map(Self)
+        }
+    }
     impl AsnType for MeasurementsToActivate {
         const NAME: &'static str = "MeasurementsToActivate";
     }
     impl<'a> Decode<'a> for MeasurementsToActivate {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(8, 8)?))
         }
     }
     impl Encode for MeasurementsToActivate {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 8, 8)?;
             Ok(())
@@ -20454,15 +20861,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl MessageIdentifier {
+        /// The string of the 16 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 16 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 16).map(Self)
+        }
+    }
     impl AsnType for MessageIdentifier {
         const NAME: &'static str = "MessageIdentifier";
     }
     impl<'a> Decode<'a> for MessageIdentifier {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(16, 16)?))
         }
     }
     impl Encode for MessageIdentifier {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 16, 16)?;
             Ok(())
@@ -20484,15 +20903,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl MobilityInformation {
+        /// The string of the 32 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 32 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 32).map(Self)
+        }
+    }
     impl AsnType for MobilityInformation {
         const NAME: &'static str = "MobilityInformation";
     }
     impl<'a> Decode<'a> for MobilityInformation {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(32, 32)?))
         }
     }
     impl Encode for MobilityInformation {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 32, 32)?;
             Ok(())
@@ -20623,7 +21054,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MutingPatternInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MutingPatternInformation<'static> {
             MutingPatternInformation {
                 muting_pattern_period: self.muting_pattern_period,
@@ -20735,7 +21167,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASPDU<'a>(pub Octets<'a>);
     impl<'a> NASPDU<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NASPDU<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NASPDU<'static> {
             NASPDU(self.0.into_owned())
         }
@@ -20759,11 +21192,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "NAS-PDU";
     }
     impl<'a> Decode<'a> for NASPDU<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for NASPDU<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -20781,7 +21216,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASSecurityParametersfromEUTRAN<'a>(pub Octets<'a>);
     impl<'a> NASSecurityParametersfromEUTRAN<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NASSecurityParametersfromEUTRAN<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NASSecurityParametersfromEUTRAN<'static> {
             NASSecurityParametersfromEUTRAN(self.0.into_owned())
         }
@@ -20805,11 +21241,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "NASSecurityParametersfromE-UTRAN";
     }
     impl<'a> Decode<'a> for NASSecurityParametersfromEUTRAN<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for NASSecurityParametersfromEUTRAN<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -20827,7 +21265,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASSecurityParameterstoEUTRAN<'a>(pub Octets<'a>);
     impl<'a> NASSecurityParameterstoEUTRAN<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NASSecurityParameterstoEUTRAN<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NASSecurityParameterstoEUTRAN<'static> {
             NASSecurityParameterstoEUTRAN(self.0.into_owned())
         }
@@ -20851,11 +21290,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "NASSecurityParameterstoE-UTRAN";
     }
     impl<'a> Decode<'a> for NASSecurityParameterstoEUTRAN<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for NASSecurityParameterstoEUTRAN<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -21007,7 +21448,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NBIoTPagingEDRXInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NBIoTPagingEDRXInformation<'static> {
             NBIoTPagingEDRXInformation {
                 n_b_io_t_paging_e_drx_cycle: self.n_b_io_t_paging_e_drx_cycle,
@@ -21244,7 +21686,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NBIoTRLFReportContainer<'a>(pub Octets<'a>);
     impl<'a> NBIoTRLFReportContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NBIoTRLFReportContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NBIoTRLFReportContainer<'static> {
             NBIoTRLFReportContainer(self.0.into_owned())
         }
@@ -21268,11 +21711,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "NB-IoT-RLF-Report-Container";
     }
     impl<'a> Decode<'a> for NBIoTRLFReportContainer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for NBIoTRLFReportContainer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -21294,15 +21739,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl NBIoTUEIdentityIndexValue {
+        /// The string of the 12 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 12 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 12).map(Self)
+        }
+    }
     impl AsnType for NBIoTUEIdentityIndexValue {
         const NAME: &'static str = "NB-IoT-UEIdentityIndexValue";
     }
     impl<'a> Decode<'a> for NBIoTUEIdentityIndexValue {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(12, 12)?))
         }
     }
     impl Encode for NBIoTUEIdentityIndexValue {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 12, 12)?;
             Ok(())
@@ -21333,7 +21790,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NGENB<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NGENB<'static> {
             NGENB {
                 global_ng_e_nb_id: self.global_ng_e_nb_id.into_owned(),
@@ -21421,7 +21879,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NRCGI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NRCGI<'static> {
             NRCGI {
                 p_lmnidentity: self.p_lmnidentity,
@@ -21508,15 +21967,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl NRCellIdentity {
+        /// The string of the 36 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 36 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 36).map(Self)
+        }
+    }
     impl AsnType for NRCellIdentity {
         const NAME: &'static str = "NRCellIdentity";
     }
     impl<'a> Decode<'a> for NRCellIdentity {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(36, 36)?))
         }
     }
     impl Encode for NRCellIdentity {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 36, 36)?;
             Ok(())
@@ -21550,7 +22021,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NRUESecurityCapabilities<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NRUESecurityCapabilities<'static> {
             NRUESecurityCapabilities {
                 n_rencryption_algorithms: self.n_rencryption_algorithms.into_owned(),
@@ -21663,7 +22135,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NRUESidelinkAggregateMaximumBitrate<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NRUESidelinkAggregateMaximumBitrate<'static> {
             NRUESidelinkAggregateMaximumBitrate {
                 u_eaggregate_maximum_bit_rate: self.u_eaggregate_maximum_bit_rate,
@@ -21755,7 +22228,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NRV2XServicesAuthorized<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NRV2XServicesAuthorized<'static> {
             NRV2XServicesAuthorized {
                 vehicle_ue: self.vehicle_ue,
@@ -21858,7 +22332,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRencryptionAlgorithms<'a>(pub BitString<'a>);
     impl<'a> NRencryptionAlgorithms<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NRencryptionAlgorithms<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NRencryptionAlgorithms<'static> {
             NRencryptionAlgorithms(self.0.into_owned())
         }
@@ -21872,11 +22347,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "NRencryptionAlgorithms";
     }
     impl<'a> Decode<'a> for NRencryptionAlgorithms<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bit_string_extensible(16, 16)?))
         }
     }
     impl Encode for NRencryptionAlgorithms<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string_extensible(&self.0, 16, 16);
             Ok(())
@@ -21894,7 +22371,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRintegrityProtectionAlgorithms<'a>(pub BitString<'a>);
     impl<'a> NRintegrityProtectionAlgorithms<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NRintegrityProtectionAlgorithms<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NRintegrityProtectionAlgorithms<'static> {
             NRintegrityProtectionAlgorithms(self.0.into_owned())
         }
@@ -21908,11 +22386,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "NRintegrityProtectionAlgorithms";
     }
     impl<'a> Decode<'a> for NRintegrityProtectionAlgorithms<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bit_string_extensible(16, 16)?))
         }
     }
     impl Encode for NRintegrityProtectionAlgorithms<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string_extensible(&self.0, 16, 16);
             Ok(())
@@ -22107,11 +22587,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "NumberOfBroadcasts";
     }
     impl<'a> Decode<'a> for NumberOfBroadcasts {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 65535)? as u16))
         }
     }
     impl Encode for NumberOfBroadcasts {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 65535)?;
             Ok(())
@@ -22141,11 +22623,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "NumberofBroadcastRequest";
     }
     impl<'a> Decode<'a> for NumberofBroadcastRequest {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 65535)? as u16))
         }
     }
     impl Encode for NumberofBroadcastRequest {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 65535)?;
             Ok(())
@@ -22168,7 +22652,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct OldBSSToNewBSSInformation<'a>(pub Octets<'a>);
     impl<'a> OldBSSToNewBSSInformation<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `OldBSSToNewBSSInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> OldBSSToNewBSSInformation<'static> {
             OldBSSToNewBSSInformation(self.0.into_owned())
         }
@@ -22192,11 +22677,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "OldBSS-ToNewBSS-Information";
     }
     impl<'a> Decode<'a> for OldBSSToNewBSSInformation<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for OldBSSToNewBSSInformation<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -22339,7 +22826,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PC5FlowBitRates<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PC5FlowBitRates<'static> {
             PC5FlowBitRates {
                 guaranteed_flow_bit_rate: self.guaranteed_flow_bit_rate,
@@ -22450,7 +22938,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PC5QoSFlowItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PC5QoSFlowItem<'static> {
             PC5QoSFlowItem {
                 p_qi: self.p_qi,
@@ -22562,7 +23051,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PC5QoSFlowList<'a>(pub Vec<PC5QoSFlowItem<'a>>);
     impl<'a> PC5QoSFlowList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PC5QoSFlowList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PC5QoSFlowList<'static> {
             PC5QoSFlowList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -22626,7 +23116,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PC5QoSParameters<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PC5QoSParameters<'static> {
             PC5QoSParameters {
                 pc5_qo_sflow_list: self.pc5_qo_sflow_list.into_owned(),
@@ -22736,11 +23227,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "PDCP-SN";
     }
     impl<'a> Decode<'a> for PDCPSN {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 4095)? as u16))
         }
     }
     impl Encode for PDCPSN {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 4095)?;
             Ok(())
@@ -22770,11 +23263,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "PDCP-SNExtended";
     }
     impl<'a> Decode<'a> for PDCPSNExtended {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 32767)? as u16))
         }
     }
     impl Encode for PDCPSNExtended {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 32767)?;
             Ok(())
@@ -22804,11 +23299,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "PDCP-SNlength18";
     }
     impl<'a> Decode<'a> for PDCPSNlength18 {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 262143)? as u32))
         }
     }
     impl Encode for PDCPSNlength18 {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 262143)?;
             Ok(())
@@ -22843,7 +23340,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PLMNAreaBasedQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PLMNAreaBasedQMC<'static> {
             PLMNAreaBasedQMC {
                 plmn_listfor_qmc: self.plmn_listfor_qmc,
@@ -22965,11 +23463,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "PLMNidentity";
     }
     impl<'a> Decode<'a> for PLMNidentity {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(TBCDSTRING::decode(reader)?))
         }
     }
     impl Encode for PLMNidentity {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             self.0.encode(writer)?;
             Ok(())
@@ -23042,7 +23542,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PSCellInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PSCellInformation<'static> {
             PSCellInformation {
                 n_cgi: self.n_cgi.into_owned(),
@@ -23114,7 +23615,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PWSfailedECGIList<'a>(pub Vec<EUTRANCGI<'a>>);
     impl<'a> PWSfailedECGIList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PWSfailedECGIList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PWSfailedECGIList<'static> {
             PWSfailedECGIList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -23171,11 +23673,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Packet-LossRate";
     }
     impl<'a> Decode<'a> for PacketLossRate {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 1000)? as u16))
         }
     }
     impl Encode for PacketLossRate {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 1000)?;
             Ok(())
@@ -23286,7 +23790,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PagingEDRXInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PagingEDRXInformation<'static> {
             PagingEDRXInformation {
                 paging_e_drx_cycle: self.paging_e_drx_cycle,
@@ -23391,11 +23896,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "PagingAttemptCount";
     }
     impl<'a> Decode<'a> for PagingAttemptCount {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned_extensible(1, 16)?))
         }
     }
     impl Encode for PagingAttemptCount {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned_extensible(self.0, 1, 16);
             Ok(())
@@ -23432,7 +23939,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PagingAttemptInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PagingAttemptInformation<'static> {
             PagingAttemptInformation {
                 paging_attempt_count: self.paging_attempt_count,
@@ -23962,11 +24470,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Port-Number";
     }
     impl<'a> Decode<'a> for PortNumber {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<2>()?))
         }
     }
     impl Encode for PortNumber {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -24080,11 +24590,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "PriorityLevel";
     }
     impl<'a> Decode<'a> for PriorityLevel {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 15)? as u8))
         }
     }
     impl Encode for PriorityLevel {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 15)?;
             Ok(())
@@ -24163,7 +24675,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ProSeAuthorized<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ProSeAuthorized<'static> {
             ProSeAuthorized {
                 pro_se_direct_discovery: self.pro_se_direct_discovery,
@@ -24416,11 +24929,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "QCI";
     }
     impl<'a> Decode<'a> for QCI {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 255)? as u8))
         }
     }
     impl Encode for QCI {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 255)?;
             Ok(())
@@ -24448,11 +24963,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "RAC";
     }
     impl<'a> Decode<'a> for RAC {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<1>()?))
         }
     }
     impl Encode for RAC {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -24521,11 +25038,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "RAN-UE-NGAP-ID";
     }
     impl<'a> Decode<'a> for RANUENGAPID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 4294967295)? as u32))
         }
     }
     impl Encode for RANUENGAPID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 4294967295)?;
             Ok(())
@@ -24547,7 +25066,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RATRestrictions<'a>(pub Vec<RATRestrictionsItem<'a>>);
     impl<'a> RATRestrictions<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RATRestrictions<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RATRestrictions<'static> {
             RATRestrictions(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -24611,7 +25131,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RATRestrictionsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RATRestrictionsItem<'static> {
             RATRestrictionsItem {
                 p_lmnidentity: self.p_lmnidentity,
@@ -24775,7 +25296,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RIMInformation<'a>(pub Octets<'a>);
     impl<'a> RIMInformation<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RIMInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RIMInformation<'static> {
             RIMInformation(self.0.into_owned())
         }
@@ -24799,11 +25321,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "RIMInformation";
     }
     impl<'a> Decode<'a> for RIMInformation<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for RIMInformation<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -24826,7 +25350,8 @@ pub mod s1_ap_ies {
         eHRPD_Sector_ID([u8; 16]),
     }
     impl<'a> RIMRoutingAddress<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RIMRoutingAddress<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RIMRoutingAddress<'static> {
             match self {
                 Self::gERAN_Cell_ID(value) => RIMRoutingAddress::gERAN_Cell_ID(value.into_owned()),
@@ -24954,7 +25479,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RIMTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RIMTransfer<'static> {
             RIMTransfer {
                 r_iminformation: self.r_iminformation.into_owned(),
@@ -25071,7 +25597,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RLFReportInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RLFReportInformation<'static> {
             RLFReportInformation {
                 u_e_rlf_report_container: self.u_e_rlf_report_container.into_owned(),
@@ -25189,11 +25716,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "RNC-ID";
     }
     impl<'a> Decode<'a> for RNCID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 4095)? as u16))
         }
     }
     impl Encode for RNCID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 4095)?;
             Ok(())
@@ -25215,7 +25744,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RRCContainer<'a>(pub Octets<'a>);
     impl<'a> RRCContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RRCContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RRCContainer<'static> {
             RRCContainer(self.0.into_owned())
         }
@@ -25239,11 +25769,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "RRC-Container";
     }
     impl<'a> Decode<'a> for RRCContainer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for RRCContainer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -25390,7 +25922,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ReceiveStatusOfULPDCPSDUsExtended<'a>(pub BitString<'a>);
     impl<'a> ReceiveStatusOfULPDCPSDUsExtended<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ReceiveStatusOfULPDCPSDUsExtended<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ReceiveStatusOfULPDCPSDUsExtended<'static> {
             ReceiveStatusOfULPDCPSDUsExtended(self.0.into_owned())
         }
@@ -25404,11 +25937,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "ReceiveStatusOfULPDCPSDUsExtended";
     }
     impl<'a> Decode<'a> for ReceiveStatusOfULPDCPSDUsExtended<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bit_string(1, 16384)?))
         }
     }
     impl Encode for ReceiveStatusOfULPDCPSDUsExtended<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string(&self.0, 1, 16384)?;
             Ok(())
@@ -25426,7 +25961,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a>(pub BitString<'a>);
     impl<'a> ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'static> {
             ReceiveStatusOfULPDCPSDUsPDCPSNlength18(self.0.into_owned())
         }
@@ -25440,11 +25976,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "ReceiveStatusOfULPDCPSDUsPDCP-SNlength18";
     }
     impl<'a> Decode<'a> for ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bit_string(1, 131072)?))
         }
     }
     impl Encode for ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string(&self.0, 1, 131072)?;
             Ok(())
@@ -25462,7 +26000,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ReceiveStatusofULPDCPSDUs<'a>(pub BitString<'a>);
     impl<'a> ReceiveStatusofULPDCPSDUs<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ReceiveStatusofULPDCPSDUs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ReceiveStatusofULPDCPSDUs<'static> {
             ReceiveStatusofULPDCPSDUs(self.0.into_owned())
         }
@@ -25481,11 +26020,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "ReceiveStatusofULPDCPSDUs";
     }
     impl<'a> Decode<'a> for ReceiveStatusofULPDCPSDUs<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bit_string(4096, 4096)?))
         }
     }
     impl Encode for ReceiveStatusofULPDCPSDUs<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string(&self.0, 4096, 4096)?;
             Ok(())
@@ -25519,7 +26060,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RecommendedCellItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RecommendedCellItem<'static> {
             RecommendedCellItem {
                 e_utran_cgi: self.e_utran_cgi.into_owned(),
@@ -25616,7 +26158,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedCellList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> RecommendedCellList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RecommendedCellList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RecommendedCellList<'static> {
             RecommendedCellList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -25677,7 +26220,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RecommendedCellsForPaging<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RecommendedCellsForPaging<'static> {
             RecommendedCellsForPaging {
                 recommended_cell_list: self.recommended_cell_list.into_owned(),
@@ -25763,7 +26307,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RecommendedENBItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RecommendedENBItem<'static> {
             RecommendedENBItem {
                 m_mepaging_target: self.m_mepaging_target.into_owned(),
@@ -25835,7 +26380,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedENBList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> RecommendedENBList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RecommendedENBList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RecommendedENBList<'static> {
             RecommendedENBList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -25896,7 +26442,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RecommendedENBsForPaging<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RecommendedENBsForPaging<'static> {
             RecommendedENBsForPaging {
                 recommended_enblist: self.recommended_enblist.into_owned(),
@@ -25976,11 +26523,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "RelativeMMECapacity";
     }
     impl<'a> Decode<'a> for RelativeMMECapacity {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 255)? as u8))
         }
     }
     impl Encode for RelativeMMECapacity {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 255)?;
             Ok(())
@@ -26050,11 +26599,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "RepetitionPeriod";
     }
     impl<'a> Decode<'a> for RepetitionPeriod {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 4095)? as u16))
         }
     }
     impl Encode for RepetitionPeriod {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 4095)?;
             Ok(())
@@ -26262,7 +26813,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RequestType<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RequestType<'static> {
             RequestType {
                 event_type: self.event_type,
@@ -26399,7 +26951,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RequestedTNLInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RequestedTNLInfo<'static> {
             RequestedTNLInfo {
                 p_lmnidentity: self.p_lmnidentity,
@@ -26479,11 +27032,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Routing-ID";
     }
     impl<'a> Decode<'a> for RoutingID {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 255)? as u8))
         }
     }
     impl Encode for RoutingID {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 255)?;
             Ok(())
@@ -26519,7 +27074,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `STMSI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> STMSI<'static> {
             STMSI {
                 m_mec: self.m_mec,
@@ -26620,7 +27176,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SONConfigurationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SONConfigurationTransfer<'static> {
             SONConfigurationTransfer {
                 targete_nb_id: self.targete_nb_id.into_owned(),
@@ -26725,7 +27282,8 @@ pub mod s1_ap_ies {
         sONInformation_Extension(ProtocolIEField<'a>),
     }
     impl<'a> SONInformation<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SONInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SONInformation<'static> {
             match self {
                 Self::sONInformationRequest(value) => SONInformation::sONInformationRequest(value),
@@ -26858,7 +27416,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SONInformationReply<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SONInformationReply<'static> {
             SONInformationReply {
                 x2_tnlconfiguration_info: self
@@ -26948,7 +27507,8 @@ pub mod s1_ap_ies {
         rLFReportInformation(RLFReportInformation<'a>),
     }
     impl<'a> SONInformationReport<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SONInformationReport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SONInformationReport<'static> {
             match self {
                 Self::rLFReportInformation(value) => {
@@ -27209,7 +27769,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ScheduledCommunicationTime<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ScheduledCommunicationTime<'static> {
             ScheduledCommunicationTime {
                 dayof_week: self.dayof_week,
@@ -27369,7 +27930,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SecondaryRATDataUsageReportItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SecondaryRATDataUsageReportItem<'static> {
             SecondaryRATDataUsageReportItem {
                 e_rab_id: self.e_rab_id,
@@ -27473,7 +28035,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecondaryRATDataUsageReportList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> SecondaryRATDataUsageReportList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SecondaryRATDataUsageReportList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SecondaryRATDataUsageReportList<'static> {
             SecondaryRATDataUsageReportList(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -27624,7 +28187,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SecurityContext<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SecurityContext<'static> {
             SecurityContext {
                 next_hop_chaining_count: self.next_hop_chaining_count,
@@ -27727,7 +28291,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SecurityIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SecurityIndication<'static> {
             SecurityIndication {
                 integrity_protection_indication: self.integrity_protection_indication,
@@ -27806,7 +28371,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecurityKey<'a>(pub BitString<'a>);
     impl<'a> SecurityKey<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SecurityKey<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SecurityKey<'static> {
             SecurityKey(self.0.into_owned())
         }
@@ -27825,11 +28391,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "SecurityKey";
     }
     impl<'a> Decode<'a> for SecurityKey<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bit_string(256, 256)?))
         }
     }
     impl Encode for SecurityKey<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string(&self.0, 256, 256)?;
             Ok(())
@@ -27860,7 +28428,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SecurityResult<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SecurityResult<'static> {
             SecurityResult {
                 integrity_protection_result: self.integrity_protection_result,
@@ -27992,7 +28561,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SensorMeasConfigNameItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SensorMeasConfigNameItem<'static> {
             SensorMeasConfigNameItem {
                 sensor_name_config: self.sensor_name_config.into_owned(),
@@ -28064,7 +28634,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SensorMeasConfigNameList<'a>(pub Vec<SensorMeasConfigNameItem<'a>>);
     impl<'a> SensorMeasConfigNameList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SensorMeasConfigNameList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SensorMeasConfigNameList<'static> {
             SensorMeasConfigNameList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -28128,7 +28699,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SensorMeasurementConfiguration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SensorMeasurementConfiguration<'static> {
             SensorMeasurementConfiguration {
                 sensor_meas_config: self.sensor_meas_config,
@@ -28278,7 +28850,8 @@ pub mod s1_ap_ies {
         choice_Extensions(ProtocolIEField<'a>),
     }
     impl<'a> SensorNameConfig<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SensorNameConfig<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SensorNameConfig<'static> {
             match self {
                 Self::uncompensatedBarometricConfig(value) => {
@@ -28366,15 +28939,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl SerialNumber {
+        /// The string of the 16 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 16 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 16).map(Self)
+        }
+    }
     impl AsnType for SerialNumber {
         const NAME: &'static str = "SerialNumber";
     }
     impl<'a> Decode<'a> for SerialNumber {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(16, 16)?))
         }
     }
     impl Encode for SerialNumber {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 16, 16)?;
             Ok(())
@@ -28392,7 +28977,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedDCNs<'a>(pub Vec<ServedDCNsItem<'a>>);
     impl<'a> ServedDCNs<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ServedDCNs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ServedDCNs<'static> {
             ServedDCNs(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -28456,7 +29042,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ServedDCNsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ServedDCNsItem<'static> {
             ServedDCNsItem {
                 d_cn_id: self.d_cn_id,
@@ -28541,7 +29128,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedGUMMEIs<'a>(pub Vec<ServedGUMMEIsItem<'a>>);
     impl<'a> ServedGUMMEIs<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ServedGUMMEIs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ServedGUMMEIs<'static> {
             ServedGUMMEIs(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -28608,7 +29196,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ServedGUMMEIsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ServedGUMMEIsItem<'static> {
             ServedGUMMEIsItem {
                 served_plmns: self.served_plmns,
@@ -28879,7 +29468,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceToTargetTransparentContainer<'a>(pub Octets<'a>);
     impl<'a> SourceToTargetTransparentContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SourceToTargetTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SourceToTargetTransparentContainer<'static> {
             SourceToTargetTransparentContainer(self.0.into_owned())
         }
@@ -28903,11 +29493,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Source-ToTarget-TransparentContainer";
     }
     impl<'a> Decode<'a> for SourceToTargetTransparentContainer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for SourceToTargetTransparentContainer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -28927,7 +29519,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceBSSToTargetBSSTransparentContainer<'a>(pub Octets<'a>);
     impl<'a> SourceBSSToTargetBSSTransparentContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SourceBSSToTargetBSSTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SourceBSSToTargetBSSTransparentContainer<'static> {
             SourceBSSToTargetBSSTransparentContainer(self.0.into_owned())
         }
@@ -28951,11 +29544,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "SourceBSS-ToTargetBSS-TransparentContainer";
     }
     impl<'a> Decode<'a> for SourceBSSToTargetBSSTransparentContainer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for SourceBSSToTargetBSSTransparentContainer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -28989,7 +29584,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SourceNgRanNodeID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SourceNgRanNodeID<'static> {
             SourceNgRanNodeID {
                 global_ran_node_id: self.global_ran_node_id.into_owned(),
@@ -29075,7 +29671,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'a>(pub Octets<'a>);
     impl<'a> SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'static> {
             SourceNgRanNodeToTargetNgRanNodeTransparentContainer(self.0.into_owned())
         }
@@ -29099,11 +29696,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "SourceNgRanNode-ToTargetNgRanNode-TransparentContainer";
     }
     impl<'a> Decode<'a> for SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -29124,7 +29723,8 @@ pub mod s1_ap_ies {
         sourceNodeID_Extension(ProtocolIEField<'a>),
     }
     impl<'a> SourceNodeID<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SourceNodeID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SourceNodeID<'static> {
             match self {
                 Self::sourceNgRanNode_ID(value) => {
@@ -29247,7 +29847,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceRNCToTargetRNCTransparentContainer<'a>(pub Octets<'a>);
     impl<'a> SourceRNCToTargetRNCTransparentContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SourceRNCToTargetRNCTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SourceRNCToTargetRNCTransparentContainer<'static> {
             SourceRNCToTargetRNCTransparentContainer(self.0.into_owned())
         }
@@ -29271,11 +29872,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "SourceRNC-ToTargetRNC-TransparentContainer";
     }
     impl<'a> Decode<'a> for SourceRNCToTargetRNCTransparentContainer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for SourceRNCToTargetRNCTransparentContainer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -29309,7 +29912,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SourceeNBID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SourceeNBID<'static> {
             SourceeNBID {
                 global_enb_id: self.global_enb_id.into_owned(),
@@ -29412,7 +30016,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SourceeNBToTargeteNBTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SourceeNBToTargeteNBTransparentContainer<'static> {
             SourceeNBToTargeteNBTransparentContainer {
                 r_rc_container: self.r_rc_container.into_owned(),
@@ -29572,11 +30177,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "StratumLevel";
     }
     impl<'a> Decode<'a> for StratumLevel {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned_extensible(0, 3)?))
         }
     }
     impl Encode for StratumLevel {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned_extensible(self.0, 0, 3);
             Ok(())
@@ -29602,11 +30209,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "SubscriberProfileIDforRFP";
     }
     impl<'a> Decode<'a> for SubscriberProfileIDforRFP {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(1, 256)? as u16))
         }
     }
     impl Encode for SubscriberProfileIDforRFP {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 1, 256)?;
             Ok(())
@@ -29854,7 +30463,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SubscriptionBasedUEDifferentiationInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SubscriptionBasedUEDifferentiationInfo<'static> {
             SubscriptionBasedUEDifferentiationInfo {
                 periodic_communication_indicator: self.periodic_communication_indicator,
@@ -30082,7 +30692,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SupportedTAs<'a>(pub Vec<SupportedTAsItem<'a>>);
     impl<'a> SupportedTAs<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SupportedTAs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SupportedTAs<'static> {
             SupportedTAs(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -30146,7 +30757,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SupportedTAsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SupportedTAsItem<'static> {
             SupportedTAsItem {
                 t_ac: self.t_ac,
@@ -30247,7 +30859,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SynchronisationInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SynchronisationInformation<'static> {
             SynchronisationInformation {
                 source_stratum_level: self.source_stratum_level,
@@ -30442,7 +31055,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TABasedMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TABasedMDT<'static> {
             TABasedMDT {
                 t_alistfor_mdt: self.t_alistfor_mdt,
@@ -30527,7 +31141,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TABasedQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TABasedQMC<'static> {
             TABasedQMC {
                 t_alistfor_qmc: self.t_alistfor_qmc,
@@ -30608,11 +31223,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "TAC";
     }
     impl<'a> Decode<'a> for TAC {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<2>()?))
         }
     }
     impl Encode for TAC {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -30688,7 +31305,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAI<'static> {
             TAI {
                 p_lmnidentity: self.p_lmnidentity,
@@ -30770,7 +31388,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIBroadcast<'a>(pub Vec<TAIBroadcastItem<'a>>);
     impl<'a> TAIBroadcast<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIBroadcast<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAIBroadcast<'static> {
             TAIBroadcast(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -30834,7 +31453,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIBroadcastItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAIBroadcastItem<'static> {
             TAIBroadcastItem {
                 t_ai: self.t_ai.into_owned(),
@@ -30918,7 +31538,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAICancelled<'a>(pub Vec<TAICancelledItem<'a>>);
     impl<'a> TAICancelled<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAICancelled<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAICancelled<'static> {
             TAICancelled(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -30982,7 +31603,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAICancelledItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAICancelledItem<'static> {
             TAICancelledItem {
                 t_ai: self.t_ai.into_owned(),
@@ -31079,7 +31701,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIBasedMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAIBasedMDT<'static> {
             TAIBasedMDT {
                 t_ailistfor_mdt: self.t_ailistfor_mdt.into_owned(),
@@ -31164,7 +31787,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIBasedQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAIBasedQMC<'static> {
             TAIBasedQMC {
                 t_ailistfor_qmc: self.t_ailistfor_qmc.into_owned(),
@@ -31236,7 +31860,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListForRestart<'a>(pub Vec<TAI<'a>>);
     impl<'a> TAIListForRestart<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIListForRestart<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAIListForRestart<'static> {
             TAIListForRestart(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -31284,7 +31909,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListforMDT<'a>(pub Vec<TAI<'a>>);
     impl<'a> TAIListforMDT<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIListforMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAIListforMDT<'static> {
             TAIListforMDT(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -31332,7 +31958,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListforQMC<'a>(pub Vec<TAI<'a>>);
     impl<'a> TAIListforQMC<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIListforQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAIListforQMC<'static> {
             TAIListforQMC(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -31380,7 +32007,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListforWarning<'a>(pub Vec<TAI<'a>>);
     impl<'a> TAIListforWarning<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIListforWarning<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAIListforWarning<'static> {
             TAIListforWarning(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -31520,11 +32148,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "TBCD-STRING";
     }
     impl<'a> Decode<'a> for TBCDSTRING {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<3>()?))
         }
     }
     impl Encode for TBCDSTRING {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -31542,7 +32172,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetToSourceTransparentContainer<'a>(pub Octets<'a>);
     impl<'a> TargetToSourceTransparentContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargetToSourceTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TargetToSourceTransparentContainer<'static> {
             TargetToSourceTransparentContainer(self.0.into_owned())
         }
@@ -31566,11 +32197,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Target-ToSource-TransparentContainer";
     }
     impl<'a> Decode<'a> for TargetToSourceTransparentContainer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for TargetToSourceTransparentContainer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -31589,7 +32222,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetBSSToSourceBSSTransparentContainer<'a>(pub Octets<'a>);
     impl<'a> TargetBSSToSourceBSSTransparentContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargetBSSToSourceBSSTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TargetBSSToSourceBSSTransparentContainer<'static> {
             TargetBSSToSourceBSSTransparentContainer(self.0.into_owned())
         }
@@ -31613,11 +32247,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "TargetBSS-ToSourceBSS-TransparentContainer";
     }
     impl<'a> Decode<'a> for TargetBSSToSourceBSSTransparentContainer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for TargetBSSToSourceBSSTransparentContainer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -31641,7 +32277,8 @@ pub mod s1_ap_ies {
         targetgNgRanNode_ID(TargetNgRanNodeID<'a>),
     }
     impl<'a> TargetID<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargetID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TargetID<'static> {
             match self {
                 Self::targeteNB_ID(value) => TargetID::targeteNB_ID(value.into_owned()),
@@ -31780,7 +32417,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargetNgRanNodeID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TargetNgRanNodeID<'static> {
             TargetNgRanNodeID {
                 global_ran_node_id: self.global_ran_node_id.into_owned(),
@@ -31866,7 +32504,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'a>(pub Octets<'a>);
     impl<'a> TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'static> {
             TargetNgRanNodeToSourceNgRanNodeTransparentContainer(self.0.into_owned())
         }
@@ -31890,11 +32529,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "TargetNgRanNode-ToSourceNgRanNode-TransparentContainer";
     }
     impl<'a> Decode<'a> for TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -31934,7 +32575,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargetRNCID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TargetRNCID<'static> {
             TargetRNCID {
                 l_ai: self.l_ai.into_owned(),
@@ -32058,7 +32700,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetRNCToSourceRNCTransparentContainer<'a>(pub Octets<'a>);
     impl<'a> TargetRNCToSourceRNCTransparentContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargetRNCToSourceRNCTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TargetRNCToSourceRNCTransparentContainer<'static> {
             TargetRNCToSourceRNCTransparentContainer(self.0.into_owned())
         }
@@ -32082,11 +32725,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "TargetRNC-ToSourceRNC-TransparentContainer";
     }
     impl<'a> Decode<'a> for TargetRNCToSourceRNCTransparentContainer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for TargetRNCToSourceRNCTransparentContainer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -32120,7 +32765,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargeteNBID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TargeteNBID<'static> {
             TargeteNBID {
                 global_enb_id: self.global_enb_id.into_owned(),
@@ -32216,7 +32862,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargeteNBToSourceeNBTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TargeteNBToSourceeNBTransparentContainer<'static> {
             TargeteNBToSourceeNBTransparentContainer {
                 r_rc_container: self.r_rc_container.into_owned(),
@@ -32296,11 +32943,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Threshold-RSRP";
     }
     impl<'a> Decode<'a> for ThresholdRSRP {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 97)? as u8))
         }
     }
     impl Encode for ThresholdRSRP {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 97)?;
             Ok(())
@@ -32328,11 +32977,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Threshold-RSRQ";
     }
     impl<'a> Decode<'a> for ThresholdRSRQ {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 34)? as u8))
         }
     }
     impl Encode for ThresholdRSRQ {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 34)?;
             Ok(())
@@ -32360,11 +33011,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Time-UE-StayedInCell";
     }
     impl<'a> Decode<'a> for TimeUEStayedInCell {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 4095)? as u16))
         }
     }
     impl Encode for TimeUEStayedInCell {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 4095)?;
             Ok(())
@@ -32394,11 +33047,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "Time-UE-StayedInCell-EnhancedGranularity";
     }
     impl<'a> Decode<'a> for TimeUEStayedInCellEnhancedGranularity {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 40950)? as u16))
         }
     }
     impl Encode for TimeUEStayedInCellEnhancedGranularity {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 40950)?;
             Ok(())
@@ -32436,7 +33091,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TimeBasedHandoverInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TimeBasedHandoverInformation<'static> {
             TimeBasedHandoverInformation {
                 h_owindow_start: self.h_owindow_start,
@@ -32572,11 +33228,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "TimeSinceSecondaryNodeRelease";
     }
     impl<'a> Decode<'a> for TimeSinceSecondaryNodeRelease {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<4>()?))
         }
     }
     impl Encode for TimeSinceSecondaryNodeRelease {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -32610,7 +33268,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TimeSynchronisationInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TimeSynchronisationInfo<'static> {
             TimeSynchronisationInfo {
                 stratum_level: self.stratum_level,
@@ -32851,7 +33510,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TraceActivation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TraceActivation<'static> {
             TraceActivation {
                 e_utran_trace_id: self.e_utran_trace_id,
@@ -33037,11 +33697,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "TrafficLoadReductionIndication";
     }
     impl<'a> Decode<'a> for TrafficLoadReductionIndication {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(1, 99)? as u8))
         }
     }
     impl Encode for TrafficLoadReductionIndication {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 1, 99)?;
             Ok(())
@@ -33074,7 +33736,8 @@ pub mod s1_ap_ies {
                 u_l_gtp_teid,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TransportInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TransportInformation<'static> {
             TransportInformation {
                 transport_layer_address: self.transport_layer_address.into_owned(),
@@ -33138,7 +33801,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TransportLayerAddress<'a>(pub BitString<'a>);
     impl<'a> TransportLayerAddress<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TransportLayerAddress<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TransportLayerAddress<'static> {
             TransportLayerAddress(self.0.into_owned())
         }
@@ -33152,11 +33816,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "TransportLayerAddress";
     }
     impl<'a> Decode<'a> for TransportLayerAddress<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bit_string_extensible(1, 160)?))
         }
     }
     impl Encode for TransportLayerAddress<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string_extensible(&self.0, 1, 160);
             Ok(())
@@ -33190,7 +33856,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TunnelInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TunnelInformation<'static> {
             TunnelInformation {
                 transport_layer_address: self.transport_layer_address.into_owned(),
@@ -33336,15 +34003,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl UEApplicationLayerMeasurementCapability {
+        /// The string of the 8 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 8 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 8).map(Self)
+        }
+    }
     impl AsnType for UEApplicationLayerMeasurementCapability {
         const NAME: &'static str = "UE-Application-Layer-Measurement-Capability";
     }
     impl<'a> Decode<'a> for UEApplicationLayerMeasurementCapability {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(8, 8)?))
         }
     }
     impl Encode for UEApplicationLayerMeasurementCapability {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 8, 8)?;
             Ok(())
@@ -33362,7 +34041,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEHistoryInformation<'a>(pub Vec<LastVisitedCellItem<'a>>);
     impl<'a> UEHistoryInformation<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEHistoryInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEHistoryInformation<'static> {
             UEHistoryInformation(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -33410,7 +34090,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEHistoryInformationFromTheUE<'a>(pub Octets<'a>);
     impl<'a> UEHistoryInformationFromTheUE<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEHistoryInformationFromTheUE<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEHistoryInformationFromTheUE<'static> {
             UEHistoryInformationFromTheUE(self.0.into_owned())
         }
@@ -33434,11 +34115,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "UE-HistoryInformationFromTheUE";
     }
     impl<'a> Decode<'a> for UEHistoryInformationFromTheUE<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for UEHistoryInformationFromTheUE<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -33456,7 +34139,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERLFReportContainer<'a>(pub Octets<'a>);
     impl<'a> UERLFReportContainer<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UERLFReportContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERLFReportContainer<'static> {
             UERLFReportContainer(self.0.into_owned())
         }
@@ -33480,11 +34164,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "UE-RLF-Report-Container";
     }
     impl<'a> Decode<'a> for UERLFReportContainer<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for UERLFReportContainer<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -33502,7 +34188,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERLFReportContainerForExtendedBands<'a>(pub Octets<'a>);
     impl<'a> UERLFReportContainerForExtendedBands<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UERLFReportContainerForExtendedBands<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERLFReportContainerForExtendedBands<'static> {
             UERLFReportContainerForExtendedBands(self.0.into_owned())
         }
@@ -33526,11 +34213,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "UE-RLF-Report-Container-for-extended-bands";
     }
     impl<'a> Decode<'a> for UERLFReportContainerForExtendedBands<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for UERLFReportContainerForExtendedBands<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -33606,7 +34295,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UES1APIDPair<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UES1APIDPair<'static> {
             UES1APIDPair {
                 m_me_ue_s1_ap_id: self.m_me_ue_s1_ap_id,
@@ -33695,7 +34385,8 @@ pub mod s1_ap_ies {
         mME_UE_S1AP_ID(MMEUES1APID),
     }
     impl<'a> UES1APIDs<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UES1APIDs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UES1APIDs<'static> {
             match self {
                 Self::uE_S1AP_ID_pair(value) => UES1APIDs::uE_S1AP_ID_pair(value.into_owned()),
@@ -33777,11 +34468,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "UE-Usage-Type";
     }
     impl<'a> Decode<'a> for UEUsageType {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.unsigned(0, 255)? as u8))
         }
     }
     impl Encode for UEUsageType {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 255)?;
             Ok(())
@@ -33817,7 +34510,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEAssociatedLogicalS1ConnectionItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEAssociatedLogicalS1ConnectionItem<'static> {
             UEAssociatedLogicalS1ConnectionItem {
                 m_me_ue_s1_ap_id: self.m_me_ue_s1_ap_id,
@@ -33939,7 +34633,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEAggregateMaximumBitrate<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEAggregateMaximumBitrate<'static> {
             UEAggregateMaximumBitrate {
                 u_eaggregate_maximum_bit_rate_dl: self.u_eaggregate_maximum_bit_rate_dl,
@@ -34052,7 +34747,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEAppLayerMeasConfig<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEAppLayerMeasConfig<'static> {
             UEAppLayerMeasConfig {
                 container_for_app_layer_meas_config: self
@@ -34193,15 +34889,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl UEIdentityIndexValue {
+        /// The string of the 10 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 10 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 10).map(Self)
+        }
+    }
     impl AsnType for UEIdentityIndexValue {
         const NAME: &'static str = "UEIdentityIndexValue";
     }
     impl<'a> Decode<'a> for UEIdentityIndexValue {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(10, 10)?))
         }
     }
     impl Encode for UEIdentityIndexValue {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 10, 10)?;
             Ok(())
@@ -34223,7 +34931,8 @@ pub mod s1_ap_ies {
         iMSI(IMSI<'a>),
     }
     impl<'a> UEPagingID<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEPagingID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEPagingID<'static> {
             match self {
                 Self::s_TMSI(value) => UEPagingID::s_TMSI(value.into_owned()),
@@ -34286,7 +34995,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapability<'a>(pub Octets<'a>);
     impl<'a> UERadioCapability<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UERadioCapability<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERadioCapability<'static> {
             UERadioCapability(self.0.into_owned())
         }
@@ -34310,11 +35020,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "UERadioCapability";
     }
     impl<'a> Decode<'a> for UERadioCapability<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for UERadioCapability<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -34332,7 +35044,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapabilityForPaging<'a>(pub Octets<'a>);
     impl<'a> UERadioCapabilityForPaging<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UERadioCapabilityForPaging<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERadioCapabilityForPaging<'static> {
             UERadioCapabilityForPaging(self.0.into_owned())
         }
@@ -34356,11 +35069,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "UERadioCapabilityForPaging";
     }
     impl<'a> Decode<'a> for UERadioCapabilityForPaging<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for UERadioCapabilityForPaging<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -34378,7 +35093,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapabilityID<'a>(pub Octets<'a>);
     impl<'a> UERadioCapabilityID<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UERadioCapabilityID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERadioCapabilityID<'static> {
             UERadioCapabilityID(self.0.into_owned())
         }
@@ -34402,11 +35118,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "UERadioCapabilityID";
     }
     impl<'a> Decode<'a> for UERadioCapabilityID<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for UERadioCapabilityID<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -34440,7 +35158,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UESecurityCapabilities<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UESecurityCapabilities<'static> {
             UESecurityCapabilities {
                 encryption_algorithms: self.encryption_algorithms.into_owned(),
@@ -34548,7 +35267,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UESidelinkAggregateMaximumBitrate<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UESidelinkAggregateMaximumBitrate<'static> {
             UESidelinkAggregateMaximumBitrate {
                 u_esidelink_aggregate_maximum_bit_rate: self.u_esidelink_aggregate_maximum_bit_rate,
@@ -34685,7 +35405,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ULCPSecurityInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ULCPSecurityInformation<'static> {
             ULCPSecurityInformation {
                 ul_nas_mac: self.ul_nas_mac,
@@ -34772,15 +35493,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl ULNASCount {
+        /// The string of the 5 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 5 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 5).map(Self)
+        }
+    }
     impl AsnType for ULNASCount {
         const NAME: &'static str = "UL-NAS-Count";
     }
     impl<'a> Decode<'a> for ULNASCount {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(5, 5)?))
         }
     }
     impl Encode for ULNASCount {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 5, 5)?;
             Ok(())
@@ -34802,15 +35535,27 @@ pub mod s1_ap_ies {
             Self(value)
         }
     }
+    impl ULNASMAC {
+        /// The string of the 16 bits of `value`, the most significant first.
+        ///
+        /// # Errors
+        ///
+        /// An error of the kind `Argument` for a value that 16 bits do not hold.
+        pub fn new(value: u64) -> Result<Self, Error> {
+            Bits::new(value, 16).map(Self)
+        }
+    }
     impl AsnType for ULNASMAC {
         const NAME: &'static str = "UL-NAS-MAC";
     }
     impl<'a> Decode<'a> for ULNASMAC {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.bits_sized(16, 16)?))
         }
     }
     impl Encode for ULNASMAC {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 16, 16)?;
             Ok(())
@@ -34828,7 +35573,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct URIAddress<'a>(pub Cow<'a, str>);
     impl<'a> URIAddress<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `URIAddress<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> URIAddress<'static> {
             URIAddress(Cow::Owned(self.0.into_owned()))
         }
@@ -34852,11 +35598,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "URI-Address";
     }
     impl<'a> Decode<'a> for URIAddress<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.visible_string(0, UNBOUNDED)?))
         }
     }
     impl Encode for URIAddress<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.visible_string(&self.0, 0, UNBOUNDED)?;
             Ok(())
@@ -34932,7 +35680,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UserLocationInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UserLocationInformation<'static> {
             UserLocationInformation {
                 eutran_cgi: self.eutran_cgi.into_owned(),
@@ -35030,7 +35779,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `V2XServicesAuthorized<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> V2XServicesAuthorized<'static> {
             V2XServicesAuthorized {
                 vehicle_ue: self.vehicle_ue,
@@ -35265,7 +36015,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WLANMeasConfigNameList<'a>(pub Vec<WLANName<'a>>);
     impl<'a> WLANMeasConfigNameList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `WLANMeasConfigNameList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WLANMeasConfigNameList<'static> {
             WLANMeasConfigNameList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -35421,7 +36172,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `WLANMeasurementConfiguration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WLANMeasurementConfiguration<'static> {
             WLANMeasurementConfiguration {
                 wlan_meas_config: self.wlan_meas_config,
@@ -35569,7 +36321,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WLANName<'a>(pub Octets<'a>);
     impl<'a> WLANName<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `WLANName<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WLANName<'static> {
             WLANName(self.0.into_owned())
         }
@@ -35593,11 +36346,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "WLANName";
     }
     impl<'a> Decode<'a> for WLANName<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(1, 32)?))
         }
     }
     impl Encode for WLANName<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 1, 32)?;
             Ok(())
@@ -35628,7 +36383,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `WUSAssistanceInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WUSAssistanceInformation<'static> {
             WUSAssistanceInformation {
                 paging_probability_information: self.paging_probability_information,
@@ -35707,7 +36463,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WarningAreaCoordinates<'a>(pub Octets<'a>);
     impl<'a> WarningAreaCoordinates<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `WarningAreaCoordinates<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WarningAreaCoordinates<'static> {
             WarningAreaCoordinates(self.0.into_owned())
         }
@@ -35731,11 +36488,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "WarningAreaCoordinates";
     }
     impl<'a> Decode<'a> for WarningAreaCoordinates<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(1, 1024)?))
         }
     }
     impl Encode for WarningAreaCoordinates<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 1, 1024)?;
             Ok(())
@@ -35758,7 +36517,8 @@ pub mod s1_ap_ies {
         emergencyAreaIDList(EmergencyAreaIDList),
     }
     impl<'a> WarningAreaList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `WarningAreaList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WarningAreaList<'static> {
             match self {
                 Self::cellIDList(value) => WarningAreaList::cellIDList(value.into_owned()),
@@ -35855,7 +36615,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WarningMessageContents<'a>(pub Octets<'a>);
     impl<'a> WarningMessageContents<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `WarningMessageContents<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WarningMessageContents<'static> {
             WarningMessageContents(self.0.into_owned())
         }
@@ -35879,11 +36640,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "WarningMessageContents";
     }
     impl<'a> Decode<'a> for WarningMessageContents<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_string(1, 9600)?))
         }
     }
     impl Encode for WarningMessageContents<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 1, 9600)?;
             Ok(())
@@ -35909,11 +36672,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "WarningSecurityInfo";
     }
     impl<'a> Decode<'a> for WarningSecurityInfo {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<50>()?))
         }
     }
     impl Encode for WarningSecurityInfo {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -35939,11 +36704,13 @@ pub mod s1_ap_ies {
         const NAME: &'static str = "WarningType";
     }
     impl<'a> Decode<'a> for WarningType {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self(reader.octet_array::<2>()?))
         }
     }
     impl Encode for WarningType {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
@@ -35975,7 +36742,8 @@ pub mod s1_ap_ies {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `X2TNLConfigurationInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> X2TNLConfigurationInfo<'static> {
             X2TNLConfigurationInfo {
                 e_nbx2_transport_layer_addresses: self
@@ -36096,7 +36864,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CSGMembershipInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CSGMembershipInfo<'static> {
             CSGMembershipInfo {
                 c_sgmembership_status: self.c_sgmembership_status,
@@ -36244,7 +37013,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellTrafficTrace<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellTrafficTrace<'static> {
             CellTrafficTrace {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -36301,7 +37071,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ConnectionEstablishmentIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ConnectionEstablishmentIndication<'static> {
             ConnectionEstablishmentIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -36363,7 +37134,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DeactivateTrace<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DeactivateTrace<'static> {
             DeactivateTrace {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -36425,7 +37197,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DownlinkNASTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DownlinkNASTransport<'static> {
             DownlinkNASTransport {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -36482,7 +37255,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DownlinkNonUEAssociatedLPPaTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DownlinkNonUEAssociatedLPPaTransport<'static> {
             DownlinkNonUEAssociatedLPPaTransport {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -36544,7 +37318,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DownlinkS1cdma2000tunnelling<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DownlinkS1cdma2000tunnelling<'static> {
             DownlinkS1cdma2000tunnelling {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -36606,7 +37381,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `DownlinkUEAssociatedLPPaTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DownlinkUEAssociatedLPPaTransport<'static> {
             DownlinkUEAssociatedLPPaTransport {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -36683,7 +37459,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABAdmittedItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABAdmittedItem<'static> {
             ERABAdmittedItem {
                 e_rab_id: self.e_rab_id,
@@ -36881,7 +37658,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABAdmittedList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABAdmittedList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABAdmittedList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABAdmittedList<'static> {
             ERABAdmittedList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -36954,7 +37732,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABDataForwardingItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABDataForwardingItem<'static> {
             ERABDataForwardingItem {
                 e_rab_id: self.e_rab_id,
@@ -37142,7 +37921,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABFailedToResumeItemResumeReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABFailedToResumeItemResumeReq<'static> {
             ERABFailedToResumeItemResumeReq {
                 e_rab_id: self.e_rab_id,
@@ -37240,7 +38020,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABFailedToResumeItemResumeRes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABFailedToResumeItemResumeRes<'static> {
             ERABFailedToResumeItemResumeRes {
                 e_rab_id: self.e_rab_id,
@@ -37322,7 +38103,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToResumeListResumeReq<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABFailedToResumeListResumeReq<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABFailedToResumeListResumeReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABFailedToResumeListResumeReq<'static> {
             ERABFailedToResumeListResumeReq(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -37372,7 +38154,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToResumeListResumeRes<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABFailedToResumeListResumeRes<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABFailedToResumeListResumeRes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABFailedToResumeListResumeRes<'static> {
             ERABFailedToResumeListResumeRes(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -37438,7 +38221,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABFailedToSetupItemHOReqAck<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABFailedToSetupItemHOReqAck<'static> {
             ERABFailedToSetupItemHOReqAck {
                 e_rab_id: self.e_rab_id,
@@ -37520,7 +38304,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedtoSetupListHOReqAck<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABFailedtoSetupListHOReqAck<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABFailedtoSetupListHOReqAck<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABFailedtoSetupListHOReqAck<'static> {
             ERABFailedtoSetupListHOReqAck(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -37581,7 +38366,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModificationConfirm<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModificationConfirm<'static> {
             ERABModificationConfirm {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -37643,7 +38429,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModificationIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModificationIndication<'static> {
             ERABModificationIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -37702,7 +38489,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModifyItemBearerModConf<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModifyItemBearerModConf<'static> {
             ERABModifyItemBearerModConf {
                 e_rab_id: self.e_rab_id,
@@ -37787,7 +38575,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModifyItemBearerModRes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModifyItemBearerModRes<'static> {
             ERABModifyItemBearerModRes {
                 e_rab_id: self.e_rab_id,
@@ -37859,7 +38648,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyListBearerModConf<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABModifyListBearerModConf<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModifyListBearerModConf<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModifyListBearerModConf<'static> {
             ERABModifyListBearerModConf(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -37907,7 +38697,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyListBearerModRes<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABModifyListBearerModRes<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModifyListBearerModRes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModifyListBearerModRes<'static> {
             ERABModifyListBearerModRes(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -37971,7 +38762,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModifyRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModifyRequest<'static> {
             ERABModifyRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -38028,7 +38820,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModifyResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModifyResponse<'static> {
             ERABModifyResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -38093,7 +38886,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABNotToBeModifiedItemBearerModInd<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABNotToBeModifiedItemBearerModInd<'static> {
             ERABNotToBeModifiedItemBearerModInd {
                 e_rab_id: self.e_rab_id,
@@ -38197,7 +38991,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABNotToBeModifiedListBearerModInd<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABNotToBeModifiedListBearerModInd<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABNotToBeModifiedListBearerModInd<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABNotToBeModifiedListBearerModInd<'static> {
             ERABNotToBeModifiedListBearerModInd(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -38263,7 +39058,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABReleaseCommand<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABReleaseCommand<'static> {
             ERABReleaseCommand {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -38325,7 +39121,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABReleaseIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABReleaseIndication<'static> {
             ERABReleaseIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -38384,7 +39181,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABReleaseItemBearerRelComp<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABReleaseItemBearerRelComp<'static> {
             ERABReleaseItemBearerRelComp {
                 e_rab_id: self.e_rab_id,
@@ -38456,7 +39254,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABReleaseListBearerRelComp<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABReleaseListBearerRelComp<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABReleaseListBearerRelComp<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABReleaseListBearerRelComp<'static> {
             ERABReleaseListBearerRelComp(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -38515,7 +39314,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABReleaseResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABReleaseResponse<'static> {
             ERABReleaseResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -38580,7 +39380,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSetupItemBearerSURes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSetupItemBearerSURes<'static> {
             ERABSetupItemBearerSURes {
                 e_rab_id: self.e_rab_id,
@@ -38703,7 +39504,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSetupItemCtxtSURes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSetupItemCtxtSURes<'static> {
             ERABSetupItemCtxtSURes {
                 e_rab_id: self.e_rab_id,
@@ -38807,7 +39609,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupListBearerSURes<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABSetupListBearerSURes<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSetupListBearerSURes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSetupListBearerSURes<'static> {
             ERABSetupListBearerSURes(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -38855,7 +39658,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupListCtxtSURes<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABSetupListCtxtSURes<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSetupListCtxtSURes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSetupListCtxtSURes<'static> {
             ERABSetupListCtxtSURes(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -38919,7 +39723,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSetupRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSetupRequest<'static> {
             ERABSetupRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -38976,7 +39781,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSetupResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSetupResponse<'static> {
             ERABSetupResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -39022,7 +39828,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSubjecttoDataForwardingList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABSubjecttoDataForwardingList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSubjecttoDataForwardingList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSubjecttoDataForwardingList<'static> {
             ERABSubjecttoDataForwardingList(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -39091,7 +39898,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeModifiedItemBearerModInd<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeModifiedItemBearerModInd<'static> {
             ERABToBeModifiedItemBearerModInd {
                 e_rab_id: self.e_rab_id,
@@ -39214,7 +40022,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeModifiedItemBearerModReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeModifiedItemBearerModReq<'static> {
             ERABToBeModifiedItemBearerModReq {
                 e_rab_id: self.e_rab_id,
@@ -39318,7 +40127,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeModifiedListBearerModInd<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABToBeModifiedListBearerModInd<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeModifiedListBearerModInd<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeModifiedListBearerModInd<'static> {
             ERABToBeModifiedListBearerModInd(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -39368,7 +40178,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeModifiedListBearerModReq<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABToBeModifiedListBearerModReq<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeModifiedListBearerModReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeModifiedListBearerModReq<'static> {
             ERABToBeModifiedListBearerModReq(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -39443,7 +40254,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSetupItemBearerSUReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSetupItemBearerSUReq<'static> {
             ERABToBeSetupItemBearerSUReq {
                 e_rab_id: self.e_rab_id,
@@ -39598,7 +40410,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSetupItemCtxtSUReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSetupItemCtxtSUReq<'static> {
             ERABToBeSetupItemCtxtSUReq {
                 e_rab_id: self.e_rab_id,
@@ -39760,7 +40573,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSetupItemHOReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSetupItemHOReq<'static> {
             ERABToBeSetupItemHOReq {
                 e_rab_id: self.e_rab_id,
@@ -39879,7 +40693,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupListBearerSUReq<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABToBeSetupListBearerSUReq<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSetupListBearerSUReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSetupListBearerSUReq<'static> {
             ERABToBeSetupListBearerSUReq(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -39927,7 +40742,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupListCtxtSUReq<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABToBeSetupListCtxtSUReq<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSetupListCtxtSUReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSetupListCtxtSUReq<'static> {
             ERABToBeSetupListCtxtSUReq(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -39975,7 +40791,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupListHOReq<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABToBeSetupListHOReq<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSetupListHOReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSetupListHOReq<'static> {
             ERABToBeSetupListHOReq(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -40042,7 +40859,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSwitchedDLItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSwitchedDLItem<'static> {
             ERABToBeSwitchedDLItem {
                 e_rab_id: self.e_rab_id,
@@ -40146,7 +40964,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSwitchedDLList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABToBeSwitchedDLList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSwitchedDLList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSwitchedDLList<'static> {
             ERABToBeSwitchedDLList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -40213,7 +41032,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSwitchedULItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSwitchedULItem<'static> {
             ERABToBeSwitchedULItem {
                 e_rab_id: self.e_rab_id,
@@ -40317,7 +41137,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSwitchedULList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABToBeSwitchedULList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSwitchedULList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSwitchedULList<'static> {
             ERABToBeSwitchedULList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -40381,7 +41202,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeUpdatedItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeUpdatedItem<'static> {
             ERABToBeUpdatedItem {
                 e_rab_id: self.e_rab_id,
@@ -40477,7 +41299,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeUpdatedList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> ERABToBeUpdatedList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeUpdatedList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeUpdatedList<'static> {
             ERABToBeUpdatedList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -40536,7 +41359,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBCPRelocationIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBCPRelocationIndication<'static> {
             ENBCPRelocationIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -40598,7 +41422,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBConfigurationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBConfigurationTransfer<'static> {
             ENBConfigurationTransfer {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -40660,7 +41485,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBConfigurationUpdate<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBConfigurationUpdate<'static> {
             ENBConfigurationUpdate {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -40717,7 +41543,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBConfigurationUpdateAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBConfigurationUpdateAcknowledge<'static> {
             ENBConfigurationUpdateAcknowledge {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -40774,7 +41601,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBConfigurationUpdateFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBConfigurationUpdateFailure<'static> {
             ENBConfigurationUpdateFailure {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -40836,7 +41664,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBDirectInformationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBDirectInformationTransfer<'static> {
             ENBDirectInformationTransfer {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -40898,7 +41727,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBEarlyStatusTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBEarlyStatusTransfer<'static> {
             ENBEarlyStatusTransfer {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -40960,7 +41790,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBStatusTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBStatusTransfer<'static> {
             ENBStatusTransfer {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41022,7 +41853,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ErrorIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ErrorIndication<'static> {
             ErrorIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41084,7 +41916,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverCancel<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverCancel<'static> {
             HandoverCancel {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41141,7 +41974,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverCancelAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverCancelAcknowledge<'static> {
             HandoverCancelAcknowledge {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41198,7 +42032,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverCommand<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverCommand<'static> {
             HandoverCommand {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41255,7 +42090,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverFailure<'static> {
             HandoverFailure {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41317,7 +42153,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverNotify<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverNotify<'static> {
             HandoverNotify {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41374,7 +42211,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverPreparationFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverPreparationFailure<'static> {
             HandoverPreparationFailure {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41436,7 +42274,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverRequest<'static> {
             HandoverRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41493,7 +42332,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverRequestAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverRequestAcknowledge<'static> {
             HandoverRequestAcknowledge {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41555,7 +42395,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverRequired<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverRequired<'static> {
             HandoverRequired {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41617,7 +42458,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverSuccess<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverSuccess<'static> {
             HandoverSuccess {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41674,7 +42516,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `InitialContextSetupFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InitialContextSetupFailure<'static> {
             InitialContextSetupFailure {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41736,7 +42579,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `InitialContextSetupRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InitialContextSetupRequest<'static> {
             InitialContextSetupRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41793,7 +42637,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `InitialContextSetupResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InitialContextSetupResponse<'static> {
             InitialContextSetupResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41850,7 +42695,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `InitialUEMessage<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InitialUEMessage<'static> {
             InitialUEMessage {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -41899,7 +42745,8 @@ pub mod s1_ap_pdu_contents {
         rIMTransfer(RIMTransfer<'a>),
     }
     impl<'a> InterSystemInformationTransferType<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `InterSystemInformationTransferType<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InterSystemInformationTransferType<'static> {
             match self {
                 Self::rIMTransfer(value) => {
@@ -41973,7 +42820,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `KillRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> KillRequest<'static> {
             KillRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42030,7 +42878,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `KillResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> KillResponse<'static> {
             KillResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42087,7 +42936,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LocationReport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LocationReport<'static> {
             LocationReport {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42149,7 +42999,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LocationReportingControl<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LocationReportingControl<'static> {
             LocationReportingControl {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42206,7 +43057,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `LocationReportingFailureIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LocationReportingFailureIndication<'static> {
             LocationReportingFailureIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42263,7 +43115,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MMECPRelocationIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMECPRelocationIndication<'static> {
             MMECPRelocationIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42325,7 +43178,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEConfigurationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEConfigurationTransfer<'static> {
             MMEConfigurationTransfer {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42387,7 +43241,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEConfigurationUpdate<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEConfigurationUpdate<'static> {
             MMEConfigurationUpdate {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42444,7 +43299,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEConfigurationUpdateAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEConfigurationUpdateAcknowledge<'static> {
             MMEConfigurationUpdateAcknowledge {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42501,7 +43357,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEConfigurationUpdateFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEConfigurationUpdateFailure<'static> {
             MMEConfigurationUpdateFailure {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42563,7 +43420,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEDirectInformationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEDirectInformationTransfer<'static> {
             MMEDirectInformationTransfer {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42625,7 +43483,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEEarlyStatusTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEEarlyStatusTransfer<'static> {
             MMEEarlyStatusTransfer {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42687,7 +43546,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEStatusTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEStatusTransfer<'static> {
             MMEStatusTransfer {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42744,7 +43604,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NASDeliveryIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NASDeliveryIndication<'static> {
             NASDeliveryIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42801,7 +43662,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `NASNonDeliveryIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NASNonDeliveryIndication<'static> {
             NASNonDeliveryIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42863,7 +43725,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `OverloadStart<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> OverloadStart<'static> {
             OverloadStart {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42920,7 +43783,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `OverloadStop<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> OverloadStop<'static> {
             OverloadStop {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -42977,7 +43841,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PWSFailureIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PWSFailureIndication<'static> {
             PWSFailureIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43039,7 +43904,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PWSRestartIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PWSRestartIndication<'static> {
             PWSRestartIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43101,7 +43967,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `Paging<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Paging<'static> {
             Paging {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43163,7 +44030,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PathSwitchRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PathSwitchRequest<'static> {
             PathSwitchRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43220,7 +44088,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PathSwitchRequestAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PathSwitchRequestAcknowledge<'static> {
             PathSwitchRequestAcknowledge {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43277,7 +44146,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PathSwitchRequestFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PathSwitchRequestFailure<'static> {
             PathSwitchRequestFailure {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43335,7 +44205,8 @@ pub mod s1_ap_pdu_contents {
                 value,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `AnonymousPrivateMessagePrivateIEs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AnonymousPrivateMessagePrivateIEs<'static> {
             AnonymousPrivateMessagePrivateIEs {
                 id: self.id,
@@ -43401,7 +44272,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PrivateMessagePrivateIEs<'a>(pub Vec<AnonymousPrivateMessagePrivateIEs<'a>>);
     impl<'a> PrivateMessagePrivateIEs<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PrivateMessagePrivateIEs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PrivateMessagePrivateIEs<'static> {
             PrivateMessagePrivateIEs(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -43465,7 +44337,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(private_ies: PrivateMessagePrivateIEs<'a>) -> Self {
             Self { private_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `PrivateMessage<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PrivateMessage<'static> {
             PrivateMessage {
                 private_ies: self.private_ies.into_owned(),
@@ -43522,7 +44395,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RerouteNASRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RerouteNASRequest<'static> {
             RerouteNASRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43584,7 +44458,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `Reset<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Reset<'static> {
             Reset {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43641,7 +44516,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ResetAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ResetAcknowledge<'static> {
             ResetAcknowledge {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43733,7 +44609,8 @@ pub mod s1_ap_pdu_contents {
         partOfS1_Interface(UEAssociatedLogicalS1ConnectionListRes<'a>),
     }
     impl<'a> ResetType<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `ResetType<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ResetType<'static> {
             match self {
                 Self::s1_Interface(value) => ResetType::s1_Interface(value),
@@ -43822,7 +44699,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `RetrieveUEInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RetrieveUEInformation<'static> {
             RetrieveUEInformation {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43879,7 +44757,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `S1RemovalFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1RemovalFailure<'static> {
             S1RemovalFailure {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43941,7 +44820,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `S1RemovalRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1RemovalRequest<'static> {
             S1RemovalRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -43998,7 +44878,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `S1RemovalResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1RemovalResponse<'static> {
             S1RemovalResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44055,7 +44936,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `S1SetupFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1SetupFailure<'static> {
             S1SetupFailure {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44117,7 +44999,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `S1SetupRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1SetupRequest<'static> {
             S1SetupRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44174,7 +45057,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `S1SetupResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1SetupResponse<'static> {
             S1SetupResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44231,7 +45115,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SecondaryRATDataUsageReport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SecondaryRATDataUsageReport<'static> {
             SecondaryRATDataUsageReport {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44287,7 +45172,8 @@ pub mod s1_ap_pdu_contents {
                 i_e_extensions,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAIItem<'static> {
             TAIItem {
                 t_ai: self.t_ai.into_owned(),
@@ -44359,7 +45245,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> TAIList<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TAIList<'static> {
             TAIList(self.0.into_iter().map(|item| item.into_owned()).collect())
         }
@@ -44418,7 +45305,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TraceFailureIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TraceFailureIndication<'static> {
             TraceFailureIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44480,7 +45368,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `TraceStart<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TraceStart<'static> {
             TraceStart {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44526,7 +45415,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEAssociatedLogicalS1ConnectionListRes<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> UEAssociatedLogicalS1ConnectionListRes<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEAssociatedLogicalS1ConnectionListRes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEAssociatedLogicalS1ConnectionListRes<'static> {
             UEAssociatedLogicalS1ConnectionListRes(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -44576,7 +45466,8 @@ pub mod s1_ap_pdu_contents {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEAssociatedLogicalS1ConnectionListResAck<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> UEAssociatedLogicalS1ConnectionListResAck<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEAssociatedLogicalS1ConnectionListResAck<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEAssociatedLogicalS1ConnectionListResAck<'static> {
             UEAssociatedLogicalS1ConnectionListResAck(
                 self.0.into_iter().map(|item| item.into_owned()).collect(),
@@ -44642,7 +45533,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UECapabilityInfoIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UECapabilityInfoIndication<'static> {
             UECapabilityInfoIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44699,7 +45591,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextModificationConfirm<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextModificationConfirm<'static> {
             UEContextModificationConfirm {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44756,7 +45649,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextModificationFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextModificationFailure<'static> {
             UEContextModificationFailure {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44818,7 +45712,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextModificationIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextModificationIndication<'static> {
             UEContextModificationIndication {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44880,7 +45775,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextModificationRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextModificationRequest<'static> {
             UEContextModificationRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44937,7 +45833,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextModificationResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextModificationResponse<'static> {
             UEContextModificationResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -44994,7 +45891,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextReleaseCommand<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextReleaseCommand<'static> {
             UEContextReleaseCommand {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45051,7 +45949,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextReleaseComplete<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextReleaseComplete<'static> {
             UEContextReleaseComplete {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45113,7 +46012,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextReleaseRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextReleaseRequest<'static> {
             UEContextReleaseRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45170,7 +46070,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextResumeFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextResumeFailure<'static> {
             UEContextResumeFailure {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45232,7 +46133,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextResumeRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextResumeRequest<'static> {
             UEContextResumeRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45289,7 +46191,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextResumeResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextResumeResponse<'static> {
             UEContextResumeResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45351,7 +46254,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextSuspendRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextSuspendRequest<'static> {
             UEContextSuspendRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45408,7 +46312,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextSuspendResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextSuspendResponse<'static> {
             UEContextSuspendResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45464,7 +46369,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEInformationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEInformationTransfer<'static> {
             UEInformationTransfer {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45526,7 +46432,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UERadioCapabilityIDMappingRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERadioCapabilityIDMappingRequest<'static> {
             UERadioCapabilityIDMappingRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45583,7 +46490,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UERadioCapabilityIDMappingResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERadioCapabilityIDMappingResponse<'static> {
             UERadioCapabilityIDMappingResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45645,7 +46553,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UERadioCapabilityMatchRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERadioCapabilityMatchRequest<'static> {
             UERadioCapabilityMatchRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45702,7 +46611,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UERadioCapabilityMatchResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERadioCapabilityMatchResponse<'static> {
             UERadioCapabilityMatchResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45759,7 +46669,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UplinkNASTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UplinkNASTransport<'static> {
             UplinkNASTransport {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45816,7 +46727,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UplinkNonUEAssociatedLPPaTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UplinkNonUEAssociatedLPPaTransport<'static> {
             UplinkNonUEAssociatedLPPaTransport {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45878,7 +46790,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UplinkS1cdma2000tunnelling<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UplinkS1cdma2000tunnelling<'static> {
             UplinkS1cdma2000tunnelling {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45935,7 +46848,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UplinkUEAssociatedLPPaTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UplinkUEAssociatedLPPaTransport<'static> {
             UplinkUEAssociatedLPPaTransport {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -45997,7 +46911,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `WriteReplaceWarningRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WriteReplaceWarningRequest<'static> {
             WriteReplaceWarningRequest {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -46054,7 +46969,8 @@ pub mod s1_ap_pdu_contents {
         pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
             Self { protocol_ies }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `WriteReplaceWarningResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WriteReplaceWarningResponse<'static> {
             WriteReplaceWarningResponse {
                 protocol_ies: self.protocol_ies.into_owned(),
@@ -46135,7 +47051,8 @@ pub mod s1_ap_pdu_descriptions {
                 value,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `InitiatingMessage<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InitiatingMessage<'static> {
             InitiatingMessage {
                 procedure_code: self.procedure_code,
@@ -46148,6 +47065,7 @@ pub mod s1_ap_pdu_descriptions {
         const NAME: &'static str = "InitiatingMessage";
     }
     impl<'a> Decode<'a> for InitiatingMessage<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let procedure_code = match ProcedureCode::decode(reader) {
                 Ok(value) => value,
@@ -46169,6 +47087,7 @@ pub mod s1_ap_pdu_descriptions {
         }
     }
     impl Encode for InitiatingMessage<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             self.procedure_code.encode(writer)?;
             self.criticality.encode(writer)?;
@@ -46210,7 +47129,8 @@ pub mod s1_ap_pdu_descriptions {
         unsuccessfulOutcome(UnsuccessfulOutcome<'a>),
     }
     impl<'a> S1APPDU<'a> {
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `S1APPDU<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1APPDU<'static> {
             match self {
                 Self::initiatingMessage(value) => S1APPDU::initiatingMessage(value.into_owned()),
@@ -46328,7 +47248,8 @@ pub mod s1_ap_pdu_descriptions {
                 value,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `SuccessfulOutcome<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SuccessfulOutcome<'static> {
             SuccessfulOutcome {
                 procedure_code: self.procedure_code,
@@ -46341,6 +47262,7 @@ pub mod s1_ap_pdu_descriptions {
         const NAME: &'static str = "SuccessfulOutcome";
     }
     impl<'a> Decode<'a> for SuccessfulOutcome<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let procedure_code = match ProcedureCode::decode(reader) {
                 Ok(value) => value,
@@ -46362,6 +47284,7 @@ pub mod s1_ap_pdu_descriptions {
         }
     }
     impl Encode for SuccessfulOutcome<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             self.procedure_code.encode(writer)?;
             self.criticality.encode(writer)?;
@@ -46408,7 +47331,8 @@ pub mod s1_ap_pdu_descriptions {
                 value,
             }
         }
-        /// The same value, which borrows nothing: what it borrowed from the octets that it was decoded from is copied.
+        /// The same value, which borrows nothing and is kept as long as it is needed: a `UnsuccessfulOutcome<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
+        #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UnsuccessfulOutcome<'static> {
             UnsuccessfulOutcome {
                 procedure_code: self.procedure_code,
@@ -46421,6 +47345,7 @@ pub mod s1_ap_pdu_descriptions {
         const NAME: &'static str = "UnsuccessfulOutcome";
     }
     impl<'a> Decode<'a> for UnsuccessfulOutcome<'a> {
+        #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let procedure_code = match ProcedureCode::decode(reader) {
                 Ok(value) => value,
@@ -46442,6 +47367,7 @@ pub mod s1_ap_pdu_descriptions {
         }
     }
     impl Encode for UnsuccessfulOutcome<'_> {
+        #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             self.procedure_code.encode(writer)?;
             self.criticality.encode(writer)?;
