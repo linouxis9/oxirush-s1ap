@@ -1,4 +1,6 @@
 /target/
+/benches/target/
+/benches/dhat-heap.json
 Cargo.lock
 s1ap/*.asn
 s1ap/*.asn1
