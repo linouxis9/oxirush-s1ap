@@ -188,7 +188,7 @@ fn block_5() {
 
     async fn handle(received: Vec<u8>) -> Result<(), Error> {
         // Nothing of `received` is copied
-        let pdu = S1APPDU::decode_borrowed(&received)?;
+        let pdu = S1AP_PDU::decode_borrowed(&received)?;
         let message: UplinkNASTransport = pdu.decode_value()?;
         extract_s1ap_ies!(message, UplinkNASTransport,
             req nas: NASPDU = NAS_PDU(nas) => nas,

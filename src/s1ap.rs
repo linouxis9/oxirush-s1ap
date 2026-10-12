@@ -47514,6 +47514,35 @@ impl S1APPDU<'static> {
             None => oxirush_aper::decode(bytes).map(S1APPDU::into_owned),
         }
     }
+    /// The PDU that `bytes` are, as `decode` reads it, with the octets of its message
+    /// borrowed from `bytes`: nothing is copied, and the PDU, a `S1APPDU<'_>`, lives as
+    /// long as they do. `into_owned()` gives the PDU that `decode` gives.
+    ///
+    /// ```
+    /// use oxirush_s1ap::s1ap::*;
+    ///
+    /// // A UE CONTEXT RELEASE REQUEST, read where it was received
+    /// let received = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    /// let pdu = S1AP_PDU::decode_borrowed(&received)?;
+    /// let request: UEContextReleaseRequest = pdu.decode_value()?;
+    /// assert_eq!(request.protocol_ies.0.len(), 3);
+    ///
+    /// // Kept after `received` is gone
+    /// let kept: S1AP_PDU = pdu.into_owned();
+    /// # let _ = kept;
+    /// # Ok::<(), oxirush_s1ap::Error>(())
+    /// ```
+    pub fn decode_borrowed<'b>(bytes: &'b [u8]) -> Result<S1APPDU<'b>, crate::Error> {
+        match S1APPDU::usual(bytes) {
+            Some((alternative, code, criticality, message)) => Ok(S1APPDU::of_alternative(
+                alternative,
+                code,
+                criticality,
+                Octets::borrowed(message),
+            )),
+            None => oxirush_aper::decode(bytes),
+        }
+    }
 }
 impl<'a> S1APPDU<'a> {
     /// A PDU of the usual layout, read octet by octet: its alternative, its procedure
@@ -47571,34 +47600,6 @@ impl<'a> S1APPDU<'a> {
                 criticality,
                 value,
             }),
-        }
-    }
-    /// The PDU that `bytes` are, as `decode` reads it, with the octets of its message
-    /// borrowed from `bytes`: nothing is copied, and the PDU lives as long as they do.
-    ///
-    /// ```
-    /// use oxirush_s1ap::s1ap::*;
-    ///
-    /// // A UE CONTEXT RELEASE REQUEST, read where it was received
-    /// let received = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    /// let pdu = S1APPDU::decode_borrowed(&received)?;
-    /// let request: UEContextReleaseRequest = pdu.decode_value()?;
-    /// assert_eq!(request.protocol_ies.0.len(), 3);
-    ///
-    /// // Kept after `received` is gone
-    /// let kept: S1AP_PDU = pdu.into_owned();
-    /// # let _ = kept;
-    /// # Ok::<(), oxirush_s1ap::Error>(())
-    /// ```
-    pub fn decode_borrowed(bytes: &'a [u8]) -> Result<Self, crate::Error> {
-        match Self::usual(bytes) {
-            Some((alternative, code, criticality, message)) => Ok(Self::of_alternative(
-                alternative,
-                code,
-                criticality,
-                Octets::borrowed(message),
-            )),
-            None => oxirush_aper::decode(bytes),
         }
     }
     /// The octets of this PDU, in aligned PER.

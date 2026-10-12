@@ -217,7 +217,7 @@ what each type became.
   of id-eNB-UE-S1AP-ID, wherever they take `eNB_UE_S1AP_ID`, the name of the
   IE: an alias of a type names the IE that the name of the type names. The
   alias did not compile as an IE name.
-- `S1APPDU::decode_borrowed(&octets)`: the PDU that borrows its message from
+- `S1AP_PDU::decode_borrowed(&octets)`: the PDU that borrows its message from
   the octets, for a caller that reads a PDU where it was received. It copies
   nothing, where `S1AP_PDU::decode` copies the message once to own it, and
   `into_owned()` gives the PDU that `decode` gives. `pdu.encode_into(&mut

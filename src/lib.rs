@@ -59,7 +59,7 @@
 //! | Read a message where it was received | `let pdu = S1AP_PDU::decode(&octets)?;` then `pdu.decode_value()?`: the message borrows from `pdu`, which is a variable of its own |
 //! | Keep a value after the PDU is gone | `value.into_owned()`, which gives the same type with the lifetime `'static`, as `NASPDU<'static>`: this is the type to write in a struct |
 //! | Build a value | From data that it owns: `NASPDU::from(vec)` is a `NASPDU<'static>` |
-//! | Read a PDU in the buffer that it was received in | [`S1APPDU::decode_borrowed`](s1ap::S1APPDU::decode_borrowed), which copies nothing: the PDU borrows from the buffer |
+//! | Read a PDU in the buffer that it was received in | [`S1AP_PDU::decode_borrowed`](s1ap::S1APPDU::decode_borrowed), which copies nothing: the PDU borrows from the buffer |
 //!
 //! [`S1AP_PDU`](s1ap::S1AP_PDU) is the PDU that owns its octets, `S1APPDU<'static>`,
 //! and has no lifetime to write.
@@ -107,7 +107,7 @@
 //! }
 //!
 //! async fn handle(received: Vec<u8>) -> Result<(), Error> {
-//!     let pdu = S1APPDU::decode_borrowed(&received)?;
+//!     let pdu = S1AP_PDU::decode_borrowed(&received)?;
 //!     let message: UplinkNASTransport = pdu.decode_value()?;
 //!     extract_s1ap_ies!(message, UplinkNASTransport,
 //!         req nas: NASPDU = NAS_PDU(nas) => nas,
