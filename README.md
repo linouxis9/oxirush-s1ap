@@ -1016,7 +1016,7 @@ written, and take them so.
 |------|----------|
 | `PLMNidentity` | `"208-93"`, the MCC and the MNC |
 | `TransportLayerAddress` | `"10.0.0.1"`, `"2001:db8::1"`, or the two with a comma |
-| `IMSI` | its digits. A string of digits alone is always the digits, also where an even number of them could be the octets that JER writes |
+| `IMSI` | its digits. A string of digits alone is always the digits, also where an even number of them could be the octets of the string |
 | `TAC`, `FiveGSTAC`, `LAC`, `RAC`, `CI`, `GTP-TEID`, `M-TMSI`, `MME-Group-ID`, `MME-Code`, `Port-Number`, `CellIdentity`, `NRCellIdentity`, `UL-NAS-Count` | a number, also read as a `"0x…"` string |
 | `ENUMERATED` | the name of the value, read in any case |
 | `INTEGER` | a number. One above 2^64-1 or below -2^63, which JSON has no exact number for, is a string of its decimal digits |
@@ -1024,11 +1024,12 @@ written, and take them so.
 | a bit string of another size than the one that its type gives beside an extension marker, as an algorithm mask of 24 bits | `{"value": "C00000", "length": 24}`, where a mask of the 16 bits of its type is `"C000"` |
 | the other strings: keys and algorithm masks, the NAS-PDU and the other containers, the identifiers of an eNB, whose length says which kind they are | hexadecimal, read in either case |
 
-Each is also read as JER writes it, and a value that does not fit its
-notation, such as a transport layer address of another length, stays as JER
-writes it. The octets of a bit string start with its first bit:
-`"000010"` is the macro eNB identifier 1, in 20 bits, and `"000004"` the
-number 1 in 22 bits.
+Each is also read in the form of its ASN.1 type, and a value that does not
+fit its notation, such as a transport layer address of another length, stays
+in that form: the documentation of the [`inspect`] module lists the form of
+each type under [Values]. The octets of a bit string start with its first
+bit: `"000010"` is the macro eNB identifier 1, in 20 bits, and `"000004"`
+the number 1 in 22 bits.
 
 ### Errors of the JSON forms
 
@@ -1212,6 +1213,7 @@ Licensed under the Apache License, Version 2.0. See [LICENSE](https://github.com
 [Names]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/index.html#names
 [What is not there]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/index.html#what-is-not-there
 [Edits]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/index.html#edits
+[Values]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/index.html#values
 [Octets that carry a type]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/index.html#octets-that-carry-a-type
 [`to_tree()`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/s1ap/s1_ap_pdu_descriptions/enum.S1APPDU.html#method.to_tree
 [`from_tree()`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/s1ap/s1_ap_pdu_descriptions/enum.S1APPDU.html#method.from_tree
