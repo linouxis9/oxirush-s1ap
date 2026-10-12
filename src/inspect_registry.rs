@@ -747,6 +747,7 @@ types! {
     EmergencyAreaIDList = [_];
     EmergencyAreaIDListForRestart = [_];
     EnGNBID = bits;
+    EncryptionAlgorithms = bits;
     ErrorIndication sequence { "protocolIEs": ies };
     EventL1LoggedMDTConfig sequence { "l1Threshold": MeasurementThresholdL1LoggedMDT, "hysteresis": _, "timeToTrigger": TimeToTrigger, "iE-Extensions"? extensions };
     EventTrigger choice { "outOfCoverage": EventTriggerOutOfCoverage, "eventL1LoggedMDTConfig": EventL1LoggedMDTConfig, "choice-Extensions": ie };
@@ -788,6 +789,7 @@ types! {
     InitialContextSetupResponse sequence { "protocolIEs": ies };
     InitialUEMessage sequence { "protocolIEs": ies };
     InitiatingMessage sequence { "procedureCode": _, "criticality": Criticality, "value": _ };
+    IntegrityProtectionAlgorithms = bits;
     InterSystemInformationTransferType choice { "rIMTransfer": RIMTransfer };
     InterSystemMeasurementItem sequence { "freqBandIndicatorNR": _, "sSBfrequencies": _, "subcarrierSpacingSSB": InterSystemMeasurementItemSubcarrierSpacingSSB, "maxRSIndexCellQual"? _, "sMTC"? _, "threshRS-Index-r15"? _, "sSBToMeasure"? _, "sSRSSIMeasurement"? _, "quantityConfigNR-R15"? _, "excludedCellsToAddModList"? _, "iE-Extensions"? extensions };
     InterSystemMeasurementList = [InterSystemMeasurementItem];
@@ -838,9 +840,11 @@ types! {
     NBIoTPagingEDRXInformation sequence { "nB-IoT-paging-eDRX-Cycle": NBIoTPagingEDRXCycle, "nB-IoT-pagingTimeWindow"? NBIoTPagingTimeWindow, "iE-Extensions"? extensions };
     NGENB sequence { "global-ng-eNB-ID": GlobalENBID, "iE-Extensions"? extensions };
     NRCGI sequence { "pLMNIdentity": _, "nRCellIdentity": _, "iE-Extensions"? extensions };
-    NRUESecurityCapabilities sequence { "nRencryptionAlgorithms": _, "nRintegrityProtectionAlgorithms": _, "iE-Extensions"? extensions };
+    NRUESecurityCapabilities sequence { "nRencryptionAlgorithms": NRencryptionAlgorithms, "nRintegrityProtectionAlgorithms": NRintegrityProtectionAlgorithms, "iE-Extensions"? extensions };
     NRUESidelinkAggregateMaximumBitrate sequence { "uEaggregateMaximumBitRate": _, "iE-Extensions"? extensions };
     NRV2XServicesAuthorized sequence { "vehicleUE"? VehicleUE, "pedestrianUE"? PedestrianUE, "iE-Extensions"? extensions };
+    NRencryptionAlgorithms = bits;
+    NRintegrityProtectionAlgorithms = bits;
     OverloadResponse choice { "overloadAction": OverloadAction };
     OverloadStart sequence { "protocolIEs": ies };
     OverloadStop sequence { "protocolIEs": ies };
@@ -865,7 +869,7 @@ types! {
     PrivateMessagePrivateIEs = [AnonymousPrivateMessagePrivateIEs];
     ProSeAuthorized sequence { "proSeDirectDiscovery"? ProSeDirectDiscovery, "proSeDirectCommunication"? ProSeDirectCommunication, "iE-Extensions"? extensions };
     RATRestrictions = [RATRestrictionsItem];
-    RATRestrictionsItem sequence { "pLMNidentity": _, "rAT-RestrictionInformation": _, "iE-Extensions"? extensions };
+    RATRestrictionsItem sequence { "pLMNidentity": _, "rAT-RestrictionInformation": bits, "iE-Extensions"? extensions };
     RIMRoutingAddress choice { "gERAN-Cell-ID": GERANCellID, "targetRNC-ID": TargetRNCID, "eHRPD-Sector-ID": _ };
     RIMTransfer sequence { "rIMInformation": _, "rIMRoutingAddress"? RIMRoutingAddress, "iE-Extensions"? extensions };
     RLFReportInformation sequence { "uE-RLF-Report-Container": _, "uE-RLF-Report-Container-for-extended-bands"? _, "iE-Extensions"? extensions };
@@ -896,7 +900,7 @@ types! {
     SONInformationReply sequence { "x2TNLConfigurationInfo"? X2TNLConfigurationInfo, "iE-Extensions"? extensions };
     SONInformationReport choice { "rLFReportInformation": RLFReportInformation };
     STMSI sequence { "mMEC": _, "m-TMSI": _, "iE-Extensions"? extensions };
-    ScheduledCommunicationTime sequence { "dayofWeek"? _, "timeofDayStart"? _, "timeofDayEnd"? _, "iE-Extensions"? extensions };
+    ScheduledCommunicationTime sequence { "dayofWeek"? bits, "timeofDayStart"? _, "timeofDayEnd"? _, "iE-Extensions"? extensions };
     SecondaryRATDataUsageReport sequence { "protocolIEs": ies };
     SecondaryRATDataUsageReportItem sequence { "e-RAB-ID": _, "secondaryRATType": SecondaryRATType, "e-RABUsageReportList": ERABUsageReportList, "iE-Extensions"? extensions };
     SecondaryRATDataUsageReportList = [ie];
@@ -982,7 +986,7 @@ types! {
     UERadioCapabilityMatchResponse sequence { "protocolIEs": ies };
     UES1APIDPair sequence { "mME-UE-S1AP-ID": _, "eNB-UE-S1AP-ID": _, "iE-Extensions"? extensions };
     UES1APIDs choice { "uE-S1AP-ID-pair": UES1APIDPair, "mME-UE-S1AP-ID": _ };
-    UESecurityCapabilities sequence { "encryptionAlgorithms": _, "integrityProtectionAlgorithms": _, "iE-Extensions"? extensions };
+    UESecurityCapabilities sequence { "encryptionAlgorithms": EncryptionAlgorithms, "integrityProtectionAlgorithms": IntegrityProtectionAlgorithms, "iE-Extensions"? extensions };
     UESidelinkAggregateMaximumBitrate sequence { "uESidelinkAggregateMaximumBitRate": _, "iE-Extensions"? extensions };
     ULCPSecurityInformation sequence { "ul-NAS-MAC": _, "ul-NAS-Count": _, "iE-Extensions"? extensions };
     UnsuccessfulOutcome sequence { "procedureCode": _, "criticality": Criticality, "value": _ };

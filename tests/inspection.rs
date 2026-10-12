@@ -2045,60 +2045,63 @@ fn usage_report(count: u64) -> serde_json::Value {
     ]})
 }
 
-/// rasn's JER writes an INTEGER as an `i64`, where ITU-T X.697 (02/2021) §21 has a number
-/// of any size. An IE with an integer of 2^63 or more has no typed value: it stays its
-/// octets, as the README says.
+/// An INTEGER is a number of any size (ITU-T X.697 (02/2021) §21). One of 2^63 or more
+/// is written, read, edited and encoded as any other, and the bindings read it in the
+/// octets.
 #[test]
-fn an_ie_with_an_integer_of_two_to_the_63_stays_octets() {
+fn an_integer_of_two_to_the_63_or_more_is_a_number() {
     use serde_json::json;
     let report = "/s1ap/SecondaryRATDataUsageReportList/0/e-RABUsageReportList/0";
     let count = format!("{report}/usageCountUL");
 
-    // The largest integer that is typed is written, read, edited and encoded.
-    let largest = (1u64 << 63) - 1;
-    let pdu = S1AP_PDU::from_tree(&usage_report(largest)).unwrap();
-    let mut view = pdu.to_view().unwrap();
-    assert_eq!(inspect::select(&view, &count).unwrap(), [&json!(largest)]);
-    assert_eq!(pdu.to_tree().unwrap(), usage_report(largest));
-    inspect::set(&mut view, &count, json!(largest - 1)).unwrap();
-    let edited = S1AP_PDU::from_view(&view).unwrap();
-    assert_eq!(edited.to_tree().unwrap(), usage_report(largest - 1));
+    // The octets of the largest count of 63 bits, which has eight octets as these have.
+    let below = S1AP_PDU::from_tree(&usage_report((1 << 63) - 1)).unwrap();
+    let below = hex::encode(below.encode().unwrap());
+    assert_eq!(below.matches("7fffffffffffffff").count(), 1);
 
-    // One more is not written as a typed value.
-    assert!(S1AP_PDU::from_tree(&usage_report(1 << 63)).is_err());
+    for (number, octets) in [
+        (1u64 << 63, "8000000000000000"),
+        (u64::MAX, "ffffffffffffffff"),
+    ] {
+        // Written, it is the eight octets of the count in the same message.
+        let pdu = S1AP_PDU::from_tree(&usage_report(number)).unwrap();
+        let wire = pdu.encode().unwrap();
+        assert_eq!(
+            hex::encode(&wire),
+            below.replace("7fffffffffffffff", octets)
+        );
 
-    // Received, it is eight octets as the largest is: the item that has it is its octets
-    // beside why it has no value, and the rest of the PDU is read.
-    let wire = hex::encode(pdu.encode().unwrap());
-    assert_eq!(wire.matches("7fffffffffffffff").count(), 1);
-    let wire = hex::decode(wire.replace("7fffffffffffffff", "8000000000000000")).unwrap();
-    let pdu = S1AP_PDU::decode(&wire).unwrap();
-    let mut view = pdu.to_view().unwrap();
-    let list = &view["message"]["protocolIEs"][2]["value"][0]["value"]["e-RABUsageReportList"];
-    let entry = list[0].clone();
-    assert!(entry["_decode_error"].is_string(), "{entry}");
-    assert_eq!(entry["value"], entry["_raw_value"]);
-    let octets = inspect::select(&view, &format!("{report}/octets")).unwrap()[0].clone();
-    assert_eq!(octets, entry["_raw_value"]);
-    assert!(inspect::select(&view, &count).is_err());
-    let rab = "/s1ap/SecondaryRATDataUsageReportList/0/e-RAB-ID";
-    assert_eq!(inspect::select(&view, rab).unwrap(), [&json!(5)]);
+        // Received, it is the number that it is, and the bindings read the same.
+        let mut view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
+        let list = &view["message"]["protocolIEs"][2]["value"][0]["value"]["e-RABUsageReportList"];
+        let entry = list[0].clone();
+        assert!(entry.get("_decode_error").is_none(), "{entry}");
+        assert_eq!(inspect::select(&view, &count).unwrap(), [&json!(number)]);
+        let item = hex::decode(entry["_raw_value"].as_str().unwrap()).unwrap();
+        let item: ERABUsageReportItem = decode_open_type(&rasn::types::Any::new(item)).unwrap();
+        assert_eq!(item.usage_count_ul, number);
 
-    // A tree has the octets too, and both forms send them as they were received, also
-    // beside an edit of another value.
-    let mut tree = usage_report(1);
-    let item = &mut tree["ies"][2]["SecondaryRATDataUsageReportList"][0];
-    item["SecondaryRATDataUsageReportItem"]["e-RABUsageReportList"][0] =
-        json!({"E-RABUsageReportItem": {"octets": octets}});
-    assert_eq!(pdu.to_tree().unwrap(), tree);
-    assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
-    inspect::set(&mut view, rab, json!(6)).unwrap();
-    let edited = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
-    assert_eq!(inspect::select(&edited, rab).unwrap(), [&json!(6)]);
+        // A tree has it, and both forms are the same octets.
+        assert_eq!(pdu.to_tree().unwrap(), usage_report(number));
+        assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
+
+        // Edited, it is the tree of the other number.
+        inspect::set(&mut view, &count, json!(number - 1)).unwrap();
+        let edited = S1AP_PDU::from_view(&view).unwrap();
+        assert_eq!(edited.to_tree().unwrap(), usage_report(number - 1));
+    }
+
+    // One more than the type has is refused, where it is.
+    let mut beyond = usage_report(1);
+    let item = &mut beyond["ies"][2]["SecondaryRATDataUsageReportList"][0];
+    let entry = &mut item["SecondaryRATDataUsageReportItem"]["e-RABUsageReportList"][0];
+    entry["E-RABUsageReportItem"]["usageCountUL"] = json!("18446744073709551616");
+    let error = S1AP_PDU::from_tree(&beyond).unwrap_err();
+    assert_eq!(error.kind(), oxirush_s1ap::ErrorKind::Value);
     assert_eq!(
-        inspect::select(&edited, &format!("{report}/octets")).unwrap(),
-        [&octets]
+        error.to_string(),
+        "this is not a value of E-RABUsageReportItem, at usageCountUL: \
+         \"18446744073709551616\" is outside its constraint (0..18446744073709551615)"
     );
 }
 
@@ -2121,19 +2124,18 @@ fn modification(bits: usize) -> S1AP_PDU {
     .unwrap()
 }
 
-/// rasn's JER writes a BIT STRING of one extensible size as its octets alone, where
-/// ITU-T X.697 (02/2021) §7.2.1 and §24.3 give it its length. A string of another size
-/// than its type gives would be shown as a string that it is not, 20 bits as 24: its IE
-/// has no typed value and stays its octets, as the README says.
+/// A BIT STRING whose type gives one size and an extension marker has its length when
+/// it is of another size (ITU-T X.697 (02/2021) §24.3), and is its octets alone when it
+/// is of that size, as it always was. Both are read, edited and written: the octets
+/// are those that the bindings encode.
 #[test]
-fn an_ie_with_a_string_of_bits_of_another_size_stays_octets() {
+fn a_bit_string_of_another_size_than_its_type_gives_has_its_length() {
     use serde_json::json;
     let capabilities = "/s1ap/UESecurityCapabilities";
-    let member = |of: &str| format!("{capabilities}/{of}");
-    let algorithms = member("encryptionAlgorithms");
-    let other = "/s1ap/eNB-UE-S1AP-ID/value";
+    let algorithms = format!("{capabilities}/encryptionAlgorithms");
+    let message = "UEContextModificationRequest";
 
-    // The size that the type gives is typed: hexadecimal, read and edited.
+    // The size that the type gives: hexadecimal, read and edited.
     let mut view = modification(16).to_view().unwrap();
     assert_eq!(
         inspect::select(&view, &algorithms).unwrap(),
@@ -2146,48 +2148,63 @@ fn an_ie_with_a_string_of_bits_of_another_size_stays_octets() {
         [&json!("8000")]
     );
 
-    // 20 bits and 24 bits are the same three octets to JER. Each is the octets of its IE
-    // beside why it has no value, and the rest of the PDU is read.
-    let mut received = Vec::new();
+    // 20 bits and 24 bits are the same three octets, and not the same string.
     for bits in [20, 24] {
         let pdu = modification(bits);
         let wire = pdu.encode().unwrap();
-        let view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
-        let entry = view["message"]["protocolIEs"][2].clone();
-        let error = entry["_decode_error"].as_str().unwrap_or_default();
-        assert!(
-            error.starts_with("JER does not represent this value"),
-            "{entry}"
-        );
-        assert_eq!(entry["value"], entry["_raw_value"]);
-        assert!(inspect::select(&view, &algorithms).is_err());
-        assert_eq!(inspect::select(&view, other).unwrap(), [&json!(1)]);
+        let mut view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
+        let entry = &view["message"]["protocolIEs"][2];
+        assert!(entry.get("_decode_error").is_none(), "{entry}");
+        let shown = json!({"value": "C00000", "length": bits});
+        assert_eq!(inspect::select(&view, &algorithms).unwrap(), [&shown]);
 
-        // A tree has the octets too, and both forms send them as they were received.
-        let octets = json!({"UESecurityCapabilities": {"octets": entry["_raw_value"]}});
+        // Its two members have paths, which a message is checked against.
+        let length = format!("{algorithms}/length");
+        assert_eq!(inspect::select(&view, &length).unwrap(), [&json!(bits)]);
+        let listed = format!("{capabilities}/value/encryptionAlgorithms/length");
+        let paths = inspect::paths(&view);
+        assert!(paths.iter().any(|(path, _)| *path == listed), "{paths:?}");
+        assert_eq!(inspect::check_path(message, &length), Ok(()));
+
+        // A tree has it, and both forms are the octets that the bindings encoded.
         let tree = pdu.to_tree().unwrap();
-        assert_eq!(tree["ies"][2], octets);
+        let written = &tree["ies"][2]["UESecurityCapabilities"];
+        assert_eq!(written["encryptionAlgorithms"], shown);
         assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
         assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
-        received.push(entry["_raw_value"].clone());
+
+        // Edited to the size of the type, it is what the bindings encode for that.
+        inspect::set(&mut view, &algorithms, json!("C000")).unwrap();
+        assert_eq!(S1AP_PDU::from_view(&view).unwrap(), modification(16));
     }
-    assert_ne!(received[0], received[1]);
 
-    // The octets of the IE are set in its place.
-    let mut view = modification(24).to_view().unwrap();
-    let usual = modification(16).to_view().unwrap();
-    let usual = inspect::select(&usual, &member("octets")).unwrap()[0].clone();
-    inspect::set(&mut view, &member("octets"), usual).unwrap();
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap(), modification(16));
+    // From the size of the type to another one, by the whole value and by its length.
+    let mut view = modification(16).to_view().unwrap();
+    let longer = json!({"value": "C00000", "length": 24});
+    inspect::set(&mut view, &algorithms, longer).unwrap();
+    assert_eq!(S1AP_PDU::from_view(&view).unwrap(), modification(24));
+    inspect::set(&mut view, &format!("{algorithms}/length"), json!(20)).unwrap();
+    assert_eq!(S1AP_PDU::from_view(&view).unwrap(), modification(20));
 
-    // Such a string is not written as a typed value either.
-    let written = json!({"message": "UEContextModificationRequest", "ies": [
-        {"MME-UE-S1AP-ID": 1},
-        {"eNB-UE-S1AP-ID": 1},
-        {"UESecurityCapabilities": {
-            "encryptionAlgorithms": "C00000",
-            "integrityProtectionAlgorithms": "C000",
-        }},
-    ]});
-    assert!(S1AP_PDU::from_tree(&written).is_err());
+    // What is not the string that it says is refused: three octets without a length
+    // are not the 16 bits of the type, and 20 bits are not two octets.
+    let written = |algorithms: serde_json::Value| {
+        S1AP_PDU::from_tree(&json!({"message": message, "ies": [
+            {"MME-UE-S1AP-ID": 1},
+            {"eNB-UE-S1AP-ID": 1},
+            {"UESecurityCapabilities": {
+                "encryptionAlgorithms": algorithms,
+                "integrityProtectionAlgorithms": "C000",
+            }},
+        ]}))
+    };
+    assert!(written(json!("C000")).is_ok());
+    let error = written(json!("C00000")).unwrap_err();
+    assert_eq!(error.kind(), oxirush_s1ap::ErrorKind::Value);
+    assert_eq!(
+        error.to_string(),
+        "this is not a value of UESecurityCapabilities, at encryptionAlgorithms: 3 octets are \
+         written for a bit string of 16 bits, which has 2"
+    );
+    assert!(written(json!({"value": "C000", "length": 20})).is_err());
 }
