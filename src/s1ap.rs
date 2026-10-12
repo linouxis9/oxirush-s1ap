@@ -749,7 +749,7 @@ pub mod s1_ap_ies {
         fn decode_with_tag_and_constraints<D: Decoder>(
             decoder: &mut D,
             tag: Tag,
-            constraints: Constraints,
+            constraints: &Constraints,
         ) -> Result<Self, D::Error> {
             if decoder.codec() != rasn::Codec::Aper {
                 return FixedBitString::<32usize>::decode_with_tag_and_constraints(
@@ -761,9 +761,9 @@ pub mod s1_ap_ies {
             }
             const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
             const REST: Constraints = rasn::constraints!(rasn::size_constraint!(24));
-            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
             let mut bits = BitString::from_element(first);
-            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
             let mut value = FixedBitString::<32usize>::ZERO;
             value[..32].copy_from_bitslice(&bits);
             Ok(Self(value))
@@ -1451,7 +1451,7 @@ pub mod s1_ap_ies {
         fn decode_with_tag_and_constraints<D: Decoder>(
             decoder: &mut D,
             tag: Tag,
-            constraints: Constraints,
+            constraints: &Constraints,
         ) -> Result<Self, D::Error> {
             if decoder.codec() != rasn::Codec::Aper {
                 return FixedBitString::<27usize>::decode_with_tag_and_constraints(
@@ -1463,9 +1463,9 @@ pub mod s1_ap_ies {
             }
             const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
             const REST: Constraints = rasn::constraints!(rasn::size_constraint!(19));
-            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
             let mut bits = BitString::from_element(first);
-            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
             let mut value = FixedBitString::<27usize>::ZERO;
             value[..27].copy_from_bitslice(&bits);
             Ok(Self(value))
@@ -2029,7 +2029,7 @@ pub mod s1_ap_ies {
         fn decode_with_tag_and_constraints<D: Decoder>(
             decoder: &mut D,
             tag: Tag,
-            constraints: Constraints,
+            constraints: &Constraints,
         ) -> Result<Self, D::Error> {
             if decoder.codec() != rasn::Codec::Aper {
                 return FixedBitString::<28usize>::decode_with_tag_and_constraints(
@@ -2041,9 +2041,9 @@ pub mod s1_ap_ies {
             }
             const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
             const REST: Constraints = rasn::constraints!(rasn::size_constraint!(20));
-            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
             let mut bits = BitString::from_element(first);
-            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
             let mut value = FixedBitString::<28usize>::ZERO;
             value[..28].copy_from_bitslice(&bits);
             Ok(Self(value))
@@ -3000,53 +3000,53 @@ pub mod s1_ap_ies {
             if tag == Tag::new(Class::Context, 0) {
                 const SIZE: Constraints = rasn::constraints!(rasn::size_constraint!(20));
                 if decoder.codec() != rasn::Codec::Aper {
-                    return BitString::decode_with_tag_and_constraints(decoder, tag, SIZE)
+                    return BitString::decode_with_tag_and_constraints(decoder, tag, &SIZE)
                         .map(Self::macroENB_ID);
                 }
                 const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
                 const REST: Constraints = rasn::constraints!(rasn::size_constraint!(12));
-                let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+                let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
                 let mut bits = BitString::from_element(first);
-                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
                 return Ok(Self::macroENB_ID(bits));
             }
             if tag == Tag::new(Class::Context, 1) {
                 const SIZE: Constraints = rasn::constraints!(rasn::size_constraint!(28));
                 if decoder.codec() != rasn::Codec::Aper {
-                    return BitString::decode_with_tag_and_constraints(decoder, tag, SIZE)
+                    return BitString::decode_with_tag_and_constraints(decoder, tag, &SIZE)
                         .map(Self::homeENB_ID);
                 }
                 const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
                 const REST: Constraints = rasn::constraints!(rasn::size_constraint!(20));
-                let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+                let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
                 let mut bits = BitString::from_element(first);
-                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
                 return Ok(Self::homeENB_ID(bits));
             }
             if tag == Tag::new(Class::Context, 2) {
                 const SIZE: Constraints = rasn::constraints!(rasn::size_constraint!(18));
                 if decoder.codec() != rasn::Codec::Aper {
-                    return BitString::decode_with_tag_and_constraints(decoder, tag, SIZE)
+                    return BitString::decode_with_tag_and_constraints(decoder, tag, &SIZE)
                         .map(Self::short_macroENB_ID);
                 }
                 const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
                 const REST: Constraints = rasn::constraints!(rasn::size_constraint!(10));
-                let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+                let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
                 let mut bits = BitString::from_element(first);
-                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
                 return Ok(Self::short_macroENB_ID(bits));
             }
             if tag == Tag::new(Class::Context, 3) {
                 const SIZE: Constraints = rasn::constraints!(rasn::size_constraint!(21));
                 if decoder.codec() != rasn::Codec::Aper {
-                    return BitString::decode_with_tag_and_constraints(decoder, tag, SIZE)
+                    return BitString::decode_with_tag_and_constraints(decoder, tag, &SIZE)
                         .map(Self::long_macroENB_ID);
                 }
                 const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
                 const REST: Constraints = rasn::constraints!(rasn::size_constraint!(13));
-                let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+                let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
                 let mut bits = BitString::from_element(first);
-                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+                bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
                 return Ok(Self::long_macroENB_ID(bits));
             }
             Err(rasn::de::Error::no_valid_choice("ENBID", decoder.codec()))
@@ -3056,12 +3056,12 @@ pub mod s1_ap_ies {
         fn decode_with_tag_and_constraints<D: Decoder>(
             decoder: &mut D,
             tag: Tag,
-            _: Constraints,
+            _: &Constraints,
         ) -> Result<Self, D::Error> {
             decoder.decode_explicit_prefix(tag)
         }
         fn decode<D: Decoder>(decoder: &mut D) -> Result<Self, D::Error> {
-            decoder.decode_choice(Self::CONSTRAINTS)
+            decoder.decode_choice(&Self::CONSTRAINTS)
         }
     }
     #[derive(AsnType, Debug, Clone, Encode, PartialEq, Eq, Hash)]
@@ -5194,7 +5194,7 @@ pub mod s1_ap_ies {
         fn decode_with_tag_and_constraints<D: Decoder>(
             decoder: &mut D,
             tag: Tag,
-            constraints: Constraints,
+            constraints: &Constraints,
         ) -> Result<Self, D::Error> {
             if decoder.codec() != rasn::Codec::Aper {
                 return FixedBitString::<64usize>::decode_with_tag_and_constraints(
@@ -5206,9 +5206,9 @@ pub mod s1_ap_ies {
             }
             const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
             const REST: Constraints = rasn::constraints!(rasn::size_constraint!(56));
-            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
             let mut bits = BitString::from_element(first);
-            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
             let mut value = FixedBitString::<64usize>::ZERO;
             value[..64].copy_from_bitslice(&bits);
             Ok(Self(value))
@@ -5271,7 +5271,7 @@ pub mod s1_ap_ies {
         fn decode_with_tag_and_constraints<D: Decoder>(
             decoder: &mut D,
             tag: Tag,
-            constraints: Constraints,
+            constraints: &Constraints,
         ) -> Result<Self, D::Error> {
             if decoder.codec() != rasn::Codec::Aper {
                 return FixedBitString::<32usize>::decode_with_tag_and_constraints(
@@ -5283,9 +5283,9 @@ pub mod s1_ap_ies {
             }
             const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
             const REST: Constraints = rasn::constraints!(rasn::size_constraint!(24));
-            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
             let mut bits = BitString::from_element(first);
-            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
             let mut value = FixedBitString::<32usize>::ZERO;
             value[..32].copy_from_bitslice(&bits);
             Ok(Self(value))
@@ -5514,7 +5514,7 @@ pub mod s1_ap_ies {
         fn decode_with_tag_and_constraints<D: Decoder>(
             decoder: &mut D,
             tag: Tag,
-            constraints: Constraints,
+            constraints: &Constraints,
         ) -> Result<Self, D::Error> {
             if decoder.codec() != rasn::Codec::Aper {
                 return FixedBitString::<36usize>::decode_with_tag_and_constraints(
@@ -5526,9 +5526,9 @@ pub mod s1_ap_ies {
             }
             const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
             const REST: Constraints = rasn::constraints!(rasn::size_constraint!(28));
-            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
             let mut bits = BitString::from_element(first);
-            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
             let mut value = FixedBitString::<36usize>::ZERO;
             value[..36].copy_from_bitslice(&bits);
             Ok(Self(value))
@@ -6387,7 +6387,7 @@ pub mod s1_ap_ies {
         fn decode_with_tag_and_constraints<D: Decoder>(
             decoder: &mut D,
             tag: Tag,
-            constraints: Constraints,
+            constraints: &Constraints,
         ) -> Result<Self, D::Error> {
             if decoder.codec() != rasn::Codec::Aper {
                 return FixedBitString::<4096usize>::decode_with_tag_and_constraints(
@@ -6399,9 +6399,9 @@ pub mod s1_ap_ies {
             }
             const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
             const REST: Constraints = rasn::constraints!(rasn::size_constraint!(4088));
-            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
             let mut bits = BitString::from_element(first);
-            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
             let mut value = FixedBitString::<4096usize>::ZERO;
             value[..4096].copy_from_bitslice(&bits);
             Ok(Self(value))
@@ -6963,7 +6963,7 @@ pub mod s1_ap_ies {
         fn decode_with_tag_and_constraints<D: Decoder>(
             decoder: &mut D,
             tag: Tag,
-            constraints: Constraints,
+            constraints: &Constraints,
         ) -> Result<Self, D::Error> {
             if decoder.codec() != rasn::Codec::Aper {
                 return FixedBitString::<256usize>::decode_with_tag_and_constraints(
@@ -6975,9 +6975,9 @@ pub mod s1_ap_ies {
             }
             const OCTET: Constraints = rasn::constraints!(rasn::value_constraint!(0, 255));
             const REST: Constraints = rasn::constraints!(rasn::size_constraint!(248));
-            let first = decoder.decode_integer::<u8>(Tag::INTEGER, OCTET)?;
+            let first = decoder.decode_integer::<u8>(Tag::INTEGER, &OCTET)?;
             let mut bits = BitString::from_element(first);
-            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, REST)?);
+            bits.extend_from_bitslice(&decoder.decode_bit_string(Tag::BIT_STRING, &REST)?);
             let mut value = FixedBitString::<256usize>::ZERO;
             value[..256].copy_from_bitslice(&bits);
             Ok(Self(value))

@@ -1110,7 +1110,7 @@ macros give typed construction, extraction and mutation.
 | rasn features | `bytes` storage is on; `f32` and `f64`, which nothing uses, are off. |
 | Complete values | `S1AP_PDU::decode`, `decode_value` and the extraction of a typed IE refuse incomplete values and trailing whole octets. |
 
-rasn 0.28's APER codec departs from ITU-T X.691 where S1AP reaches it. There
+rasn 0.29's APER codec departs from ITU-T X.691 where S1AP reaches it. There
 the generator replaces the derived codec with `Encode` and `Decode`
 implementations written against rasn's public codec traits; every other value
 uses the derived codec unchanged.

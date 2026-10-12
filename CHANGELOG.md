@@ -5,11 +5,17 @@ All notable changes to `oxirush-s1ap` are recorded here.
 ## Unreleased (0.3.0)
 
 The bindings come from TS 36.413 V19.2.0 (Release 19) instead of V16.6.0,
-and the APER codec follows ITU-T X.691 where rasn 0.28 departs from it. It
+and the APER codec follows ITU-T X.691 where rasn 0.29 departs from it. It
 is not source compatible with 0.2.0.
 
 ### Breaking changes relative to 0.2.0
 
+- The crate is built with rasn 0.29, where 0.2.0 had rasn 0.28, and
+  `oxirush_s1ap::rasn` is that version: the values of the bindings are its
+  types. A crate that depends on `rasn` itself beside this one moves to
+  0.29 with it, or takes the types from `oxirush_s1ap::rasn`. rasn 0.29
+  takes constraints by reference: an `Encode` or a `Decode` that is written
+  by hand has `&Constraints` where it had `Constraints`.
 - The bindings are generated from the Release 19 ASN.1 (`36413-j20`), with
   every procedure, IE and extension up to Release 19.
 - Each protocol IE container, each extension container and their fields are
@@ -27,7 +33,7 @@ is not source compatible with 0.2.0.
 - The macros name each IE by its own identifier before any type alias, and a
   type name is an alias only for the one IE of that type: `GUMMEI` built
   id-GUMMEI-ID where a PATH SWITCH REQUEST carries id-SourceMME-GUMMEI.
-- The minimum supported Rust version is 1.88, which rasn 0.28.15 needs:
+- The minimum supported Rust version is 1.88, which rasn needs:
   0.2.0 declared 1.85.
 - `helpers::plmn` writes other octets for an MNC of three digits, and
   `helpers::plmn_from` reads them: see the first entry of Fixed.
