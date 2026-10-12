@@ -11,7 +11,7 @@
 //! the example needs no dependency on it.
 //!
 //! For the ergonomic `build_s1ap!` / `extract_s1ap_ies!` versions, see
-//! `build_pdu.rs` and `extract_ies.rs`.
+//! `s1ap_build_pdu.rs` and `s1ap_extract_ies.rs`.
 
 use oxirush_s1ap::aper;
 use oxirush_s1ap::s1ap::*;

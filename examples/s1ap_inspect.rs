@@ -2,7 +2,7 @@
 //! it again.
 //!
 //! ```sh
-//! cargo run --example inspect --features inspect
+//! cargo run --example s1ap_inspect --features inspect
 //! ```
 
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};

@@ -177,7 +177,7 @@ fn main() -> Result<(), Error> {
         println!();
     }
 
-    // The `decode_manually` example reads the IEs of a message by hand, which is
+    // The `s1ap_decode_manually` example reads the IEs of a message by hand, which is
     // what `extract_s1ap_ies!` does for each field.
     Ok(())
 }

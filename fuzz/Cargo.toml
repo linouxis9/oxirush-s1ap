@@ -27,6 +27,7 @@ features = ["inspect"]
 [dependencies.oracle]
 package = "oxirush-s1ap-oracle"
 path = "../oracle"
+features = ["rasn"]
 
 # Not part of any parent workspace.
 [workspace]
