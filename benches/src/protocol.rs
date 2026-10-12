@@ -26,8 +26,11 @@ use codec::s1ap;
 use codec::{Error, build_s1ap, extract_s1ap_ies};
 use serde_json::{Value, json};
 
-/// A PDU of the protocol.
+/// A PDU of the protocol, which owns its octets.
 pub type Pdu = s1ap::S1AP_PDU;
+
+/// A PDU that borrows its message from the octets that it is decoded from.
+pub type Borrowed<'a> = s1ap::S1APPDU<'a>;
 
 /// The fixtures of the crate: a line for each message, with its name and its
 /// octets in hexadecimal.
@@ -41,43 +44,56 @@ pub const ROOT: &str = "/s1ap";
 /// as the macros name it, with its criticality and the type of its value.
 macro_rules! typed {
     ($direction:ident $procedure:ident $criticality:ident $message:ident {
-        $($ie_criticality:ident $ie:ident: $type:ident,)*
+        $($ie_criticality:ident $ie:ident: $type:ident $(<$borrows:lifetime>)?,)*
     }) => {{
-        /// The values of the IEs of the message, in their order.
-        type Values = ($(s1ap::$type,)*);
+        /// The values of the IEs of the message, in their order. Those that hold
+        /// octets borrow them.
+        type Values<'a> = ($(s1ap::$type $(<$borrows>)?,)*);
 
         #[allow(non_snake_case)]
-        fn read(message: &s1ap::$message) -> Result<Values, Error> {
+        fn read<'a>(message: &'a s1ap::$message<'a>) -> Result<Values<'a>, Error> {
             extract_s1ap_ies!(message, $message,
-                $(req $ie: s1ap::$type = $ie(value) => value,)*
+                $(req $ie: s1ap::$type $(<$borrows>)? = $ie(value) => value,)*
             );
             Ok(($($ie,)*))
         }
 
+        /// The same values, which borrow nothing.
         #[allow(non_snake_case)]
-        fn build(($($ie,)*): Values) -> Result<Pdu, Error> {
+        fn owned(($($ie,)*): Values<'_>) -> Values<'static> {
+            ($(typed!(@owned $ie $(, $borrows)?),)*)
+        }
+
+        #[allow(non_snake_case)]
+        fn build(($($ie,)*): Values<'_>) -> Result<Pdu, Error> {
             build_s1ap!($direction, $procedure, $criticality, $message,
                 $($ie_criticality $ie($ie),)*
             )
         }
 
-        fn message(pdu: &Pdu) -> s1ap::$message {
+        fn message(pdu: &Pdu) -> s1ap::$message<'_> {
             pdu.decode_value().unwrap()
         }
 
         Typed {
-            decode_value: |pdu| done(pdu.decode_value::<s1ap::$message>()),
+            decode_value: |pdu| done(pdu.decode_value::<s1ap::$message<'_>>()),
             extract: |pdu| {
                 let message = message(pdu);
                 Box::new(move || done(read(&message)))
             },
             build: |pdu| {
-                let mut values = Some(read(&message(pdu)).unwrap());
+                let mut values = Some(owned(read(&message(pdu)).unwrap()));
                 Box::new(move || done(build(values.take().unwrap())))
             },
             rebuilt: |pdu| build(read(&message(pdu)).unwrap()).unwrap(),
         }
     }};
+    (@owned $value:ident) => {
+        $value
+    };
+    (@owned $value:ident, $borrows:lifetime) => {
+        $value.into_owned()
+    };
 }
 
 /// `length` octets in hexadecimal, which are not all the same.
@@ -146,12 +162,12 @@ fn initial_context_setup_request() -> Written {
         typed: typed!(InitiatingMessage InitialContextSetup REJECT InitialContextSetupRequest {
             REJECT MME_UE_S1AP_ID: MMEUES1APID,
             REJECT eNB_UE_S1AP_ID: ENBUES1APID,
-            REJECT uEaggregateMaximumBitrate: UEAggregateMaximumBitrate,
-            REJECT E_RABToBeSetupListCtxtSUReq: ERABToBeSetupListCtxtSUReq,
-            REJECT UESecurityCapabilities: UESecurityCapabilities,
-            REJECT SecurityKey: SecurityKey,
-            IGNORE HandoverRestrictionList: HandoverRestrictionList,
-            IGNORE UERadioCapability: UERadioCapability,
+            REJECT uEaggregateMaximumBitrate: UEAggregateMaximumBitrate<'a>,
+            REJECT E_RABToBeSetupListCtxtSUReq: ERABToBeSetupListCtxtSUReq<'a>,
+            REJECT UESecurityCapabilities: UESecurityCapabilities<'a>,
+            REJECT SecurityKey: SecurityKey<'a>,
+            IGNORE HandoverRestrictionList: HandoverRestrictionList<'a>,
+            IGNORE UERadioCapability: UERadioCapability<'a>,
             IGNORE Masked_IMEISV: MaskedIMEISV,
         }),
     }
@@ -178,8 +194,8 @@ fn e_rab_setup_request() -> Written {
         typed: typed!(InitiatingMessage E_RABSetup REJECT ERABSetupRequest {
             REJECT MME_UE_S1AP_ID: MMEUES1APID,
             REJECT eNB_UE_S1AP_ID: ENBUES1APID,
-            REJECT uEaggregateMaximumBitrate: UEAggregateMaximumBitrate,
-            REJECT E_RABToBeSetupListBearerSUReq: ERABToBeSetupListBearerSUReq,
+            REJECT uEaggregateMaximumBitrate: UEAggregateMaximumBitrate<'a>,
+            REJECT E_RABToBeSetupListBearerSUReq: ERABToBeSetupListBearerSUReq<'a>,
         }),
     }
 }
@@ -228,9 +244,9 @@ fn handover_required() -> Written {
             REJECT eNB_UE_S1AP_ID: ENBUES1APID,
             REJECT HandoverType: HandoverType,
             IGNORE Cause: Cause,
-            REJECT TargetID: TargetID,
+            REJECT TargetID: TargetID<'a>,
             IGNORE Direct_Forwarding_Path_Availability: DirectForwardingPathAvailability,
-            REJECT Source_ToTarget_TransparentContainer: SourceToTargetTransparentContainer,
+            REJECT Source_ToTarget_TransparentContainer: SourceToTargetTransparentContainer<'a>,
         }),
     }
 }
@@ -254,10 +270,10 @@ fn paging() -> Written {
         edit: ("/s1ap/TAIList/15/TAIItem/tAI/tAC", json!(17)),
         typed: typed!(InitiatingMessage Paging IGNORE Paging {
             IGNORE UEIdentityIndexValue: UEIdentityIndexValue,
-            IGNORE UEPagingID: UEPagingID,
+            IGNORE UEPagingID: UEPagingID<'a>,
             IGNORE pagingDRX: PagingDRX,
             IGNORE CNDomain: CNDomain,
-            IGNORE TAIList: TAIList,
+            IGNORE TAIList: TAIList<'a>,
             IGNORE PagingPriority: PagingPriority,
         }),
     }

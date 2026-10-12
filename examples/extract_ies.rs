@@ -5,7 +5,6 @@
 //! inside the Initial Context Setup E-RAB list.
 
 use oxirush_s1ap::helpers::*;
-use oxirush_s1ap::rasn::types::FixedBitString;
 use oxirush_s1ap::s1ap::*;
 use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies};
 
@@ -143,7 +142,7 @@ fn main() -> Result<(), Error> {
         REJECT E_RABToBeSetupListCtxtSUReq(erabs),
 
         REJECT UESecurityCapabilities(ue_security_capabilities(0xe0, 0xe0)),
-        REJECT SecurityKey(SecurityKey(FixedBitString::<256>::ZERO)),
+        REJECT SecurityKey([0; 32]),
     )?;
 
     // Encode → decode round-trip, then extract.
@@ -183,15 +182,15 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn target_enb() -> Result<TargetID, Error> {
+fn target_enb() -> Result<TargetID<'static>, Error> {
     let network = plmn("208", "93")?;
-    let enb = global_enb_id(network.clone(), 0x12345)?;
+    let enb = global_enb_id(network, 0x12345)?;
     let area = tai(network, [0x00, 0x01]);
 
     Ok(TargetID::targeteNB_ID(TargeteNBID::new(enb, area, None)))
 }
 
-fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
+fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq<'static> {
     let qos = ERABLevelQoSParameters::new(
         QCI(9),
         AllocationAndRetentionPriority::new(
@@ -205,9 +204,9 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
     );
 
     let item = ERABToBeSetupItemCtxtSUReq::new(
-        ERABID(5u8.into()),
+        ERABID(5),
         qos,
-        TransportLayerAddress(bytes_to_bitvec(&[10, 0, 0, 1])),
+        TransportLayerAddress([10, 0, 0, 1].into()),
         GTPTEID::from([0, 0, 0, 1]),
         Some(NASPDU::from(nas)),
         None,

@@ -7,7 +7,7 @@
 //! gives an [`Error`] of the kind `Argument` for a number that does not fit,
 //! and cuts none short.
 
-use rasn::types::{BitString, FixedBitString, FixedOctetString};
+use oxirush_aper::{BitString, Bits};
 
 use crate::Error;
 use crate::s1ap::*;
@@ -20,37 +20,6 @@ fn fits(what: &str, value: u64, bits: u32) -> Result<u64, Error> {
             "{what} {value} does not fit in {bits} bits"
         ))),
     }
-}
-
-/// Convert an integer to a most-significant-bit-first bit string of `width` bits.
-///
-/// An error of the kind `Argument` for a width over the 64 bits of the value, and
-/// for a value that does not fit in `width` bits.
-pub fn int_to_bitvec(value: u64, width: usize) -> Result<BitString, Error> {
-    let bits = u32::try_from(width).ok().filter(|bits| *bits <= 64);
-    let bits = bits.ok_or_else(|| {
-        Error::argument(format!(
-            "a bit string of {width} bits does not come from a number of 64 bits"
-        ))
-    })?;
-    let value = fits("the number", value, bits)?;
-    Ok((0..bits).rev().map(|bit| (value >> bit) & 1 == 1).collect())
-}
-
-/// Convert bytes to a most-significant-bit-first bit string.
-pub fn bytes_to_bitvec(bytes: &[u8]) -> BitString {
-    bytes
-        .iter()
-        .flat_map(|byte| (0..8u8).rev().map(move |bit| (byte >> bit) & 1 == 1))
-        .collect()
-}
-
-fn fixed_bit_string<const N: usize>(value: u64) -> FixedBitString<N> {
-    let mut bits = FixedBitString::<N>::ZERO;
-    for index in 0..N {
-        bits.set(index, (value >> (N - index - 1)) & 1 == 1);
-    }
-    bits
 }
 
 /// The octets of the PLMN identity of an MCC and an MNC: the three digits of `mcc`, and
@@ -118,7 +87,7 @@ pub fn plmn(mcc: &str, mnc: &str) -> Result<PLMNidentity, Error> {
     let mcc_digits = mcc_digits.ok_or_else(|| refused("an MCC", mcc, "three"))?;
     let octets = digits(mnc).and_then(|mnc| plmn_octets(mcc_digits, &mnc));
     let octets = octets.ok_or_else(|| refused("an MNC", mnc, "two or three"))?;
-    Ok(PLMNidentity(TBCDSTRING(FixedOctetString::new(octets))))
+    Ok(PLMNidentity(TBCDSTRING(octets)))
 }
 
 /// Decode a `PLMNidentity` into MCC and MNC strings, in the order of
@@ -128,23 +97,22 @@ pub fn plmn(mcc: &str, mnc: &str) -> Result<PLMNidentity, Error> {
 /// is not the filler before an MNC of two digits. `ab cd ef` is none, and so is
 /// `02 f8 f9`.
 pub fn plmn_from(identity: &PLMNidentity) -> Option<(String, String)> {
-    let octets = &identity.0.0;
-    plmn_digits([octets[0], octets[1], octets[2]])
+    plmn_digits(identity.0.0)
 }
 
 /// Build a Globally Unique MME Identifier.
-pub fn gummei(plmn_identity: PLMNidentity, mme_group_id: u16, mme_code: u8) -> GUMMEI {
+pub fn gummei(plmn_identity: PLMNidentity, mme_group_id: u16, mme_code: u8) -> GUMMEI<'static> {
     GUMMEI::new(
         plmn_identity,
-        MMEGroupID(FixedOctetString::new(mme_group_id.to_be_bytes())),
-        MMECode(FixedOctetString::new([mme_code])),
+        MMEGroupID(mme_group_id.to_be_bytes()),
+        MMECode([mme_code]),
         None,
     )
 }
 
 /// Build an LTE Tracking Area Identity: a PLMN and the two octets of a TAC.
-pub fn tai(plmn_identity: PLMNidentity, tac: [u8; 2]) -> TAI {
-    TAI::new(plmn_identity, TAC(FixedOctetString::new(tac)), None)
+pub fn tai(plmn_identity: PLMNidentity, tac: [u8; 2]) -> TAI<'static> {
+    TAI::new(plmn_identity, TAC(tac), None)
 }
 
 /// Build an E-UTRAN Cell Global Identifier from a 20-bit macro eNB ID and 8-bit cell ID.
@@ -156,12 +124,12 @@ pub fn eutran_cgi(
     plmn_identity: PLMNidentity,
     enb_id: u32,
     cell_id: u8,
-) -> Result<EUTRANCGI, Error> {
+) -> Result<EUTRANCGI<'static>, Error> {
     let enb_id = fits("the macro eNB ID", enb_id.into(), 20)?;
     let eci = (enb_id << 8) | u64::from(cell_id);
     Ok(EUTRANCGI::new(
         plmn_identity,
-        CellIdentity(fixed_bit_string::<28>(eci)),
+        CellIdentity(Bits::low(eci, 28)),
         None,
     ))
 }
@@ -170,11 +138,14 @@ pub fn eutran_cgi(
 ///
 /// An error of the kind `Argument` for an eNB ID that does not fit in 20 bits
 /// (TS 36.413 clause 9.2.1.37).
-pub fn global_enb_id(plmn_identity: PLMNidentity, enb_id: u32) -> Result<GlobalENBID, Error> {
+pub fn global_enb_id(
+    plmn_identity: PLMNidentity,
+    enb_id: u32,
+) -> Result<GlobalENBID<'static>, Error> {
     let enb_id = fits("the macro eNB ID", enb_id.into(), 20)?;
     Ok(GlobalENBID::new(
         plmn_identity,
-        ENBID::macroENB_ID(int_to_bitvec(enb_id, 20)?),
+        ENBID::macroENB_ID(Bits::low(enb_id, 20)),
         None,
     ))
 }
@@ -186,13 +157,9 @@ pub fn global_enb_id(plmn_identity: PLMNidentity, enb_id: u32) -> Result<GlobalE
 /// 128-EEA1 or 128-EIA1 (TS 36.413 §9.2.1.40). The octets of the NAS UE
 /// network capability IE lead with EEA0 and EIA0 (TS 24.301 §9.9.3.34), so
 /// shift them left by one bit first.
-pub fn ue_security_capabilities(encryption: u8, integrity: u8) -> UESecurityCapabilities {
-    let algorithms = |byte: u8| {
-        (0..16u8)
-            .map(|index| index < 8 && (byte >> (7 - index)) & 1 == 1)
-            .collect()
-    };
-
+pub fn ue_security_capabilities(encryption: u8, integrity: u8) -> UESecurityCapabilities<'static> {
+    // Sixteen bits, of which the first eight are the algorithms.
+    let algorithms = |byte: u8| BitString::from([byte, 0]);
     UESecurityCapabilities::new(
         EncryptionAlgorithms(algorithms(encryption)),
         IntegrityProtectionAlgorithms(algorithms(integrity)),
@@ -209,7 +176,7 @@ mod tests {
     fn security_capability_octets_lead_with_the_first_algorithm() {
         // 128-EEA1 and 128-EEA2; 128-EIA2.
         let capabilities = ue_security_capabilities(0xC0, 0x40);
-        let leading = |bits: &BitString| bits.iter().take(3).map(|bit| *bit).collect::<Vec<_>>();
+        let leading = |bits: &BitString| (0..3).map(|at| bits.get(at).unwrap()).collect::<Vec<_>>();
         assert_eq!(
             leading(&capabilities.encryption_algorithms.0),
             [true, true, false]
@@ -223,7 +190,7 @@ mod tests {
     #[test]
     fn plmn_round_trips_for_two_digit_mnc() {
         let identity = plmn("208", "93").unwrap();
-        assert_eq!(&identity.0.0[..], &[0x02, 0xF8, 0x39]);
+        assert_eq!(identity.0.0, [0x02, 0xF8, 0x39]);
         assert_eq!(plmn_from(&identity), Some(("208".into(), "93".into())));
     }
 
@@ -231,7 +198,7 @@ mod tests {
     fn plmn_round_trips_for_three_digit_mnc() {
         // The digits 9 9 9 0 7 0, two in each octet, the second over the first.
         let identity = plmn("999", "070").unwrap();
-        assert_eq!(&identity.0.0[..], &[0x99, 0x09, 0x07]);
+        assert_eq!(identity.0.0, [0x99, 0x09, 0x07]);
         assert_eq!(plmn_from(&identity), Some(("999".into(), "070".into())));
     }
 
@@ -287,25 +254,17 @@ mod tests {
         let plmn = plmn("208", "93").unwrap();
         // The 20-bit eNB ID and the 8-bit cell: a 28-bit cell identity,
         // octet-aligned after the PLMN (X.691 (02/2021) §16.10).
-        let cgi = eutran_cgi(plmn.clone(), 0x12345, 0x67).unwrap();
+        let cgi = eutran_cgi(plmn, 0x12345, 0x67).unwrap();
+        assert_eq!(cgi.cell_id.0, Bits::new(0x123_4567, 28).unwrap());
         assert_eq!(
-            cgi.cell_id.0[..28],
-            int_to_bitvec(0x123_4567, 28).unwrap()[..]
-        );
-        assert_eq!(
-            rasn::aper::encode(&cgi).unwrap(),
+            oxirush_aper::encode(&cgi).unwrap(),
             [0x00, 0x02, 0xf8, 0x39, 0x12, 0x34, 0x56, 0x70]
         );
         let enb = global_enb_id(plmn, 0x12345).unwrap();
         let ENBID::macroENB_ID(bits) = enb.e_nb_id else {
             panic!("expected macro eNB ID");
         };
-        assert_eq!(bits, int_to_bitvec(0x12345, 20).unwrap());
-    }
-
-    /// The number that the bits are, the first bit the most significant.
-    fn number(bits: impl Iterator<Item = bool>) -> u64 {
-        bits.fold(0, |number, bit| number << 1 | u64::from(bit))
+        assert_eq!(bits, Bits::new(0x12345, 20).unwrap());
     }
 
     #[test]
@@ -321,7 +280,7 @@ mod tests {
         let ENBID::macroENB_ID(last) = global_enb_id(network(), 0xf_ffff).unwrap().e_nb_id else {
             panic!("expected macro eNB ID");
         };
-        assert_eq!(number(last.iter().map(|bit| *bit)), 0xf_ffff);
+        assert_eq!((last.value(), last.len()), (0xf_ffff, 20));
         assert_eq!(
             argument(global_enb_id(network(), 0x10_0000).unwrap_err()),
             "the macro eNB ID 1048576 does not fit in 20 bits"
@@ -330,30 +289,6 @@ mod tests {
         assert_eq!(
             argument(eutran_cgi(network(), 0x10_0000, 1).unwrap_err()),
             "the macro eNB ID 1048576 does not fit in 20 bits"
-        );
-    }
-
-    #[test]
-    fn a_bit_string_has_the_bits_of_a_number_that_fits_its_width() {
-        let bits = int_to_bitvec(0b101, 3).unwrap();
-        assert_eq!(
-            bits.iter().map(|bit| *bit).collect::<Vec<_>>(),
-            [true, false, true]
-        );
-        assert_eq!(int_to_bitvec(0, 0).unwrap().len(), 0);
-        assert_eq!(
-            number(int_to_bitvec(u64::MAX, 64).unwrap().iter().map(|bit| *bit)),
-            u64::MAX
-        );
-        // A number of more bits than the width, and a width of more bits than a number.
-        let wide = int_to_bitvec(0b1000, 3).unwrap_err();
-        assert_eq!(wide.kind(), ErrorKind::Argument);
-        assert_eq!(wide.to_string(), "the number 8 does not fit in 3 bits");
-        let long = int_to_bitvec(1, 65).unwrap_err();
-        assert_eq!(long.kind(), ErrorKind::Argument);
-        assert_eq!(
-            long.to_string(),
-            "a bit string of 65 bits does not come from a number of 64 bits"
         );
     }
 

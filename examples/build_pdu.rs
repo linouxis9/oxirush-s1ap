@@ -2,11 +2,10 @@
 //!
 //! The examples cover simple and complex context setup, UE release, handover
 //! outcomes, failure handling, and standalone IE construction. The macro
-//! invocations hide numeric IDs and rasn open-type encoding; the commented
+//! invocations hide numeric IDs and open-type encoding; the commented
 //! construction at the end shows the equivalent generated types.
 
 use oxirush_s1ap::helpers::*;
-use oxirush_s1ap::rasn::types::FixedBitString;
 use oxirush_s1ap::s1ap::*;
 use oxirush_s1ap::{Error, build_s1ap, build_s1ap_ie};
 
@@ -66,10 +65,10 @@ fn main() -> Result<(), Error> {
 
         // Its security capabilities and its key
         REJECT UESecurityCapabilities(ue_security_capabilities(0xe0, 0xe0)),
-        REJECT SecurityKey(SecurityKey(FixedBitString::<256>::ZERO)),
+        REJECT SecurityKey([0; 32]),
 
         // Its MME
-        IGNORE GUMMEI_ID(gummei(network.clone(), 1, 1)),
+        IGNORE GUMMEI_ID(gummei(network, 1, 1)),
     )?;
 
     println!("\n=== 3. InitialContextSetupRequest (complex) ===");
@@ -81,7 +80,7 @@ fn main() -> Result<(), Error> {
     // identity is mandatory in S1AP, and the transparent container uses the
     // ASN.1-derived underscore spelling accepted by the macro.
 
-    let target_enb = global_enb_id(network.clone(), 0x12345)?;
+    let target_enb = global_enb_id(network, 0x12345)?;
     let target_area = tai(network, [0x00, 0x01]);
     let target = TargetID::targeteNB_ID(TargeteNBID::new(target_enb, target_area, None));
     let cause = Cause::radioNetwork(CauseRadioNetwork::handover_desirable_for_radio_reason);
@@ -170,10 +169,10 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn erab_setup_list() -> ERABSetupListCtxtSURes {
+fn erab_setup_list() -> ERABSetupListCtxtSURes<'static> {
     let item = ERABSetupItemCtxtSURes::new(
-        ERABID(5u8.into()),
-        TransportLayerAddress(bytes_to_bitvec(&[10, 0, 0, 2])),
+        ERABID(5),
+        TransportLayerAddress([10, 0, 0, 2].into()),
         GTPTEID::from([0, 0, 0, 2]),
         None,
     );
@@ -186,10 +185,10 @@ fn erab_setup_list() -> ERABSetupListCtxtSURes {
     )])
 }
 
-fn erab_admitted_list() -> ERABAdmittedList {
+fn erab_admitted_list() -> ERABAdmittedList<'static> {
     let item = ERABAdmittedItem::new(
-        ERABID(5u8.into()),
-        TransportLayerAddress(bytes_to_bitvec(&[10, 0, 0, 3])),
+        ERABID(5),
+        TransportLayerAddress([10, 0, 0, 3].into()),
         GTPTEID::from([0, 0, 0, 3]),
         None,
         None,
@@ -205,7 +204,7 @@ fn erab_admitted_list() -> ERABAdmittedList {
     )])
 }
 
-fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
+fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq<'static> {
     let qos = ERABLevelQoSParameters::new(
         QCI(9),
         AllocationAndRetentionPriority::new(
@@ -219,9 +218,9 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq {
     );
 
     let item = ERABToBeSetupItemCtxtSUReq::new(
-        ERABID(5u8.into()),
+        ERABID(5),
         qos,
-        TransportLayerAddress(bytes_to_bitvec(&[10, 0, 0, 1])),
+        TransportLayerAddress([10, 0, 0, 1].into()),
         GTPTEID::from([0, 0, 0, 1]),
         Some(NASPDU::from(nas)),
         None,

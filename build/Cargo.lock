@@ -232,6 +232,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
+name = "oxirush-aper-generator"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "quote",
+ "regex",
+ "syn 2.0.98",
+]
+
+[[package]]
+name = "oxirush-s1ap-generator"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "oxirush-aper-generator",
+ "rasn-compiler",
+ "regex",
+]
+
+[[package]]
 name = "pin-project-lite"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -304,16 +324,6 @@ name = "rustversion"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
-
-[[package]]
-name = "oxirush-s1ap-generator"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "rasn-compiler",
- "regex",
- "syn 2.0.98",
-]
 
 [[package]]
 name = "shlex"

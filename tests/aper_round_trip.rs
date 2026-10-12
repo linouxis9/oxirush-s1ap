@@ -1,5 +1,6 @@
+use oxirush_s1ap::aper::{Decode, Encode, decode, encode};
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{Error, ErrorKind, build_s1ap, extract_s1ap_ies};
+use oxirush_s1ap::{Bits, Error, ErrorKind, build_s1ap, extract_s1ap_ies};
 
 #[test]
 fn public_macros_round_trip_typed_open_message() -> Result<(), Error> {
@@ -14,7 +15,7 @@ fn public_macros_round_trip_typed_open_message() -> Result<(), Error> {
         panic!("expected initiating message");
     };
     // Extension bit, octet padding, then the aligned 16-bit ProtocolIE count.
-    assert_eq!(&message.value.as_bytes()[..3], &[0x00, 0x00, 0x03]);
+    assert_eq!(&message.value[..3], &[0x00, 0x00, 0x03]);
 
     let wire = pdu.encode().expect("encode PDU");
     let decoded = S1AP_PDU::decode(&wire).expect("decode PDU");
@@ -76,7 +77,7 @@ fn every_constrained_list_encodes_its_length_per_x691() -> Result<(), Error> {
 fn e_rab_container_lists_encode_their_size_constraint() -> Result<(), Error> {
     let item = ERABAdmittedItem::new(
         ERABID(5u8.into()),
-        TransportLayerAddress(oxirush_s1ap::helpers::bytes_to_bitvec(&[10, 0, 0, 3])),
+        TransportLayerAddress(oxirush_s1ap::BitString::from([10, 0, 0, 3])),
         GTPTEID::from([0, 0, 0, 3]),
         None,
         None,
@@ -104,8 +105,9 @@ fn e_rab_container_lists_encode_their_size_constraint() -> Result<(), Error> {
         "2001002900000400004002000100084002000200124010000014400b00a1f00a00000300000003007b00020155"
     );
 
-    let decoded: HandoverRequestAcknowledge = S1AP_PDU::decode(&wire)
-        .expect("decode PDU")
+    // The message borrows from the PDU, which is kept beside it.
+    let received = S1AP_PDU::decode(&wire).expect("decode PDU");
+    let decoded: HandoverRequestAcknowledge = received
         .decode_value()
         .expect("decode HandoverRequestAcknowledge");
     let ie = decoded
@@ -131,8 +133,8 @@ fn each_ecgi_list_encodes_its_own_size_constraint() -> Result<(), Error> {
     use oxirush_s1ap::helpers::{eutran_cgi, plmn};
 
     let cell = eutran_cgi(plmn("208", "93")?, 0x12345, 1)?;
-    let mut identifier = rasn::types::FixedBitString::<16>::ZERO;
-    identifier.set(0, true);
+    // The first bit of the sixteen.
+    let identifier = Bits::from(0x8000u16);
     let request = build_s1ap!(InitiatingMessage, WriteReplaceWarning,
         REJECT, WriteReplaceWarningRequest,
         REJECT MessageIdentifier(MessageIdentifier(identifier)),
@@ -150,10 +152,10 @@ fn each_ecgi_list_encodes_its_own_size_constraint() -> Result<(), Error> {
 
     let synchronisation =
         SynchronisationInformation::new(None, None, Some(ECGI_List(vec![cell])), None);
-    let wire = rasn::aper::encode(&synchronisation).expect("encode SynchronisationInformation");
+    let wire = encode(&synchronisation).expect("encode SynchronisationInformation");
     assert_eq!(hex::encode(&wire), "10000002f83912345010");
     assert_eq!(
-        rasn::aper::decode::<SynchronisationInformation>(&wire).expect("decode"),
+        decode::<SynchronisationInformation>(&wire).expect("decode"),
         synchronisation
     );
     Ok(())
@@ -165,8 +167,8 @@ fn each_ecgi_list_encodes_its_own_size_constraint() -> Result<(), Error> {
 /// decodes it only from that octet.
 #[test]
 fn empty_encoding_in_an_open_type_is_one_zero_octet() -> Result<(), Error> {
-    let mut identifier = rasn::types::FixedBitString::<16>::ZERO;
-    identifier.set(0, true);
+    // The first bit of the sixteen.
+    let identifier = Bits::from(0x8000u16);
     let kill = build_s1ap!(InitiatingMessage, Kill, REJECT, KillRequest,
         REJECT MessageIdentifier(MessageIdentifier(identifier)),
         REJECT SerialNumber(SerialNumber(identifier)),
@@ -178,10 +180,9 @@ fn empty_encoding_in_an_open_type_is_one_zero_octet() -> Result<(), Error> {
         "002b0014000003006f0002800000700002800000bf000100"
     );
 
-    let request: KillRequest = S1AP_PDU::decode(&wire)
-        .expect("decode PDU")
-        .decode_value()
-        .expect("decode KillRequest");
+    // The message borrows from the PDU, which is kept beside it.
+    let received = S1AP_PDU::decode(&wire).expect("decode PDU");
+    let request: KillRequest = received.decode_value().expect("decode KillRequest");
     extract_s1ap_ies!(&request, KillRequest,
         req kill_all: KillAllWarningMessages = KillAllWarningMessages(value) => value,
     );
@@ -206,10 +207,9 @@ fn reroute_nas_request_carries_the_s1_message_ie() -> Result<(), Error> {
         "0034002c00000300080002000700e1001918000f40140000020002400131003a40087809000000001a4000df00028001"
     );
 
-    let request: RerouteNASRequest = S1AP_PDU::decode(&wire)
-        .expect("decode PDU")
-        .decode_value()
-        .expect("decode RerouteNASRequest");
+    // The message borrows from the PDU, which is kept beside it.
+    let received = S1AP_PDU::decode(&wire).expect("decode PDU");
+    let request: RerouteNASRequest = received.decode_value().expect("decode RerouteNASRequest");
     extract_s1ap_ies!(&request, RerouteNASRequest,
         req s1_message: Vec<u8> = S1_Message(value) => value.to_vec(),
     );
@@ -281,7 +281,7 @@ fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), Er
 }
 
 /// A message with the identifier that the functions below require, or without it.
-fn release_request(id: Option<u32>) -> UEContextReleaseRequest {
+fn release_request(id: Option<u32>) -> UEContextReleaseRequest<'static> {
     let ie =
         |id: u32| oxirush_s1ap::build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(id));
     let ies = id.map(|id| ie(id).expect("an identifier"));
@@ -357,14 +357,15 @@ fn a_missing_required_ie_is_an_error_of_the_crate() {
 /// two reads what the other writes.
 #[test]
 fn a_number_between_the_ranges_of_an_extensible_root_is_written_in_the_root() {
-    let period = |value: u8| {
-        let period = ExpectedActivityPeriod(value.into());
+    let period = |value: u8| -> ExpectedUEActivityBehaviour<'static> {
+        let period = ExpectedActivityPeriod(u64::from(value));
         ExpectedUEActivityBehaviour::new(Some(period), None, None, None)
     };
-    let written = |value| hex::encode(rasn::aper::encode(&period(value)).unwrap());
+    let written = |value| hex::encode(encode(&period(value)).unwrap());
     let read = |octets: &str| {
         let octets = hex::decode(octets).unwrap();
-        rasn::aper::decode::<ExpectedUEActivityBehaviour>(&octets).unwrap()
+        let read = decode::<ExpectedUEActivityBehaviour>(&octets).unwrap();
+        read.into_owned()
     };
 
     // The extension bit of the SEQUENCE, a bit for each of its four members, the
@@ -388,21 +389,18 @@ fn pattern(octets: usize) -> String {
 
 /// `octets`, which pycrate wrote, are a value of `T` that is written as the same octets,
 /// and are none with an octet less.
-fn as_pycrate_writes_it<T: rasn::Decode + rasn::Encode>(octets: &str) -> T {
-    let octets = hex::decode(octets).unwrap();
-    let value = rasn::aper::decode::<T>(&octets).expect("decode");
-    assert_eq!(
-        hex::encode(rasn::aper::encode(&value).unwrap()),
-        hex::encode(&octets)
-    );
-    assert!(rasn::aper::decode::<T>(&octets[..octets.len() - 1]).is_err());
+fn as_pycrate_writes_it<T: Decode<'static> + Encode>(octets: &str) -> T {
+    // The value borrows from the octets, which a test keeps to its end.
+    let octets: &'static [u8] = hex::decode(octets).unwrap().leak();
+    let value = decode::<T>(octets).expect("decode");
+    assert_eq!(hex::encode(encode(&value).unwrap()), hex::encode(octets));
+    assert!(decode::<T>(&octets[..octets.len() - 1]).is_err());
     value
 }
 
 /// A string whose size has a range of 256 or more is after a length of two octets,
 /// which starts an octet (X.691 (02/2021) §11.5.7.3, §17.8): the member of the bindings
-/// that is such a string, as pycrate 0.8.1 writes a value of it. Without the type of
-/// `sized` in its place, rasn 0.29 does not write it so.
+/// that is such a string, as pycrate 0.8.1 writes a value of it.
 #[test]
 fn a_string_with_a_length_of_two_octets_is_written_as_pycrate_writes_it() {
     // containerForAppLayerMeasConfig OCTET STRING (SIZE(1..1000)), of 300 octets and of

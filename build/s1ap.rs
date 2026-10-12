@@ -25,18 +25,20 @@ const CARRIED: &[(&str, &str)] = &[
 
 pub fn generate_s1ap() -> Result<()> {
     // The modules that `build/asn1.sha256` records, and no other.
-    let mut files = crate::asn1::modules()?;
+    let mut files = generator::asn1::modules()?;
     files.sort();
 
     let config = RasnConfig {
         // rasn-compiler's typed open types are experimental and currently emit
-        // invalid bindings for TS 36.413. Stable opaque open types are wrapped
-        // by the macros over the generated registry, retaining a typed public API.
+        // invalid bindings for TS 36.413. An open type is opaque: the macros over the
+        // generated registry give it its type.
         opaque_open_types: true,
         generate_from_impls: true,
         ..RasnConfig::default()
     };
-    let output = Path::new("src/s1ap.rs");
+    // What rasn-compiler resolves is written as bindings for rasn, which become the
+    // oracle of the tests.
+    let output = Path::new(ORACLE);
 
     let warnings = Compiler::<RasnBackend, _>::new_with_config(config)
         .add_asn_sources_by_path(files.iter())
@@ -51,14 +53,18 @@ pub fn generate_s1ap() -> Result<()> {
     post_process(output, &files)
 }
 
+/// The bindings of the oracle, and those of the crate.
+const ORACLE: &str = "oracle/src/bindings.rs";
+const BINDINGS: &str = "src/s1ap.rs";
+
 fn post_process(path: &Path, asn_files: &[PathBuf]) -> Result<()> {
-    let mut generated = fs::read_to_string(path).context("read generated S1AP bindings")?;
-    generated.insert_str(0, "#![allow(clippy::large_enum_variant)]\n\n");
+    let mut resolved = fs::read_to_string(path).context("read the resolved S1AP bindings")?;
+    resolved.insert_str(0, "#![allow(clippy::large_enum_variant)]\n\n");
 
     // Plain bracketed specification references are otherwise parsed as rustdoc links.
-    generated = generated.replace("[16]", "(reference 16)");
+    resolved = resolved.replace("[16]", "(reference 16)");
 
-    generated = crate::containers::share(&generated, "s1_ap_containers")?;
+    resolved = generator::containers::share(&resolved, "s1_ap_containers")?;
 
     // TS 36.413 declares both ECGIList, SIZE(1..maxnoofCellID), and ECGI-List,
     // SIZE(1..maxnoofCellsineNB), which rasn-compiler both names `ECGIList`.
@@ -66,46 +72,75 @@ fn post_process(path: &Path, asn_files: &[PathBuf]) -> Result<()> {
     // of SynchronisationInformation, refers to it.
     let ecgi_list = "    #[rasn(delegate, size(\"1..=256\"), identifier = \"ECGI-List\")]\n    pub struct ECGIList(";
     ensure!(
-        generated.matches(ecgi_list).count() == 1,
+        resolved.matches(ecgi_list).count() == 1,
         "no unique ECGI-List declaration"
     );
-    generated = generated.replacen(ecgi_list, &ecgi_list.replace("ECGIList(", "ECGI_List("), 1);
+    resolved = resolved.replacen(ecgi_list, &ecgi_list.replace("ECGIList(", "ECGI_List("), 1);
     let aggressor_list = "aggressore_cgi_list: Option<ECGIList>";
     ensure!(
-        generated.matches(aggressor_list).count() == 2,
+        resolved.matches(aggressor_list).count() == 2,
         "unexpected aggressoreCGI-List declarations"
     );
-    generated = generated.replace(aggressor_list, "aggressore_cgi_list: Option<ECGI_List>");
+    resolved = resolved.replace(aggressor_list, "aggressore_cgi_list: Option<ECGI_List>");
 
-    generated = constrain_container_lists(&generated, asn_files)?;
-    generated = crate::aper_fix::fix_constrained_sequences(&generated)?;
-    generated = crate::aper_fix::fix_utf8_strings(&generated)?;
-    generated = crate::aper_fix::fix_fixed_bit_strings(&generated)?;
-    generated = crate::aper_fix::fix_long_inline_strings(&generated)?;
-    generated = crate::aper_fix::fix_sequences(&generated)?;
+    resolved = constrain_container_lists(&resolved, asn_files)?;
 
     // The private IE container uses PrivateIE-ID, which rasn-compiler omits
     // from the import list of its module.
-    generated = generated.replacen(
+    resolved = resolved.replacen(
         "    use super::s1_ap_common_data_types::{Criticality, Presence, ProcedureCode, ProtocolIEID};",
         "    use super::s1_ap_common_data_types::{\n        Criticality, Presence, PrivateIEID, ProcedureCode, ProtocolIEID,\n    };",
         1,
     );
 
-    generated.push_str(&generate_support(&generated)?);
+    // The bindings of the crate, on oxirush-aper.
+    let bindings = generator::bindings::bindings(&resolved)?;
+
+    // The oracle of the tests: the same types, with the codec of rasn and the
+    // corrections that it needs.
+    let mut oracle = resolved;
+    oracle = generator::rasn_fix::fix_constrained_sequences(&oracle)?;
+    oracle = generator::rasn_fix::fix_utf8_strings(&oracle)?;
+    oracle = generator::rasn_fix::fix_fixed_bit_strings(&oracle)?;
+    oracle = generator::rasn_fix::fix_long_inline_strings(&oracle)?;
+    oracle = generator::rasn_fix::fix_sequences(&oracle)?;
+    oracle.push_str(&oracle_support(&oracle)?);
+
     let asn = asn_files
         .iter()
         .map(fs::read_to_string)
         .collect::<std::io::Result<Vec<_>>>()?
         .join("\n");
     // The procedures and the IEs, once for the macros and for the inspection.
-    let registry = crate::registry::Registry::read("S1AP", &generated, &asn)?;
-    fs::write("src/registry.rs", registry.list()?)?;
-    fs::write(
-        "src/inspect_registry.rs",
-        crate::inspection::generate("S1AP", &generated, &asn, &registry, CARRIED)?,
-    )?;
-    fs::write(path, generated).context("write post-processed S1AP bindings")
+    let registry =
+        generator::registry::Registry::read("S1AP", &oracle, &asn, bindings.borrowing.clone())?;
+    let list = registry.list()?;
+    let inspection = generator::inspection::generate("S1AP", &oracle, &asn, &registry, CARRIED)?;
+    // The types that the crate decodes by a name or an identifier: the oracle decodes
+    // the same.
+    let named = Regex::new(r"crate::s1ap::([A-Za-z][A-Za-z0-9_]*)")?;
+    let mut types: BTreeSet<&str> = BTreeSet::from(["S1APPDU"]);
+    for text in [&list, &inspection] {
+        types.extend(
+            named
+                .captures_iter(text)
+                .map(|c| c.get(1).expect("a name").as_str()),
+        );
+    }
+    let mut oracle_types = String::from(
+        "// Auto-generated by build/s1ap.rs from ASN.1; do not edit.\ncrate::oracle_types! {\n",
+    );
+    for name in &types {
+        writeln!(oracle_types, "    {name}")?;
+    }
+    oracle_types.push_str("}\n");
+    fs::write("oracle/src/types.rs", oracle_types)?;
+    fs::write("src/registry.rs", list)?;
+    fs::write("src/inspect_registry.rs", inspection)?;
+    fs::write(path, oracle).context("write the bindings of the oracle")?;
+    let mut text = bindings.text;
+    text.push_str(&support(&bindings.borrowing)?);
+    fs::write(BINDINGS, text).context("write the S1AP bindings")
 }
 
 /// Restore the SIZE constraint of the lists declared through a parameterized
@@ -172,7 +207,9 @@ fn constrain_container_lists(generated: &str, asn_files: &[PathBuf]) -> Result<S
     Ok(generated)
 }
 
-fn generate_support(generated: &str) -> Result<String> {
+/// What follows the modules in the bindings of the oracle: their names at the root,
+/// the aliases of the crate, and the conversions that its tests build values with.
+fn oracle_support(generated: &str) -> Result<String> {
     let generated_type = Regex::new(r"(?m)^    pub (?:struct|enum|type) ([A-Za-z][A-Za-z0-9_]*)")?;
     let rust_types: BTreeSet<&str> = generated_type
         .captures_iter(generated)
@@ -192,7 +229,7 @@ fn generate_support(generated: &str) -> Result<String> {
     let mut out = String::new();
     writeln!(
         out,
-        "\n// Auto-generated S1AP compatibility surface."
+        "\n// The names of the modules at the root, and the aliases of the crate."
     )?;
     writeln!(out, "pub use s1_ap_common_data_types::*;")?;
     writeln!(out, "pub use s1_ap_constants::*;")?;
@@ -211,14 +248,12 @@ fn generate_support(generated: &str) -> Result<String> {
         writeln!(out, "pub type ENB_UE_S1AP_ID = ENBUES1APID;")?;
     }
 
+    writeln!(out, "#[allow(unused_imports)]")?;
     writeln!(
         out,
-        "use rasn::prelude::{{BitString, FixedBitString, FixedOctetString, Integer, OctetString, PrintableString, SequenceOf, VisibleString}};"
+        "use rasn::prelude::{{BitString, FixedBitString, FixedOctetString, Integer, OctetString, PrintableString, SequenceOf, Utf8String, VisibleString}};"
     )?;
-    writeln!(
-        out,
-        "\n// Auto-generated newtype conversions used by the builder macros."
-    )?;
+    writeln!(out, "\n// The conversions of the types that have a name.")?;
     for (name, inner) in &newtypes {
         writeln!(
             out,
@@ -239,119 +274,173 @@ fn generate_support(generated: &str) -> Result<String> {
             )?;
         }
     }
-
-    // The kinds, the names of the procedures and their codes are those of the registry.
-    writeln!(out, "pub use crate::registry::S1apPduKind;")?;
-
-    writeln!(out, "impl S1APPDU {{")?;
-    writeln!(out, "    /// The octets of this PDU, in aligned PER.")?;
-    writeln!(out, "    pub fn encode(&self) -> Result<Vec<u8>, crate::Error> {{")?;
-    writeln!(out, "        // Octet by octet, and by the codec of rasn for what that leaves: a message of")?;
-    writeln!(out, "        // 16384 octets or more, and the error of what does not encode.")?;
-    writeln!(out, "        let message = self.value().as_bytes();")?;
-    writeln!(out, "        let (code, criticality) = (self.procedure_code(), self.criticality());")?;
-    writeln!(out, "        match crate::wire::pdu_octets(self.alternative(), code, criticality, message) {{")?;
-    writeln!(out, "            Some(octets) => Ok(octets),")?;
-    writeln!(out, "            None => rasn::aper::encode(self).map_err(crate::Error::encoding::<Self>),")?;
-    writeln!(out, "        }}")?;
-    writeln!(out, "    }}")?;
-    writeln!(out, "    /// The PDU that `bytes` are, in aligned PER: the octets of one PDU, whole, and no")?;
-    writeln!(out, "    /// octet after it.")?;
-    writeln!(out, "    pub fn decode(bytes: &[u8]) -> Result<Self, crate::Error> {{")?;
-    writeln!(out, "        // Octet by octet, and by the codec of rasn for what that leaves, which reads it")?;
-    writeln!(out, "        // or says why it does not.")?;
-    writeln!(out, "        let read = crate::wire::pdu(bytes).and_then(|(alternative, code, criticality, message)| {{")?;
-    writeln!(out, "            let message = rasn::types::Any::new(message.to_vec());")?;
-    writeln!(out, "            Self::of_alternative(alternative, code, criticality, message)")?;
-    writeln!(out, "        }});")?;
-    writeln!(out, "        match read {{")?;
-    writeln!(out, "            Some(pdu) => Ok(pdu),")?;
-    writeln!(out, "            None => crate::per::decode_complete(bytes),")?;
-    writeln!(out, "        }}")?;
-    writeln!(out, "    }}")?;
-    writeln!(out, "    /// The message that this PDU holds, as its type `T`.")?;
-    writeln!(out, "    ///")?;
-    writeln!(out, "    /// `T` is the type of the message that `kind()` says. For the type of another")?;
-    writeln!(out, "    /// message the error has the kind `WrongMessage`, as the octets of one message")?;
-    writeln!(out, "    /// may decode as another:")?;
-    writeln!(out, "    ///")?;
-    writeln!(out, "    /// ```")?;
-    writeln!(out, "    /// use oxirush_s1ap::{{ErrorKind, s1ap::*}};")?;
-    writeln!(out, "    ///")?;
-    writeln!(out, "    /// // A UE CONTEXT RELEASE REQUEST")?;
-    writeln!(out, "    /// let octets = hex::decode(\"0012401500000300000002002a000800020007000240020280\").unwrap();")?;
-    writeln!(out, "    /// let pdu = S1AP_PDU::decode(&octets)?;")?;
-    writeln!(out, "    /// let request: UEContextReleaseRequest = pdu.decode_value()?;")?;
-    writeln!(out, "    /// assert_eq!(request.protocol_ies.0.len(), 3);")?;
-    writeln!(out, "    ///")?;
-    writeln!(out, "    /// let other = pdu.decode_value::<S1SetupRequest>().unwrap_err();")?;
-    writeln!(out, "    /// assert_eq!(other.kind(), ErrorKind::WrongMessage);")?;
-    writeln!(out, "    /// # Ok::<(), oxirush_s1ap::Error>(())")?;
-    writeln!(out, "    /// ```")?;
-    writeln!(out, "    ///")?;
-    writeln!(out, "    /// A type that is no message, as that of an IE or the item of a list, does not compile.")?;
-    writeln!(out, "    /// `decode_open_type` decodes any type from an open type.")?;
-    writeln!(out, "    ///")?;
-    writeln!(out, "    /// ```compile_fail")?;
-    writeln!(out, "    /// use oxirush_s1ap::s1ap::*;")?;
-    writeln!(out, "    ///")?;
-    writeln!(out, "    /// fn held(pdu: &S1AP_PDU) {{")?;
-    writeln!(out, "    ///     let _ = pdu.decode_value::<ERABToBeSetupItemCtxtSUReq>();")?;
-    writeln!(out, "    /// }}")?;
-    writeln!(out, "    /// ```")?;
-    writeln!(out, "    pub fn decode_value<T: crate::Message>(&self) -> Result<T, crate::Error> {{")?;
-    writeln!(out, "        let (direction, code) = (self.direction(), self.procedure_code());")?;
-    writeln!(out, "        if (direction, code) != (T::DIRECTION, T::PROCEDURE_CODE) {{")?;
-    writeln!(out, "            return Err(crate::Error::wrong_message(T::NAME, direction, code));")?;
-    writeln!(out, "        }}")?;
-    writeln!(out, "        // A message of protocol IEs is read octet by octet, and what that leaves by the")?;
-    writeln!(out, "        // codec of rasn, which reads it or says why it does not.")?;
-    writeln!(out, "        let value = self.value();")?;
-    writeln!(out, "        let read = T::__OF_PROTOCOL_IES")?;
-    writeln!(out, "            .and_then(|of| Some(of(crate::wire::protocol_ies(value.as_bytes())?)));")?;
-    writeln!(out, "        match read {{")?;
-    writeln!(out, "            Some(message) => Ok(message),")?;
-    writeln!(out, "            None => decode_open_type(value),")?;
-    writeln!(out, "        }}")?;
-    writeln!(out, "    }}")?;
-    writeln!(out, "    /// Return the procedure code of this PDU.")?;
-    writeln!(out, "    pub fn procedure_code(&self) -> u8 {{")?;
-    writeln!(out, "        match self {{")?;
-    writeln!(out, "            S1APPDU::initiatingMessage(message) => message.procedure_code.0,")?;
-    writeln!(out, "            S1APPDU::successfulOutcome(message) => message.procedure_code.0,")?;
-    writeln!(out, "            S1APPDU::unsuccessfulOutcome(message) => message.procedure_code.0,")?;
-    writeln!(out, "        }}")?;
-    writeln!(out, "    }}")?;
-    writeln!(out, "    /// Return the PDU direction as a human-readable string.")?;
-    writeln!(out, "    pub fn direction(&self) -> &'static str {{")?;
-    writeln!(out, "        match self {{")?;
-    writeln!(out, "            S1APPDU::initiatingMessage(_) => \"InitiatingMessage\",")?;
-    writeln!(out, "            S1APPDU::successfulOutcome(_) => \"SuccessfulOutcome\",")?;
-    writeln!(out, "            S1APPDU::unsuccessfulOutcome(_) => \"UnsuccessfulOutcome\",")?;
-    writeln!(out, "        }}")?;
-    writeln!(out, "    }}")?;
-    writeln!(out, "    /// Returns `true` for an initiating message.")?;
-    writeln!(out, "    pub fn is_initiating(&self) -> bool {{ matches!(self, S1APPDU::initiatingMessage(_)) }}")?;
-    writeln!(out, "    /// Returns `true` for a successful outcome.")?;
-    writeln!(out, "    pub fn is_successful(&self) -> bool {{ matches!(self, S1APPDU::successfulOutcome(_)) }}")?;
-    writeln!(out, "    /// Returns `true` for an unsuccessful outcome.")?;
-    writeln!(out, "    pub fn is_unsuccessful(&self) -> bool {{ matches!(self, S1APPDU::unsuccessfulOutcome(_)) }}")?;
-    writeln!(out, "}}")?;
-    writeln!(out, "impl std::fmt::Display for S1APPDU {{")?;
-    writeln!(out, "    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{")?;
-    writeln!(out, "        write!(formatter, \"{{}} {{}} (code={{}})\", self.direction(), self.procedure_name(), self.procedure_code())")?;
-    writeln!(out, "    }}")?;
-    writeln!(out, "}}")?;
-    writeln!(out, "/// The open type of a value: its complete encoding in aligned PER, in which an empty")?;
-    writeln!(out, "/// encoding becomes one zero octet (X.691 (02/2021) §11.1.4, §11.2.1).")?;
-    writeln!(out, "pub fn encode_open_type<T: rasn::Encode>(value: &T) -> Result<rasn::types::Any, crate::Error> {{")?;
-    writeln!(out, "    crate::per::encode_open_type(value)")?;
-    writeln!(out, "}}")?;
-    writeln!(out, "/// The value of the type `T` that an open type holds, in aligned PER: one value,")?;
-    writeln!(out, "/// whole, and no octet after it.")?;
-    writeln!(out, "pub fn decode_open_type<T: rasn::Decode>(value: &rasn::types::Any) -> Result<T, crate::Error> {{")?;
-    writeln!(out, "    crate::per::decode_complete(value.as_bytes())")?;
-    writeln!(out, "}}")?;
-
     Ok(out)
 }
+
+/// What follows the modules in the bindings of the crate: their names at the root, the
+/// aliases, and what a PDU does.
+fn support(borrowing: &BTreeSet<String>) -> Result<String> {
+    let mut out = String::new();
+    writeln!(
+        out,
+        "\n// The names of the modules at the root, and the aliases."
+    )?;
+    writeln!(out, "pub use s1_ap_common_data_types::*;")?;
+    writeln!(out, "pub use s1_ap_constants::*;")?;
+    writeln!(out, "pub use s1_ap_containers::*;")?;
+    writeln!(out, "pub use s1_ap_ies::*;")?;
+    writeln!(out, "pub use s1_ap_pdu_contents::*;")?;
+    writeln!(out, "pub use s1_ap_pdu_descriptions::*;")?;
+    writeln!(out, "use alloc::vec::Vec;")?;
+    writeln!(out, "use oxirush_aper::{{Decode, Encode, Octets}};")?;
+    ensure!(borrowing.contains("S1APPDU"), "a PDU that borrows nothing");
+    for (alias, name) in [
+        ("MME_UE_S1AP_ID", "MMEUES1APID"),
+        ("ENB_UE_S1AP_ID", "ENBUES1APID"),
+    ] {
+        ensure!(!borrowing.contains(name), "{name} borrows");
+        writeln!(out, "#[allow(non_camel_case_types)]")?;
+        writeln!(out, "pub type {alias} = {name};")?;
+    }
+    out.push_str(SUPPORT);
+    Ok(out)
+}
+
+/// What a PDU does. The same text serves oxirush-ngap, with the names of its protocol.
+const SUPPORT: &str = r####"/// A PDU that owns its octets: what `decode` gives, what the macros build, and what
+/// is kept and sent. It borrows nothing, and so has no lifetime to write.
+#[allow(non_camel_case_types)]
+pub type S1AP_PDU = S1APPDU<'static>;
+pub use crate::registry::S1apPduKind;
+impl S1APPDU<'static> {
+    /// The PDU that `bytes` are, in aligned PER: the octets of one PDU, whole, and no
+    /// octet after it. The PDU owns the octets of its message, which are copied once.
+    pub fn decode(bytes: &[u8]) -> Result<Self, crate::Error> {
+        S1APPDU::decode_borrowed(bytes).map(S1APPDU::into_owned)
+    }
+}
+impl<'a> S1APPDU<'a> {
+    /// The PDU that `bytes` are, as `decode` reads it, with the octets of its message
+    /// borrowed from `bytes`: nothing is copied, and the PDU lives as long as they do.
+    ///
+    /// ```
+    /// use oxirush_s1ap::s1ap::*;
+    ///
+    /// // A UE CONTEXT RELEASE REQUEST, read where it was received
+    /// let received = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    /// let pdu = S1APPDU::decode_borrowed(&received)?;
+    /// let request: UEContextReleaseRequest = pdu.decode_value()?;
+    /// assert_eq!(request.protocol_ies.0.len(), 3);
+    ///
+    /// // Kept after `received` is gone
+    /// let kept: S1AP_PDU = pdu.into_owned();
+    /// # let _ = kept;
+    /// # Ok::<(), oxirush_s1ap::Error>(())
+    /// ```
+    pub fn decode_borrowed(bytes: &'a [u8]) -> Result<Self, crate::Error> {
+        oxirush_aper::decode(bytes)
+    }
+    /// The octets of this PDU, in aligned PER.
+    pub fn encode(&self) -> Result<Vec<u8>, crate::Error> {
+        let mut octets = Vec::with_capacity(self.value().len() + 8);
+        self.encode_into(&mut octets)?;
+        Ok(octets)
+    }
+    /// Append the octets of this PDU, in aligned PER, to `octets`: a buffer that is
+    /// kept from one PDU to the next is allocated once. After an error, `octets` are as
+    /// they were.
+    pub fn encode_into(&self, octets: &mut Vec<u8>) -> Result<(), crate::Error> {
+        oxirush_aper::encode_into(self, octets)
+    }
+    /// The message that this PDU holds, as its type `T`. What the message holds of
+    /// octets is borrowed from the PDU: the PDU is a variable of its own, which the
+    /// message does not outlive, and `into_owned()` of the message gives one that is
+    /// kept after it.
+    ///
+    /// `T` is the type of the message that `kind()` says. For the type of another
+    /// message the error has the kind `WrongMessage`, as the octets of one message
+    /// may decode as another:
+    ///
+    /// ```
+    /// use oxirush_s1ap::{ErrorKind, s1ap::*};
+    ///
+    /// // A UE CONTEXT RELEASE REQUEST
+    /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    /// let pdu = S1AP_PDU::decode(&octets)?;
+    /// let request: UEContextReleaseRequest = pdu.decode_value()?;
+    /// assert_eq!(request.protocol_ies.0.len(), 3);
+    ///
+    /// let other = pdu.decode_value::<S1SetupRequest>().unwrap_err();
+    /// assert_eq!(other.kind(), ErrorKind::WrongMessage);
+    /// # Ok::<(), oxirush_s1ap::Error>(())
+    /// ```
+    ///
+    /// A type that is no message, as that of a transfer or an IE, does not compile.
+    /// `decode_open_type` decodes any type from an open type.
+    ///
+    /// ```compile_fail
+    /// use oxirush_s1ap::s1ap::*;
+    ///
+    /// fn held(pdu: &S1AP_PDU) {
+    ///     let _ = pdu.decode_value::<ERABToBeSetupItemCtxtSUReq>();
+    /// }
+    /// ```
+    pub fn decode_value<'s, T: crate::Message<'s>>(&'s self) -> Result<T, crate::Error> {
+        let (direction, code) = (self.direction(), self.procedure_code());
+        if (direction, code) != (T::DIRECTION, T::PROCEDURE_CODE) {
+            return Err(crate::error::wrong_message(T::NAME, direction, code));
+        }
+        oxirush_aper::decode(self.value())
+    }
+    /// Return the procedure code of this PDU.
+    pub fn procedure_code(&self) -> u8 {
+        match self {
+            S1APPDU::initiatingMessage(message) => message.procedure_code.0,
+            S1APPDU::successfulOutcome(message) => message.procedure_code.0,
+            S1APPDU::unsuccessfulOutcome(message) => message.procedure_code.0,
+        }
+    }
+    /// Return the PDU direction as a human-readable string.
+    pub fn direction(&self) -> &'static str {
+        match self {
+            S1APPDU::initiatingMessage(_) => "InitiatingMessage",
+            S1APPDU::successfulOutcome(_) => "SuccessfulOutcome",
+            S1APPDU::unsuccessfulOutcome(_) => "UnsuccessfulOutcome",
+        }
+    }
+    /// Returns `true` for an initiating message.
+    pub fn is_initiating(&self) -> bool {
+        matches!(self, S1APPDU::initiatingMessage(_))
+    }
+    /// Returns `true` for a successful outcome.
+    pub fn is_successful(&self) -> bool {
+        matches!(self, S1APPDU::successfulOutcome(_))
+    }
+    /// Returns `true` for an unsuccessful outcome.
+    pub fn is_unsuccessful(&self) -> bool {
+        matches!(self, S1APPDU::unsuccessfulOutcome(_))
+    }
+}
+impl core::fmt::Display for S1APPDU<'_> {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(
+            formatter,
+            "{} {} (code={})",
+            self.direction(),
+            self.procedure_name(),
+            self.procedure_code()
+        )
+    }
+}
+/// The open type of a value: its complete encoding in aligned PER, in which an empty
+/// encoding becomes one zero octet (X.691 (02/2021) §11.1.4, §11.2.1).
+pub fn encode_open_type<T: Encode>(value: &T) -> Result<Octets<'static>, crate::Error> {
+    oxirush_aper::encode(value).map(Octets::owned)
+}
+/// The value of the type `T` that the octets of an open type hold, in aligned PER: one
+/// value, whole, and no octet after it. What the value holds of octets is borrowed
+/// from `value`.
+pub fn decode_open_type<'a, T: Decode<'a>>(value: &'a [u8]) -> Result<T, crate::Error> {
+    oxirush_aper::decode(value)
+}
+"####;

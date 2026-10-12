@@ -354,10 +354,11 @@ fn main() -> Result<(), oxirush_s1ap::Error> {
     let bytes = hex::decode("401100080000010002400145").unwrap();
     let mut pdu = S1AP_PDU::decode(&bytes)?;
 
-    // Its IEs as they were received: identifier, criticality and octets
-    let mut ies = pdu.protocol_ies()?;
+    // Its IEs as they were received: identifier, criticality and octets. They
+    // borrow from the PDU, and are owned here, as the PDU is changed below
+    let mut ies = pdu.protocol_ies()?.into_owned();
     for ie in &ies.0 {
-        let octets = hex::encode(ie.value.as_bytes());
+        let octets = hex::encode(&ie.value);
         println!("{} {:?} {octets}", ie.id.0, ie.criticality);
     }
 
@@ -463,14 +464,14 @@ use oxirush_s1ap::helpers::*;
 
 // A PLMN from its MCC and its MNC, and what is identified within it
 let network = plmn("208", "93").unwrap();
-let mme = gummei(network.clone(), 1, 1); // group, code
-let tracking_area = tai(network.clone(), [0x00, 0x01]); // TAC
-let cell = eutran_cgi(network.clone(), 0x12345, 7).unwrap(); // macro eNB, cell
-let enb = global_enb_id(network.clone(), 0x12345).unwrap();
+let mme = gummei(network, 1, 1); // group, code
+let tracking_area = tai(network, [0x00, 0x01]); // TAC
+let cell = eutran_cgi(network, 0x12345, 7).unwrap(); // macro eNB, cell
+let enb = global_enb_id(network, 0x12345).unwrap();
 
 // A bit string from octets, and the algorithms of a UE: the first octet
 // of its encryption bitmap, then of its integrity bitmap
-let algorithm_mask = bytes_to_bitvec(&[0xe0]);
+let algorithm_mask = oxirush_s1ap::BitString::from([0xe0]);
 let capabilities = ue_security_capabilities(0xe0, 0xe0);
 
 // What is no MCC, and a macro eNB ID that does not fit in its 20 bits
@@ -506,7 +507,6 @@ methods and the functions of the JSON forms.
 |---------------|-------|
 | `kind()` | An `ErrorKind`, which is what a caller matches on. More kinds may come with a later version: leave the others to `_` |
 | `Display` | What is wrong, with the names of the specification, and what to do about it where something can be done |
-| `source()` | The error of `rasn`, where the codec gave one: a `rasn::error::DecodeError` or an `EncodeError` |
 
 It is `Clone`, `Send` and `Sync`, two errors are equal when their kind and
 their message are, and `?` converts one into a `Box<dyn std::error::Error>`.
@@ -531,17 +531,15 @@ let wrong = pdu.decode_value::<S1SetupRequest>().unwrap_err();
 assert_eq!(wrong.kind(), ErrorKind::WrongMessage);
 println!("{wrong}");
 
-// Octets that end early: the message, and what rasn said
+// Octets that end early
 let short = S1AP_PDU::decode(&bytes[..10]).unwrap_err();
 assert_eq!(short.kind(), ErrorKind::Decode);
 println!("{short}");
-println!("{}", std::error::Error::source(&short).unwrap());
 ```
 
 ```text
 the message of this PDU is UEContextReleaseRequest, not S1SetupRequest: kind() says which message a PDU holds
 these octets do not decode as S1AP-PDU: the octets end before the value does, in its field `value`
-Error when decoding field `InitiatingMessage.value`: Need more data to continue: Size(120) (Codec: APER) (Codec: APER)
 ```
 
 ### Key types

@@ -5,17 +5,64 @@ All notable changes to `oxirush-s1ap` are recorded here.
 ## Unreleased (0.3.0)
 
 The bindings come from TS 36.413 V19.2.0 (Release 19) instead of V16.6.0,
-and the APER codec follows ITU-T X.691 where rasn 0.29 departs from it. It
-is not source compatible with 0.2.0.
+and the codec is the crate's own: the bindings read and write aligned PER
+with [`oxirush-aper`](https://crates.io/crates/oxirush-aper), by ITU-T X.691,
+where 0.2.0 derived the codec of rasn 0.28. It is not source compatible
+with 0.2.0: [the values of the bindings](#the-values-of-the-bindings) says
+what each type became.
 
 ### Breaking changes relative to 0.2.0
 
-- The crate is built with rasn 0.29, where 0.2.0 had rasn 0.28, and
-  `oxirush_s1ap::rasn` is that version: the values of the bindings are its
-  types. A crate that depends on `rasn` itself beside this one moves to
-  0.29 with it, or takes the types from `oxirush_s1ap::rasn`. rasn 0.29
-  takes constraints by reference: an `Encode` or a `Decode` that is written
-  by hand has `&Constraints` where it had `Constraints`.
+- The crate no longer depends on `rasn`, and `oxirush_s1ap::rasn` is not
+  there. The bindings implement `AsnType`, `Decode` and `Encode` of
+  `oxirush-aper`, which the crate re-exports as `oxirush_s1ap::aper`, and no
+  trait of rasn: they have aligned PER, and none of the other encoding rules
+  that the derived codec of rasn gave them. With the `inspect` feature they
+  have the JSON forms.
+- <a id="the-values-of-the-bindings"></a>The values of the bindings are
+  native numbers, arrays and the types of `oxirush-aper`, where they were
+  those of rasn:
+
+  | 0.2.0 | Now | To migrate |
+  | --- | --- | --- |
+  | A native number, for an `INTEGER` whose constraint has no extension marker | The same number | As before |
+  | `Integer`, for an `INTEGER` whose constraint has an extension marker | `u64`, or `i64` for a type whose root goes below zero | `ERABID(n)` for `(0..15, ...)`, where `n` is a `u64`: no `.into()`, and no `Integer` to convert. A number that 64 bits do not hold does not decode: see below |
+  | `FixedOctetString<N>` | `[u8; N]` | `TBCDSTRING([0x02, 0xf8, 0x39])` |
+  | `OctetString`, `Any` | `Octets<'a>` | `Octets::from(vec)`, `Octets::from(&slice)`, or `.into()` of either. It derefs to `[u8]`: `.as_bytes()` is gone |
+  | `FixedBitString<N>` and `BitString` of 64 bits at most, without an extension marker | `Bits`, a number with a length | `CellIdentity(Bits::new(0x1234507, 28)?)`, `bits.value()` and `bits.len()` |
+  | Another `BitString` | `BitString<'a>` | `BitString::from([0xe0, 0x00])`, `BitString::new(octets, length)?`, `.as_octets()` and `.len()` |
+  | `PrintableString`, `VisibleString`, `Utf8String` | `Cow<'a, str>` | `MMEname("mme-1".into())`, and `&name.0` is a `&str` |
+  | `SequenceOf<T>` | `Vec<T>` | As before |
+  | The `LazyLock<Integer>` statics of the value assignments, as `MAXNOOF…` | `pub const … : u64` | The name is the same |
+
+- A type that holds octets, a long bit string, a character string or an open
+  type has a lifetime, as `NASPDU<'a>`, and so has each type that holds one of
+  them, which is every message: a value that is decoded borrows from the
+  octets that it was decoded from, and copies none. `S1AP_PDU` is the PDU that
+  owns its octets, `S1APPDU<'static>`, and `S1AP_PDU::decode` gives it as
+  before. What changes for code that compiled:
+  - a function that returns or keeps a value of the bindings writes its
+    lifetime: `-> NASPDU<'static>` for a value that it built or that it made
+    with `into_owned()`, which every type that borrows has, and
+    `fn name<'a>(message: &'a T<'a>) -> U<'a>` for one that it read in a
+    message;
+  - the PDU is a variable of its own before `decode_value`, as the message
+    borrows from it: `let pdu = S1AP_PDU::decode(&octets)?;` then
+    `let message: T = pdu.decode_value()?;`. The two in one expression do
+    not compile, and the compiler says to bind the first;
+  - a pattern on a PDU that borrows names its type, `S1APPDU::initiatingMessage(..)`:
+    `S1AP_PDU::` in a pattern asks for `'static`.
+- `s1ap::decode_open_type` takes the octets, `&[u8]`, where it took an `&Any`,
+  and `s1ap::encode_open_type` gives an `Octets<'static>`. The `value` of a
+  `ProtocolIEField`, of a `ProtocolExtensionField` and of the three
+  alternatives of a PDU is an `Octets`, where it was an `Any`:
+  `decode_open_type::<T>(&ie.value)` reads the same, and `&ie.value` is the
+  octets where `ie.value.as_bytes()` was.
+- The bindings hold an `INTEGER` in 64 bits, where rasn held one of any
+  size. Octets with a larger number, which only an extension marker lets a
+  later release send, are an error of the kind `Decode` for the value that
+  holds it: `the number does not fit in 64 bits`. The PDU and its other IEs
+  are read, and the JSON forms show that IE as the octets received.
 - The bindings are generated from the Release 19 ASN.1 (`36413-j20`), with
   every procedure, IE and extension up to Release 19.
 - Each protocol IE container, each extension container and their fields are
@@ -33,8 +80,7 @@ is not source compatible with 0.2.0.
 - The macros name each IE by its own identifier before any type alias, and a
   type name is an alias only for the one IE of that type: `GUMMEI` built
   id-GUMMEI-ID where a PATH SWITCH REQUEST carries id-SourceMME-GUMMEI.
-- The minimum supported Rust version is 1.88, which rasn needs:
-  0.2.0 declared 1.85.
+- The minimum supported Rust version is 1.88: 0.2.0 declared 1.85.
 - `helpers::plmn` writes other octets for an MNC of three digits, and
   `helpers::plmn_from` reads them: see the first entry of Fixed.
 - `helpers::plmn_from` returns an `Option<(String, String)>`, where it
@@ -47,18 +93,17 @@ is not source compatible with 0.2.0.
   and so do the four macros. A function that returned one of those errors
   returns `Result<_, oxirush_s1ap::Error>`, or keeps a
   `Box<dyn std::error::Error>`. `error.kind()` is an `ErrorKind` to match on,
-  and the message says what is wrong without the wording of rasn: `these
-  octets do not decode as S1AP-PDU: the octets end before the value does`.
-  The error of rasn is the `source()`, for code that read its `kind`:
-  `source.downcast_ref::<rasn::error::DecodeError>()`. `Error` has a `From`
-  of both, for code that calls `rasn::aper` itself.
+  and the message says what is wrong and where: `these octets do not decode
+  as S1AP-PDU: the octets end before the value does, in its field
+  `value``. It is the error of `oxirush-aper`, and has no `source()`: no
+  error of rasn is behind it.
 - `decode_value::<T>()` takes the type of a message alone, and checks that
   the PDU holds that message: on another one the error has the kind
   `WrongMessage`, where 0.2.0 decoded the octets as whatever type was named,
   and a UE CONTEXT RELEASE REQUEST read as a setup request with three IEs.
   A type that is no message, as that of an IE, does not compile: decode it
-  with `s1ap::decode_open_type::<T>(&any)`. Generic code that calls
-  `decode_value` asks for `T: oxirush_s1ap::Message` where it asked for
+  with `s1ap::decode_open_type::<T>(&octets)`. Generic code that calls
+  `decode_value` asks for `T: oxirush_s1ap::Message<'a>` where it asked for
   `T: rasn::Decode`. Code that read the IEs of any PDU as those of one
   message, as in `pdu.decode_value::<ErrorIndication>()`, because every
   message is the same container, and wrote them back with
@@ -102,9 +147,11 @@ is not source compatible with 0.2.0.
   takes a `?` or an `.unwrap()`:
   - `plmn(mcc, mnc) -> Result<PLMNidentity, Error>`, for an MCC that is not
     three digits or an MNC that is not two or three, where it panicked;
-  - `int_to_bitvec(value, width) -> Result<BitString, Error>`, for a width
-    over 64 bits, where it panicked, and for a value that does not fit in the
-    width, whose high bits it dropped;
+  - `int_to_bitvec` and `bytes_to_bitvec` are gone with the bit strings of
+    rasn: `Bits::new(value, width)?` is a number in a width, which refuses a
+    width over 64 bits, where `int_to_bitvec` panicked, and a value that does
+    not fit in the width, whose high bits it dropped, and
+    `BitString::from(octets)` is the bits of octets;
   - `eutran_cgi(…) -> Result<EUTRANCGI, Error>` and
     `global_enb_id(…) -> Result<GlobalENBID, Error>`, for a macro eNB ID over
     20 bits, which they masked: `global_enb_id(plmn, 0x1fffff)` built the
@@ -170,15 +217,18 @@ is not source compatible with 0.2.0.
   of id-eNB-UE-S1AP-ID, wherever they take `eNB_UE_S1AP_ID`, the name of the
   IE: an alias of a type names the IE that the name of the type names. The
   alias did not compile as an IE name.
-- The `sized` module: the `OCTET STRING` and `BIT STRING` types whose length
-  determinant takes two octets.
-- `oxirush_s1ap::rasn`, the `rasn` that the crate is built with: a crate that
-  names the values of the bindings, such as `FixedBitString`, or the error
-  of the codec that an `Error` has as its source, takes them from there,
-  where it had to depend on the same `rasn` itself. The examples do.
+- `S1APPDU::decode_borrowed(&octets)`: the PDU that borrows its message from
+  the octets, for a caller that reads a PDU where it was received. It copies
+  nothing, where `S1AP_PDU::decode` copies the message once to own it, and
+  `into_owned()` gives the PDU that `decode` gives. `pdu.encode_into(&mut
+  octets)` appends the octets of a PDU to a buffer that is kept.
+- `oxirush_s1ap::aper`, the `oxirush-aper` that the crate is built with, and
+  at the root of the crate `Octets`, `Bits`, `BitString`, `AsnType`, `Decode`
+  and `Encode`: a crate that names the values of the bindings takes them
+  from there, and needs no dependency of its own. The examples do.
 - `oxirush_s1ap::Message`, which the type of each message of a procedure
-  implements: its `NAME`, as ASN.1 gives it, its `DIRECTION` and its
-  `PROCEDURE_CODE`.
+  implements: its `DIRECTION` and its `PROCEDURE_CODE`. The name that ASN.1
+  gives it is the `NAME` of `AsnType`, which every type of the bindings has.
 - With the `inspect` feature, `inspect::check_path`: whether a path can select
   anything in a message of a name, without a view. The IE has to be one of
   the object set of the message, and each segment under it a member that the
@@ -256,8 +306,13 @@ is not source compatible with 0.2.0.
   modules that the bindings are generated from, `build/extract_asn1.py`
   takes them out of the archive that 3GPP publishes, and the generator reads
   no module that has another digest.
-- Fuzz targets, in `fuzz/`, which CI runs: they compare what the crate reads
-  and writes itself with what the codec of rasn alone does.
+- An oracle for the tests, in `oracle/`: the same types with the codec of
+  rasn 0.29, another implementation of aligned PER, which the generator
+  writes beside the bindings. The tests give each vector, and what a peer may
+  send in its place, to both, and compare what they read and write: the PDU,
+  the message, and with `inspect` each IE and each transfer of a view. The
+  fuzz targets, in `fuzz/`, which CI runs, make the same comparison on the
+  octets that they find. rasn is a dependency of the tests alone.
 
 ### Changed
 
@@ -317,15 +372,13 @@ is not source compatible with 0.2.0.
   IE that was added are set at its path. An `_original_id` that is no number
   is refused.
 - `paths` lists the `octets` of an IE that has no value beside them.
-- The JSON forms are written and read by a codec of the crate, which makes
-  a `serde_json::Value` of a value of the bindings and back with no text
-  between them, where the codec of the JSON Encoding Rules of rasn wrote
-  text that was parsed, and read it back to compare. A value has the form
-  that it had, which the documentation of `inspect` lists under Values, and
-  two values that stayed octets beside a `_decode_error` have one:
-  - an integer of 2^63 or more is a number, and one above 2^64-1 or below
-    -2^63, which JSON has no exact number for, a string of its decimal
-    digits;
+- The JSON forms are written and read by the bindings themselves, which make
+  a `serde_json::Value` of a value and back with no text between them, where
+  the codec of the JSON Encoding Rules of rasn wrote text that was parsed.
+  A value has the form that it had, which the documentation of `inspect`
+  lists under Values, and two values that stayed octets beside a
+  `_decode_error` have one:
+  - an integer of 2^63 or more is a number;
   - a `BIT STRING` of another size than the one that its type gives beside
     an extension marker is `{"value", "length"}`, as an algorithm mask of 24
     bits is `{"value": "C00000", "length": 24}`. One of the size of its type
@@ -335,32 +388,19 @@ is not source compatible with 0.2.0.
   A value that is written is read strictly, and the error says where the
   fault is by the names of the value: a member that its type does not have,
   a second alternative of a `CHOICE`, an integer outside its constraint or
-  written as its digits where JSON has a number for it, a bit string with
-  other octets than its length has and padding bits that are not zero. The
-  name of an `ENUMERATED` value is taken whatever its case and its
-  separators where it is read.
-- A PDU and a message of protocol IEs are read and written octet by octet,
-  where the codec of rasn read and wrote each: `S1AP_PDU::decode` and
-  `encode`, `decode_value`, `protocol_ies`, `set_protocol_ies`, `check` and
-  the messages that `build_s1ap!` builds. In aligned PER each component
-  of both starts an octet. What is not of that layout is left to the codec
-  of rasn, so a value and an error are what they were: a PDU of an
-  alternative that a later release adds, a message with an extension
-  addition, a length of 16384 octets or more, and octets that end early or
-  go on after the value.
+  written as its digits, a bit string with other octets than its length has
+  and padding bits that are not zero. The name of an `ENUMERATED` value is
+  taken whatever its case and its separators where it is read.
+- The codec reads what a peer may send as rasn read it where the value is
+  the same: padding bits that are not zero, a length in a longer form than
+  it needs and a number with leading zero octets. It refuses a number of no
+  octet where ITU-T X.691 has one at least.
 - The examples of the documentation and of the README are compiled and run
   by the documentation tests.
-- The crate with `inspect` compiles to less code: the JSON codec names the
-  members of a `SEQUENCE` in a function that is compiled once, where an
-  iterator was compiled for each type, and so is what a typed function does
-  whatever its type is.
-- A `SEQUENCE` is written and read in PER by a codec of the crate, in the
-  encoder and the decoder that it is given. The derived codec had rasn make
-  an encoder of another type for each number of components, and the PER
-  codec of every member was compiled once more for each. In the other
-  encoding rules, and for the JSON forms, a `SEQUENCE` is written and read
-  as the derived codec did it, and the additions of a later release are
-  skipped in the unaligned variant too.
+- The crate compiles to less code, with `inspect` and without: a type
+  reads and writes its fields with the functions of `oxirush-aper`, which
+  are compiled once, where the derived codec of rasn was compiled for each
+  type in each of its encoding rules.
 - A message is found by the code of its procedure before its direction,
   the name of an IE by a binary search of its identifier, and its
   identifier by a hash of its name. `check` names an IE where it reports a

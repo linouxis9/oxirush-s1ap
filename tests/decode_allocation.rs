@@ -4,8 +4,10 @@
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use oxirush_s1ap::s1ap::{CellIDCancelled, CellIDCancelledItem};
-use rasn::prelude::*;
+use oracle::bindings::CellIDCancelledItem;
+use oracle::rasn::{self, prelude::*};
+use oxirush_s1ap::aper::decode;
+use oxirush_s1ap::s1ap::CellIDCancelled;
 
 struct PeakAllocator;
 
@@ -28,18 +30,18 @@ unsafe impl GlobalAlloc for PeakAllocator {
 #[global_allocator]
 static ALLOCATOR: PeakAllocator = PeakAllocator;
 
-/// `CellID-Cancelled` with the list codec that rasn derives for it, in place of the
-/// one of the crate.
+/// `CellID-Cancelled` of the oracle, with the list codec that rasn derives for it in
+/// place of the one that the oracle has.
 #[derive(AsnType, Decode)]
 #[rasn(delegate, size("1..=65535"))]
 struct Derived(#[allow(dead_code)] SequenceOf<CellIDCancelledItem>);
 
-/// The most memory that is reserved at once while `octets`, which are no `T`, are
-/// decoded as one.
-fn reserved<T: Decode>(octets: &[u8]) -> usize {
+/// The most memory that is reserved at once while `read` reads octets that are no
+/// value, and refuses them.
+fn reserved(read: impl FnOnce() -> bool) -> usize {
     let before = CURRENT.load(Ordering::SeqCst);
     PEAK.store(before, Ordering::SeqCst);
-    assert!(rasn::aper::decode::<T>(octets).is_err());
+    assert!(!read());
     PEAK.load(Ordering::SeqCst) - before
 }
 
@@ -52,12 +54,14 @@ fn a_claimed_list_length_reserves_no_memory() {
     // CellID-Cancelled is SIZE(1..65535): a count of 65535, then no element, then
     // octets that are none.
     for octets in [vec![0xff, 0xfe], after(&[0xff, 0xfe])] {
-        let cells = reserved::<CellIDCancelled>(&octets);
+        let cells = reserved(|| decode::<CellIDCancelled>(&octets).is_ok());
         assert!(cells < 64 * 1024, "reserved {cells} bytes");
     }
     // The list codec of rasn reserves for the count that it reads, as far as the
-    // octets after it have bits: the codec of the crate is in its place.
-    let derived = reserved::<Derived>(&after(&[0xff, 0xfe]));
+    // octets after it have bits: the reader of the crate reserves a little, and grows
+    // the list with the elements that it reads.
+    let octets = after(&[0xff, 0xfe]);
+    let derived = reserved(|| rasn::aper::decode::<Derived>(&octets).is_ok());
     assert!(
         derived > 1024 * 1024,
         "the codec of rasn reserved {derived} bytes"

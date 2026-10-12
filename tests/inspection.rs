@@ -573,12 +573,12 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     let pdu = S1AP_PDU::from_tree(&required(json!({name: container}))).unwrap();
     // The octets are the APER encoding of the type, which the bindings read.
     let message: HandoverRequired = pdu.decode_value().unwrap();
-    let octets = message.protocol_ies.0[2].value.as_bytes();
     let octets: SourceToTargetTransparentContainer =
-        decode_open_type(&rasn::types::Any::new(octets.to_vec())).unwrap();
-    let carried: SourceeNBToTargeteNBTransparentContainer = rasn::aper::decode(&octets.0).unwrap();
-    assert_eq!(carried.r_rc_container.0.as_ref(), [1, 2]);
-    assert_eq!(rasn::aper::encode(&carried).unwrap(), octets.0.as_ref());
+        decode_open_type(&message.protocol_ies.0[2].value).unwrap();
+    let carried: SourceeNBToTargeteNBTransparentContainer =
+        oxirush_s1ap::aper::decode(&octets.0).unwrap();
+    assert_eq!(carried.r_rc_container.0, [1, 2]);
+    assert_eq!(oxirush_s1ap::aper::encode(&carried).unwrap(), octets.0);
     // Nothing says what the octets carry: a view and a tree have them as they are.
     let mut view = pdu.to_view().unwrap();
     let ie = "/s1ap/Source-ToTarget-TransparentContainer";
@@ -940,7 +940,6 @@ fn the_parts_of_a_gummei_are_numbers() {
 
 #[test]
 fn a_tunnel_endpoint_and_the_identities_of_a_ue_are_readable() {
-    use oxirush_s1ap::helpers::bytes_to_bitvec;
     use serde_json::json;
     let added = |id: u16, value: serde_json::Value| {
         sent(&[json!({"id": id, "criticality": "ignore", "value": value})])
@@ -953,14 +952,14 @@ fn a_tunnel_endpoint_and_the_identities_of_a_ue_are_readable() {
     let item = &mut ie(&mut shown, 51)["value"][0];
     assert_eq!(item["value"], bearer);
     let expected = ERABSetupItemCtxtSURes::new(
-        ERABID(5u8.into()),
-        TransportLayerAddress(bytes_to_bitvec(&[10, 0, 0, 2])),
+        ERABID(5),
+        TransportLayerAddress(oxirush_s1ap::BitString::from([10, 0, 0, 2])),
         GTPTEID::from([0, 0, 0, 2]),
         None,
     );
     assert_eq!(
         item["_raw_value"],
-        octets(encode_open_type(&expected).unwrap().as_bytes())
+        octets(&encode_open_type(&expected).unwrap())
     );
 
     // UEPagingID is IE 43: an IMSI by its digits, or an S-TMSI by its numbers.
@@ -971,10 +970,7 @@ fn a_tunnel_endpoint_and_the_identities_of_a_ue_are_readable() {
         ie(&mut shown, 43)["value"]["iMSI"],
         json!("208930000000001")
     );
-    assert_eq!(
-        ie(&mut shown, 43)["_raw_value"],
-        octets(expected.as_bytes())
-    );
+    assert_eq!(ie(&mut shown, 43)["_raw_value"], octets(&expected));
     // As JER writes it, with the filler that says it is not digits.
     let mut same = added(43, json!({"iMSI": "02980300000000F1"})).unwrap();
     assert_eq!(
@@ -1610,7 +1606,7 @@ fn a_kind_that_the_specification_does_not_have_says_the_direction_of_its_pdu() {
     let pdu = S1AP_PDU::unsuccessfulOutcome(UnsuccessfulOutcome::new(
         ProcedureCode(13),
         Criticality::ignore,
-        rasn::types::Any::new(vec![0]),
+        oxirush_s1ap::Octets::from(vec![0]),
     ));
     let oxirush_s1ap::S1apPduKind::Other {
         direction,
@@ -2078,7 +2074,7 @@ fn an_integer_of_two_to_the_63_or_more_is_a_number() {
         assert!(entry.get("_decode_error").is_none(), "{entry}");
         assert_eq!(inspect::select(&view, &count).unwrap(), [&json!(number)]);
         let item = hex::decode(entry["_raw_value"].as_str().unwrap()).unwrap();
-        let item: ERABUsageReportItem = decode_open_type(&rasn::types::Any::new(item)).unwrap();
+        let item: ERABUsageReportItem = decode_open_type(&item).unwrap();
         assert_eq!(item.usage_count_ul, number);
 
         // A tree has it, and both forms are the same octets.
@@ -2091,7 +2087,8 @@ fn an_integer_of_two_to_the_63_or_more_is_a_number() {
         assert_eq!(edited.to_tree().unwrap(), usage_report(number - 1));
     }
 
-    // One more than the type has is refused, where it is.
+    // One more than the type has is no number that JSON has, and its decimal digits
+    // are no number: it is refused, where it is.
     let mut beyond = usage_report(1);
     let item = &mut beyond["ies"][2]["SecondaryRATDataUsageReportList"][0];
     let entry = &mut item["SecondaryRATDataUsageReportItem"]["e-RABUsageReportList"][0];
@@ -2100,16 +2097,83 @@ fn an_integer_of_two_to_the_63_or_more_is_a_number() {
     assert_eq!(error.kind(), oxirush_s1ap::ErrorKind::Value);
     assert_eq!(
         error.to_string(),
-        "this is not a value of E-RABUsageReportItem, at usageCountUL: \
-         \"18446744073709551616\" is outside its constraint (0..18446744073709551615)"
+        "this is not a value of E-RABUsageReportItem, at usageCountUL: a number is expected, \
+         and \"18446744073709551616\" is written"
     );
+}
+
+/// The bindings hold an INTEGER in 64 bits. An IE with a number that a later release
+/// makes larger than that is not read with its type: a view and a tree have the octets
+/// that were received, with why they do not decode, and write them back as they are.
+#[test]
+fn an_ie_with_an_integer_beyond_64_bits_keeps_the_octets_received() {
+    use serde_json::json;
+    // The count of the paging attempts has an extension marker: INTEGER (1..16, ...).
+    let attempts = PagingAttemptInformation::new(
+        PagingAttemptCount(u64::MAX),
+        IntendedNumberOfPagingAttempts(1),
+        None,
+        None,
+    );
+    let largest = AssistanceDataForPaging::new(None, None, Some(attempts), None);
+    let largest = encode_open_type(&largest).unwrap();
+    // The octets of the largest count that the bindings hold, with the nine octets of
+    // 2^64 in the place of its own nine.
+    let nine = [0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff];
+    let at = largest
+        .windows(9)
+        .position(|octets| octets == nine)
+        .unwrap();
+    assert_eq!(largest[at - 1], 9);
+    let mut beyond = largest.to_vec();
+    beyond[at..at + 9].copy_from_slice(&[0x01, 0, 0, 0, 0, 0, 0, 0, 0]);
+    let error = decode_open_type::<AssistanceDataForPaging>(&beyond).unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "these octets do not decode as AssistanceDataForPaging: the number does not fit in 64 \
+         bits, in its field `paging_attempt_information.paging_attempt_count`"
+    );
+
+    // A PAGING with these octets as its assistance data.
+    let mut pdu = S1AP_PDU::from_tree(&json!({"message": "Paging", "ies": [
+        {"UEIdentityIndexValue": "0A40"},
+        {"UEPagingID": {"s-TMSI": {"mMEC": 1, "m-TMSI": 1}}},
+        {"CNDomain": "ps"},
+        {"TAIList": [{"TAIItem": {"tAI": {"pLMNidentity": "208-93", "tAC": 1}}}]},
+        {"AssistanceDataForPaging": {"pagingAttemptInformation": {
+            "pagingAttemptCount": 1,
+            "intendedNumberOfPagingAttempts": 1,
+        }}},
+    ]}))
+    .unwrap();
+    let mut ies = pdu.protocol_ies().unwrap().into_owned();
+    ies.0[4].value = beyond.clone().into();
+    pdu.set_protocol_ies(ies).unwrap();
+    let wire = pdu.encode().unwrap();
+
+    // The IE is the octets that were received, and the others are read.
+    let view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
+    let entry = &view["message"]["protocolIEs"][4];
+    assert_eq!(entry["_raw_value"], json!(hex::encode_upper(&beyond)));
+    assert_eq!(entry["value"], entry["_raw_value"]);
+    let why = entry["_decode_error"].as_str().unwrap();
+    assert!(why.contains("the number does not fit in 64 bits"), "{why}");
+    assert_eq!(view["message"]["protocolIEs"][2]["value"], json!("ps"));
+    // The view and the tree give the octets back.
+    assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
+    let tree = pdu.to_tree().unwrap();
+    assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
 }
 
 /// A request to modify a UE context, with UE security capabilities whose encryption
 /// algorithms are this many bits.
 fn modification(bits: usize) -> S1AP_PDU {
-    let mask =
-        |length: usize| -> rasn::types::BitString { (0..length).map(|bit| bit < 2).collect() };
+    // The first two bits of a string of this length.
+    let mask = |length: usize| {
+        let mut octets = vec![0; length.div_ceil(8)];
+        octets[0] = 0xc0;
+        oxirush_s1ap::BitString::new(octets, length).unwrap()
+    };
     let capabilities = UESecurityCapabilities::new(
         EncryptionAlgorithms(mask(bits)),
         IntegrityProtectionAlgorithms(mask(16)),

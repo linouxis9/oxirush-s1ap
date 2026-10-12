@@ -1,23 +1,23 @@
+use oxirush_s1ap::aper::{AsnType, Decode, Error, Reader, decode, encode};
 use oxirush_s1ap::s1ap::*;
-use rasn::prelude::*;
 
 /// Unknown SEQUENCE additions must be consumed before the next TAI in
 /// TAIListforWarning (TS 36.413 §9.3.4; X.691 (02/2021) §19.8-19.9).
 #[test]
 fn unknown_sequence_addition_preserves_the_following_tai() {
     let wire = hex::decode("00018002f83900010101000002f8390002").unwrap();
-    let value = rasn::aper::decode::<TAIListforWarning>(&wire).unwrap();
+    let value = decode::<TAIListforWarning>(&wire).unwrap();
     assert_eq!(
         value
             .0
             .iter()
-            .map(|tai| tai.t_ac.0.as_ref())
+            .map(|tai| &tai.t_ac.0[..])
             .collect::<Vec<_>>(),
         [&[0, 1][..], &[0, 2][..]],
     );
     // The public type retains the known root, while future additions are ignored.
     assert_eq!(
-        rasn::aper::encode(&value).unwrap(),
+        encode(&value).unwrap(),
         hex::decode("00010002f83900010002f8390002").unwrap(),
     );
 }
@@ -45,28 +45,38 @@ fn complete_warning_request_preserves_unknown_addition_bytes() {
         panic!("expected tracking area warning list");
     };
     assert_eq!(
-        list.0
-            .iter()
-            .map(|tai| tai.t_ac.0.as_ref())
-            .collect::<Vec<_>>(),
+        list.0.iter().map(|tai| &tai.t_ac.0[..]).collect::<Vec<_>>(),
         [&[0, 1][..], &[0, 2][..]],
     );
 }
 
-#[derive(AsnType, Decode, Debug, PartialEq)]
-#[rasn(automatic_tags)]
-struct FollowingTAI {
-    value: TAI,
-    #[rasn(value("0..=255"))]
+/// A TAI, then a number of one octet: what follows the additions of a value is read
+/// where they end.
+#[derive(Debug, PartialEq)]
+struct FollowingTAI<'a> {
+    value: TAI<'a>,
     following: u8,
 }
 
-/// Hand-built X.691 fields, independent of rasn's encoder. In particular,
+impl AsnType for FollowingTAI<'_> {
+    const NAME: &'static str = "FollowingTAI";
+}
+
+impl<'a> Decode<'a> for FollowingTAI<'a> {
+    fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
+        Ok(Self {
+            value: TAI::decode(reader)?,
+            following: reader.unsigned(0, 255)? as u8,
+        })
+    }
+}
+
+/// Hand-built X.691 fields, independent of the writer of the crate. In particular,
 /// normally small lengths <=64 encode n-1 in six unaligned bits; larger
 /// bitmaps use an unconstrained length (X.691 (02/2021) §11.9.3.4),
 /// including fragments.
 #[derive(Default)]
-struct Wire(BitString);
+struct Wire(Vec<bool>);
 
 impl Wire {
     fn bits(&mut self, value: usize, count: usize) {
@@ -97,7 +107,11 @@ impl Wire {
 
     fn finish(mut self) -> Vec<u8> {
         self.align();
-        self.0.into_vec()
+        let octet = |bits: &[bool]| {
+            bits.iter()
+                .fold(0, |octet, bit| octet << 1 | u8::from(*bit))
+        };
+        self.0.chunks(8).map(octet).collect()
     }
 }
 
@@ -157,8 +171,8 @@ fn unknown_additions_handle_small_large_and_fragmented_bitmaps() {
     };
     for count in [1, 64, 65, 128, 16384, 65536] {
         let wire = extended_tai(count, false);
-        assert_eq!(rasn::aper::decode::<FollowingTAI>(&wire).unwrap(), expected);
-        assert!(rasn::aper::decode::<FollowingTAI>(&wire[..wire.len() - 1]).is_err());
+        assert_eq!(decode::<FollowingTAI>(&wire).unwrap(), expected);
+        assert!(decode::<FollowingTAI>(&wire[..wire.len() - 1]).is_err());
     }
 }
 
@@ -166,13 +180,10 @@ fn unknown_additions_handle_small_large_and_fragmented_bitmaps() {
 fn unknown_fragmented_open_types_preserve_following_fields_and_reject_truncation() {
     for count in [1, 64, 65, 128] {
         let wire = extended_tai(count, true);
-        assert_eq!(
-            rasn::aper::decode::<FollowingTAI>(&wire).unwrap().following,
-            0x7c
-        );
+        assert_eq!(decode::<FollowingTAI>(&wire).unwrap().following, 0x7c);
         for cut in 0..wire.len() {
             assert!(
-                rasn::aper::decode::<FollowingTAI>(&wire[..cut]).is_err(),
+                decode::<FollowingTAI>(&wire[..cut]).is_err(),
                 "accepted truncated addition: bitmap={count}, prefix={cut}",
             );
         }
@@ -184,29 +195,21 @@ fn unknown_additions_reject_truncated_small_open_types() {
     for count in [1, 64, 65, 128] {
         let wire = extended_tai(count, false);
         for cut in 0..wire.len() {
-            assert!(rasn::aper::decode::<FollowingTAI>(&wire[..cut]).is_err());
+            assert!(decode::<FollowingTAI>(&wire[..cut]).is_err());
         }
     }
 }
 
 #[test]
-fn root_fields_and_other_codecs_keep_the_original_sequence_layout() {
+fn root_fields_keep_the_original_sequence_layout() {
+    // The extension bit and the bit of the member that may be absent, then the PLMN
+    // identity, which is three octets and so starts an octet, and the TAC, two octets
+    // that follow it where it ends.
     let value =
         oxirush_s1ap::helpers::tai(oxirush_s1ap::helpers::plmn("208", "93").unwrap(), [0, 1]);
-    macro_rules! round_trip {
-        ($codec:ident) => {
-            let wire = rasn::$codec::encode(&value).unwrap();
-            assert_eq!(rasn::$codec::decode::<TAI>(&wire).unwrap(), value);
-        };
-    }
-    round_trip!(aper);
-    round_trip!(uper);
-    round_trip!(ber);
-    round_trip!(der);
-    round_trip!(oer);
-    round_trip!(coer);
-    round_trip!(jer);
-    round_trip!(xer);
+    let wire = encode(&value).unwrap();
+    assert_eq!(wire, [0x00, 0x02, 0xf8, 0x39, 0x00, 0x01]);
+    assert_eq!(decode::<TAI>(&wire).unwrap(), value);
 }
 
 /// Named extension containers are ordinary optional root fields, distinct
@@ -216,15 +219,15 @@ fn optional_root_extension_container_is_preserved() {
     let wire = hex::decode("4002f83900010000fde840015a").unwrap();
     let value = TAI::new(
         oxirush_s1ap::helpers::plmn("208", "93").unwrap(),
-        [0, 1].into(),
+        TAC([0, 1]),
         Some(ProtocolExtensionContainer(vec![
             ProtocolExtensionField::new(
                 ProtocolExtensionID(65000),
                 Criticality::ignore,
-                Any::new(vec![0x5a]),
+                vec![0x5a].into(),
             ),
         ])),
     );
-    assert_eq!(rasn::aper::decode::<TAI>(&wire).unwrap(), value);
-    assert_eq!(rasn::aper::encode(&value).unwrap(), wire);
+    assert_eq!(decode::<TAI>(&wire).unwrap(), value);
+    assert_eq!(encode(&value).unwrap(), wire);
 }

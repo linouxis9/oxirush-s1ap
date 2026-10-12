@@ -3,9 +3,9 @@
 
 use oxirush_s1ap::s1ap::*;
 use oxirush_s1ap::{
-    Error, ErrorKind, Message, build_s1ap, build_s1ap_ie, extract_s1ap_ies, with_s1ap_ie_mut,
+    AsnType, Error, ErrorKind, Message, Octets, build_s1ap, build_s1ap_ie, extract_s1ap_ies,
+    with_s1ap_ie_mut,
 };
-use rasn::types::Any;
 
 /// A UE CONTEXT RELEASE REQUEST with its three IEs, the message of the README.
 const RELEASE_REQUEST: &str = "0012401500000300000002002a000800020007000240020280";
@@ -112,12 +112,8 @@ fn octets_that_are_no_pdu_are_a_decode_error() {
             text.starts_with("these octets do not decode as S1AP-PDU: "),
             "{text}"
         );
-        // What rasn says is the source, and is not the message.
-        assert!(!text.contains("Codec"), "{text}");
-        assert!(source(&short).is_some_and(|source| source.contains("Codec: APER")));
-        // And is that error itself, for the one who reads its kind.
-        let rasn = std::error::Error::source(&short).unwrap();
-        assert!(rasn.downcast_ref::<rasn::error::DecodeError>().is_some());
+        // The codec is that of the family: the error is whole, and has no source.
+        assert_eq!(source(&short), None);
     }
     let long = S1AP_PDU::decode(&[&octets[..], &[0]].concat()).unwrap_err();
     assert_eq!(long.kind(), ErrorKind::Decode);
@@ -131,15 +127,15 @@ fn octets_that_are_no_pdu_are_a_decode_error() {
 fn an_open_type_that_is_not_the_value_asked_for_is_a_decode_error() {
     // An MME UE S1AP ID is an INTEGER (0..4294967295): a length of one octet, then
     // the octet.
-    let id: MMEUES1APID = decode_open_type(&Any::new(vec![0x00, 0x2a])).unwrap();
+    let id: MMEUES1APID = decode_open_type(&Octets::from(vec![0x00, 0x2a])).unwrap();
     assert_eq!(id.0, 42);
-    let short = decode_open_type::<MMEUES1APID>(&Any::new(vec![0x40, 0x2a])).unwrap_err();
+    let short = decode_open_type::<MMEUES1APID>(&Octets::from(vec![0x40, 0x2a])).unwrap_err();
     assert_eq!(short.kind(), ErrorKind::Decode);
     assert_eq!(
         short.to_string(),
         "these octets do not decode as MME-UE-S1AP-ID: the octets end before the value does"
     );
-    let long = decode_open_type::<MMEUES1APID>(&Any::new(vec![0x00, 0x2a, 0x00, 0x00]));
+    let long = decode_open_type::<MMEUES1APID>(&Octets::from(vec![0x00, 0x2a, 0x00, 0x00]));
     assert_eq!(
         long.unwrap_err().to_string(),
         "these octets do not decode as MME-UE-S1AP-ID: the value is followed by 2 octets"
@@ -156,7 +152,7 @@ fn a_value_outside_its_constraint_is_an_encode_error() {
         "a value of SubscriberProfileIDforRFP does not encode: 1000 is outside its \
          constraint (1..256)"
     );
-    assert!(source(&error).is_some_and(|source| source.contains("Codec: APER")));
+    assert_eq!(source(&error), None);
 }
 
 #[test]
@@ -192,15 +188,15 @@ fn request(ies: Vec<ProtocolIEField>) -> UEContextReleaseRequest {
 }
 
 /// The entry of an MME UE S1AP ID and that of an eNB UE S1AP ID.
-fn mme_and_enb() -> (ProtocolIEField, ProtocolIEField) {
+fn mme_and_enb() -> (ProtocolIEField<'static>, ProtocolIEField<'static>) {
     let mme = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(42u32));
     let enb = build_s1ap_ie!(UEContextReleaseRequest, REJECT eNB_UE_S1AP_ID(7u32));
     (mme.unwrap(), enb.unwrap())
 }
 
 /// An entry with the identifier of an IE, whose octets are not the value of that IE.
-fn undecodable(id: u16) -> ProtocolIEField {
-    ProtocolIEField::new(id, Criticality::reject, Any::new(vec![0xff]))
+fn undecodable(id: u16) -> ProtocolIEField<'static> {
+    ProtocolIEField::new(id, Criticality::reject, Octets::from(vec![0xff]))
 }
 
 #[test]
@@ -233,7 +229,7 @@ fn an_ie_that_does_not_decode_is_an_error_for_a_required_and_for_an_optional_fie
         "the MME-UE-S1AP-ID of this UEContextReleaseRequest does not decode: the octets end \
          before the value does"
     );
-    assert!(source(&required).is_some_and(|source| source.contains("Codec: APER")));
+    assert_eq!(source(&required), None);
 
     // The one that may be absent is there: it is not `None`.
     let optional = ids(&request(vec![mme, undecodable(8)])).unwrap_err();
@@ -251,9 +247,10 @@ fn an_ie_that_does_not_decode_is_an_error_for_a_required_and_for_an_optional_fie
 /// not been received (TS 36.413 clause 10.3.4.2).
 const SPOILED_CAUSE: &str = "0012401500000300000002002a000800020007000240027280";
 
-fn spoiled_request() -> UEContextReleaseRequest {
+fn spoiled_request() -> UEContextReleaseRequest<'static> {
     let pdu = S1AP_PDU::decode(&hex::decode(SPOILED_CAUSE).unwrap()).unwrap();
-    pdu.decode_value().unwrap()
+    let request: UEContextReleaseRequest = pdu.decode_value().unwrap();
+    request.into_owned()
 }
 
 /// What a receiver reads in a request when it takes the cause if it can.
@@ -292,7 +289,8 @@ fn a_lax_field_is_the_ie_if_it_decodes_and_none_otherwise() {
     let inactivity = Cause::radioNetwork(CauseRadioNetwork::user_inactivity);
 
     // The IE is there and decodes.
-    let received: UEContextReleaseRequest = release_request().decode_value().unwrap();
+    let pdu = release_request();
+    let received: UEContextReleaseRequest = pdu.decode_value().unwrap();
     assert_eq!(id_and_cause(&received), Ok((42, Some(inactivity.clone()))));
     assert_eq!(cause_if_read(&received), Some(inactivity));
 
@@ -324,7 +322,8 @@ fn a_lax_field_is_the_ie_if_it_decodes_and_none_otherwise() {
 #[test]
 fn the_last_of_an_ie_that_is_there_twice_decides_a_lax_field() {
     let inactivity = Cause::radioNetwork(CauseRadioNetwork::user_inactivity);
-    let received: UEContextReleaseRequest = release_request().decode_value().unwrap();
+    let pdu = release_request();
+    let received: UEContextReleaseRequest = pdu.decode_value().unwrap();
     let read = received.protocol_ies.0[2].clone();
     let unread = spoiled_request().protocol_ies.0[2].clone();
 
@@ -416,7 +415,7 @@ fn an_argument_that_a_helper_does_not_take_is_an_error_and_no_panic() {
     let panicked = [
         plmn("20", "93").unwrap_err(),
         plmn("208", "9").unwrap_err(),
-        int_to_bitvec(1, 65).unwrap_err(),
+        oxirush_s1ap::Bits::new(1, 65).unwrap_err(),
     ];
     // What was cut short: a macro eNB ID over 20 bits (TS 36.413 clause 9.2.1.37),
     // alone and before the 8 bits of a cell in a Cell Identity of 28 (clause 9.2.1.38),
@@ -424,7 +423,7 @@ fn an_argument_that_a_helper_does_not_take_is_an_error_and_no_panic() {
     let cut_short = [
         global_enb_id(network(), 0x1f_ffff).unwrap_err(),
         eutran_cgi(network(), 0x1f_ffff, 1).unwrap_err(),
-        int_to_bitvec(0x100, 8).unwrap_err(),
+        oxirush_s1ap::Bits::new(0x100, 8).unwrap_err(),
     ];
     for error in panicked.iter().chain(&cut_short) {
         assert_eq!(error.kind(), ErrorKind::Argument, "{error}");
@@ -444,9 +443,9 @@ fn an_argument_that_a_helper_does_not_take_is_an_error_and_no_panic() {
 #[cfg(feature = "inspect")]
 mod inspect_errors {
     use super::release_request;
+    use oxirush_s1ap::Octets;
     use oxirush_s1ap::s1ap::*;
     use oxirush_s1ap::{Error, ErrorKind, inspect};
-    use rasn::types::Any;
     use serde_json::{Value, json};
 
     /// The view of the UE CONTEXT RELEASE REQUEST.
@@ -723,7 +722,6 @@ mod inspect_errors {
             "this is not a value of Global-ENB-ID, at eNB-ID: an object with one member is \
              expected, the name of an alternative with its value, and 5 is written"
         );
-        // The codec of the JSON forms is that of the crate: no error of rasn is its source.
         assert!(std::error::Error::source(&member).is_none());
     }
 
@@ -861,7 +859,7 @@ mod inspect_errors {
         let S1AP_PDU::initiatingMessage(mut held) = release_request() else {
             panic!("an initiating message");
         };
-        held.value = Any::new(vec![0xff]);
+        held.value = Octets::from(vec![0xff]);
         let pdu = S1AP_PDU::initiatingMessage(held);
         let error = pdu.to_view().unwrap_err();
         assert_eq!(error.kind(), ErrorKind::Decode);
