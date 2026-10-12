@@ -678,7 +678,6 @@ mod inspect_errors {
         let octets = written(json!([{"MME-UE-S1AP-ID": {"octets": "zz"}}])).unwrap_err();
         for error in [&string, &name, &outside, &octets] {
             assert_eq!(error.kind(), ErrorKind::Value, "{error}");
-            // The wording of the codec is the source, where the codec said it.
             assert!(!error.to_string().contains("Codec"), "{error}");
         }
         assert_eq!(
@@ -692,11 +691,12 @@ mod inspect_errors {
         );
         assert_eq!(
             outside.to_string(),
-            "this is not a value of MME-UE-S1AP-ID: the number does not fit in 32 bits"
+            "this is not a value of MME-UE-S1AP-ID: 4294967296 is outside its constraint (0..4294967295)"
         );
         assert_eq!(
             octets.to_string(),
-            "\"zz\" is not octets: octets are written in hexadecimal, two digits for each"
+            "this is not a value of UEContextReleaseRequest, at protocolIEs/0/value: octets in \
+             hexadecimal, two digits for each, are expected, and \"zz\" is written"
         );
 
         // A value of a member, by the names that ASN.1 gives the members on the way:
@@ -720,10 +720,11 @@ mod inspect_errors {
         assert_eq!(member.kind(), ErrorKind::Value);
         assert_eq!(
             member.to_string(),
-            "this is not a value of Global-ENB-ID, at eNB-ID: an object is expected, and 5 is written"
+            "this is not a value of Global-ENB-ID, at eNB-ID: an object with one member is \
+             expected, the name of an alternative with its value, and 5 is written"
         );
-        let rasn = std::error::Error::source(&member).expect("the error of rasn");
-        assert!(rasn.to_string().contains("Codec: JER"), "{rasn}");
+        // The codec of the JSON forms is that of the crate: no error of rasn is its source.
+        assert!(std::error::Error::source(&member).is_none());
     }
 
     #[test]
