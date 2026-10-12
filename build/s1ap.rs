@@ -24,10 +24,8 @@ const CARRIED: &[(&str, &str)] = &[
 ];
 
 pub fn generate_s1ap() -> Result<()> {
-    let mut files: Vec<PathBuf> = fs::read_dir("s1ap")
-        .context("read S1AP ASN.1 source directory")?
-        .map(|entry| entry.map(|entry| entry.path()))
-        .collect::<std::io::Result<_>>()?;
+    // The modules that `build/asn1.sha256` records, and no other.
+    let mut files = crate::asn1::modules()?;
     files.sort();
 
     let config = RasnConfig {
