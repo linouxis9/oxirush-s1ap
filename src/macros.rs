@@ -457,6 +457,10 @@ macro_rules! procedures {
         #[cfg(any(test, fuzzing))]
         #[allow(unused_imports)]
         pub(crate) use $crate::s1ap::S1AP_PDU as Pdu;
+        /// A PDU that borrows its message from the octets that it is decoded from.
+        #[cfg(test)]
+        #[allow(unused_imports)]
+        pub(crate) use $crate::s1ap::S1APPDU as BorrowedPdu;
         /// The name of the type of a PDU in the bindings.
         #[cfg(any(test, fuzzing))]
         #[allow(dead_code)]
