@@ -239,6 +239,21 @@ is not source compatible with 0.2.0.
   `this is not a value of Cause, at radioNetwork: "no-such-cause" is no
   value of the ENUMERATED`. The revisions of this version before the release
   returned a `String`, which for such a value was the text of rasn.
+- Vectors with content, in `tests/fixtures/vectors.tsv`: 284 messages that
+  pycrate 0.8.1 encoded from the ASN.1 of TS 36.413, beside the 101 of
+  `messages.tsv`, which have what is mandatory and nothing else. They hold
+  each message with every IE of its object set, each of the 327 IEs that the
+  crate names, where the messages of `messages.tsv` hold 80, each
+  alternative of each `CHOICE`, each value of each `ENUMERATED` but those of
+  the type of handover, and strings and lists around each form of the length
+  determinant, in fragments too. The tests read each with its types and
+  write it back to the same octets, from its values alone too.
+  `tests/fixtures/generate.py` writes both files, and
+  `tests/fixtures/dissect.py` gives them to tshark.
+- For maintainers: `build/asn1.sha256` records the SHA-256 of the six ASN.1
+  modules that the bindings are generated from, `build/extract_asn1.py`
+  takes them out of the archive that 3GPP publishes, and the generator reads
+  no module that has another digest.
 
 ### Changed
 
