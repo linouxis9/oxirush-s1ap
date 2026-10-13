@@ -1274,8 +1274,8 @@ fn a_path_that_names_nothing_is_refused_and_changes_nothing() {
     }
     for (path, reason) in [
         ("/s1ap/NoSuchIE/value", "is not an IE of S1AP"),
-        ("/s1ap/GUMMEI-ID/value", "selected no field"),
-        ("/s1ap/7/value", "selected no field"),
+        ("/s1ap/GUMMEI-ID/value", "an edit changes what is there"),
+        ("/s1ap/7/value", "an edit changes what is there"),
     ] {
         let error = inspect::set(&mut view, path, json!(1))
             .unwrap_err()
@@ -1397,7 +1397,7 @@ fn null_takes_an_optional_member_out() {
     let error = inspect::set(&mut edited, nas, Value::Null)
         .unwrap_err()
         .to_string();
-    assert!(error.contains("selected no field"), "{error}");
+    assert!(error.contains("an edit changes what is there"), "{error}");
 }
 
 #[test]
