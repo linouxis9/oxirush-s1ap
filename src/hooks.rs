@@ -13,6 +13,8 @@
 use crate::Error;
 use crate::s1ap::{ProtocolIEContainer, S1APPDU};
 
+/// The bindings, by a name that is the same for both protocols.
+pub use crate::s1ap as bindings;
 /// A PDU that owns its octets, by a name that is the same for both protocols.
 pub use crate::s1ap::S1AP_PDU as Pdu;
 /// A PDU that borrows its message from the octets that it is decoded from.

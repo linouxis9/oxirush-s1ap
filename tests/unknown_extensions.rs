@@ -231,3 +231,40 @@ fn optional_root_extension_container_is_preserved() {
     assert_eq!(decode::<TAI>(&wire).unwrap(), value);
     assert_eq!(encode(&value).unwrap(), wire);
 }
+
+/// What X.691 (02/2021) gives no encoding for is refused. The extension bit of a
+/// SEQUENCE is one when an addition is present, and zero otherwise (§19.1), and the
+/// length of the bitmap of the additions is one at least (§19.8, §11.9.3.1 a)).
+///
+/// A differential run against the codec of rasn found the first of these, which the
+/// crate read as a value without additions.
+#[test]
+fn an_extension_bit_without_an_addition_that_is_present_is_refused() {
+    let refused = |octets: &[u8]| {
+        let error = decode::<ULCPSecurityInformation>(octets).unwrap_err();
+        error.to_string()
+    };
+    let none = "the extension bit of a SEQUENCE is set, and it has no extension addition";
+    // The extension bit, no iE-Extensions, the 16 bits of the MAC and the 5 of the
+    // count, then the bitmap of the additions: a one bit for the form of more than 64
+    // bits, and its length, which is zero.
+    let error = refused(&[0x80, 0x02, 0x01, 0x00]);
+    assert!(error.ends_with(none), "{error}");
+    // A bitmap of one addition, which is not present.
+    let error = refused(&[0x80, 0x02, 0x00, 0x00]);
+    assert!(error.ends_with(none), "{error}");
+    // One addition that is present, counted in the form of more than 64 bits, where 64
+    // bits at most have their length, less one, in six bits (§11.9.3.4).
+    let error = refused(&[0x80, 0x02, 0x01, 0x01, 0x80, 0x01, 0xaa]);
+    assert!(error.ends_with("has its length in six bits"), "{error}");
+    // One addition that is present, in an open type of no octet: a complete encoding
+    // is one octet at least (§11.1.3.1).
+    let error = refused(&[0x80, 0x02, 0x00, 0x02, 0x00]);
+    assert!(
+        error.contains("an extension addition has no octet"),
+        "{error}"
+    );
+    // The same addition in one octet is skipped, and the value is read.
+    let value = decode::<ULCPSecurityInformation>(&[0x80, 0x02, 0x00, 0x02, 0x01, 0x00]).unwrap();
+    assert_eq!(encode(&value).unwrap(), [0x00, 0x02, 0x00]);
+}
