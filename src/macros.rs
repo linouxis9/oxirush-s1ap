@@ -198,6 +198,10 @@ use oxirush_aper::{Encode, Octets, Writer};
 use crate::s1ap::{Criticality, ProtocolIEContainer, ProtocolIEField, ProtocolIEID, S1AP_PDU};
 use crate::{Error, Message};
 
+/// For the macro that extracts IEs: what a field is given of the value of an IE.
+#[doc(hidden)]
+pub use crate::message::__Field;
+
 /// For the macro that builds an IE: one entry of the IEs of a message, which is the
 /// identifier of an IE, its criticality and its value in an open type, or why the
 /// value does not encode.
@@ -305,6 +309,17 @@ pub fn __undecodable_ie<'a, M: Message<'a>>(
     position: usize,
 ) -> Error {
     crate::error::undecodable_ie(error, M::NAME, ie.id.0, ie.criticality, position)
+}
+
+/// For the macro that builds one IE: `M` is a message, and a container of protocol IEs.
+#[doc(hidden)]
+pub fn __message_of_protocol_ies<'a, M: Message<'a>>() {
+    const {
+        assert!(
+            M::__OF_PROTOCOL_IES,
+            "the message has private IEs, and no container of protocol IEs"
+        )
+    };
 }
 
 /// For the macro that builds a PDU: `M` is the message that the procedure of `P` has
@@ -912,7 +927,9 @@ macro_rules! extract_s1ap_ies {
         }
         $( $crate::extract_s1ap_ies!(@check $kind $name, $msg, $ie_name); )+
     };
-    (@val $bind:ident) => { $bind.0 };
+    // The value of the IE, or the one value that its type is a name for: what the
+    // type of the field says.
+    (@val $bind:ident) => { $crate::macros::__Field::__field($bind) };
     (@val $_bind:ident, $expr:expr) => { $expr };
     // The last one decides a `lax` field.
     (@last lax $name:ident, $value:ident) => {
@@ -1116,24 +1133,34 @@ macro_rules! build_s1ap {
 }
 
 /// Build one S1AP protocol IE entry. Every message takes the same
-/// `ProtocolIEField`: the name says where the IE goes, and is that of a message
-/// or of another type that has IEs.
+/// `ProtocolIEField`: the name before the comma says where the IE goes, and is the
+/// type of a message.
+///
+/// An IE that goes in no message is built without that name. Such is an item of a
+/// list of single containers, as `E-RABToBeSetupListCtxtSUReq`, whose items are each one
+/// IE:
+///
+/// ```ignore
+/// build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(item))
+/// ```
 ///
 /// Gives a `Result<ProtocolIEField, Error>`: a value that does not encode into its
 /// open type is an error of the kind `Encode`.
 #[macro_export]
 macro_rules! build_s1ap_ie {
     ($msg:ident, $criticality:ident $ie_name:ident ($($value:tt)+)) => {{
-        // The name is a type that has IEs.
-        let _ = |of: &$crate::s1ap::$msg<'_>| {
-            let _: &$crate::s1ap::ProtocolIEContainer<'_> = &of.protocol_ies;
-        };
+        // The name is the type of a message that has protocol IEs.
+        $crate::macros::__message_of_protocol_ies::<$crate::s1ap::$msg<'_>>();
+        $crate::build_s1ap_ie!($criticality $ie_name ($($value)+))
+    }};
+    // An IE that is in no message: an item of a list of single containers.
+    ($criticality:ident $ie_name:ident ($($value:tt)+)) => {
         $crate::macros::__ie(
             $crate::__s1ap_ie_id!($ie_name),
             $crate::build_s1ap!(@criticality $criticality),
             &$crate::registry::ies::$ie_name::value(($($value)+)),
         )
-    }};
+    };
     ($msg:ident, $ie_name:ident ($($value:tt)+)) => {
         compile_error!(concat!(
             "the criticality of the IE ",

@@ -191,3 +191,93 @@ fn a_message_without_protocol_ies_and_octets_that_are_none_are_errors() -> Resul
     assert_eq!(pdu, request);
     Ok(())
 }
+
+/// A field of the macro that extracts is the value of the IE when it has the type of
+/// the IE, and the one value that the type is a name for when it has the type of that
+/// value: an MME-UE-S1AP-ID is a name for a number, and a Cause is a name for nothing.
+#[test]
+fn a_field_takes_the_value_of_an_ie_as_its_type_or_as_the_value_that_it_names() -> Result<(), Error>
+{
+    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(42u32),
+        REJECT eNB_UE_S1AP_ID(7u32),
+        IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+    )?;
+    let request: UEContextReleaseRequest = pdu.decode_value()?;
+    oxirush_s1ap::extract_s1ap_ies!(request, UEContextReleaseRequest,
+        req cause: Cause = Cause(cause),
+        req id: MMEUES1APID = MME_UE_S1AP_ID(id),
+        req number: u32 = MME_UE_S1AP_ID(id),
+        opt enb: ENBUES1APID = eNB_UE_S1AP_ID(id),
+        lax enb_number: u32 = eNB_UE_S1AP_ID(id),
+        opt twice: u32 = MME_UE_S1AP_ID(id) => id.0 * 2,
+    );
+    assert_eq!(
+        cause,
+        Cause::radioNetwork(CauseRadioNetwork::user_inactivity)
+    );
+    assert_eq!((id, number), (MMEUES1APID(42), 42));
+    assert_eq!((enb, enb_number), (Some(ENBUES1APID(7)), Some(7)));
+    assert_eq!(twice, Some(84));
+    Ok(())
+}
+
+/// TS 36.413 clause 9.1.4.1: the E-RABs of an INITIAL CONTEXT SETUP REQUEST are a list
+/// of single containers, each of which holds one IE, the item of an E-RAB. An item is
+/// in no message, and is built without the name of one.
+#[test]
+fn an_item_of_a_list_of_single_containers_is_built_without_the_name_of_a_message()
+-> Result<(), Error> {
+    let bearer = |id: u64| -> Result<ProtocolIEField<'static>, Error> {
+        let priority = AllocationAndRetentionPriority::new(
+            PriorityLevel(8),
+            PreEmptionCapability::shall_not_trigger_pre_emption,
+            PreEmptionVulnerability::not_pre_emptable,
+            None,
+        );
+        let item = ERABToBeSetupItemCtxtSUReq::new(
+            ERABID(id),
+            ERABLevelQoSParameters::new(QCI(9), priority, None, None),
+            TransportLayerAddress(oxirush_s1ap::BitString::from([10, 0, 0, 1])),
+            GTPTEID([0, 0, 0, id as u8]),
+            None,
+            None,
+        );
+        build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(item))
+    };
+    let bearers = ERABToBeSetupListCtxtSUReq(vec![bearer(5)?, bearer(6)?]);
+    let rates = UEAggregateMaximumBitrate::new(BitRate(100_000_000), BitRate(50_000_000), None);
+    let pdu = build_s1ap!(InitiatingMessage, InitialContextSetup, REJECT, InitialContextSetupRequest,
+        REJECT MME_UE_S1AP_ID(1u32),
+        REJECT eNB_UE_S1AP_ID(7u32),
+        REJECT uEaggregateMaximumBitrate(rates),
+        REJECT E_RABToBeSetupListCtxtSUReq(bearers),
+        REJECT UESecurityCapabilities(oxirush_s1ap::helpers::ue_security_capabilities(0xe0, 0xe0)),
+        REJECT SecurityKey(SecurityKey::from([0x5a; 32])),
+    )?;
+    // The message is as the specification has a sender construct it.
+    assert_eq!(pdu.check()?, []);
+
+    // Its receiver reads each item out of its container.
+    let received = S1AP_PDU::decode(&pdu.encode()?)?;
+    let message: InitialContextSetupRequest = received.decode_value()?;
+    oxirush_s1ap::extract_s1ap_ies!(message, InitialContextSetupRequest,
+        req list: ERABToBeSetupListCtxtSUReq = E_RABToBeSetupListCtxtSUReq(list),
+    );
+    let mut ids = Vec::new();
+    for container in &list.0 {
+        assert_eq!(
+            (container.id.0, container.criticality),
+            (52, Criticality::reject)
+        );
+        let item: ERABToBeSetupItemCtxtSUReq = decode_open_type(&container.value)?;
+        ids.push(item.e_rab_id.0);
+    }
+    assert_eq!(ids, [5, 6]);
+
+    // With the name of a message before it, an IE is the same IE.
+    let named = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(42u32))?;
+    assert_eq!(named, build_s1ap_ie!(REJECT MME_UE_S1AP_ID(42u32))?);
+    Ok(())
+}
