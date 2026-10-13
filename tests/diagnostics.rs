@@ -290,3 +290,62 @@ fn each_deviation_has_the_cause_of_its_clause() -> Result<(), Error> {
     );
     Ok(())
 }
+
+/// TS 36.413 clause 9.1.8.5: the MME name of an S1 SETUP RESPONSE is a PrintableString
+/// (SIZE (1..150, ...)). A name of no character encodes, as a value of a later version
+/// of the type, which a sender of this version does not send. Clause 10.3.1 has a
+/// receiver handle a value that its version does not define as an IE that it does not
+/// comprehend.
+#[test]
+fn a_value_outside_the_root_of_an_extensible_constraint_is_reported() -> Result<(), Error> {
+    // It encodes, and an encoding that is strict refuses it.
+    let none = MMEname("".into());
+    assert_eq!(aper::encode(&none)?, [0x80, 0x00]);
+    let refused = aper::encode_strict(&none).unwrap_err();
+    assert_eq!(refused.kind(), ErrorKind::Encode);
+    assert_eq!(
+        refused.to_string(),
+        "a value of MMEname does not encode: a size of 0 is outside the root of its \
+         constraint (1..150, ...)"
+    );
+
+    // An S1 SETUP RESPONSE with that name is built as any other, and `check` says it.
+    let response = |name: &'static str| {
+        let served = ServedGUMMEIsItem::new(
+            ServedPLMNs(vec![plmn("208", "93")?]),
+            ServedGroupIDs(vec![MMEGroupID([0x00, 0x01])]),
+            ServedMMECs(vec![MMECode([0x01])]),
+            None,
+        );
+        build_s1ap!(SuccessfulOutcome, S1Setup, REJECT, S1SetupResponse,
+            IGNORE MMEname(MMEname(name.into())),
+            REJECT ServedGUMMEIs(ServedGUMMEIs(vec![served])),
+            IGNORE RelativeMMECapacity(RelativeMMECapacity(255)),
+        )
+    };
+    assert_eq!(response("mme-1")?.check()?, []);
+    let deviations = response("")?.check()?;
+    assert!(matches!(
+        deviations[..],
+        [Deviation::OutsideRoot {
+            id: 61,
+            name: "MMEname",
+            position: 0,
+            criticality: Criticality::ignore,
+            ..
+        }]
+    ));
+    assert_eq!(
+        deviations[0].to_string(),
+        "MMEname (IE 61), at position 0, has a value of a later version of its type: a size \
+         of 0 is outside the root of its constraint (1..150, ...)"
+    );
+    assert_eq!(deviations[0].ie(), Some((61, Criticality::ignore)));
+    assert_eq!(
+        deviations[0].type_of_error(),
+        Some(TypeOfError::not_understood)
+    );
+    // The receiver ignores an IE of the criticality `ignore` that it does not comprehend.
+    assert_eq!(deviations[0].cause(), None);
+    Ok(())
+}

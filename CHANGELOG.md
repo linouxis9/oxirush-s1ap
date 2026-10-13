@@ -180,6 +180,10 @@ what each type became.
   that send one. A conditional IE is not reported, as its condition is in
   the prose of TS 36.413, and the IEs that a value holds are not looked at.
   0.2.0 left all of it to the caller.
+- A value outside the root of an extensible constraint, as `MMEname("")`
+  where the type has `SIZE (1..150, ...)`, is written as an extension, which
+  is right for a test and no value for an MME to send. `check()` reports it
+  as `Deviation::OutsideRoot`, and `aper::encode_strict` refuses it.
 - What a receiver answers a message that deviates with, as clause 10 of
   TS 36.413 has it: `deviation.cause()` is the protocol cause, a transfer
   syntax error for an IE that does not decode, an abstract syntax error by

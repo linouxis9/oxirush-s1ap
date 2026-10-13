@@ -8946,7 +8946,7 @@ pub mod s1_ap_ies {
     impl Encode for DataSize {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.unsigned_extensible(self.0, 1, 4095);
+            writer.unsigned_extensible(self.0, 1, 4095)?;
             Ok(())
         }
     }
@@ -9020,7 +9020,7 @@ pub mod s1_ap_ies {
     impl Encode for ERABID {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.unsigned_extensible(self.0, 0, 15);
+            writer.unsigned_extensible(self.0, 0, 15)?;
             Ok(())
         }
     }
@@ -9915,7 +9915,7 @@ pub mod s1_ap_ies {
     impl Encode for EARFCN {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.unsigned_extensible(self.0, 0, 262143);
+            writer.unsigned_extensible(self.0, 0, 262143)?;
             Ok(())
         }
     }
@@ -12266,7 +12266,7 @@ pub mod s1_ap_ies {
     impl Encode for EnGNBID<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.bit_string_extensible(&self.0, 22, 32);
+            writer.bit_string_extensible(&self.0, 22, 32)?;
             Ok(())
         }
     }
@@ -12306,7 +12306,7 @@ pub mod s1_ap_ies {
     impl Encode for EncryptionAlgorithms<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.bit_string_extensible(&self.0, 16, 16);
+            writer.bit_string_extensible(&self.0, 16, 16)?;
             Ok(())
         }
     }
@@ -12797,7 +12797,7 @@ pub mod s1_ap_ies {
     impl Encode for ExpectedActivityPeriod {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.unsigned_extensible(self.0, 1, 181);
+            writer.unsigned_extensible(self.0, 1, 181)?;
             Ok(())
         }
     }
@@ -12893,7 +12893,7 @@ pub mod s1_ap_ies {
     impl Encode for ExpectedIdlePeriod {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.unsigned_extensible(self.0, 1, 181);
+            writer.unsigned_extensible(self.0, 1, 181)?;
             Ok(())
         }
     }
@@ -13279,7 +13279,7 @@ pub mod s1_ap_ies {
     impl Encode for ExtendedBitRate {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.unsigned_extensible(self.0, 10000000001, 4000000000000);
+            writer.unsigned_extensible(self.0, 10000000001, 4000000000000)?;
             Ok(())
         }
     }
@@ -13535,7 +13535,7 @@ pub mod s1_ap_ies {
     impl Encode for FiveQI {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.unsigned_extensible(self.0, 0, 255);
+            writer.unsigned_extensible(self.0, 0, 255)?;
             Ok(())
         }
     }
@@ -16202,7 +16202,7 @@ pub mod s1_ap_ies {
     impl Encode for IntegrityProtectionAlgorithms<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.bit_string_extensible(&self.0, 16, 16);
+            writer.bit_string_extensible(&self.0, 16, 16)?;
             Ok(())
         }
     }
@@ -16321,7 +16321,7 @@ pub mod s1_ap_ies {
     impl Encode for IntendedNumberOfPagingAttempts {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.unsigned_extensible(self.0, 1, 16);
+            writer.unsigned_extensible(self.0, 1, 16)?;
             Ok(())
         }
     }
@@ -18470,7 +18470,9 @@ pub mod s1_ap_ies {
             if let Err(error) = self.pattern_period.encode(writer) {
                 return Err(error.in_field("pattern_period"));
             }
-            writer.unsigned_extensible(self.pattern_offset, 0, 10239);
+            if let Err(error) = writer.unsigned_extensible(self.pattern_offset, 0, 10239) {
+                return Err(error.in_field("pattern_offset"));
+            }
             if let Some(value) = &self.i_e_extensions {
                 if let Err(error) = value.encode(writer) {
                     return Err(error.in_field("i_e_extensions"));
@@ -20327,7 +20329,7 @@ pub mod s1_ap_ies {
     impl Encode for M7period {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.unsigned_extensible(self.0, 1, 60);
+            writer.unsigned_extensible(self.0, 1, 60)?;
             Ok(())
         }
     }
@@ -21884,7 +21886,9 @@ pub mod s1_ap_ies {
                 return Err(error.in_field("muting_pattern_period"));
             }
             if let Some(value) = &self.muting_pattern_offset {
-                writer.unsigned_extensible(*value, 0, 10239);
+                if let Err(error) = writer.unsigned_extensible(*value, 0, 10239) {
+                    return Err(error.in_field("muting_pattern_offset"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
                 if let Err(error) = value.encode(writer) {
@@ -23169,7 +23173,7 @@ pub mod s1_ap_ies {
     impl Encode for NRencryptionAlgorithms<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.bit_string_extensible(&self.0, 16, 16);
+            writer.bit_string_extensible(&self.0, 16, 16)?;
             Ok(())
         }
     }
@@ -23209,7 +23213,7 @@ pub mod s1_ap_ies {
     impl Encode for NRintegrityProtectionAlgorithms<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.bit_string_extensible(&self.0, 16, 16);
+            writer.bit_string_extensible(&self.0, 16, 16)?;
             Ok(())
         }
     }
@@ -24787,7 +24791,7 @@ pub mod s1_ap_ies {
     impl Encode for PagingAttemptCount {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.unsigned_extensible(self.0, 1, 16);
+            writer.unsigned_extensible(self.0, 1, 16)?;
             Ok(())
         }
     }
@@ -26104,7 +26108,11 @@ pub mod s1_ap_ies {
             if let Err(error) = self.p_lmnidentity.encode(writer) {
                 return Err(error.in_field("p_lmnidentity"));
             }
-            writer.bit_string_extensible(&self.r_at_restriction_information, 8, 8);
+            if let Err(error) =
+                writer.bit_string_extensible(&self.r_at_restriction_information, 8, 8)
+            {
+                return Err(error.in_field("r_at_restriction_information"));
+            }
             if let Some(value) = &self.i_e_extensions {
                 if let Err(error) = value.encode(writer) {
                     return Err(error.in_field("i_e_extensions"));
@@ -28833,10 +28841,14 @@ pub mod s1_ap_ies {
                 }
             }
             if let Some(value) = &self.timeof_day_start {
-                writer.unsigned_extensible(*value, 0, 86399);
+                if let Err(error) = writer.unsigned_extensible(*value, 0, 86399) {
+                    return Err(error.in_field("timeof_day_start"));
+                }
             }
             if let Some(value) = &self.timeof_day_end {
-                writer.unsigned_extensible(*value, 0, 86399);
+                if let Err(error) = writer.unsigned_extensible(*value, 0, 86399) {
+                    return Err(error.in_field("timeof_day_end"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
                 if let Err(error) = value.encode(writer) {
@@ -31262,7 +31274,7 @@ pub mod s1_ap_ies {
     impl Encode for StratumLevel {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.unsigned_extensible(self.0, 0, 3);
+            writer.unsigned_extensible(self.0, 0, 3)?;
             Ok(())
         }
     }
@@ -31653,7 +31665,9 @@ pub mod s1_ap_ies {
                 }
             }
             if let Some(value) = &self.periodic_time {
-                writer.unsigned_extensible(*value, 1, 3600);
+                if let Err(error) = writer.unsigned_extensible(*value, 1, 3600) {
+                    return Err(error.in_field("periodic_time"));
+                }
             }
             if let Some(value) = &self.scheduled_communication_time {
                 if let Err(error) = value.encode(writer) {
@@ -35057,7 +35071,7 @@ pub mod s1_ap_ies {
     impl Encode for TransportLayerAddress<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.bit_string_extensible(&self.0, 1, 160);
+            writer.bit_string_extensible(&self.0, 1, 160)?;
             Ok(())
         }
     }
