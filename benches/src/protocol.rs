@@ -279,6 +279,17 @@ fn paging() -> Written {
     }
 }
 
+/// An UPLINK NAS TRANSPORT of `count` IEs of one name: MME-UE-S1AP-ID, the
+/// smallest IE that has a name and a value.
+pub(crate) fn many_ies(count: usize) -> Pdu {
+    let (id, value) = (s1ap::ProtocolIEID(0), vec![0x00, 0x01]);
+    let ie = s1ap::ProtocolIEField::new(id, s1ap::Criticality::reject, value.into());
+    let mut pdu = Pdu::decode(&[0x00, 0x0d, 0x40, 0x03, 0x00, 0x00, 0x00]).unwrap();
+    pdu.set_protocol_ies(s1ap::ProtocolIEContainer(vec![ie; count]))
+        .unwrap();
+    pdu
+}
+
 /// The messages of the size that a network sends.
 pub(crate) fn written() -> Vec<Written> {
     vec![
