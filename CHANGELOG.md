@@ -335,6 +335,13 @@ what each type became.
 
 ### Changed
 
+- An identity prints as it is read, and whole. A `PLMNidentity` prints as its MCC
+  and its MNC, `PLMNidentity(208-93)`, where it printed three numbers, and
+  converts to and from the `Plmn` of `oxirush-utils`, which the crate has as
+  `oxirush_s1ap::identity` and now depends on. A type that is a fixed number of
+  octets prints them in hexadecimal, as `MTMSI(deadbeef)` and
+  `TAC(0001)`. Each has a `Display`, which is the same without the name of the
+  type.
 - `Debug` prints no octet of a key. A `SecurityKey`, which is K_eNB or the
   next hop NH, prints as `SecurityKey(256 bits)`, and so in every value that
   holds one, as a `SecurityContext`. The octets of an IE whose type holds a

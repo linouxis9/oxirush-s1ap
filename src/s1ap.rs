@@ -3559,7 +3559,20 @@ pub mod s1_ap_ies {
             })
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for CI {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for CI {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "CI({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct CI(pub [u8; 2]);
     impl From<[u8; 2]> for CI {
         fn from(value: [u8; 2]) -> Self {
@@ -7286,7 +7299,20 @@ pub mod s1_ap_ies {
             })
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for CorrelationID {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for CorrelationID {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "CorrelationID({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct CorrelationID(pub [u8; 4]);
     impl From<[u8; 4]> for CorrelationID {
         fn from(value: [u8; 4]) -> Self {
@@ -9576,7 +9602,20 @@ pub mod s1_ap_ies {
             })?))
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for EUTRANTraceID {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for EUTRANTraceID {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "EUTRANTraceID({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct EUTRANTraceID(pub [u8; 8]);
     impl From<[u8; 8]> for EUTRANTraceID {
         fn from(value: [u8; 8]) -> Self {
@@ -11406,7 +11445,20 @@ pub mod s1_ap_ies {
             ))
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for EmergencyAreaID {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for EmergencyAreaID {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "EmergencyAreaID({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct EmergencyAreaID(pub [u8; 3]);
     impl From<[u8; 3]> for EmergencyAreaID {
         fn from(value: [u8; 3]) -> Self {
@@ -12971,8 +13023,21 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for FiveGSTAC {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for FiveGSTAC {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "FiveGSTAC({self})")
+        }
+    }
     #[doc = " F"]
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct FiveGSTAC(pub [u8; 3]);
     impl From<[u8; 3]> for FiveGSTAC {
         fn from(value: [u8; 3]) -> Self {
@@ -14005,7 +14070,20 @@ pub mod s1_ap_ies {
             })
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for GTPTEID {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for GTPTEID {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "GTPTEID({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct GTPTEID(pub [u8; 4]);
     impl From<[u8; 4]> for GTPTEID {
         fn from(value: [u8; 4]) -> Self {
@@ -16743,8 +16821,21 @@ pub mod s1_ap_ies {
             Ok(Self(reading.octets(value)?))
         }
     }
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for LAC {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for LAC {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "LAC({self})")
+        }
+    }
     #[doc = " L"]
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct LAC(pub [u8; 2]);
     impl From<[u8; 2]> for LAC {
         fn from(value: [u8; 2]) -> Self {
@@ -18337,7 +18428,20 @@ pub mod s1_ap_ies {
             Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for MTMSI {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for MTMSI {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "MTMSI({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MTMSI(pub [u8; 4]);
     impl From<[u8; 4]> for MTMSI {
         fn from(value: [u8; 4]) -> Self {
@@ -20257,7 +20361,20 @@ pub mod s1_ap_ies {
             })?))
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for MMECode {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for MMECode {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "MMECode({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MMECode(pub [u8; 1]);
     impl From<[u8; 1]> for MMECode {
         fn from(value: [u8; 1]) -> Self {
@@ -20289,7 +20406,20 @@ pub mod s1_ap_ies {
             Ok(Self(reading.octet_array::<1>(value)?))
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for MMEGroupID {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for MMEGroupID {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "MMEGroupID({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MMEGroupID(pub [u8; 2]);
     impl From<[u8; 2]> for MMEGroupID {
         fn from(value: [u8; 2]) -> Self {
@@ -23531,7 +23661,38 @@ pub mod s1_ap_ies {
             })?))
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The MCC and the MNC, as `208-93`. Octets that are no PLMN identity print in hexadecimal.
+    impl core::fmt::Display for PLMNidentity {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            match oxirush_utils::identity::Plmn::from_ap_octets(self.0.0) {
+                Ok(plmn) => write!(formatter, "{plmn}"),
+                Err(_) => self
+                    .0
+                    .0
+                    .iter()
+                    .try_for_each(|octet| write!(formatter, "{octet:02x}")),
+            }
+        }
+    }
+    /// The PLMN identity of a PLMN, in the order of the application protocols.
+    impl From<oxirush_utils::identity::Plmn> for PLMNidentity {
+        fn from(plmn: oxirush_utils::identity::Plmn) -> Self {
+            Self(TBCDSTRING(plmn.to_ap_octets()))
+        }
+    }
+    /// The PLMN of a PLMN identity: an error for octets that are none.
+    impl TryFrom<PLMNidentity> for oxirush_utils::identity::Plmn {
+        type Error = oxirush_utils::identity::Error;
+        fn try_from(identity: PLMNidentity) -> Result<Self, Self::Error> {
+            Self::from_ap_octets(identity.0.0)
+        }
+    }
+    impl core::fmt::Debug for PLMNidentity {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "PLMNidentity({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PLMNidentity(pub TBCDSTRING);
     impl From<TBCDSTRING> for PLMNidentity {
         fn from(value: TBCDSTRING) -> Self {
@@ -24538,7 +24699,20 @@ pub mod s1_ap_ies {
             Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for PortNumber {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for PortNumber {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "PortNumber({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PortNumber(pub [u8; 2]);
     impl From<[u8; 2]> for PortNumber {
         fn from(value: [u8; 2]) -> Self {
@@ -25031,7 +25205,20 @@ pub mod s1_ap_ies {
             ))
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for RAC {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for RAC {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "RAC({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RAC(pub [u8; 1]);
     impl From<[u8; 1]> for RAC {
         fn from(value: [u8; 1]) -> Self {
@@ -31308,8 +31495,21 @@ pub mod s1_ap_ies {
             })
         }
     }
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for TAC {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for TAC {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "TAC({self})")
+        }
+    }
     #[doc = " T"]
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TAC(pub [u8; 2]);
     impl From<[u8; 2]> for TAC {
         fn from(value: [u8; 2]) -> Self {
@@ -32234,7 +32434,20 @@ pub mod s1_ap_ies {
             })?))
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for TBCDSTRING {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for TBCDSTRING {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "TBCDSTRING({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TBCDSTRING(pub [u8; 3]);
     impl From<[u8; 3]> for TBCDSTRING {
         fn from(value: [u8; 3]) -> Self {
@@ -33318,7 +33531,20 @@ pub mod s1_ap_ies {
             Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for TimeSinceSecondaryNodeRelease {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for TimeSinceSecondaryNodeRelease {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "TimeSinceSecondaryNodeRelease({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TimeSinceSecondaryNodeRelease(pub [u8; 4]);
     impl From<[u8; 4]> for TimeSinceSecondaryNodeRelease {
         fn from(value: [u8; 4]) -> Self {
@@ -36773,7 +36999,20 @@ pub mod s1_ap_ies {
             Ok(Self(reading.octets(value)?))
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for WarningSecurityInfo {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for WarningSecurityInfo {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "WarningSecurityInfo({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct WarningSecurityInfo(pub [u8; 50]);
     impl From<[u8; 50]> for WarningSecurityInfo {
         fn from(value: [u8; 50]) -> Self {
@@ -36805,7 +37044,20 @@ pub mod s1_ap_ies {
             Ok(Self(reading.octet_array::<50>(value)?))
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+    /// The octets, in hexadecimal.
+    impl core::fmt::Display for WarningType {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0
+                .iter()
+                .try_for_each(|octet| write!(formatter, "{octet:02x}"))
+        }
+    }
+    impl core::fmt::Debug for WarningType {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "WarningType({self})")
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct WarningType(pub [u8; 2]);
     impl From<[u8; 2]> for WarningType {
         fn from(value: [u8; 2]) -> Self {
