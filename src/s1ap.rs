@@ -846,9 +846,22 @@ pub mod s1_ap_containers {
     };
     #[cfg(feature = "inspect")]
     use serde_json::Value;
+    impl core::fmt::Debug for ProtocolIEField<'_> {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let holds_key = crate::registry::KEY_IES.contains(&self.id.0);
+            let mut shown = formatter.debug_struct("ProtocolIEField");
+            shown.field("id", &self.id);
+            shown.field("criticality", &self.criticality);
+            match holds_key {
+                true => shown.field("value", &format_args!("{} octets", self.value.len())),
+                false => shown.field("value", &self.value),
+            };
+            shown.finish()
+        }
+    }
     #[doc = " `ProtocolIE-Field`: an IE of a protocol IE container, and a `ProtocolIE-SingleContainer`."]
     #[doc = " The object set of a container does not show in its type: `value` is an open type."]
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, PartialEq, Eq, Hash)]
     pub struct ProtocolIEField<'a> {
         pub id: ProtocolIEID,
         pub criticality: Criticality,
@@ -982,8 +995,24 @@ pub mod s1_ap_containers {
             })?))
         }
     }
+    impl core::fmt::Debug for ProtocolExtensionField<'_> {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let holds_key = crate::registry::KEY_IES.contains(&self.id.0);
+            let mut shown = formatter.debug_struct("ProtocolExtensionField");
+            shown.field("id", &self.id);
+            shown.field("criticality", &self.criticality);
+            match holds_key {
+                true => shown.field(
+                    "extension_value",
+                    &format_args!("{} octets", self.extension_value.len()),
+                ),
+                false => shown.field("extension_value", &self.extension_value),
+            };
+            shown.finish()
+        }
+    }
     #[doc = " `ProtocolExtensionField`: an IE of a protocol extension container."]
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, PartialEq, Eq, Hash)]
     pub struct ProtocolExtensionField<'a> {
         pub id: ProtocolExtensionID,
         pub criticality: Criticality,
@@ -28422,8 +28451,13 @@ pub mod s1_ap_ies {
             })
         }
     }
+    impl core::fmt::Debug for SecurityKey<'_> {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(formatter, "SecurityKey({} bits)", self.0.len())
+        }
+    }
     #[doc = " S"]
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, PartialEq, Eq, Hash)]
     pub struct SecurityKey<'a>(pub BitString<'a>);
     impl<'a> SecurityKey<'a> {
         /// The same value, which borrows nothing and is kept as long as it is needed: a `SecurityKey<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
@@ -47111,7 +47145,20 @@ pub mod s1_ap_pdu_descriptions {
     };
     #[cfg(feature = "inspect")]
     use serde_json::Value;
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    impl core::fmt::Debug for InitiatingMessage<'_> {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let holds_key = crate::pdu::holds_key("InitiatingMessage", self.procedure_code.0);
+            let mut shown = formatter.debug_struct("InitiatingMessage");
+            shown.field("procedure_code", &self.procedure_code);
+            shown.field("criticality", &self.criticality);
+            match holds_key {
+                true => shown.field("value", &format_args!("{} octets", self.value.len())),
+                false => shown.field("value", &self.value),
+            };
+            shown.finish()
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash)]
     pub struct InitiatingMessage<'a> {
         pub procedure_code: ProcedureCode,
         pub criticality: Criticality,
@@ -47312,7 +47359,20 @@ pub mod s1_ap_pdu_descriptions {
             })
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    impl core::fmt::Debug for SuccessfulOutcome<'_> {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let holds_key = crate::pdu::holds_key("SuccessfulOutcome", self.procedure_code.0);
+            let mut shown = formatter.debug_struct("SuccessfulOutcome");
+            shown.field("procedure_code", &self.procedure_code);
+            shown.field("criticality", &self.criticality);
+            match holds_key {
+                true => shown.field("value", &format_args!("{} octets", self.value.len())),
+                false => shown.field("value", &self.value),
+            };
+            shown.finish()
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash)]
     pub struct SuccessfulOutcome<'a> {
         pub procedure_code: ProcedureCode,
         pub criticality: Criticality,
@@ -47396,7 +47456,20 @@ pub mod s1_ap_pdu_descriptions {
             })
         }
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    impl core::fmt::Debug for UnsuccessfulOutcome<'_> {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let holds_key = crate::pdu::holds_key("UnsuccessfulOutcome", self.procedure_code.0);
+            let mut shown = formatter.debug_struct("UnsuccessfulOutcome");
+            shown.field("procedure_code", &self.procedure_code);
+            shown.field("criticality", &self.criticality);
+            match holds_key {
+                true => shown.field("value", &format_args!("{} octets", self.value.len())),
+                false => shown.field("value", &self.value),
+            };
+            shown.finish()
+        }
+    }
+    #[derive(Clone, PartialEq, Eq, Hash)]
     pub struct UnsuccessfulOutcome<'a> {
         pub procedure_code: ProcedureCode,
         pub criticality: Criticality,

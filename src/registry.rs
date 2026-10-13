@@ -103,7 +103,7 @@ ies! {
     36 reject "E-RABToBeModifiedItemBearerModReq" crate::s1ap::ERABToBeModifiedItemBearerModReq<'a> => E_RABToBeModifiedItemBearerModReq ERABToBeModifiedItemBearerModReq;
     37 ignore "E-RABModifyItemBearerModRes" crate::s1ap::ERABModifyItemBearerModRes<'a> => E_RABModifyItemBearerModRes ERABModifyItemBearerModRes;
     39 ignore "E-RABSetupItemBearerSURes" crate::s1ap::ERABSetupItemBearerSURes<'a> => E_RABSetupItemBearerSURes ERABSetupItemBearerSURes;
-    40 "SecurityContext" crate::s1ap::SecurityContext<'a> => SecurityContext;
+    40 "SecurityContext" @key crate::s1ap::SecurityContext<'a> => SecurityContext;
     41 "HandoverRestrictionList" crate::s1ap::HandoverRestrictionList<'a> => HandoverRestrictionList;
     43 "UEPagingID" crate::s1ap::UEPagingID<'a> => UEPagingID;
     44 "pagingDRX" crate::s1ap::PagingDRX => pagingDRX;
@@ -126,7 +126,7 @@ ies! {
     70 "cdma2000PDU" crate::s1ap::Cdma2000PDU<'a> => cdma2000PDU Cdma2000PDU;
     71 "cdma2000RATType" crate::s1ap::Cdma2000RATType => cdma2000RATType Cdma2000RATType;
     72 "cdma2000SectorID" crate::s1ap::Cdma2000SectorID<'a> => cdma2000SectorID Cdma2000SectorID;
-    73 "SecurityKey" crate::s1ap::SecurityKey<'a> => SecurityKey;
+    73 "SecurityKey" @key crate::s1ap::SecurityKey<'a> => SecurityKey;
     74 "UERadioCapability" crate::s1ap::UERadioCapability<'a> => UERadioCapability;
     75 "GUMMEI-ID" crate::s1ap::GUMMEI<'a> => GUMMEI_ID;
     78 ignore "E-RABInformationListItem" crate::s1ap::ERABInformationListItem<'a> => E_RABInformationListItem ERABInformationListItem;
