@@ -1195,6 +1195,10 @@ impl S1APPDU<'_> {
     /// An error when the message does not decode, and for a procedure that the
     /// specification does not have in that direction.
     ///
+    /// A view takes up to 125 octets of memory for each octet of the S1AP_PDU, and
+    /// [`with_view`](Self::with_view) twice that: 49 MB and 94 MB for a message of 65,535
+    /// IEs, 393 KB. The crate has no limit on the octets of a S1AP_PDU: the caller bounds them.
+    ///
     /// ```
     /// use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     /// use serde_json::json;
