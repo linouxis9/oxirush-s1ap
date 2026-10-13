@@ -1667,6 +1667,47 @@ fn a_member_that_is_absent_selects_nothing_and_one_that_its_type_has_not_is_an_e
 }
 
 #[test]
+fn an_edit_that_fails_after_it_changed_an_ie_leaves_the_view_as_it_was() {
+    use serde_json::json;
+    // UE-S1AP-IDs is IE 99, a CHOICE that has no `radioNetwork`, and Cause IE 2, which
+    // has it.
+    let mut view = sent(&[
+        json!({"id": 99, "criticality": "ignore", "value": {"mME-UE-S1AP-ID": 1}}),
+        json!({"id": 2, "criticality": "ignore", "value": {"radioNetwork": "user-inactivity"}}),
+    ])
+    .unwrap();
+    let before = view.clone();
+    // The entries that `*` selects are edited from the last: the cause takes the edit,
+    // and the identifiers, before it, refuse the path.
+    let everywhere = "/s1ap/*/value/radioNetwork";
+    let error = inspect::set(&mut view, everywhere, json!("unspecified"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("is not a member of UES1APIDs"), "{error}");
+    assert_eq!(view, before);
+    assert!(inspect::remove(&mut view, everywhere).is_err());
+    assert_eq!(view, before);
+    // The cause alone takes it.
+    inspect::set(
+        &mut view,
+        "/s1ap/Cause/value/radioNetwork",
+        json!("unspecified"),
+    )
+    .unwrap();
+    let cause = inspect::select(&view, "/s1ap/Cause/value/radioNetwork").unwrap();
+    assert_eq!(cause, [&json!("unspecified")]);
+    // An entry that is taken out before another refuses the path is put back where it
+    // was: `0` then names the identifiers again.
+    let mut view = before.clone();
+    let both = view["message"]["protocolIEs"].as_array().unwrap().clone();
+    let entries = view["message"]["protocolIEs"].as_array_mut().unwrap();
+    entries.extend(both);
+    let before = view.clone();
+    assert!(inspect::remove(&mut view, "/s1ap/*/Cause").is_err());
+    assert_eq!(view, before);
+}
+
+#[test]
 fn an_edit_names_a_member_that_the_type_has_and_keeps_what_it_always_has() {
     use serde_json::{Value, json};
     let mut view = release_with_cause().to_view().unwrap();
