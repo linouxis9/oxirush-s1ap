@@ -19,7 +19,7 @@
 
 pub use oxirush_s1ap::s1ap::S1AP_PDU as Pdu;
 pub use oxirush_s1ap::s1ap::S1APPDU as Borrowed;
-pub use oxirush_s1ap::{Error, ErrorKind, aper, fuzzing, inspect};
+pub use oxirush_s1ap::{Error, ErrorKind, aper, hooks, inspect};
 
 /// The name that the bindings give the type of a PDU.
 pub const PDU_TYPE: &str = "S1APPDU";

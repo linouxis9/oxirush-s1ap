@@ -419,7 +419,7 @@ where
 {
     let read: Result<T, Error> = oxirush_aper::decode(raw);
     let shown = read.map(|value| value.to_json());
-    #[cfg(any(test, fuzzing))]
+    #[cfg(any(test, oxirush_s1ap_hooks))]
     if let Some(observer) = OBSERVER.get() {
         observer(name, raw, &shown);
     }
@@ -437,7 +437,7 @@ where
     oxirush_aper::encode(&typed).map_err(|error| error.outside_its_type(T::NAME))
 }
 
-#[cfg(any(test, fuzzing))]
+#[cfg(any(test, oxirush_s1ap_hooks))]
 thread_local! {
     /// What is told of each value that this thread decodes as a type of the registry:
     /// the name of the type in the bindings, the octets, and the JSON form of the
@@ -448,7 +448,7 @@ thread_local! {
 }
 
 /// What observes the values that are decoded as a type of the registry.
-#[cfg(any(test, fuzzing))]
+#[cfg(any(test, oxirush_s1ap_hooks))]
 pub(crate) type Observer = fn(&'static str, &[u8], &Result<Value, Error>);
 
 /// The transfers of the registry: the member that holds each, and the type that its
