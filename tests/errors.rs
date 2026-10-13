@@ -156,6 +156,45 @@ fn a_value_outside_its_constraint_is_an_encode_error() {
 }
 
 #[test]
+fn a_member_that_does_not_encode_is_named_as_one_that_does_not_decode_is() {
+    // The priority level is an INTEGER (0..15), TS 36.413 clause 9.2.1.60.
+    let priority = AllocationAndRetentionPriority::new(
+        PriorityLevel(16),
+        PreEmptionCapability::shall_not_trigger_pre_emption,
+        PreEmptionVulnerability::not_pre_emptable,
+        None,
+    );
+    let error = encode_open_type(&priority).unwrap_err();
+    assert_eq!(error.kind(), ErrorKind::Encode);
+    assert_eq!(
+        error.to_string(),
+        "a value of AllocationAndRetentionPriority does not encode: 16 is outside its \
+         constraint (0..15), in its field `priority_level`"
+    );
+    assert_eq!(error.fields().collect::<Vec<_>>(), ["priority_level"]);
+
+    // In a value that holds it, the fields are those on the way to the member: the
+    // QoS parameters of an E-RAB, clause 9.2.1.15.
+    let parameters = ERABLevelQoSParameters::new(QCI(9), priority, None, None);
+    let error = encode_open_type(&parameters).unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "a value of E-RABLevelQoSParameters does not encode: 16 is outside its constraint \
+         (0..15), in its field `allocation_retention_priority.priority_level`"
+    );
+
+    // A list of no item where the type has one at least: the PLMNs that a tracking
+    // area broadcasts are 1 to 6.
+    let area = SupportedTAsItem::new(TAC([0x00, 0x01]), BPLMNs(vec![]), None);
+    let error = encode_open_type(&area).unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "a value of SupportedTAs-Item does not encode: a size of 0 is outside its constraint \
+         (1..6), in its field `broadcast_plmns`"
+    );
+}
+
+#[test]
 fn an_error_is_the_error_of_a_function_of_the_caller() {
     // With `?`, in a function whose error is this one or holds any error.
     fn code(octets: &[u8]) -> Result<u8, Error> {

@@ -6,7 +6,8 @@
     non_snake_case,
     non_upper_case_globals,
     unused,
-    clippy::too_many_arguments
+    clippy::too_many_arguments,
+    clippy::collapsible_if
 )]
 pub mod s1_ap_common_data_types {
     use super::*;
@@ -334,7 +335,8 @@ pub mod s1_ap_common_data_types {
     non_snake_case,
     non_upper_case_globals,
     unused,
-    clippy::too_many_arguments
+    clippy::too_many_arguments,
+    clippy::collapsible_if
 )]
 pub mod s1_ap_constants {
     use super::*;
@@ -832,7 +834,8 @@ pub mod s1_ap_constants {
     non_snake_case,
     non_upper_case_globals,
     unused,
-    clippy::too_many_arguments
+    clippy::too_many_arguments,
+    clippy::collapsible_if
 )]
 pub mod s1_ap_containers {
     use super::*;
@@ -918,8 +921,12 @@ pub mod s1_ap_containers {
     impl Encode for ProtocolIEField<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            self.id.encode(writer)?;
-            self.criticality.encode(writer)?;
+            if let Err(error) = self.id.encode(writer) {
+                return Err(error.in_field("id"));
+            }
+            if let Err(error) = self.criticality.encode(writer) {
+                return Err(error.in_field("criticality"));
+            }
             writer.open_type(&self.value);
             Ok(())
         }
@@ -1069,8 +1076,12 @@ pub mod s1_ap_containers {
     impl Encode for ProtocolExtensionField<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            self.id.encode(writer)?;
-            self.criticality.encode(writer)?;
+            if let Err(error) = self.id.encode(writer) {
+                return Err(error.in_field("id"));
+            }
+            if let Err(error) = self.criticality.encode(writer) {
+                return Err(error.in_field("criticality"));
+            }
             writer.open_type(&self.extension_value);
             Ok(())
         }
@@ -1153,7 +1164,8 @@ pub mod s1_ap_containers {
     non_snake_case,
     non_upper_case_globals,
     unused,
-    clippy::too_many_arguments
+    clippy::too_many_arguments,
+    clippy::collapsible_if
 )]
 pub mod s1_ap_ies {
     use super::*;
@@ -1234,10 +1246,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.g_ummei.encode(writer)?;
-            self.m_tmsi.encode(writer)?;
+            if let Err(error) = self.g_ummei.encode(writer) {
+                return Err(error.in_field("g_ummei"));
+            }
+            if let Err(error) = self.m_tmsi.encode(writer) {
+                return Err(error.in_field("m_tmsi"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -1470,11 +1488,19 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.priority_level.encode(writer)?;
-            self.pre_emption_capability.encode(writer)?;
-            self.pre_emption_vulnerability.encode(writer)?;
+            if let Err(error) = self.priority_level.encode(writer) {
+                return Err(error.in_field("priority_level"));
+            }
+            if let Err(error) = self.pre_emption_capability.encode(writer) {
+                return Err(error.in_field("pre_emption_capability"));
+            }
+            if let Err(error) = self.pre_emption_vulnerability.encode(writer) {
+                return Err(error.in_field("pre_emption_vulnerability"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -1808,10 +1834,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.cell_identifier_and_celevel_for_cecapable_ues
-                .encode(writer)?;
+            if let Err(error) = self
+                .cell_identifier_and_celevel_for_cecapable_ues
+                .encode(writer)
+            {
+                return Err(error.in_field("cell_identifier_and_celevel_for_cecapable_ues"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -1947,16 +1979,24 @@ pub mod s1_ap_ies {
             writer.bit(self.paging_attempt_information.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.assistance_data_for_recommended_cells {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("assistance_data_for_recommended_cells"));
+                }
             }
             if let Some(value) = &self.assistance_data_for_cecapable_ues {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("assistance_data_for_cecapable_ues"));
+                }
             }
             if let Some(value) = &self.paging_attempt_information {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("paging_attempt_information"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -2072,9 +2112,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.recommended_cells_for_paging.encode(writer)?;
+            if let Err(error) = self.recommended_cells_for_paging.encode(writer) {
+                return Err(error.in_field("recommended_cells_for_paging"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -2256,10 +2300,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.d_l_discarding.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.d_l_discarding.encode(writer) {
+                return Err(error.in_field("d_l_discarding"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -2407,10 +2457,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.d_lcount_pdcp_snlength.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.d_lcount_pdcp_snlength.encode(writer) {
+                return Err(error.in_field("d_lcount_pdcp_snlength"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -2589,14 +2645,24 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.receive_statusof_ulpdcpsdus.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.u_l_countvalue.encode(writer)?;
-            self.d_l_countvalue.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.u_l_countvalue.encode(writer) {
+                return Err(error.in_field("u_l_countvalue"));
+            }
+            if let Err(error) = self.d_l_countvalue.encode(writer) {
+                return Err(error.in_field("d_l_countvalue"));
+            }
             if let Some(value) = &self.receive_statusof_ulpdcpsdus {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("receive_statusof_ulpdcpsdus"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -2954,15 +3020,23 @@ pub mod s1_ap_ies {
             writer.bit(self.bluetooth_meas_config_name_list.is_some());
             writer.bit(self.bt_rssi.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.bluetooth_meas_config.encode(writer)?;
+            if let Err(error) = self.bluetooth_meas_config.encode(writer) {
+                return Err(error.in_field("bluetooth_meas_config"));
+            }
             if let Some(value) = &self.bluetooth_meas_config_name_list {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("bluetooth_meas_config_name_list"));
+                }
             }
             if let Some(value) = &self.bt_rssi {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("bt_rssi"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -3513,14 +3587,24 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.r_ac.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmnidentity.encode(writer)?;
-            self.l_ac.encode(writer)?;
-            self.c_i.encode(writer)?;
+            if let Err(error) = self.p_lmnidentity.encode(writer) {
+                return Err(error.in_field("p_lmnidentity"));
+            }
+            if let Err(error) = self.l_ac.encode(writer) {
+                return Err(error.in_field("l_ac"));
+            }
+            if let Err(error) = self.c_i.encode(writer) {
+                return Err(error.in_field("c_i"));
+            }
             if let Some(value) = &self.r_ac {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("r_ac"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -3804,10 +3888,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmn_identity.encode(writer)?;
-            self.c_ntype.encode(writer)?;
+            if let Err(error) = self.p_lmn_identity.encode(writer) {
+                return Err(error.in_field("p_lmn_identity"));
+            }
+            if let Err(error) = self.c_ntype.encode(writer) {
+                return Err(error.in_field("c_ntype"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -3903,10 +3993,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_dcp_snextended.encode(writer)?;
-            self.h_fnmodified.encode(writer)?;
+            if let Err(error) = self.p_dcp_snextended.encode(writer) {
+                return Err(error.in_field("p_dcp_snextended"));
+            }
+            if let Err(error) = self.h_fnmodified.encode(writer) {
+                return Err(error.in_field("h_fnmodified"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -4003,10 +4099,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_dcp_sn.encode(writer)?;
-            self.h_fn.encode(writer)?;
+            if let Err(error) = self.p_dcp_sn.encode(writer) {
+                return Err(error.in_field("p_dcp_sn"));
+            }
+            if let Err(error) = self.h_fn.encode(writer) {
+                return Err(error.in_field("h_fn"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -4102,10 +4204,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_dcp_snlength18.encode(writer)?;
-            self.h_fnfor_pdcp_snlength18.encode(writer)?;
+            if let Err(error) = self.p_dcp_snlength18.encode(writer) {
+                return Err(error.in_field("p_dcp_snlength18"));
+            }
+            if let Err(error) = self.h_fnfor_pdcp_snlength18.encode(writer) {
+                return Err(error.in_field("h_fnfor_pdcp_snlength18"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -4332,9 +4440,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.c_sg_id.encode(writer)?;
+            if let Err(error) = self.c_sg_id.encode(writer) {
+                return Err(error.in_field("c_sg_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -4519,10 +4631,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_cgi.encode(writer)?;
-            self.number_of_broadcasts.encode(writer)?;
+            if let Err(error) = self.e_cgi.encode(writer) {
+                return Err(error.in_field("e_cgi"));
+            }
+            if let Err(error) = self.number_of_broadcasts.encode(writer) {
+                return Err(error.in_field("number_of_broadcasts"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -4669,10 +4787,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_cgi.encode(writer)?;
-            self.number_of_broadcasts.encode(writer)?;
+            if let Err(error) = self.e_cgi.encode(writer) {
+                return Err(error.in_field("e_cgi"));
+            }
+            if let Err(error) = self.number_of_broadcasts.encode(writer) {
+                return Err(error.in_field("number_of_broadcasts"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -5586,11 +5710,19 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.cdma2000_one_xmeid.encode(writer)?;
-            self.cdma2000_one_xmsi.encode(writer)?;
-            self.cdma2000_one_xpilot.encode(writer)?;
+            if let Err(error) = self.cdma2000_one_xmeid.encode(writer) {
+                return Err(error.in_field("cdma2000_one_xmeid"));
+            }
+            if let Err(error) = self.cdma2000_one_xmsi.encode(writer) {
+                return Err(error.in_field("cdma2000_one_xmsi"));
+            }
+            if let Err(error) = self.cdma2000_one_xpilot.encode(writer) {
+                return Err(error.in_field("cdma2000_one_xpilot"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -5919,9 +6051,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.cell_id_listfor_mdt.encode(writer)?;
+            if let Err(error) = self.cell_id_listfor_mdt.encode(writer) {
+                return Err(error.in_field("cell_id_listfor_mdt"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -6005,9 +6141,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.cell_id_listfor_qmc.encode(writer)?;
+            if let Err(error) = self.cell_id_listfor_qmc.encode(writer) {
+                return Err(error.in_field("cell_id_listfor_qmc"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -6140,9 +6280,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_cgi.encode(writer)?;
+            if let Err(error) = self.e_cgi.encode(writer) {
+                return Err(error.in_field("e_cgi"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -6284,10 +6428,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_cgi.encode(writer)?;
-            self.number_of_broadcasts.encode(writer)?;
+            if let Err(error) = self.e_cgi.encode(writer) {
+                return Err(error.in_field("e_cgi"));
+            }
+            if let Err(error) = self.number_of_broadcasts.encode(writer) {
+                return Err(error.in_field("number_of_broadcasts"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -6483,10 +6633,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.global_cell_id.encode(writer)?;
-            self.c_elevel.encode(writer)?;
+            if let Err(error) = self.global_cell_id.encode(writer) {
+                return Err(error.in_field("global_cell_id"));
+            }
+            if let Err(error) = self.c_elevel.encode(writer) {
+                return Err(error.in_field("c_elevel"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -6616,9 +6772,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.cell_size.encode(writer)?;
+            if let Err(error) = self.cell_size.encode(writer) {
+                return Err(error.in_field("cell_size"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -6843,9 +7003,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_cgi.encode(writer)?;
+            if let Err(error) = self.e_cgi.encode(writer) {
+                return Err(error.in_field("e_cgi"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -6978,9 +7142,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_cgi.encode(writer)?;
+            if let Err(error) = self.e_cgi.encode(writer) {
+                return Err(error.in_field("e_cgi"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -7114,10 +7282,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.en_g_nb_id.encode(writer)?;
-            self.supported_tas.encode(writer)?;
+            if let Err(error) = self.en_g_nb_id.encode(writer) {
+                return Err(error.in_field("en_g_nb_id"));
+            }
+            if let Err(error) = self.supported_tas.encode(writer) {
+                return Err(error.in_field("supported_tas"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -7263,10 +7437,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.source_ng_ran_node_id.encode(writer)?;
-            self.r_an_ue_ngap_id.encode(writer)?;
+            if let Err(error) = self.source_ng_ran_node_id.encode(writer) {
+                return Err(error.in_field("source_ng_ran_node_id"));
+            }
+            if let Err(error) = self.r_an_ue_ngap_id.encode(writer) {
+                return Err(error.in_field("r_an_ue_ngap_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -7493,19 +7673,29 @@ pub mod s1_ap_ies {
             writer.bit(self.i_es_criticality_diagnostics.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.procedure_code {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("procedure_code"));
+                }
             }
             if let Some(value) = &self.triggering_message {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("triggering_message"));
+                }
             }
             if let Some(value) = &self.procedure_criticality {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("procedure_criticality"));
+                }
             }
             if let Some(value) = &self.i_es_criticality_diagnostics {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_es_criticality_diagnostics"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -7644,11 +7834,19 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.i_ecriticality.encode(writer)?;
-            self.i_e_id.encode(writer)?;
-            self.type_of_error.encode(writer)?;
+            if let Err(error) = self.i_ecriticality.encode(writer) {
+                return Err(error.in_field("i_ecriticality"));
+            }
+            if let Err(error) = self.i_e_id.encode(writer) {
+                return Err(error.in_field("i_e_id"));
+            }
+            if let Err(error) = self.type_of_error.encode(writer) {
+                return Err(error.in_field("type_of_error"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -7834,9 +8032,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.d_apsindicator.encode(writer)?;
+            if let Err(error) = self.d_apsindicator.encode(writer) {
+                return Err(error.in_field("d_apsindicator"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -7966,9 +8168,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.dapsresponseindicator.encode(writer)?;
+            if let Err(error) = self.dapsresponseindicator.encode(writer) {
+                return Err(error.in_field("dapsresponseindicator"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -8068,10 +8274,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.d_apsresponse_info.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.d_apsresponse_info.encode(writer) {
+                return Err(error.in_field("d_apsresponse_info"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -8244,9 +8456,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.dl_nas_mac.encode(writer)?;
+            if let Err(error) = self.dl_nas_mac.encode(writer) {
+                return Err(error.in_field("dl_nas_mac"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -8937,12 +9153,18 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.d_l_forwarding.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
             if let Some(value) = &self.d_l_forwarding {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("d_l_forwarding"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -9042,10 +9264,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.cause.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.cause.encode(writer) {
+                return Err(error.in_field("cause"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -9156,13 +9384,21 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.gbr_qos_information.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.q_ci.encode(writer)?;
-            self.allocation_retention_priority.encode(writer)?;
+            if let Err(error) = self.q_ci.encode(writer) {
+                return Err(error.in_field("q_ci"));
+            }
+            if let Err(error) = self.allocation_retention_priority.encode(writer) {
+                return Err(error.in_field("allocation_retention_priority"));
+            }
             if let Some(value) = &self.gbr_qos_information {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("gbr_qos_information"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -9328,10 +9564,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.security_result.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.security_result.encode(writer) {
+                return Err(error.in_field("security_result"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -9497,10 +9739,16 @@ pub mod s1_ap_ies {
             writer.bit(self.i_e_extensions.is_some());
             writer.octet_array(&self.start_timestamp);
             writer.octet_array(&self.end_timestamp);
-            writer.unsigned(self.usage_count_ul, 0, 18446744073709551615)?;
-            writer.unsigned(self.usage_count_dl, 0, 18446744073709551615)?;
+            if let Err(error) = writer.unsigned(self.usage_count_ul, 0, 18446744073709551615) {
+                return Err(error.in_field("usage_count_ul"));
+            }
+            if let Err(error) = writer.unsigned(self.usage_count_dl, 0, 18446744073709551615) {
+                return Err(error.in_field("usage_count_dl"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -9949,13 +10197,21 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.x2_tnlconfig_info.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.transfertype.encode(writer)?;
-            self.s_oninformation.encode(writer)?;
+            if let Err(error) = self.transfertype.encode(writer) {
+                return Err(error.in_field("transfertype"));
+            }
+            if let Err(error) = self.s_oninformation.encode(writer) {
+                return Err(error.in_field("s_oninformation"));
+            }
             if let Some(value) = &self.x2_tnlconfig_info {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("x2_tnlconfig_info"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -10140,10 +10396,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.globale_nbid.encode(writer)?;
-            self.selected_tai.encode(writer)?;
+            if let Err(error) = self.globale_nbid.encode(writer) {
+                return Err(error.in_field("globale_nbid"));
+            }
+            if let Err(error) = self.selected_tai.encode(writer) {
+                return Err(error.in_field("selected_tai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -10240,10 +10502,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.globaleng_nbid.encode(writer)?;
-            self.selected_tai.encode(writer)?;
+            if let Err(error) = self.globaleng_nbid.encode(writer) {
+                return Err(error.in_field("globaleng_nbid"));
+            }
+            if let Err(error) = self.selected_tai.encode(writer) {
+                return Err(error.in_field("selected_tai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -10340,10 +10608,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.sourceeng_nb.encode(writer)?;
-            self.targete_nb.encode(writer)?;
+            if let Err(error) = self.sourceeng_nb.encode(writer) {
+                return Err(error.in_field("sourceeng_nb"));
+            }
+            if let Err(error) = self.targete_nb.encode(writer) {
+                return Err(error.in_field("targete_nb"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -10482,19 +10756,31 @@ pub mod s1_ap_ies {
             writer.bit(self.associated_tai.is_some());
             writer.bit(self.broadcast5_gstai.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.sourcee_nb.encode(writer)?;
-            self.targeteng_nb.encode(writer)?;
+            if let Err(error) = self.sourcee_nb.encode(writer) {
+                return Err(error.in_field("sourcee_nb"));
+            }
+            if let Err(error) = self.targeteng_nb.encode(writer) {
+                return Err(error.in_field("targeteng_nb"));
+            }
             if let Some(value) = &self.targete_nb {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("targete_nb"));
+                }
             }
             if let Some(value) = &self.associated_tai {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("associated_tai"));
+                }
             }
             if let Some(value) = &self.broadcast5_gstai {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("broadcast5_gstai"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -10618,10 +10904,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.bearers_subject_to_early_status_transfer_list
-                .encode(writer)?;
+            if let Err(error) = self
+                .bearers_subject_to_early_status_transfer_list
+                .encode(writer)
+            {
+                return Err(error.in_field("bearers_subject_to_early_status_transfer_list"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -10828,10 +11120,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.bearers_subject_to_status_transfer_list
-                .encode(writer)?;
+            if let Err(error) = self.bearers_subject_to_status_transfer_list.encode(writer) {
+                return Err(error.in_field("bearers_subject_to_status_transfer_list"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -11029,13 +11324,19 @@ pub mod s1_ap_ies {
             writer.bit(self.g_tptlaa.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.i_psec_tla {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_psec_tla"));
+                }
             }
             if let Some(value) = &self.g_tptlaa {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("g_tptlaa"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -11376,10 +11677,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmnidentity.encode(writer)?;
-            self.cell_id.encode(writer)?;
+            if let Err(error) = self.p_lmnidentity.encode(writer) {
+                return Err(error.in_field("p_lmnidentity"));
+            }
+            if let Err(error) = self.cell_id.encode(writer) {
+                return Err(error.in_field("cell_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -11605,10 +11912,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.emergency_area_id.encode(writer)?;
-            self.completed_cellin_eai.encode(writer)?;
+            if let Err(error) = self.emergency_area_id.encode(writer) {
+                return Err(error.in_field("emergency_area_id"));
+            }
+            if let Err(error) = self.completed_cellin_eai.encode(writer) {
+                return Err(error.in_field("completed_cellin_eai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -11757,10 +12070,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.emergency_area_id.encode(writer)?;
-            self.cancelled_cellin_eai.encode(writer)?;
+            if let Err(error) = self.emergency_area_id.encode(writer) {
+                return Err(error.in_field("emergency_area_id"));
+            }
+            if let Err(error) = self.cancelled_cellin_eai.encode(writer) {
+                return Err(error.in_field("cancelled_cellin_eai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -12202,11 +12521,19 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.l1_threshold.encode(writer)?;
-            self.hysteresis.encode(writer)?;
-            self.time_to_trigger.encode(writer)?;
+            if let Err(error) = self.l1_threshold.encode(writer) {
+                return Err(error.in_field("l1_threshold"));
+            }
+            if let Err(error) = self.hysteresis.encode(writer) {
+                return Err(error.in_field("hysteresis"));
+            }
+            if let Err(error) = self.time_to_trigger.encode(writer) {
+                return Err(error.in_field("time_to_trigger"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -12678,16 +13005,24 @@ pub mod s1_ap_ies {
             writer.bit(self.sourceof_ueactivity_behaviour_information.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.expected_activity_period {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("expected_activity_period"));
+                }
             }
             if let Some(value) = &self.expected_idle_period {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("expected_idle_period"));
+                }
             }
             if let Some(value) = &self.sourceof_ueactivity_behaviour_information {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("sourceof_ueactivity_behaviour_information"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -12826,13 +13161,19 @@ pub mod s1_ap_ies {
             writer.bit(self.expected_hointerval.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.expected_activity {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("expected_activity"));
+                }
             }
             if let Some(value) = &self.expected_hointerval {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("expected_hointerval"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -13135,10 +13476,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmnidentity.encode(writer)?;
-            self.five_gstac.encode(writer)?;
+            if let Err(error) = self.p_lmnidentity.encode(writer) {
+                return Err(error.in_field("p_lmnidentity"));
+            }
+            if let Err(error) = self.five_gstac.encode(writer) {
+                return Err(error.in_field("five_gstac"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -13419,10 +13766,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmn_identity.encode(writer)?;
-            self.forbidden_lacs.encode(writer)?;
+            if let Err(error) = self.p_lmn_identity.encode(writer) {
+                return Err(error.in_field("p_lmn_identity"));
+            }
+            if let Err(error) = self.forbidden_lacs.encode(writer) {
+                return Err(error.in_field("forbidden_lacs"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -13610,10 +13963,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmn_identity.encode(writer)?;
-            self.forbidden_tacs.encode(writer)?;
+            if let Err(error) = self.p_lmn_identity.encode(writer) {
+                return Err(error.in_field("p_lmn_identity"));
+            }
+            if let Err(error) = self.forbidden_tacs.encode(writer) {
+                return Err(error.in_field("forbidden_tacs"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -13729,12 +14088,22 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_maximum_bitrate_dl.encode(writer)?;
-            self.e_rab_maximum_bitrate_ul.encode(writer)?;
-            self.e_rab_guaranteed_bitrate_dl.encode(writer)?;
-            self.e_rab_guaranteed_bitrate_ul.encode(writer)?;
+            if let Err(error) = self.e_rab_maximum_bitrate_dl.encode(writer) {
+                return Err(error.in_field("e_rab_maximum_bitrate_dl"));
+            }
+            if let Err(error) = self.e_rab_maximum_bitrate_ul.encode(writer) {
+                return Err(error.in_field("e_rab_maximum_bitrate_ul"));
+            }
+            if let Err(error) = self.e_rab_guaranteed_bitrate_dl.encode(writer) {
+                return Err(error.in_field("e_rab_guaranteed_bitrate_dl"));
+            }
+            if let Err(error) = self.e_rab_guaranteed_bitrate_ul.encode(writer) {
+                return Err(error.in_field("e_rab_guaranteed_bitrate_ul"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -13866,11 +14235,19 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.l_ai.encode(writer)?;
-            self.r_ac.encode(writer)?;
-            self.c_i.encode(writer)?;
+            if let Err(error) = self.l_ai.encode(writer) {
+                return Err(error.in_field("l_ai"));
+            }
+            if let Err(error) = self.r_ac.encode(writer) {
+                return Err(error.in_field("r_ac"));
+            }
+            if let Err(error) = self.c_i.encode(writer) {
+                return Err(error.in_field("c_i"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -13960,9 +14337,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.global_g_nb_id.encode(writer)?;
+            if let Err(error) = self.global_g_nb_id.encode(writer) {
+                return Err(error.in_field("global_g_nb_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -14190,11 +14571,19 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmn_identity.encode(writer)?;
-            self.m_me_group_id.encode(writer)?;
-            self.m_me_code.encode(writer)?;
+            if let Err(error) = self.p_lmn_identity.encode(writer) {
+                return Err(error.in_field("p_lmn_identity"));
+            }
+            if let Err(error) = self.m_me_group_id.encode(writer) {
+                return Err(error.in_field("m_me_group_id"));
+            }
+            if let Err(error) = self.m_me_code.encode(writer) {
+                return Err(error.in_field("m_me_code"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -14431,10 +14820,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmnidentity.encode(writer)?;
-            self.e_nb_id.encode(writer)?;
+            if let Err(error) = self.p_lmnidentity.encode(writer) {
+                return Err(error.in_field("p_lmnidentity"));
+            }
+            if let Err(error) = self.e_nb_id.encode(writer) {
+                return Err(error.in_field("e_nb_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -14530,10 +14925,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmn_identity.encode(writer)?;
-            self.g_nb_id.encode(writer)?;
+            if let Err(error) = self.p_lmn_identity.encode(writer) {
+                return Err(error.in_field("p_lmn_identity"));
+            }
+            if let Err(error) = self.g_nb_id.encode(writer) {
+                return Err(error.in_field("g_nb_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -14697,10 +15098,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmnidentity.encode(writer)?;
-            self.en_g_nb_id.encode(writer)?;
+            if let Err(error) = self.p_lmnidentity.encode(writer) {
+                return Err(error.in_field("p_lmnidentity"));
+            }
+            if let Err(error) = self.en_g_nb_id.encode(writer) {
+                return Err(error.in_field("en_g_nb_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -14995,21 +15402,33 @@ pub mod s1_ap_ies {
             writer.bit(self.forbidden_las.is_some());
             writer.bit(self.forbidden_inter_rats.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.serving_plmn.encode(writer)?;
+            if let Err(error) = self.serving_plmn.encode(writer) {
+                return Err(error.in_field("serving_plmn"));
+            }
             if let Some(value) = &self.equivalent_plmns {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("equivalent_plmns"));
+                }
             }
             if let Some(value) = &self.forbidden_tas {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("forbidden_tas"));
+                }
             }
             if let Some(value) = &self.forbidden_las {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("forbidden_las"));
+                }
             }
             if let Some(value) = &self.forbidden_inter_rats {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("forbidden_inter_rats"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -15556,16 +15975,26 @@ pub mod s1_ap_ies {
             writer.bit(self.m1thresholdevent_a2.is_some());
             writer.bit(self.m1periodic_reporting.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.measurements_to_activate.encode(writer)?;
-            self.m1reporting_trigger.encode(writer)?;
+            if let Err(error) = self.measurements_to_activate.encode(writer) {
+                return Err(error.in_field("measurements_to_activate"));
+            }
+            if let Err(error) = self.m1reporting_trigger.encode(writer) {
+                return Err(error.in_field("m1reporting_trigger"));
+            }
             if let Some(value) = &self.m1thresholdevent_a2 {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("m1thresholdevent_a2"));
+                }
             }
             if let Some(value) = &self.m1periodic_reporting {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("m1periodic_reporting"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -15692,10 +16121,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.recommended_cells_for_paging.encode(writer)?;
-            self.recommend_enbs_for_paging.encode(writer)?;
+            if let Err(error) = self.recommended_cells_for_paging.encode(writer) {
+                return Err(error.in_field("recommended_cells_for_paging"));
+            }
+            if let Err(error) = self.recommend_enbs_for_paging.encode(writer) {
+                return Err(error.in_field("recommend_enbs_for_paging"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -16128,32 +16563,54 @@ pub mod s1_ap_ies {
             writer.bit(self.quantity_config_nr_r15.is_some());
             writer.bit(self.excluded_cells_to_add_mod_list.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            writer.unsigned(u64::from(self.freq_band_indicator_nr), 1, 1024)?;
-            writer.unsigned(u64::from(self.s_sbfrequencies), 0, 3279165)?;
-            self.subcarrier_spacing_ssb.encode(writer)?;
+            if let Err(error) = writer.unsigned(u64::from(self.freq_band_indicator_nr), 1, 1024) {
+                return Err(error.in_field("freq_band_indicator_nr"));
+            }
+            if let Err(error) = writer.unsigned(u64::from(self.s_sbfrequencies), 0, 3279165) {
+                return Err(error.in_field("s_sbfrequencies"));
+            }
+            if let Err(error) = self.subcarrier_spacing_ssb.encode(writer) {
+                return Err(error.in_field("subcarrier_spacing_ssb"));
+            }
             if let Some(value) = &self.max_rsindex_cell_qual {
-                writer.unsigned(u64::from(*value), 1, 16)?;
+                if let Err(error) = writer.unsigned(u64::from(*value), 1, 16) {
+                    return Err(error.in_field("max_rsindex_cell_qual"));
+                }
             }
             if let Some(value) = &self.s_mtc {
-                writer.octet_string(value, 0, UNBOUNDED)?;
+                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
+                    return Err(error.in_field("s_mtc"));
+                }
             }
             if let Some(value) = &self.thresh_rs_index_r15 {
-                writer.octet_string(value, 0, UNBOUNDED)?;
+                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
+                    return Err(error.in_field("thresh_rs_index_r15"));
+                }
             }
             if let Some(value) = &self.s_sbto_measure {
-                writer.octet_string(value, 0, UNBOUNDED)?;
+                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
+                    return Err(error.in_field("s_sbto_measure"));
+                }
             }
             if let Some(value) = &self.s_srssimeasurement {
-                writer.octet_string(value, 0, UNBOUNDED)?;
+                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
+                    return Err(error.in_field("s_srssimeasurement"));
+                }
             }
             if let Some(value) = &self.quantity_config_nr_r15 {
-                writer.octet_string(value, 0, UNBOUNDED)?;
+                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
+                    return Err(error.in_field("quantity_config_nr_r15"));
+                }
             }
             if let Some(value) = &self.excluded_cells_to_add_mod_list {
-                writer.octet_string(value, 0, UNBOUNDED)?;
+                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
+                    return Err(error.in_field("excluded_cells_to_add_mod_list"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -16400,12 +16857,18 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.inter_system_measurement_list.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            writer.unsigned(u64::from(self.measurement_duration), 1, 100)?;
+            if let Err(error) = writer.unsigned(u64::from(self.measurement_duration), 1, 100) {
+                return Err(error.in_field("measurement_duration"));
+            }
             if let Some(value) = &self.inter_system_measurement_list {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("inter_system_measurement_list"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -16598,17 +17061,27 @@ pub mod s1_ap_ies {
             writer.bit(self.s_inr.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.r_srp {
-                writer.unsigned(u64::from(*value), 0, 127)?;
+                if let Err(error) = writer.unsigned(u64::from(*value), 0, 127) {
+                    return Err(error.in_field("r_srp"));
+                }
             }
             if let Some(value) = &self.r_srq {
-                writer.unsigned(u64::from(*value), 0, 127)?;
+                if let Err(error) = writer.unsigned(u64::from(*value), 0, 127) {
+                    return Err(error.in_field("r_srq"));
+                }
             }
             if let Some(value) = &self.s_inr {
-                writer.unsigned(u64::from(*value), 0, 127)?;
+                if let Err(error) = writer.unsigned(u64::from(*value), 0, 127) {
+                    return Err(error.in_field("s_inr"));
+                }
             }
-            self.inter_system_measurement_parameters.encode(writer)?;
+            if let Err(error) = self.inter_system_measurement_parameters.encode(writer) {
+                return Err(error.in_field("inter_system_measurement_parameters"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -16933,10 +17406,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmnidentity.encode(writer)?;
-            self.l_ac.encode(writer)?;
+            if let Err(error) = self.p_lmnidentity.encode(writer) {
+                return Err(error.in_field("p_lmnidentity"));
+            }
+            if let Err(error) = self.l_ac.encode(writer) {
+                return Err(error.in_field("l_ac"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -17189,13 +17668,21 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.u_e_location_derived_tac.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.serving_plmn.encode(writer)?;
-            self.t_aclist_in_lte_ntn.encode(writer)?;
+            if let Err(error) = self.serving_plmn.encode(writer) {
+                return Err(error.in_field("serving_plmn"));
+            }
+            if let Err(error) = self.t_aclist_in_lte_ntn.encode(writer) {
+                return Err(error.in_field("t_aclist_in_lte_ntn"));
+            }
             if let Some(value) = &self.u_e_location_derived_tac {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("u_e_location_derived_tac"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -17446,11 +17933,19 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.global_cell_id.encode(writer)?;
-            self.cell_type.encode(writer)?;
-            self.time_ue_stayed_in_cell.encode(writer)?;
+            if let Err(error) = self.global_cell_id.encode(writer) {
+                return Err(error.in_field("global_cell_id"));
+            }
+            if let Err(error) = self.cell_type.encode(writer) {
+                return Err(error.in_field("cell_type"));
+            }
+            if let Err(error) = self.time_ue_stayed_in_cell.encode(writer) {
+                return Err(error.in_field("time_ue_stayed_in_cell"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -17667,11 +18162,17 @@ pub mod s1_ap_ies {
             writer.bit(self.p_scell_id.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.p_scell_id {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("p_scell_id"));
+                }
             }
-            writer.unsigned(u64::from(self.time_stay), 0, 40950)?;
+            if let Err(error) = writer.unsigned(u64::from(self.time_stay), 0, 40950) {
+                return Err(error.in_field("time_stay"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -17966,10 +18467,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.pattern_period.encode(writer)?;
+            if let Err(error) = self.pattern_period.encode(writer) {
+                return Err(error.in_field("pattern_period"));
+            }
             writer.unsigned_extensible(self.pattern_offset, 0, 10239);
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -18088,13 +18593,21 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.m_bsfn_result_to_log.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.logging_interval.encode(writer)?;
-            self.logging_duration.encode(writer)?;
+            if let Err(error) = self.logging_interval.encode(writer) {
+                return Err(error.in_field("logging_interval"));
+            }
+            if let Err(error) = self.logging_duration.encode(writer) {
+                return Err(error.in_field("logging_duration"));
+            }
             if let Some(value) = &self.m_bsfn_result_to_log {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("m_bsfn_result_to_log"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -18207,10 +18720,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.logging_interval.encode(writer)?;
-            self.logging_duration.encode(writer)?;
+            if let Err(error) = self.logging_interval.encode(writer) {
+                return Err(error.in_field("logging_interval"));
+            }
+            if let Err(error) = self.logging_duration.encode(writer) {
+                return Err(error.in_field("logging_duration"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -18539,10 +19058,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.report_interval.encode(writer)?;
-            self.report_amount.encode(writer)?;
+            if let Err(error) = self.report_interval.encode(writer) {
+                return Err(error.in_field("report_interval"));
+            }
+            if let Err(error) = self.report_amount.encode(writer) {
+                return Err(error.in_field("report_amount"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -18680,9 +19205,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.measurement_threshold.encode(writer)?;
+            if let Err(error) = self.measurement_threshold.encode(writer) {
+                return Err(error.in_field("measurement_threshold"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -18768,9 +19297,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.m3period.encode(writer)?;
+            if let Err(error) = self.m3period.encode(writer) {
+                return Err(error.in_field("m3period"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -18928,10 +19461,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.m4period.encode(writer)?;
-            self.m4_links_to_log.encode(writer)?;
+            if let Err(error) = self.m4period.encode(writer) {
+                return Err(error.in_field("m4period"));
+            }
+            if let Err(error) = self.m4_links_to_log.encode(writer) {
+                return Err(error.in_field("m4_links_to_log"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -19140,10 +19679,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.m5period.encode(writer)?;
-            self.m5_links_to_log.encode(writer)?;
+            if let Err(error) = self.m5period.encode(writer) {
+                return Err(error.in_field("m5period"));
+            }
+            if let Err(error) = self.m5_links_to_log.encode(writer) {
+                return Err(error.in_field("m5_links_to_log"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -19366,13 +19911,21 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.m6delay_threshold.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.m6report_interval.encode(writer)?;
-            if let Some(value) = &self.m6delay_threshold {
-                value.encode(writer)?;
+            if let Err(error) = self.m6report_interval.encode(writer) {
+                return Err(error.in_field("m6report_interval"));
             }
-            self.m6_links_to_log.encode(writer)?;
+            if let Some(value) = &self.m6delay_threshold {
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("m6delay_threshold"));
+                }
+            }
+            if let Err(error) = self.m6_links_to_log.encode(writer) {
+                return Err(error.in_field("m6_links_to_log"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -19656,10 +20209,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.m7period.encode(writer)?;
-            self.m7_links_to_log.encode(writer)?;
+            if let Err(error) = self.m7period.encode(writer) {
+                return Err(error.in_field("m7period"));
+            }
+            if let Err(error) = self.m7_links_to_log.encode(writer) {
+                return Err(error.in_field("m7_links_to_log"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -19902,11 +20461,17 @@ pub mod s1_ap_ies {
             writer.bit(self.m_bsfn_area_id.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.m_bsfn_area_id {
-                writer.unsigned(u64::from(*value), 0, 255)?;
+                if let Err(error) = writer.unsigned(u64::from(*value), 0, 255) {
+                    return Err(error.in_field("m_bsfn_area_id"));
+                }
             }
-            self.carrier_freq.encode(writer)?;
+            if let Err(error) = self.carrier_freq.encode(writer) {
+                return Err(error.in_field("carrier_freq"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -20074,11 +20639,19 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.mdt_activation.encode(writer)?;
-            self.area_scope_of_mdt.encode(writer)?;
-            self.m_dtmode.encode(writer)?;
+            if let Err(error) = self.mdt_activation.encode(writer) {
+                return Err(error.in_field("mdt_activation"));
+            }
+            if let Err(error) = self.area_scope_of_mdt.encode(writer) {
+                return Err(error.in_field("area_scope_of_mdt"));
+            }
+            if let Err(error) = self.m_dtmode.encode(writer) {
+                return Err(error.in_field("m_dtmode"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -21307,12 +21880,16 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.muting_pattern_offset.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.muting_pattern_period.encode(writer)?;
+            if let Err(error) = self.muting_pattern_period.encode(writer) {
+                return Err(error.in_field("muting_pattern_period"));
+            }
             if let Some(value) = &self.muting_pattern_offset {
                 writer.unsigned_extensible(*value, 0, 10239);
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -21703,12 +22280,18 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.n_b_io_t_paging_time_window.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.n_b_io_t_paging_e_drx_cycle.encode(writer)?;
+            if let Err(error) = self.n_b_io_t_paging_e_drx_cycle.encode(writer) {
+                return Err(error.in_field("n_b_io_t_paging_e_drx_cycle"));
+            }
             if let Some(value) = &self.n_b_io_t_paging_time_window {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("n_b_io_t_paging_time_window"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -22035,9 +22618,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.global_ng_e_nb_id.encode(writer)?;
+            if let Err(error) = self.global_ng_e_nb_id.encode(writer) {
+                return Err(error.in_field("global_ng_e_nb_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -22130,10 +22717,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmnidentity.encode(writer)?;
-            self.n_rcell_identity.encode(writer)?;
+            if let Err(error) = self.p_lmnidentity.encode(writer) {
+                return Err(error.in_field("p_lmnidentity"));
+            }
+            if let Err(error) = self.n_rcell_identity.encode(writer) {
+                return Err(error.in_field("n_rcell_identity"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -22275,10 +22868,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.n_rencryption_algorithms.encode(writer)?;
-            self.n_rintegrity_protection_algorithms.encode(writer)?;
+            if let Err(error) = self.n_rencryption_algorithms.encode(writer) {
+                return Err(error.in_field("n_rencryption_algorithms"));
+            }
+            if let Err(error) = self.n_rintegrity_protection_algorithms.encode(writer) {
+                return Err(error.in_field("n_rintegrity_protection_algorithms"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -22380,9 +22979,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.u_eaggregate_maximum_bit_rate.encode(writer)?;
+            if let Err(error) = self.u_eaggregate_maximum_bit_rate.encode(writer) {
+                return Err(error.in_field("u_eaggregate_maximum_bit_rate"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -22490,13 +23093,19 @@ pub mod s1_ap_ies {
             writer.bit(self.pedestrian_ue.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.vehicle_ue {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("vehicle_ue"));
+                }
             }
             if let Some(value) = &self.pedestrian_ue {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("pedestrian_ue"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -23082,10 +23691,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.guaranteed_flow_bit_rate.encode(writer)?;
-            self.maximum_flow_bit_rate.encode(writer)?;
+            if let Err(error) = self.guaranteed_flow_bit_rate.encode(writer) {
+                return Err(error.in_field("guaranteed_flow_bit_rate"));
+            }
+            if let Err(error) = self.maximum_flow_bit_rate.encode(writer) {
+                return Err(error.in_field("maximum_flow_bit_rate"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -23210,15 +23825,23 @@ pub mod s1_ap_ies {
             writer.bit(self.pc5_flow_bit_rates.is_some());
             writer.bit(self.range.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.p_qi.encode(writer)?;
+            if let Err(error) = self.p_qi.encode(writer) {
+                return Err(error.in_field("p_qi"));
+            }
             if let Some(value) = &self.pc5_flow_bit_rates {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("pc5_flow_bit_rates"));
+                }
             }
             if let Some(value) = &self.range {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("range"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -23377,12 +24000,18 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.pc5_link_aggregated_bit_rates.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.pc5_qo_sflow_list.encode(writer)?;
+            if let Err(error) = self.pc5_qo_sflow_list.encode(writer) {
+                return Err(error.in_field("pc5_qo_sflow_list"));
+            }
             if let Some(value) = &self.pc5_link_aggregated_bit_rates {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("pc5_link_aggregated_bit_rates"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -23590,9 +24219,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.plmn_listfor_qmc.encode(writer)?;
+            if let Err(error) = self.plmn_listfor_qmc.encode(writer) {
+                return Err(error.in_field("plmn_listfor_qmc"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -23823,9 +24456,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.n_cgi.encode(writer)?;
+            if let Err(error) = self.n_cgi.encode(writer) {
+                return Err(error.in_field("n_cgi"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -24082,12 +24719,18 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.paging_time_window.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.paging_e_drx_cycle.encode(writer)?;
+            if let Err(error) = self.paging_e_drx_cycle.encode(writer) {
+                return Err(error.in_field("paging_e_drx_cycle"));
+            }
             if let Some(value) = &self.paging_time_window {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("paging_time_window"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -24238,13 +24881,21 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.next_paging_area_scope.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.paging_attempt_count.encode(writer)?;
-            self.intended_number_of_paging_attempts.encode(writer)?;
+            if let Err(error) = self.paging_attempt_count.encode(writer) {
+                return Err(error.in_field("paging_attempt_count"));
+            }
+            if let Err(error) = self.intended_number_of_paging_attempts.encode(writer) {
+                return Err(error.in_field("intended_number_of_paging_attempts"));
+            }
             if let Some(value) = &self.next_paging_area_scope {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("next_paging_area_scope"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -24986,13 +25637,19 @@ pub mod s1_ap_ies {
             writer.bit(self.pro_se_direct_communication.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.pro_se_direct_discovery {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("pro_se_direct_discovery"));
+                }
             }
             if let Some(value) = &self.pro_se_direct_communication {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("pro_se_direct_communication"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -25444,10 +26101,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmnidentity.encode(writer)?;
+            if let Err(error) = self.p_lmnidentity.encode(writer) {
+                return Err(error.in_field("p_lmnidentity"));
+            }
             writer.bit_string_extensible(&self.r_at_restriction_information, 8, 8);
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -25798,12 +26459,18 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.r_imrouting_address.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.r_iminformation.encode(writer)?;
+            if let Err(error) = self.r_iminformation.encode(writer) {
+                return Err(error.in_field("r_iminformation"));
+            }
             if let Some(value) = &self.r_imrouting_address {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("r_imrouting_address"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -25920,12 +26587,18 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.u_e_rlf_report_container_for_extended_bands.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.u_e_rlf_report_container.encode(writer)?;
+            if let Err(error) = self.u_e_rlf_report_container.encode(writer) {
+                return Err(error.in_field("u_e_rlf_report_container"));
+            }
             if let Some(value) = &self.u_e_rlf_report_container_for_extended_bands {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("u_e_rlf_report_container_for_extended_bands"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -26383,12 +27056,18 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.time_stayed_in_cell.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.e_utran_cgi.encode(writer)?;
+            if let Err(error) = self.e_utran_cgi.encode(writer) {
+                return Err(error.in_field("e_utran_cgi"));
+            }
             if let Some(value) = &self.time_stayed_in_cell {
-                writer.unsigned(u64::from(*value), 0, 4095)?;
+                if let Err(error) = writer.unsigned(u64::from(*value), 0, 4095) {
+                    return Err(error.in_field("time_stayed_in_cell"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -26532,9 +27211,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.recommended_cell_list.encode(writer)?;
+            if let Err(error) = self.recommended_cell_list.encode(writer) {
+                return Err(error.in_field("recommended_cell_list"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -26619,9 +27302,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.m_mepaging_target.encode(writer)?;
+            if let Err(error) = self.m_mepaging_target.encode(writer) {
+                return Err(error.in_field("m_mepaging_target"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -26754,9 +27441,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.recommended_enblist.encode(writer)?;
+            if let Err(error) = self.recommended_enblist.encode(writer) {
+                return Err(error.in_field("recommended_enblist"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -27131,10 +27822,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.event_type.encode(writer)?;
-            self.report_area.encode(writer)?;
+            if let Err(error) = self.event_type.encode(writer) {
+                return Err(error.in_field("event_type"));
+            }
+            if let Err(error) = self.report_area.encode(writer) {
+                return Err(error.in_field("report_area"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -27263,9 +27960,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmnidentity.encode(writer)?;
+            if let Err(error) = self.p_lmnidentity.encode(writer) {
+                return Err(error.in_field("p_lmnidentity"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -27392,10 +28093,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.m_mec.encode(writer)?;
-            self.m_tmsi.encode(writer)?;
+            if let Err(error) = self.m_mec.encode(writer) {
+                return Err(error.in_field("m_mec"));
+            }
+            if let Err(error) = self.m_tmsi.encode(writer) {
+                return Err(error.in_field("m_tmsi"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -27500,11 +28207,19 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.targete_nb_id.encode(writer)?;
-            self.sourcee_nb_id.encode(writer)?;
-            self.s_oninformation.encode(writer)?;
+            if let Err(error) = self.targete_nb_id.encode(writer) {
+                return Err(error.in_field("targete_nb_id"));
+            }
+            if let Err(error) = self.sourcee_nb_id.encode(writer) {
+                return Err(error.in_field("sourcee_nb_id"));
+            }
+            if let Err(error) = self.s_oninformation.encode(writer) {
+                return Err(error.in_field("s_oninformation"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -27736,10 +28451,14 @@ pub mod s1_ap_ies {
             writer.bit(self.x2_tnlconfiguration_info.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.x2_tnlconfiguration_info {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("x2_tnlconfiguration_info"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -28109,7 +28828,9 @@ pub mod s1_ap_ies {
             writer.bit(self.timeof_day_end.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.dayof_week {
-                writer.bits_sized(*value, 7, 7)?;
+                if let Err(error) = writer.bits_sized(*value, 7, 7) {
+                    return Err(error.in_field("dayof_week"));
+                }
             }
             if let Some(value) = &self.timeof_day_start {
                 writer.unsigned_extensible(*value, 0, 86399);
@@ -28118,7 +28839,9 @@ pub mod s1_ap_ies {
                 writer.unsigned_extensible(*value, 0, 86399);
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -28254,11 +28977,19 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.secondary_rattype.encode(writer)?;
-            self.e_rabusage_report_list.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.secondary_rattype.encode(writer) {
+                return Err(error.in_field("secondary_rattype"));
+            }
+            if let Err(error) = self.e_rabusage_report_list.encode(writer) {
+                return Err(error.in_field("e_rabusage_report_list"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -28505,10 +29236,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            writer.unsigned(u64::from(self.next_hop_chaining_count), 0, 7)?;
-            self.next_hop_parameter.encode(writer)?;
+            if let Err(error) = writer.unsigned(u64::from(self.next_hop_chaining_count), 0, 7) {
+                return Err(error.in_field("next_hop_chaining_count"));
+            }
+            if let Err(error) = self.next_hop_parameter.encode(writer) {
+                return Err(error.in_field("next_hop_parameter"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -28604,9 +29341,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.integrity_protection_indication.encode(writer)?;
+            if let Err(error) = self.integrity_protection_indication.encode(writer) {
+                return Err(error.in_field("integrity_protection_indication"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -28746,9 +29487,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.integrity_protection_result.encode(writer)?;
+            if let Err(error) = self.integrity_protection_result.encode(writer) {
+                return Err(error.in_field("integrity_protection_result"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -28879,9 +29624,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.sensor_name_config.encode(writer)?;
+            if let Err(error) = self.sensor_name_config.encode(writer) {
+                return Err(error.in_field("sensor_name_config"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -29030,12 +29779,18 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.sensor_meas_config_name_list.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.sensor_meas_config.encode(writer)?;
+            if let Err(error) = self.sensor_meas_config.encode(writer) {
+                return Err(error.in_field("sensor_meas_config"));
+            }
             if let Some(value) = &self.sensor_meas_config_name_list {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("sensor_meas_config_name_list"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -29369,10 +30124,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.d_cn_id.encode(writer)?;
-            self.relative_dcncapacity.encode(writer)?;
+            if let Err(error) = self.d_cn_id.encode(writer) {
+                return Err(error.in_field("d_cn_id"));
+            }
+            if let Err(error) = self.relative_dcncapacity.encode(writer) {
+                return Err(error.in_field("relative_dcncapacity"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -29529,11 +30290,19 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.served_plmns.encode(writer)?;
-            self.served_group_ids.encode(writer)?;
-            self.served_mmecs.encode(writer)?;
+            if let Err(error) = self.served_plmns.encode(writer) {
+                return Err(error.in_field("served_plmns"));
+            }
+            if let Err(error) = self.served_group_ids.encode(writer) {
+                return Err(error.in_field("served_group_ids"));
+            }
+            if let Err(error) = self.served_mmecs.encode(writer) {
+                return Err(error.in_field("served_mmecs"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -29913,10 +30682,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.global_ran_node_id.encode(writer)?;
-            self.selected_tai.encode(writer)?;
+            if let Err(error) = self.global_ran_node_id.encode(writer) {
+                return Err(error.in_field("global_ran_node_id"));
+            }
+            if let Err(error) = self.selected_tai.encode(writer) {
+                return Err(error.in_field("selected_tai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -30238,10 +31013,16 @@ pub mod s1_ap_ies {
     impl Encode for SourceeNBID<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(self.i_e_extensions.is_some());
-            self.global_enb_id.encode(writer)?;
-            self.selected_tai.encode(writer)?;
+            if let Err(error) = self.global_enb_id.encode(writer) {
+                return Err(error.in_field("global_enb_id"));
+            }
+            if let Err(error) = self.selected_tai.encode(writer) {
+                return Err(error.in_field("selected_tai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -30375,17 +31156,29 @@ pub mod s1_ap_ies {
             writer.bit(self.e_rabinformation_list.is_some());
             writer.bit(self.subscriber_profile_idfor_rfp.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.r_rc_container.encode(writer)?;
+            if let Err(error) = self.r_rc_container.encode(writer) {
+                return Err(error.in_field("r_rc_container"));
+            }
             if let Some(value) = &self.e_rabinformation_list {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("e_rabinformation_list"));
+                }
             }
-            self.target_cell_id.encode(writer)?;
+            if let Err(error) = self.target_cell_id.encode(writer) {
+                return Err(error.in_field("target_cell_id"));
+            }
             if let Some(value) = &self.subscriber_profile_idfor_rfp {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("subscriber_profile_idfor_rfp"));
+                }
             }
-            self.u_e_history_information.encode(writer)?;
+            if let Err(error) = self.u_e_history_information.encode(writer) {
+                return Err(error.in_field("u_e_history_information"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -30855,25 +31648,37 @@ pub mod s1_ap_ies {
             writer.bit(self.battery_indication.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.periodic_communication_indicator {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("periodic_communication_indicator"));
+                }
             }
             if let Some(value) = &self.periodic_time {
                 writer.unsigned_extensible(*value, 1, 3600);
             }
             if let Some(value) = &self.scheduled_communication_time {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("scheduled_communication_time"));
+                }
             }
             if let Some(value) = &self.stationary_indication {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("stationary_indication"));
+                }
             }
             if let Some(value) = &self.traffic_profile {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("traffic_profile"));
+                }
             }
             if let Some(value) = &self.battery_indication {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("battery_indication"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -31088,10 +31893,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.t_ac.encode(writer)?;
-            self.broadcast_plmns.encode(writer)?;
+            if let Err(error) = self.t_ac.encode(writer) {
+                return Err(error.in_field("t_ac"));
+            }
+            if let Err(error) = self.broadcast_plmns.encode(writer) {
+                return Err(error.in_field("broadcast_plmns"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -31214,16 +32025,24 @@ pub mod s1_ap_ies {
             writer.bit(self.aggressore_cgi_list.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.source_stratum_level {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("source_stratum_level"));
+                }
             }
             if let Some(value) = &self.listening_subframe_pattern {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("listening_subframe_pattern"));
+                }
             }
             if let Some(value) = &self.aggressore_cgi_list {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("aggressore_cgi_list"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -31380,9 +32199,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.t_alistfor_mdt.encode(writer)?;
+            if let Err(error) = self.t_alistfor_mdt.encode(writer) {
+                return Err(error.in_field("t_alistfor_mdt"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -31466,9 +32289,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.t_alistfor_qmc.encode(writer)?;
+            if let Err(error) = self.t_alistfor_qmc.encode(writer) {
+                return Err(error.in_field("t_alistfor_qmc"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -31649,10 +32476,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.p_lmnidentity.encode(writer)?;
-            self.t_ac.encode(writer)?;
+            if let Err(error) = self.p_lmnidentity.encode(writer) {
+                return Err(error.in_field("p_lmnidentity"));
+            }
+            if let Err(error) = self.t_ac.encode(writer) {
+                return Err(error.in_field("t_ac"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -31797,10 +32630,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.t_ai.encode(writer)?;
-            self.completed_cellin_tai.encode(writer)?;
+            if let Err(error) = self.t_ai.encode(writer) {
+                return Err(error.in_field("t_ai"));
+            }
+            if let Err(error) = self.completed_cellin_tai.encode(writer) {
+                return Err(error.in_field("completed_cellin_tai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -31947,10 +32786,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.t_ai.encode(writer)?;
-            self.cancelled_cellin_tai.encode(writer)?;
+            if let Err(error) = self.t_ai.encode(writer) {
+                return Err(error.in_field("t_ai"));
+            }
+            if let Err(error) = self.cancelled_cellin_tai.encode(writer) {
+                return Err(error.in_field("cancelled_cellin_tai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -32039,9 +32884,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.t_ailistfor_mdt.encode(writer)?;
+            if let Err(error) = self.t_ailistfor_mdt.encode(writer) {
+                return Err(error.in_field("t_ailistfor_mdt"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -32125,9 +32974,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.t_ailistfor_qmc.encode(writer)?;
+            if let Err(error) = self.t_ailistfor_qmc.encode(writer) {
+                return Err(error.in_field("t_ailistfor_qmc"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -32776,10 +33629,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.global_ran_node_id.encode(writer)?;
-            self.selected_tai.encode(writer)?;
+            if let Err(error) = self.global_ran_node_id.encode(writer) {
+                return Err(error.in_field("global_ran_node_id"));
+            }
+            if let Err(error) = self.selected_tai.encode(writer) {
+                return Err(error.in_field("selected_tai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -32957,16 +33816,26 @@ pub mod s1_ap_ies {
             writer.bit(self.r_ac.is_some());
             writer.bit(self.extended_rnc_id.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.l_ai.encode(writer)?;
-            if let Some(value) = &self.r_ac {
-                value.encode(writer)?;
+            if let Err(error) = self.l_ai.encode(writer) {
+                return Err(error.in_field("l_ai"));
             }
-            self.r_nc_id.encode(writer)?;
+            if let Some(value) = &self.r_ac {
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("r_ac"));
+                }
+            }
+            if let Err(error) = self.r_nc_id.encode(writer) {
+                return Err(error.in_field("r_nc_id"));
+            }
             if let Some(value) = &self.extended_rnc_id {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("extended_rnc_id"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -33126,10 +33995,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.global_enb_id.encode(writer)?;
-            self.selected_tai.encode(writer)?;
+            if let Err(error) = self.global_enb_id.encode(writer) {
+                return Err(error.in_field("global_enb_id"));
+            }
+            if let Err(error) = self.selected_tai.encode(writer) {
+                return Err(error.in_field("selected_tai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -33217,9 +34092,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.r_rc_container.encode(writer)?;
+            if let Err(error) = self.r_rc_container.encode(writer) {
+                return Err(error.in_field("r_rc_container"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -33452,10 +34331,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.h_owindow_start.encode(writer)?;
-            self.h_owindow_duration.encode(writer)?;
+            if let Err(error) = self.h_owindow_start.encode(writer) {
+                return Err(error.in_field("h_owindow_start"));
+            }
+            if let Err(error) = self.h_owindow_duration.encode(writer) {
+                return Err(error.in_field("h_owindow_duration"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -33642,10 +34527,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.stratum_level.encode(writer)?;
-            self.synchronisation_status.encode(writer)?;
+            if let Err(error) = self.stratum_level.encode(writer) {
+                return Err(error.in_field("stratum_level"));
+            }
+            if let Err(error) = self.synchronisation_status.encode(writer) {
+                return Err(error.in_field("synchronisation_status"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -33898,12 +34789,22 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_utran_trace_id.encode(writer)?;
-            self.interfaces_to_trace.encode(writer)?;
-            self.trace_depth.encode(writer)?;
-            self.trace_collection_entity_ipaddress.encode(writer)?;
+            if let Err(error) = self.e_utran_trace_id.encode(writer) {
+                return Err(error.in_field("e_utran_trace_id"));
+            }
+            if let Err(error) = self.interfaces_to_trace.encode(writer) {
+                return Err(error.in_field("interfaces_to_trace"));
+            }
+            if let Err(error) = self.trace_depth.encode(writer) {
+                return Err(error.in_field("trace_depth"));
+            }
+            if let Err(error) = self.trace_collection_entity_ipaddress.encode(writer) {
+                return Err(error.in_field("trace_collection_entity_ipaddress"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -34098,8 +34999,12 @@ pub mod s1_ap_ies {
     impl Encode for TransportInformation<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.transport_layer_address.encode(writer)?;
-            self.u_l_gtp_teid.encode(writer)?;
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
+            if let Err(error) = self.u_l_gtp_teid.encode(writer) {
+                return Err(error.in_field("u_l_gtp_teid"));
+            }
             Ok(())
         }
     }
@@ -34236,12 +35141,18 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.u_dp_port_number.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.transport_layer_address.encode(writer)?;
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
             if let Some(value) = &self.u_dp_port_number {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("u_dp_port_number"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -34673,10 +35584,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.m_me_ue_s1_ap_id.encode(writer)?;
-            self.e_nb_ue_s1_ap_id.encode(writer)?;
+            if let Err(error) = self.m_me_ue_s1_ap_id.encode(writer) {
+                return Err(error.in_field("m_me_ue_s1_ap_id"));
+            }
+            if let Err(error) = self.e_nb_ue_s1_ap_id.encode(writer) {
+                return Err(error.in_field("e_nb_ue_s1_ap_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -34899,13 +35816,19 @@ pub mod s1_ap_ies {
             writer.bit(self.e_nb_ue_s1_ap_id.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.m_me_ue_s1_ap_id {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("m_me_ue_s1_ap_id"));
+                }
             }
             if let Some(value) = &self.e_nb_ue_s1_ap_id {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("e_nb_ue_s1_ap_id"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -35011,10 +35934,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.u_eaggregate_maximum_bit_rate_dl.encode(writer)?;
-            self.u_eaggregate_maximum_bit_rate_ul.encode(writer)?;
+            if let Err(error) = self.u_eaggregate_maximum_bit_rate_dl.encode(writer) {
+                return Err(error.in_field("u_eaggregate_maximum_bit_rate_dl"));
+            }
+            if let Err(error) = self.u_eaggregate_maximum_bit_rate_ul.encode(writer) {
+                return Err(error.in_field("u_eaggregate_maximum_bit_rate_ul"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -35127,10 +36056,18 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            writer.octet_string(&self.container_for_app_layer_meas_config, 1, 1000)?;
-            self.area_scope_of_qmc.encode(writer)?;
+            if let Err(error) =
+                writer.octet_string(&self.container_for_app_layer_meas_config, 1, 1000)
+            {
+                return Err(error.in_field("container_for_app_layer_meas_config"));
+            }
+            if let Err(error) = self.area_scope_of_qmc.encode(writer) {
+                return Err(error.in_field("area_scope_of_qmc"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -35540,10 +36477,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.encryption_algorithms.encode(writer)?;
-            self.integrity_protection_algorithms.encode(writer)?;
+            if let Err(error) = self.encryption_algorithms.encode(writer) {
+                return Err(error.in_field("encryption_algorithms"));
+            }
+            if let Err(error) = self.integrity_protection_algorithms.encode(writer) {
+                return Err(error.in_field("integrity_protection_algorithms"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -35642,9 +36585,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.u_esidelink_aggregate_maximum_bit_rate.encode(writer)?;
+            if let Err(error) = self.u_esidelink_aggregate_maximum_bit_rate.encode(writer) {
+                return Err(error.in_field("u_esidelink_aggregate_maximum_bit_rate"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -35786,10 +36733,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.ul_nas_mac.encode(writer)?;
-            self.ul_nas_count.encode(writer)?;
+            if let Err(error) = self.ul_nas_mac.encode(writer) {
+                return Err(error.in_field("ul_nas_mac"));
+            }
+            if let Err(error) = self.ul_nas_count.encode(writer) {
+                return Err(error.in_field("ul_nas_count"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -36062,10 +37015,16 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.eutran_cgi.encode(writer)?;
-            self.tai.encode(writer)?;
+            if let Err(error) = self.eutran_cgi.encode(writer) {
+                return Err(error.in_field("eutran_cgi"));
+            }
+            if let Err(error) = self.tai.encode(writer) {
+                return Err(error.in_field("tai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -36172,13 +37131,19 @@ pub mod s1_ap_ies {
             writer.bit(self.pedestrian_ue.is_some());
             writer.bit(self.i_e_extensions.is_some());
             if let Some(value) = &self.vehicle_ue {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("vehicle_ue"));
+                }
             }
             if let Some(value) = &self.pedestrian_ue {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("pedestrian_ue"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -36583,18 +37548,28 @@ pub mod s1_ap_ies {
             writer.bit(self.wlan_rssi.is_some());
             writer.bit(self.wlan_rtt.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.wlan_meas_config.encode(writer)?;
+            if let Err(error) = self.wlan_meas_config.encode(writer) {
+                return Err(error.in_field("wlan_meas_config"));
+            }
             if let Some(value) = &self.wlan_meas_config_name_list {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("wlan_meas_config_name_list"));
+                }
             }
             if let Some(value) = &self.wlan_rssi {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("wlan_rssi"));
+                }
             }
             if let Some(value) = &self.wlan_rtt {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("wlan_rtt"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -36761,9 +37736,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.paging_probability_information.encode(writer)?;
+            if let Err(error) = self.paging_probability_information.encode(writer) {
+                return Err(error.in_field("paging_probability_information"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -37149,9 +38128,13 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_nbx2_transport_layer_addresses.encode(writer)?;
+            if let Err(error) = self.e_nbx2_transport_layer_addresses.encode(writer) {
+                return Err(error.in_field("e_nbx2_transport_layer_addresses"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -37189,7 +38172,8 @@ pub mod s1_ap_ies {
     non_snake_case,
     non_upper_case_globals,
     unused,
-    clippy::too_many_arguments
+    clippy::too_many_arguments,
+    clippy::collapsible_if
 )]
 pub mod s1_ap_pdu_contents {
     use super::*;
@@ -37297,16 +38281,26 @@ pub mod s1_ap_pdu_contents {
             writer.bit(self.cell_access_mode.is_some());
             writer.bit(self.p_lmnidentity.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.c_sgmembership_status.encode(writer)?;
-            self.c_sg_id.encode(writer)?;
+            if let Err(error) = self.c_sgmembership_status.encode(writer) {
+                return Err(error.in_field("c_sgmembership_status"));
+            }
+            if let Err(error) = self.c_sg_id.encode(writer) {
+                return Err(error.in_field("c_sg_id"));
+            }
             if let Some(value) = &self.cell_access_mode {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("cell_access_mode"));
+                }
             }
             if let Some(value) = &self.p_lmnidentity {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("p_lmnidentity"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -37404,7 +38398,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for CellTrafficTrace<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -37462,7 +38458,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ConnectionEstablishmentIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -37525,7 +38523,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for DeactivateTrace<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -37588,7 +38588,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for DownlinkNASTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -37646,7 +38648,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for DownlinkNonUEAssociatedLPPaTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -37709,7 +38713,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for DownlinkS1cdma2000tunnelling<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -37772,7 +38778,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for DownlinkUEAssociatedLPPaTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -37924,23 +38932,39 @@ pub mod s1_ap_pdu_contents {
             writer.bit(self.u_l_transport_layer_address.is_some());
             writer.bit(self.u_l_gtp_teid.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.transport_layer_address.encode(writer)?;
-            self.g_tp_teid.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
+            if let Err(error) = self.g_tp_teid.encode(writer) {
+                return Err(error.in_field("g_tp_teid"));
+            }
             if let Some(value) = &self.d_l_transport_layer_address {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("d_l_transport_layer_address"));
+                }
             }
             if let Some(value) = &self.d_l_g_tp_teid {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("d_l_g_tp_teid"));
+                }
             }
             if let Some(value) = &self.u_l_transport_layer_address {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("u_l_transport_layer_address"));
+                }
             }
             if let Some(value) = &self.u_l_gtp_teid {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("u_l_gtp_teid"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -38185,21 +39209,33 @@ pub mod s1_ap_pdu_contents {
             writer.bit(self.u_l_transport_layer_address.is_some());
             writer.bit(self.u_l_gtp_teid.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
             if let Some(value) = &self.d_l_transport_layer_address {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("d_l_transport_layer_address"));
+                }
             }
             if let Some(value) = &self.d_l_g_tp_teid {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("d_l_g_tp_teid"));
+                }
             }
             if let Some(value) = &self.u_l_transport_layer_address {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("u_l_transport_layer_address"));
+                }
             }
             if let Some(value) = &self.u_l_gtp_teid {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("u_l_gtp_teid"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -38332,10 +39368,16 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.cause.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.cause.encode(writer) {
+                return Err(error.in_field("cause"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -38431,10 +39473,16 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.cause.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.cause.encode(writer) {
+                return Err(error.in_field("cause"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -38632,10 +39680,16 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.cause.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.cause.encode(writer) {
+                return Err(error.in_field("cause"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -38757,7 +39811,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABModificationConfirm<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -38820,7 +39876,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABModificationIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -38894,9 +39952,13 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -38980,9 +40042,13 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -39153,7 +40219,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABModifyRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -39211,7 +40279,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABModifyResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -39303,11 +40373,19 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.transport_layer_address.encode(writer)?;
-            self.d_l_gtp_teid.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
+            if let Err(error) = self.d_l_gtp_teid.encode(writer) {
+                return Err(error.in_field("d_l_gtp_teid"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -39449,7 +40527,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABReleaseCommand<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -39512,7 +40592,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABReleaseIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -39586,9 +40668,13 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -39705,7 +40791,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABReleaseResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -39797,11 +40885,19 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.transport_layer_address.encode(writer)?;
-            self.g_tp_teid.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
+            if let Err(error) = self.g_tp_teid.encode(writer) {
+                return Err(error.in_field("g_tp_teid"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -39921,11 +41017,19 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.transport_layer_address.encode(writer)?;
-            self.g_tp_teid.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
+            if let Err(error) = self.g_tp_teid.encode(writer) {
+                return Err(error.in_field("g_tp_teid"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -40114,7 +41218,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABSetupRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -40172,7 +41278,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABSetupResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -40315,11 +41423,19 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.transport_layer_address.encode(writer)?;
-            self.d_l_gtp_teid.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
+            if let Err(error) = self.d_l_gtp_teid.encode(writer) {
+                return Err(error.in_field("d_l_gtp_teid"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -40439,11 +41555,19 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.e_rablevel_qo_sparameters.encode(writer)?;
-            self.n_as_pdu.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.e_rablevel_qo_sparameters.encode(writer) {
+                return Err(error.in_field("e_rablevel_qo_sparameters"));
+            }
+            if let Err(error) = self.n_as_pdu.encode(writer) {
+                return Err(error.in_field("n_as_pdu"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -40683,13 +41807,25 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.e_rablevel_qo_sparameters.encode(writer)?;
-            self.transport_layer_address.encode(writer)?;
-            self.g_tp_teid.encode(writer)?;
-            self.n_as_pdu.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.e_rablevel_qo_sparameters.encode(writer) {
+                return Err(error.in_field("e_rablevel_qo_sparameters"));
+            }
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
+            if let Err(error) = self.g_tp_teid.encode(writer) {
+                return Err(error.in_field("g_tp_teid"));
+            }
+            if let Err(error) = self.n_as_pdu.encode(writer) {
+                return Err(error.in_field("n_as_pdu"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -40844,15 +41980,27 @@ pub mod s1_ap_pdu_contents {
             writer.bit(false);
             writer.bit(self.n_as_pdu.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.e_rablevel_qo_sparameters.encode(writer)?;
-            self.transport_layer_address.encode(writer)?;
-            self.g_tp_teid.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.e_rablevel_qo_sparameters.encode(writer) {
+                return Err(error.in_field("e_rablevel_qo_sparameters"));
+            }
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
+            if let Err(error) = self.g_tp_teid.encode(writer) {
+                return Err(error.in_field("g_tp_teid"));
+            }
             if let Some(value) = &self.n_as_pdu {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("n_as_pdu"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -40996,12 +42144,22 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.transport_layer_address.encode(writer)?;
-            self.g_tp_teid.encode(writer)?;
-            self.e_rablevel_qos_parameters.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
+            if let Err(error) = self.g_tp_teid.encode(writer) {
+                return Err(error.in_field("g_tp_teid"));
+            }
+            if let Err(error) = self.e_rablevel_qos_parameters.encode(writer) {
+                return Err(error.in_field("e_rablevel_qos_parameters"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -41276,11 +42434,19 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.transport_layer_address.encode(writer)?;
-            self.g_tp_teid.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
+            if let Err(error) = self.g_tp_teid.encode(writer) {
+                return Err(error.in_field("g_tp_teid"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -41449,11 +42615,19 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
-            self.transport_layer_address.encode(writer)?;
-            self.g_tp_teid.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
+            if let Err(error) = self.transport_layer_address.encode(writer) {
+                return Err(error.in_field("transport_layer_address"));
+            }
+            if let Err(error) = self.g_tp_teid.encode(writer) {
+                return Err(error.in_field("g_tp_teid"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -41618,12 +42792,18 @@ pub mod s1_ap_pdu_contents {
             writer.bit(false);
             writer.bit(self.security_indication.is_some());
             writer.bit(self.i_e_extensions.is_some());
-            self.e_rab_id.encode(writer)?;
+            if let Err(error) = self.e_rab_id.encode(writer) {
+                return Err(error.in_field("e_rab_id"));
+            }
             if let Some(value) = &self.security_indication {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("security_indication"));
+                }
             }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -41750,7 +42930,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBCPRelocationIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -41813,7 +42995,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBConfigurationTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -41876,7 +43060,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBConfigurationUpdate<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -41934,7 +43120,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBConfigurationUpdateAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -41992,7 +43180,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBConfigurationUpdateFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42055,7 +43245,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBDirectInformationTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42118,7 +43310,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBEarlyStatusTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42181,7 +43375,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBStatusTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42244,7 +43440,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ErrorIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42307,7 +43505,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverCancel<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42365,7 +43565,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverCancelAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42423,7 +43625,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverCommand<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42481,7 +43685,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42544,7 +43750,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverNotify<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42602,7 +43810,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverPreparationFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42665,7 +43875,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42723,7 +43935,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverRequestAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42786,7 +44000,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverRequired<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42849,7 +44065,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverSuccess<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42907,7 +44125,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for InitialContextSetupFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -42970,7 +44190,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for InitialContextSetupRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43028,7 +44250,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for InitialContextSetupResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43086,7 +44310,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for InitialUEMessage<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43211,7 +44437,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for KillRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43269,7 +44497,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for KillResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43327,7 +44557,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for LocationReport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43390,7 +44622,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for LocationReportingControl<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43448,7 +44682,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for LocationReportingFailureIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43506,7 +44742,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMECPRelocationIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43569,7 +44807,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEConfigurationTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43632,7 +44872,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEConfigurationUpdate<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43690,7 +44932,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEConfigurationUpdateAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43748,7 +44992,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEConfigurationUpdateFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43811,7 +45057,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEDirectInformationTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43874,7 +45122,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEEarlyStatusTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43937,7 +45187,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEStatusTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -43995,7 +45247,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for NASDeliveryIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44053,7 +45307,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for NASNonDeliveryIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44116,7 +45372,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for OverloadStart<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44174,7 +45432,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for OverloadStop<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44232,7 +45492,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PWSFailureIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44295,7 +45557,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PWSRestartIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44358,7 +45622,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for Paging<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44421,7 +45687,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PathSwitchRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44479,7 +45747,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PathSwitchRequestAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44537,7 +45807,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PathSwitchRequestFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44605,8 +45877,12 @@ pub mod s1_ap_pdu_contents {
     }
     impl Encode for AnonymousPrivateMessagePrivateIEs<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            self.id.encode(writer)?;
-            self.criticality.encode(writer)?;
+            if let Err(error) = self.id.encode(writer) {
+                return Err(error.in_field("id"));
+            }
+            if let Err(error) = self.criticality.encode(writer) {
+                return Err(error.in_field("criticality"));
+            }
             writer.open_type(&self.value);
             Ok(())
         }
@@ -44728,7 +46004,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PrivateMessage<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.private_ies.encode(writer)?;
+            if let Err(error) = self.private_ies.encode(writer) {
+                return Err(error.in_field("private_ies"));
+            }
             Ok(())
         }
     }
@@ -44786,7 +46064,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for RerouteNASRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44849,7 +46129,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for Reset<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -44907,7 +46189,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ResetAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45090,7 +46374,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for RetrieveUEInformation<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45148,7 +46434,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1RemovalFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45211,7 +46499,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1RemovalRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45269,7 +46559,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1RemovalResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45327,7 +46619,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1SetupFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45390,7 +46684,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1SetupRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45448,7 +46744,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1SetupResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45506,7 +46804,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for SecondaryRATDataUsageReport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45577,9 +46877,13 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.i_e_extensions.is_some());
-            self.t_ai.encode(writer)?;
+            if let Err(error) = self.t_ai.encode(writer) {
+                return Err(error.in_field("t_ai"));
+            }
             if let Some(value) = &self.i_e_extensions {
-                value.encode(writer)?;
+                if let Err(error) = value.encode(writer) {
+                    return Err(error.in_field("i_e_extensions"));
+                }
             }
             Ok(())
         }
@@ -45696,7 +47000,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for TraceFailureIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45759,7 +47065,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for TraceStart<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45924,7 +47232,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UECapabilityInfoIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -45982,7 +47292,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextModificationConfirm<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46040,7 +47352,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextModificationFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46103,7 +47417,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextModificationIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46166,7 +47482,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextModificationRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46224,7 +47542,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextModificationResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46282,7 +47602,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextReleaseCommand<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46340,7 +47662,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextReleaseComplete<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46403,7 +47727,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextReleaseRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46461,7 +47787,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextResumeFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46524,7 +47852,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextResumeRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46582,7 +47912,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextResumeResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46645,7 +47977,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextSuspendRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46703,7 +48037,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextSuspendResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46760,7 +48096,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEInformationTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46823,7 +48161,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UERadioCapabilityIDMappingRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46881,7 +48221,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UERadioCapabilityIDMappingResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -46944,7 +48286,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UERadioCapabilityMatchRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -47002,7 +48346,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UERadioCapabilityMatchResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -47060,7 +48406,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UplinkNASTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -47118,7 +48466,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UplinkNonUEAssociatedLPPaTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -47181,7 +48531,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UplinkS1cdma2000tunnelling<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -47239,7 +48591,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UplinkUEAssociatedLPPaTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -47302,7 +48656,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for WriteReplaceWarningRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -47360,7 +48716,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for WriteReplaceWarningResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            self.protocol_ies.encode(writer)?;
+            if let Err(error) = self.protocol_ies.encode(writer) {
+                return Err(error.in_field("protocol_ies"));
+            }
             Ok(())
         }
     }
@@ -47383,7 +48741,8 @@ pub mod s1_ap_pdu_contents {
     non_snake_case,
     non_upper_case_globals,
     unused,
-    clippy::too_many_arguments
+    clippy::too_many_arguments,
+    clippy::collapsible_if
 )]
 pub mod s1_ap_pdu_descriptions {
     use super::*;
@@ -47467,8 +48826,12 @@ pub mod s1_ap_pdu_descriptions {
     impl Encode for InitiatingMessage<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            self.procedure_code.encode(writer)?;
-            self.criticality.encode(writer)?;
+            if let Err(error) = self.procedure_code.encode(writer) {
+                return Err(error.in_field("procedure_code"));
+            }
+            if let Err(error) = self.criticality.encode(writer) {
+                return Err(error.in_field("criticality"));
+            }
             writer.open_type(&self.value);
             Ok(())
         }
@@ -47681,8 +49044,12 @@ pub mod s1_ap_pdu_descriptions {
     impl Encode for SuccessfulOutcome<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            self.procedure_code.encode(writer)?;
-            self.criticality.encode(writer)?;
+            if let Err(error) = self.procedure_code.encode(writer) {
+                return Err(error.in_field("procedure_code"));
+            }
+            if let Err(error) = self.criticality.encode(writer) {
+                return Err(error.in_field("criticality"));
+            }
             writer.open_type(&self.value);
             Ok(())
         }
@@ -47778,8 +49145,12 @@ pub mod s1_ap_pdu_descriptions {
     impl Encode for UnsuccessfulOutcome<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            self.procedure_code.encode(writer)?;
-            self.criticality.encode(writer)?;
+            if let Err(error) = self.procedure_code.encode(writer) {
+                return Err(error.in_field("procedure_code"));
+            }
+            if let Err(error) = self.criticality.encode(writer) {
+                return Err(error.in_field("criticality"));
+            }
             writer.open_type(&self.value);
             Ok(())
         }
