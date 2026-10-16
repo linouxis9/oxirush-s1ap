@@ -1213,7 +1213,6 @@ pub mod s1_ap_ies {
     use serde_json::Value;
     #[doc = " A"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct AdditionalGUTI {
         pub gummei: GUMMEI,
         pub m_tmsi: MTMSI,
@@ -1446,7 +1445,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct AllocationAndRetentionPriority {
         pub priority_level: PriorityLevel,
         pub pre_emption_capability: PreEmptionCapability,
@@ -1762,7 +1760,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct AssistanceDataForCECapableUEs<'a> {
         pub cell_identifier_and_ce_level_for_ce_capable_ues:
             CellIdentifierAndCELevelForCECapableUEs<'a>,
@@ -1877,7 +1874,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct AssistanceDataForPaging<'a> {
         pub assistance_data_for_recommended_cells: Option<AssistanceDataForRecommendedCells<'a>>,
         pub assistance_data_for_ce_capable_ues: Option<AssistanceDataForCECapableUEs<'a>>,
@@ -2053,7 +2049,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct AssistanceDataForRecommendedCells<'a> {
         pub recommended_cells_for_paging: RecommendedCellsForPaging<'a>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -2241,7 +2236,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct BearersSubjectToDLDiscardingItem {
         pub e_rab_id: ERABID,
         pub dl_discarding: DLDiscarding,
@@ -2400,7 +2394,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct BearersSubjectToEarlyStatusTransferItem {
         pub e_rab_id: ERABID,
         pub dl_count_pdcp_sn_length: DLCOUNTPDCPSNlength,
@@ -2565,7 +2558,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct BearersSubjectToStatusTransferItem<'a> {
         pub e_rab_id: ERABID,
         pub ul_count_value: COUNTvalue,
@@ -2965,7 +2957,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct BluetoothMeasurementConfiguration<'a> {
         pub bluetooth_meas_config: BluetoothMeasConfig,
         pub bluetooth_meas_config_name_list: Option<BluetoothMeasConfigNameList<'a>>,
@@ -3513,7 +3504,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CGI {
         pub plmn_identity: PLMNidentity,
         pub lac: LAC,
@@ -3834,7 +3824,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CNTypeRestrictionsItem {
         pub plmn_identity: PLMNidentity,
         pub cn_type: CNType,
@@ -3933,7 +3922,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct COUNTValueExtended {
         pub pdcp_sn_extended: PDCPSNExtended,
         pub hfn_modified: HFNModified,
@@ -4033,7 +4021,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct COUNTvalue {
         pub pdcp_sn: PDCPSN,
         pub hfn: HFN,
@@ -4132,7 +4119,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct COUNTvaluePDCPSNlength18 {
         pub pdcp_sn_length18: PDCPSNlength18,
         pub hfn_for_pdcp_sn_length18: HFNforPDCPSNlength18,
@@ -4379,7 +4365,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CSGIdListItem {
         pub csg_id: CSGId,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -4555,7 +4540,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CancelledCellinEAIItem {
         pub ecgi: EUTRANCGI,
         pub number_of_broadcasts: NumberOfBroadcasts,
@@ -4704,7 +4688,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CancelledCellinTAIItem {
         pub ecgi: EUTRANCGI,
         pub number_of_broadcasts: NumberOfBroadcasts,
@@ -5636,7 +5619,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct Cdma2000OneXSRVCCInfo<'a> {
         pub cdma2000_one_xmeid: Cdma2000OneXMEID<'a>,
         pub cdma2000_one_xmsi: Cdma2000OneXMSI<'a>,
@@ -6010,7 +5992,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CellBasedMDT {
         pub cell_id_listfor_mdt: CellIdListforMDT,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -6095,7 +6076,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CellBasedQMC {
         pub cell_id_listfor_qmc: CellIdListforQMC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -6228,7 +6208,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CellIDBroadcastItem {
         pub ecgi: EUTRANCGI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -6361,7 +6340,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CellIDCancelledItem {
         pub ecgi: EUTRANCGI,
         pub number_of_broadcasts: NumberOfBroadcasts,
@@ -6558,7 +6536,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CellIdentifierAndCELevelForCECapableUEs<'a> {
         pub global_cell_id: EUTRANCGI,
         pub ce_level: CELevel<'a>,
@@ -6715,7 +6692,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CellType {
         pub cell_size: CellSize,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -6946,7 +6922,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CompletedCellinEAIItem {
         pub ecgi: EUTRANCGI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -7079,7 +7054,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CompletedCellinTAIItem {
         pub ecgi: EUTRANCGI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -7205,7 +7179,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ConnectedengNBItem<'a> {
         pub en_gnb_id: EnGNBID<'a>,
         pub supported_tas: SupportedTAs,
@@ -7369,7 +7342,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ContextatSource {
         pub source_ng_ran_node_id: GlobalRANNODEID,
         pub ran_ue_ngap_id: RANUENGAPID,
@@ -7564,7 +7536,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CriticalityDiagnostics {
         pub procedure_code: Option<ProcedureCode>,
         pub triggering_message: Option<TriggeringMessage>,
@@ -7747,7 +7718,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CriticalityDiagnosticsIEItem {
         pub ie_criticality: Criticality,
         pub ie_id: ProtocolIEID,
@@ -7955,7 +7925,6 @@ pub mod s1_ap_ies {
     }
     #[doc = " D"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct DAPSRequestInfo {
         pub daps_indicator: DAPSRequestInfoDAPSIndicator,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -8085,7 +8054,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct DAPSResponseInfo {
         pub dapsresponseindicator: DAPSResponseInfoDapsresponseindicator,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -8178,7 +8146,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct DAPSResponseInfoItem {
         pub e_rab_id: ERABID,
         pub daps_response_info: DAPSResponseInfo,
@@ -8375,7 +8342,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct DLCPSecurityInformation {
         pub dl_nas_mac: DLNASMAC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -9049,7 +9015,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABInformationListItem {
         pub e_rab_id: ERABID,
         pub dl_forwarding: Option<DLForwarding>,
@@ -9159,7 +9124,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABItem {
         pub e_rab_id: ERABID,
         pub cause: Cause,
@@ -9258,7 +9222,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABLevelQoSParameters {
         pub qci: QCI,
         pub allocation_retention_priority: AllocationAndRetentionPriority,
@@ -9452,7 +9415,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABSecurityResultItem {
         pub e_rab_id: ERABID,
         pub security_result: SecurityResult,
@@ -9607,7 +9569,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABUsageReportItem {
         pub start_timestamp: [u8; 4],
         pub end_timestamp: [u8; 4],
@@ -10078,7 +10039,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENDCSONConfigurationTransfer<'a> {
         pub transfertype: ENDCSONTransferType<'a>,
         pub son_information: SONInformation<'a>,
@@ -10296,7 +10256,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENDCSONeNBIdentification {
         pub global_enb_id: GlobalENBID,
         pub selected_tai: TAI,
@@ -10396,7 +10355,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENDCSONengNBIdentification<'a> {
         pub globalen_gnb_id: GlobalEnGNBID<'a>,
         pub selected_tai: TAI,
@@ -10505,7 +10463,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENDCTransferTypeReply<'a> {
         pub source_en_gnb: ENDCSONengNBIdentification<'a>,
         pub target_enb: ENDCSONeNBIdentification,
@@ -10614,7 +10571,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENDCTransferTypeRequest<'a> {
         pub source_enb: ENDCSONeNBIdentification,
         pub target_en_gnb: ENDCSONengNBIdentification<'a>,
@@ -10808,7 +10764,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENBEarlyStatusTransferTransparentContainer<'a> {
         pub bearers_subject_to_early_status_transfer_list:
             BearersSubjectToEarlyStatusTransferList<'a>,
@@ -11030,7 +10985,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENBStatusTransferTransparentContainer<'a> {
         pub bearers_subject_to_status_transfer_list: BearersSubjectToStatusTransferList<'a>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -11236,7 +11190,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENBX2ExtTLA<'a> {
         pub ipsec_tla: Option<TransportLayerAddress<'a>>,
         pub gtp_tlaa: Option<ENBX2GTPTLAs<'a>>,
@@ -11633,7 +11586,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct EUTRANCGI {
         pub plmn_identity: PLMNidentity,
         pub cell_id: CellIdentity,
@@ -11873,7 +11825,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct EmergencyAreaIDBroadcastItem {
         pub emergency_area_id: EmergencyAreaID,
         pub completed_cellin_eai: CompletedCellinEAI,
@@ -12024,7 +11975,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct EmergencyAreaIDCancelledItem {
         pub emergency_area_id: EmergencyAreaID,
         pub cancelled_cellin_eai: CancelledCellinEAI,
@@ -12484,7 +12434,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct EventL1LoggedMDTConfig {
         pub l1_threshold: MeasurementThresholdL1LoggedMDT,
         pub hysteresis: Hysteresis,
@@ -12934,7 +12883,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ExpectedUEActivityBehaviour {
         pub expected_activity_period: Option<ExpectedActivityPeriod>,
         pub expected_idle_period: Option<ExpectedIdlePeriod>,
@@ -13104,7 +13052,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ExpectedUEBehaviour {
         pub expected_activity: Option<ExpectedUEActivityBehaviour>,
         pub expected_ho_interval: Option<ExpectedHOInterval>,
@@ -13454,7 +13401,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct FiveGSTAI {
         pub plmn_identity: PLMNidentity,
         pub five_gs_tac: FiveGSTAC,
@@ -13749,7 +13695,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ForbiddenLAsItem {
         pub plmn_identity: PLMNidentity,
         pub forbidden_lacs: ForbiddenLACs,
@@ -13945,7 +13890,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ForbiddenTAsItem {
         pub plmn_identity: PLMNidentity,
         pub forbidden_tacs: ForbiddenTACs,
@@ -14046,7 +13990,6 @@ pub mod s1_ap_ies {
     }
     #[doc = " G"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct GBRQosInformation {
         pub e_rab_maximum_bitrate_dl: BitRate,
         pub e_rab_maximum_bitrate_ul: BitRate,
@@ -14194,7 +14137,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct GERANCellID {
         pub lai: LAI,
         pub rac: RAC,
@@ -14307,7 +14249,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct GNB {
         pub global_gnb_id: GlobalGNBID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -14530,7 +14471,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct GUMMEI {
         pub plmn_identity: PLMNidentity,
         pub mme_group_id: MMEGroupID,
@@ -14780,7 +14720,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct GlobalENBID {
         pub plmn_identity: PLMNidentity,
         pub enb_id: ENBID,
@@ -14879,7 +14818,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct GlobalGNBID {
         pub plmn_identity: PLMNidentity,
         pub gnb_id: GNBIdentity,
@@ -15036,7 +14974,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct GlobalEnGNBID<'a> {
         pub plmn_identity: PLMNidentity,
         pub en_gnb_id: EnGNBID<'a>,
@@ -15314,7 +15251,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct HandoverRestrictionList {
         pub serving_plmn: PLMNidentity,
         pub equivalent_plmns: Option<EPLMNs>,
@@ -15921,7 +15857,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ImmediateMDT {
         pub measurements_to_activate: MeasurementsToActivate,
         pub m1_reporting_trigger: M1ReportingTrigger,
@@ -16088,7 +16023,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct InformationOnRecommendedCellsAndENBsForPaging<'a> {
         pub recommended_cells_for_paging: RecommendedCellsForPaging<'a>,
         pub recommend_enbs_for_paging: RecommendedENBsForPaging<'a>,
@@ -16843,7 +16777,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct InterSystemMeasurementParameters<'a> {
         pub measurement_duration: u8,
         pub inter_system_measurement_list: Option<InterSystemMeasurementList<'a>>,
@@ -17026,7 +16959,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct IntersystemMeasurementConfiguration<'a> {
         pub rsrp: Option<u8>,
         pub rsrq: Option<u8>,
@@ -17429,7 +17361,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct LAI {
         pub plmn_identity: PLMNidentity,
         pub lac: LAC,
@@ -17683,7 +17614,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct LTENTNTAIInformation {
         pub serving_plmn: PLMNidentity,
         pub tac_list_in_lte_ntn: TACListInLTENTN,
@@ -17946,7 +17876,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct LastVisitedEUTRANCellInformation {
         pub global_cell_id: EUTRANCGI,
         pub cell_type: CellType,
@@ -18177,7 +18106,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct LastVisitedPSCellInformation {
         pub ps_cell_id: Option<PSCellInformation>,
         pub time_stay: u16,
@@ -18487,7 +18415,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ListeningSubframePattern {
         pub pattern_period: ListeningSubframePatternPatternPeriod,
         pub pattern_offset: u64,
@@ -18595,7 +18522,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct LoggedMBSFNMDT {
         pub logging_interval: LoggingInterval,
         pub logging_duration: LoggingDuration,
@@ -18728,7 +18654,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct LoggedMDT {
         pub logging_interval: LoggingInterval,
         pub logging_duration: LoggingDuration,
@@ -19056,7 +18981,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct M1PeriodicReporting {
         pub report_interval: ReportIntervalMDT,
         pub report_amount: ReportAmountMDT,
@@ -19206,7 +19130,6 @@ pub mod s1_ap_ies {
     }
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct M1ThresholdEventA2 {
         pub measurement_threshold: MeasurementThresholdA2,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -19293,7 +19216,6 @@ pub mod s1_ap_ies {
     }
     #[doc = " M"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct M3Configuration {
         pub m3_period: M3period,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -19443,7 +19365,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct M4Configuration {
         pub m4_period: M4period,
         pub m4_links_to_log: LinksToLog,
@@ -19655,7 +19576,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct M5Configuration {
         pub m5_period: M5period,
         pub m5_links_to_log: LinksToLog,
@@ -19867,7 +19787,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct M6Configuration {
         pub m6_report_interval: M6reportInterval,
         pub m6_delay_threshold: Option<M6delayThreshold>,
@@ -20174,7 +20093,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct M7Configuration {
         pub m7_period: M7period,
         pub m7_links_to_log: LinksToLog,
@@ -20419,7 +20337,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct MBSFNResultToLogInfo {
         pub mbsfn_area_id: Option<u8>,
         pub carrier_freq: EARFCN,
@@ -20588,7 +20505,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct MDTConfiguration<'a> {
         pub mdt_activation: MDTActivation,
         pub area_scope_of_mdt: AreaScopeOfMDT,
@@ -21885,7 +21801,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct MutingPatternInformation {
         pub muting_pattern_period: MutingPatternInformationMutingPatternPeriod,
         pub muting_pattern_offset: Option<u64>,
@@ -22300,7 +22215,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct NBIoTPagingEDRXInformation {
         pub nb_iot_paging_edrx_cycle: NBIoTPagingEDRXCycle,
         pub nb_iot_paging_time_window: Option<NBIoTPagingTimeWindow>,
@@ -22658,7 +22572,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct NGENB {
         pub global_ng_enb_id: GlobalENBID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -22743,7 +22656,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct NRCGI {
         pub plmn_identity: PLMNidentity,
         pub nr_cell_identity: NRCellIdentity,
@@ -22891,7 +22803,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct NRUESecurityCapabilities<'a> {
         pub nr_encryption_algorithms: NRencryptionAlgorithms<'a>,
         pub nr_integrity_protection_algorithms: NRintegrityProtectionAlgorithms<'a>,
@@ -23017,7 +22928,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct NRUESidelinkAggregateMaximumBitrate {
         pub ue_aggregate_maximum_bit_rate: BitRate,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -23106,7 +23016,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct NRV2XServicesAuthorized {
         pub vehicle_ue: Option<VehicleUE>,
         pub pedestrian_ue: Option<PedestrianUE>,
@@ -23739,7 +23648,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PC5FlowBitRates {
         pub guaranteed_flow_bit_rate: BitRate,
         pub maximum_flow_bit_rate: BitRate,
@@ -23848,7 +23756,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PC5QoSFlowItem {
         pub pqi: FiveQI,
         pub pc5_flow_bit_rates: Option<PC5FlowBitRates>,
@@ -24029,7 +23936,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PC5QoSParameters {
         pub pc5_qos_flow_list: PC5QoSFlowList,
         pub pc5_link_aggregated_bit_rates: Option<BitRate>,
@@ -24274,7 +24180,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PLMNAreaBasedQMC {
         pub plmn_listfor_qmc: PLMNListforQMC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -24518,7 +24423,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PSCellInformation {
         pub ncgi: NRCGI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -24767,7 +24671,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PagingEDRXInformation {
         pub paging_edrx_cycle: PagingEDRXCycle,
         pub paging_time_window: Option<PagingTimeWindow>,
@@ -24919,7 +24822,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PagingAttemptInformation {
         pub paging_attempt_count: PagingAttemptCount,
         pub intended_number_of_paging_attempts: IntendedNumberOfPagingAttempts,
@@ -25684,7 +25586,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ProSeAuthorized {
         pub prose_direct_discovery: Option<ProSeDirectDiscovery>,
         pub prose_direct_communication: Option<ProSeDirectCommunication>,
@@ -26177,7 +26078,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct RATRestrictionsItem<'a> {
         pub plmn_identity: PLMNidentity,
         pub rat_restriction_information: BitString<'a>,
@@ -26523,7 +26423,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct RIMTransfer<'a> {
         pub rim_information: RIMInformation<'a>,
         pub rim_routing_address: Option<RIMRoutingAddress>,
@@ -26647,7 +26546,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct RLFReportInformation<'a> {
         pub ue_rlf_report_container: UERLFReportContainer<'a>,
         pub ue_rlf_report_container_for_extended_bands:
@@ -27156,7 +27054,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct RecommendedCellItem {
         pub eutran_cgi: EUTRANCGI,
         pub time_stayed_in_cell: Option<u16>,
@@ -27325,7 +27222,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct RecommendedCellsForPaging<'a> {
         pub recommended_cell_list: RecommendedCellList<'a>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -27419,7 +27315,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct RecommendedENBItem {
         pub mme_paging_target: MMEPagingTarget,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -27559,7 +27454,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct RecommendedENBsForPaging<'a> {
         pub recommended_enb_list: RecommendedENBList<'a>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -27947,7 +27841,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct RequestType {
         pub event_type: EventType,
         pub report_area: ReportArea,
@@ -28088,7 +27981,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct RequestedTNLInfo {
         pub plmn_identity: PLMNidentity,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -28213,7 +28105,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct STMSI {
         pub mmec: MMECode,
         pub m_tmsi: MTMSI,
@@ -28312,7 +28203,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SONConfigurationTransfer<'a> {
         pub target_enb_id: TargeteNBID,
         pub source_enb_id: SourceeNBID,
@@ -28569,7 +28459,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SONInformationReply<'a> {
         pub x2_tnl_configuration_info: Option<X2TNLConfigurationInfo<'a>>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -28923,7 +28812,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ScheduledCommunicationTime {
         pub dayof_week: Option<Bits>,
         pub timeof_day_start: Option<u64>,
@@ -29085,7 +28973,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SecondaryRATDataUsageReportItem<'a> {
         pub e_rab_id: ERABID,
         pub secondary_rat_type: SecondaryRATType,
@@ -29362,7 +29249,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SecurityContext<'a> {
         pub next_hop_chaining_count: u8,
         pub next_hop_parameter: SecurityKey<'a>,
@@ -29478,7 +29364,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SecurityIndication {
         pub integrity_protection_indication: IntegrityProtectionIndication,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -29626,7 +29511,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SecurityResult {
         pub integrity_protection_result: IntegrityProtectionResult,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -29758,7 +29642,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SensorMeasConfigNameItem {
         pub sensor_name_config: SensorNameConfig,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -29891,7 +29774,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SensorMeasurementConfiguration {
         pub sensor_meas_config: SensorMeasConfig,
         pub sensor_meas_config_name_list: Option<SensorMeasConfigNameList>,
@@ -30225,7 +30107,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ServedDCNsItem {
         pub dcn_id: DCNID,
         pub relative_dcn_capacity: RelativeMMECapacity,
@@ -30375,7 +30256,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ServedGUMMEIsItem {
         pub served_plmns: ServedPLMNs,
         pub served_group_ids: ServedGroupIDs,
@@ -30799,7 +30679,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SourceNgRanNodeID {
         pub global_ran_node_id: GlobalRANNODEID,
         pub selected_tai: FiveGSTAI,
@@ -31236,7 +31115,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SourceeNBToTargeteNBTransparentContainer<'a> {
         pub rrc_container: RRCContainer<'a>,
         pub e_rab_information_list: Option<ERABInformationList<'a>>,
@@ -31701,7 +31579,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SubscriptionBasedUEDifferentiationInfo {
         pub periodic_communication_indicator:
             Option<SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator>,
@@ -32014,7 +31891,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SupportedTAsItem {
         pub tac: TAC,
         pub broadcast_plmns: BPLMNs,
@@ -32113,7 +31989,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SynchronisationInformation {
         pub source_stratum_level: Option<StratumLevel>,
         pub listening_subframe_pattern: Option<ListeningSubframePattern>,
@@ -32314,7 +32189,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TABasedMDT {
         pub ta_listfor_mdt: TAListforMDT,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -32399,7 +32273,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TABasedQMC {
         pub ta_listfor_qmc: TAListforQMC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -32584,7 +32457,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TAI {
         pub plmn_identity: PLMNidentity,
         pub tac: TAC,
@@ -32731,7 +32603,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TAIBroadcastItem {
         pub tai: TAI,
         pub completed_cellin_tai: CompletedCellinTAI,
@@ -32880,7 +32751,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TAICancelledItem {
         pub tai: TAI,
         pub cancelled_cellin_tai: CancelledCellinTAI,
@@ -32981,7 +32851,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TAIBasedMDT {
         pub tai_listfor_mdt: TAIListforMDT,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -33066,7 +32935,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TAIBasedQMC {
         pub tai_listfor_qmc: TAIListforQMC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -33710,7 +33578,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TargetNgRanNodeID {
         pub global_ran_node_id: GlobalRANNODEID,
         pub selected_tai: FiveGSTAI,
@@ -33871,7 +33738,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TargetRNCID {
         pub lai: LAI,
         pub rac: Option<RAC>,
@@ -34076,7 +33942,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TargeteNBID {
         pub global_enb_id: GlobalENBID,
         pub selected_tai: TAI,
@@ -34176,7 +34041,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TargeteNBToSourceeNBTransparentContainer<'a> {
         pub rrc_container: RRCContainer<'a>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -34433,7 +34297,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TimeBasedHandoverInformation {
         pub ho_window_start: HandoverWindowStart,
         pub ho_window_duration: HandoverWindowDuration,
@@ -34629,7 +34492,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TimeSynchronisationInfo {
         pub stratum_level: StratumLevel,
         pub synchronisation_status: SynchronisationStatus,
@@ -34865,7 +34727,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TraceActivation<'a> {
         pub e_utran_trace_id: EUTRANTraceID,
         pub interfaces_to_trace: InterfacesToTrace,
@@ -35119,7 +34980,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TransportInformation<'a> {
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub ul_gtp_teid: GTPTEID,
@@ -35247,7 +35107,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TunnelInformation<'a> {
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub udp_port_number: Option<PortNumber>,
@@ -35728,7 +35587,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UES1APIDPair {
         pub mme_ue_s1ap_id: MMEUES1APID,
         pub enb_ue_s1ap_id: ENBUES1APID,
@@ -35939,7 +35797,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEAssociatedLogicalS1ConnectionItem {
         pub mme_ue_s1ap_id: Option<MMEUES1APID>,
         pub enb_ue_s1ap_id: Option<ENBUES1APID>,
@@ -36062,7 +35919,6 @@ pub mod s1_ap_ies {
     }
     #[doc = " U"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEAggregateMaximumBitrate {
         pub ue_aggregate_maximum_bit_rate_dl: BitRate,
         pub ue_aggregate_maximum_bit_rate_ul: BitRate,
@@ -36176,7 +36032,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEAppLayerMeasConfig<'a> {
         pub container_for_app_layer_meas_config: Octets<'a>,
         pub area_scope_of_qmc: AreaScopeOfQMC,
@@ -36625,7 +36480,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UESecurityCapabilities<'a> {
         pub encryption_algorithms: EncryptionAlgorithms<'a>,
         pub integrity_protection_algorithms: IntegrityProtectionAlgorithms<'a>,
@@ -36746,7 +36600,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UESidelinkAggregateMaximumBitrate {
         pub ue_sidelink_aggregate_maximum_bit_rate: BitRate,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -36880,7 +36733,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ULCPSecurityInformation {
         pub ul_nas_mac: ULNASMAC,
         pub ul_nas_count: ULNASCount,
@@ -37174,7 +37026,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UserLocationInformation {
         pub eutran_cgi: EUTRANCGI,
         pub tai: TAI,
@@ -37273,7 +37124,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct V2XServicesAuthorized {
         pub vehicle_ue: Option<VehicleUE>,
         pub pedestrian_ue: Option<PedestrianUE>,
@@ -37666,7 +37516,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct WLANMeasurementConfiguration<'a> {
         pub wlan_meas_config: WLANMeasConfig,
         pub wlan_meas_config_name_list: Option<WLANMeasConfigNameList<'a>>,
@@ -37906,7 +37755,6 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct WUSAssistanceInformation {
         pub paging_probability_information: PagingProbabilityInformation,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -38303,7 +38151,6 @@ pub mod s1_ap_ies {
     }
     #[doc = " X"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct X2TNLConfigurationInfo<'a> {
         pub enb_x2_transport_layer_addresses: ENBX2TLAs<'a>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -38424,7 +38271,6 @@ pub mod s1_ap_pdu_contents {
     #[cfg(feature = "inspect")]
     use serde_json::Value;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CSGMembershipInfo {
         pub csg_membership_status: CSGMembershipStatus,
         pub csg_id: CSGId,
@@ -38591,7 +38437,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct CellTrafficTrace<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -38651,7 +38496,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ConnectionEstablishmentIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -38716,7 +38560,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct DeactivateTrace<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -38781,7 +38624,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct DownlinkNASTransport<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -38841,7 +38683,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct DownlinkNonUEAssociatedLPPaTransport<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -38906,7 +38747,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct DownlinkS1cdma2000tunnelling<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -38971,7 +38811,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct DownlinkUEAssociatedLPPaTransport<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -39026,7 +38865,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABAdmittedItem<'a> {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
@@ -39330,7 +39168,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABDataForwardingItem<'a> {
         pub e_rab_id: ERABID,
         pub dl_transport_layer_address: Option<TransportLayerAddress<'a>>,
@@ -39543,7 +39380,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABFailedToResumeItemResumeReq {
         pub e_rab_id: ERABID,
         pub cause: Cause,
@@ -39642,7 +39478,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABFailedToResumeItemResumeRes {
         pub e_rab_id: ERABID,
         pub cause: Cause,
@@ -39855,7 +39690,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABFailedToSetupItemHOReqAck {
         pub e_rab_id: ERABID,
         pub cause: Cause,
@@ -40016,7 +39850,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABModificationConfirm<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -40081,7 +39914,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABModificationIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -40136,7 +39968,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABModifyItemBearerModConf {
         pub e_rab_id: ERABID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -40221,7 +40052,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABModifyItemBearerModRes {
         pub e_rab_id: ERABID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -40426,7 +40256,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABModifyRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -40486,7 +40315,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABModifyResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -40541,7 +40369,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABNotToBeModifiedItemBearerModInd<'a> {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
@@ -40745,7 +40572,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABReleaseCommand<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -40810,7 +40636,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABReleaseIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -40865,7 +40690,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABReleaseItemBearerRelComp {
         pub e_rab_id: ERABID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -41010,7 +40834,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABReleaseResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -41065,7 +40888,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABSetupItemBearerSURes<'a> {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
@@ -41200,7 +41022,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABSetupItemCtxtSURes<'a> {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
@@ -41455,7 +41276,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABSetupRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -41515,7 +41335,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABSetupResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -41627,7 +41446,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABToBeModifiedItemBearerModInd<'a> {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
@@ -41762,7 +41580,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABToBeModifiedItemBearerModReq<'a> {
         pub e_rab_id: ERABID,
         pub e_rab_level_qos_parameters: ERABLevelQoSParameters,
@@ -42015,7 +41832,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABToBeSetupItemBearerSUReq<'a> {
         pub e_rab_id: ERABID,
         pub e_rab_level_qos_parameters: ERABLevelQoSParameters,
@@ -42186,7 +42002,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABToBeSetupItemCtxtSUReq<'a> {
         pub e_rab_id: ERABID,
         pub e_rab_level_qos_parameters: ERABLevelQoSParameters,
@@ -42367,7 +42182,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABToBeSetupItemHOReq<'a> {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
@@ -42687,7 +42501,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABToBeSwitchedDLItem<'a> {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
@@ -42877,7 +42690,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABToBeSwitchedULItem<'a> {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
@@ -43067,7 +42879,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ERABToBeUpdatedItem {
         pub e_rab_id: ERABID,
         pub security_indication: Option<SecurityIndication>,
@@ -43240,7 +43051,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENBCPRelocationIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43305,7 +43115,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENBConfigurationTransfer<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43370,7 +43179,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENBConfigurationUpdate<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43430,7 +43238,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENBConfigurationUpdateAcknowledge<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43490,7 +43297,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENBConfigurationUpdateFailure<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43555,7 +43361,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENBDirectInformationTransfer<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43620,7 +43425,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENBEarlyStatusTransfer<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43685,7 +43489,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ENBStatusTransfer<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43750,7 +43553,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ErrorIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43815,7 +43617,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct HandoverCancel<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43875,7 +43676,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct HandoverCancelAcknowledge<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43935,7 +43735,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct HandoverCommand<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -43995,7 +43794,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct HandoverFailure<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44060,7 +43858,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct HandoverNotify<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44120,7 +43917,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct HandoverPreparationFailure<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44185,7 +43981,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct HandoverRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44245,7 +44040,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct HandoverRequestAcknowledge<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44310,7 +44104,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct HandoverRequired<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44375,7 +44168,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct HandoverSuccess<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44435,7 +44227,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct InitialContextSetupFailure<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44500,7 +44291,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct InitialContextSetupRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44560,7 +44350,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct InitialContextSetupResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44620,7 +44409,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct InitialUEMessage<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44747,7 +44535,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct KillRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44807,7 +44594,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct KillResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44867,7 +44653,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct LocationReport<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44932,7 +44717,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct LocationReportingControl<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -44992,7 +44776,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct LocationReportingFailureIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45052,7 +44835,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct MMECPRelocationIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45117,7 +44899,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct MMEConfigurationTransfer<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45182,7 +44963,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct MMEConfigurationUpdate<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45242,7 +45022,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct MMEConfigurationUpdateAcknowledge<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45302,7 +45081,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct MMEConfigurationUpdateFailure<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45367,7 +45145,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct MMEDirectInformationTransfer<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45432,7 +45209,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct MMEEarlyStatusTransfer<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45497,7 +45273,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct MMEStatusTransfer<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45557,7 +45332,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct NASDeliveryIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45617,7 +45391,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct NASNonDeliveryIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45682,7 +45455,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct OverloadStart<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45742,7 +45514,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct OverloadStop<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45802,7 +45573,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PWSFailureIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45867,7 +45637,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PWSRestartIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45932,7 +45701,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct Paging<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -45997,7 +45765,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PathSwitchRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -46057,7 +45824,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PathSwitchRequestAcknowledge<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -46117,7 +45883,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PathSwitchRequestFailure<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -46322,7 +46087,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct PrivateMessage<'a> {
         pub private_ies: PrivateMessagePrivateIEs<'a>,
     }
@@ -46382,7 +46146,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct RerouteNASRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -46447,7 +46210,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct Reset<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -46507,7 +46269,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct ResetAcknowledge<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -46692,7 +46453,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct RetrieveUEInformation<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -46752,7 +46512,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct S1RemovalFailure<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -46817,7 +46576,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct S1RemovalRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -46877,7 +46635,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct S1RemovalResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -46937,7 +46694,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct S1SetupFailure<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47002,7 +46758,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct S1SetupRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47062,7 +46817,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct S1SetupResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47122,7 +46876,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct SecondaryRATDataUsageReport<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47177,7 +46930,6 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TAIItem {
         pub tai: TAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
@@ -47310,7 +47062,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TraceFailureIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47375,7 +47126,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct TraceStart<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47558,7 +47308,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UECapabilityInfoIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47618,7 +47367,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextModificationConfirm<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47678,7 +47426,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextModificationFailure<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47743,7 +47490,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextModificationIndication<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47808,7 +47554,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextModificationRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47868,7 +47613,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextModificationResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47928,7 +47672,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextReleaseCommand<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -47988,7 +47731,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextReleaseComplete<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48053,7 +47795,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextReleaseRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48113,7 +47854,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextResumeFailure<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48178,7 +47918,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextResumeRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48238,7 +47977,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextResumeResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48303,7 +48041,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextSuspendRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48363,7 +48100,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEContextSuspendResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48422,7 +48158,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UEInformationTransfer<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48487,7 +48222,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UERadioCapabilityIDMappingRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48547,7 +48281,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UERadioCapabilityIDMappingResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48612,7 +48345,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UERadioCapabilityMatchRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48672,7 +48404,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UERadioCapabilityMatchResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48732,7 +48463,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UplinkNASTransport<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48792,7 +48522,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UplinkNonUEAssociatedLPPaTransport<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48857,7 +48586,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UplinkS1cdma2000tunnelling<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48917,7 +48645,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct UplinkUEAssociatedLPPaTransport<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -48982,7 +48709,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct WriteReplaceWarningRequest<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
@@ -49042,7 +48768,6 @@ pub mod s1_ap_pdu_contents {
     #[doc = ""]
     #[doc = " **************************************************************"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[non_exhaustive]
     pub struct WriteReplaceWarningResponse<'a> {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
