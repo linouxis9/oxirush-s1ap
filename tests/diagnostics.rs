@@ -19,7 +19,7 @@ use oxirush_s1ap::{Deviation, Error, ErrorKind, build_s1ap, extract_s1ap_ies};
 const SUPPORTED_TAS: u16 = 64;
 const DEFAULT_PAGING_DRX: u16 = 137;
 
-fn areas() -> Result<SupportedTAs<'static>, Error> {
+fn areas() -> Result<SupportedTAs, Error> {
     let networks = BPLMNs(vec![plmn("208", "93")?]);
     let area = SupportedTAsItem::new(TAC([0x00, 0x01]), networks, None);
     Ok(SupportedTAs(vec![area]))
@@ -68,9 +68,7 @@ fn accept(request: &S1SetupRequest) -> Result<usize, Error> {
 }
 
 /// The Criticality Diagnostics of an S1 SETUP REQUEST, with these items.
-fn diagnostics(
-    items: Vec<CriticalityDiagnosticsIEItem<'static>>,
-) -> CriticalityDiagnostics<'static> {
+fn diagnostics(items: Vec<CriticalityDiagnosticsIEItem>) -> CriticalityDiagnostics {
     CriticalityDiagnostics::new(
         Some(ProcedureCode(17)),
         Some(TriggeringMessage::initiating_message),
@@ -93,14 +91,14 @@ fn failure(pdu: &S1AP_PDU) -> Result<S1AP_PDU, Error> {
 }
 
 /// The cause and the Criticality Diagnostics of a failure, as its receiver reads them.
-fn answered(failure: &S1AP_PDU) -> Result<(Cause, CriticalityDiagnostics<'static>), Error> {
+fn answered(failure: &S1AP_PDU) -> Result<(Cause, CriticalityDiagnostics), Error> {
     let received = S1AP_PDU::decode(&failure.encode()?)?;
     let message: S1SetupFailure = received.decode_value()?;
     extract_s1ap_ies!(message, S1SetupFailure,
         req cause: Cause = Cause(cause) => cause,
         req diagnostics: CriticalityDiagnostics = CriticalityDiagnostics(diagnostics) => diagnostics,
     );
-    Ok((cause, diagnostics.into_owned()))
+    Ok((cause, diagnostics))
 }
 
 #[test]

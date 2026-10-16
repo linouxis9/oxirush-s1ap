@@ -81,7 +81,7 @@ pub fn plmn_from(identity: &PLMNidentity) -> Option<(String, String)> {
 }
 
 /// Build a Globally Unique MME Identifier.
-pub fn gummei(plmn_identity: PLMNidentity, mme_group_id: u16, mme_code: u8) -> GUMMEI<'static> {
+pub fn gummei(plmn_identity: PLMNidentity, mme_group_id: u16, mme_code: u8) -> GUMMEI {
     GUMMEI::new(
         plmn_identity,
         MMEGroupID(mme_group_id.to_be_bytes()),
@@ -91,7 +91,7 @@ pub fn gummei(plmn_identity: PLMNidentity, mme_group_id: u16, mme_code: u8) -> G
 }
 
 /// Build an LTE Tracking Area Identity: a PLMN and the two octets of a TAC.
-pub fn tai(plmn_identity: PLMNidentity, tac: [u8; 2]) -> TAI<'static> {
+pub fn tai(plmn_identity: PLMNidentity, tac: [u8; 2]) -> TAI {
     TAI::new(plmn_identity, TAC(tac), None)
 }
 
@@ -104,7 +104,7 @@ pub fn eutran_cgi(
     plmn_identity: PLMNidentity,
     enb_id: u32,
     cell_id: u8,
-) -> Result<EUTRANCGI<'static>, Error> {
+) -> Result<EUTRANCGI, Error> {
     let enb_id = fits("the macro eNB ID", enb_id.into(), 20)?;
     let eci = (enb_id << 8) | u64::from(cell_id);
     Ok(EUTRANCGI::new(
@@ -118,10 +118,7 @@ pub fn eutran_cgi(
 ///
 /// An error of the kind `Argument` for an eNB ID that does not fit in 20 bits
 /// (TS 36.413 clause 9.2.1.37).
-pub fn global_enb_id(
-    plmn_identity: PLMNidentity,
-    enb_id: u32,
-) -> Result<GlobalENBID<'static>, Error> {
+pub fn global_enb_id(plmn_identity: PLMNidentity, enb_id: u32) -> Result<GlobalENBID, Error> {
     let enb_id = fits("the macro eNB ID", enb_id.into(), 20)?;
     Ok(GlobalENBID::new(
         plmn_identity,

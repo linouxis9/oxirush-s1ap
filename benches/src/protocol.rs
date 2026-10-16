@@ -162,11 +162,11 @@ fn initial_context_setup_request() -> Written {
         typed: typed!(InitiatingMessage InitialContextSetup REJECT InitialContextSetupRequest {
             REJECT MME_UE_S1AP_ID: MMEUES1APID,
             REJECT eNB_UE_S1AP_ID: ENBUES1APID,
-            REJECT uEaggregateMaximumBitrate: UEAggregateMaximumBitrate<'a>,
+            REJECT uEaggregateMaximumBitrate: UEAggregateMaximumBitrate,
             REJECT E_RABToBeSetupListCtxtSUReq: ERABToBeSetupListCtxtSUReq<'a>,
             REJECT UESecurityCapabilities: UESecurityCapabilities<'a>,
             REJECT SecurityKey: SecurityKey<'a>,
-            IGNORE HandoverRestrictionList: HandoverRestrictionList<'a>,
+            IGNORE HandoverRestrictionList: HandoverRestrictionList,
             IGNORE UERadioCapability: UERadioCapability<'a>,
             IGNORE Masked_IMEISV: MaskedIMEISV,
         }),
@@ -194,7 +194,7 @@ fn e_rab_setup_request() -> Written {
         typed: typed!(InitiatingMessage E_RABSetup REJECT ERABSetupRequest {
             REJECT MME_UE_S1AP_ID: MMEUES1APID,
             REJECT eNB_UE_S1AP_ID: ENBUES1APID,
-            REJECT uEaggregateMaximumBitrate: UEAggregateMaximumBitrate<'a>,
+            REJECT uEaggregateMaximumBitrate: UEAggregateMaximumBitrate,
             REJECT E_RABToBeSetupListBearerSUReq: ERABToBeSetupListBearerSUReq<'a>,
         }),
     }
@@ -244,7 +244,7 @@ fn handover_required() -> Written {
             REJECT eNB_UE_S1AP_ID: ENBUES1APID,
             REJECT HandoverType: HandoverType,
             IGNORE Cause: Cause,
-            REJECT TargetID: TargetID<'a>,
+            REJECT TargetID: TargetID,
             IGNORE Direct_Forwarding_Path_Availability: DirectForwardingPathAvailability,
             REJECT Source_ToTarget_TransparentContainer: SourceToTargetTransparentContainer<'a>,
         }),

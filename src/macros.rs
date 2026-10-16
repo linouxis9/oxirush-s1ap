@@ -87,7 +87,7 @@
 //! ```
 //! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
 //!
-//! fn source(gummei: GUMMEI) -> Result<ProtocolIEField, oxirush_s1ap::Error> {
+//! fn source(gummei: GUMMEI) -> Result<ProtocolIEField<'static>, oxirush_s1ap::Error> {
 //!     build_s1ap_ie!(PathSwitchRequest, IGNORE SourceMME_GUMMEI(gummei))
 //! }
 //! ```
@@ -95,7 +95,7 @@
 //! ```compile_fail
 //! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
 //!
-//! fn source(gummei: GUMMEI) -> Result<ProtocolIEField, oxirush_s1ap::Error> {
+//! fn source(gummei: GUMMEI) -> Result<ProtocolIEField<'static>, oxirush_s1ap::Error> {
 //!     build_s1ap_ie!(PathSwitchRequest, IGNORE GUMMEI(gummei))
 //! }
 //! ```

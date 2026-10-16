@@ -182,7 +182,7 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn target_enb() -> Result<TargetID<'static>, Error> {
+fn target_enb() -> Result<TargetID, Error> {
     let network = plmn("208", "93")?;
     let enb = global_enb_id(network, 0x12345)?;
     let area = tai(network, [0x00, 0x01]);

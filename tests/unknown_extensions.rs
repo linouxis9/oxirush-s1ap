@@ -49,16 +49,16 @@ fn complete_warning_request_preserves_unknown_addition_bytes() {
 /// A TAI, then a number of one octet: what follows the additions of a value is read
 /// where they end.
 #[derive(Debug, PartialEq)]
-struct FollowingTAI<'a> {
-    value: TAI<'a>,
+struct FollowingTAI {
+    value: TAI,
     following: u8,
 }
 
-impl AsnType for FollowingTAI<'_> {
+impl AsnType for FollowingTAI {
     const NAME: &'static str = "FollowingTAI";
 }
 
-impl<'a> Decode<'a> for FollowingTAI<'a> {
+impl<'a> Decode<'a> for FollowingTAI {
     fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
         Ok(Self {
             value: TAI::decode(reader)?,

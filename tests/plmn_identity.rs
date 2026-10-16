@@ -94,7 +94,7 @@ fn networks(printed: &str) -> Vec<(String, String)> {
 }
 
 /// The tracking areas that the eNB of [`S1_SETUP`] supports, built with the helpers.
-fn tracking_areas() -> SupportedTAs<'static> {
+fn tracking_areas() -> SupportedTAs {
     let broadcast = BPLMNs(vec![
         plmn("208", "93").unwrap(),
         plmn("310", "410").unwrap(),

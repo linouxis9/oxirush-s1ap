@@ -1214,16 +1214,16 @@ pub mod s1_ap_ies {
     #[doc = " A"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct AdditionalGUTI<'a> {
-        pub gummei: GUMMEI<'a>,
+    pub struct AdditionalGUTI {
+        pub gummei: GUMMEI,
         pub m_tmsi: MTMSI,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> AdditionalGUTI<'a> {
+    impl AdditionalGUTI {
         pub fn new(
-            gummei: GUMMEI<'a>,
+            gummei: GUMMEI,
             m_tmsi: MTMSI,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 gummei,
@@ -1231,20 +1231,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `AdditionalGUTI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> AdditionalGUTI<'static> {
-            AdditionalGUTI {
-                gummei: self.gummei.into_owned(),
-                m_tmsi: self.m_tmsi,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for AdditionalGUTI<'_> {
+    impl AsnType for AdditionalGUTI {
         const NAME: &'static str = "Additional-GUTI";
     }
-    impl<'a> Decode<'a> for AdditionalGUTI<'a> {
+    impl<'a> Decode<'a> for AdditionalGUTI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -1257,10 +1248,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("m_tmsi")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -1274,7 +1268,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for AdditionalGUTI<'_> {
+    impl Encode for AdditionalGUTI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -1293,7 +1287,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AdditionalGUTI<'_> {
+    impl Json for AdditionalGUTI {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("gUMMEI", self.gummei.to_json());
@@ -1453,18 +1447,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct AllocationAndRetentionPriority<'a> {
+    pub struct AllocationAndRetentionPriority {
         pub priority_level: PriorityLevel,
         pub pre_emption_capability: PreEmptionCapability,
         pub pre_emption_vulnerability: PreEmptionVulnerability,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> AllocationAndRetentionPriority<'a> {
+    impl AllocationAndRetentionPriority {
         pub fn new(
             priority_level: PriorityLevel,
             pre_emption_capability: PreEmptionCapability,
             pre_emption_vulnerability: PreEmptionVulnerability,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 priority_level,
@@ -1473,21 +1467,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `AllocationAndRetentionPriority<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> AllocationAndRetentionPriority<'static> {
-            AllocationAndRetentionPriority {
-                priority_level: self.priority_level,
-                pre_emption_capability: self.pre_emption_capability,
-                pre_emption_vulnerability: self.pre_emption_vulnerability,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for AllocationAndRetentionPriority<'_> {
+    impl AsnType for AllocationAndRetentionPriority {
         const NAME: &'static str = "AllocationAndRetentionPriority";
     }
-    impl<'a> Decode<'a> for AllocationAndRetentionPriority<'a> {
+    impl<'a> Decode<'a> for AllocationAndRetentionPriority {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -1504,10 +1488,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("pre_emption_vulnerability")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -1522,7 +1509,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for AllocationAndRetentionPriority<'_> {
+    impl Encode for AllocationAndRetentionPriority {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -1544,7 +1531,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AllocationAndRetentionPriority<'_> {
+    impl Json for AllocationAndRetentionPriority {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("priorityLevel", self.priority_level.to_json());
@@ -1589,48 +1576,36 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum AreaScopeOfMDT<'a> {
-        cellBased(CellBasedMDT<'a>),
-        tABased(TABasedMDT<'a>),
+    pub enum AreaScopeOfMDT {
+        cellBased(CellBasedMDT),
+        tABased(TABasedMDT),
         pLMNWide(()),
-        tAIBased(TAIBasedMDT<'a>),
+        tAIBased(TAIBasedMDT),
     }
-    impl<'a> AreaScopeOfMDT<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `AreaScopeOfMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> AreaScopeOfMDT<'static> {
-            match self {
-                Self::cellBased(value) => AreaScopeOfMDT::cellBased(value.into_owned()),
-                Self::tABased(value) => AreaScopeOfMDT::tABased(value.into_owned()),
-                Self::pLMNWide(value) => AreaScopeOfMDT::pLMNWide(value),
-                Self::tAIBased(value) => AreaScopeOfMDT::tAIBased(value.into_owned()),
-            }
-        }
-    }
-    impl<'a> From<CellBasedMDT<'a>> for AreaScopeOfMDT<'a> {
-        fn from(value: CellBasedMDT<'a>) -> Self {
+    impl From<CellBasedMDT> for AreaScopeOfMDT {
+        fn from(value: CellBasedMDT) -> Self {
             Self::cellBased(value)
         }
     }
-    impl<'a> From<TABasedMDT<'a>> for AreaScopeOfMDT<'a> {
-        fn from(value: TABasedMDT<'a>) -> Self {
+    impl From<TABasedMDT> for AreaScopeOfMDT {
+        fn from(value: TABasedMDT) -> Self {
             Self::tABased(value)
         }
     }
-    impl<'a> From<()> for AreaScopeOfMDT<'a> {
+    impl From<()> for AreaScopeOfMDT {
         fn from(value: ()) -> Self {
             Self::pLMNWide(value)
         }
     }
-    impl<'a> From<TAIBasedMDT<'a>> for AreaScopeOfMDT<'a> {
-        fn from(value: TAIBasedMDT<'a>) -> Self {
+    impl From<TAIBasedMDT> for AreaScopeOfMDT {
+        fn from(value: TAIBasedMDT) -> Self {
             Self::tAIBased(value)
         }
     }
-    impl AsnType for AreaScopeOfMDT<'_> {
+    impl AsnType for AreaScopeOfMDT {
         const NAME: &'static str = "AreaScopeOfMDT";
     }
-    impl<'a> Decode<'a> for AreaScopeOfMDT<'a> {
+    impl<'a> Decode<'a> for AreaScopeOfMDT {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(3, 1, true)? {
                 0 => Self::cellBased(CellBasedMDT::decode(reader)?),
@@ -1638,22 +1613,13 @@ pub mod s1_ap_ies {
                 2 => Self::pLMNWide(()),
                 _ => {
                     let octets = reader.open_type()?;
-                    match octets.as_borrowed() {
-                        Some(octets) => {
-                            let reader = &mut Reader::new(octets);
-                            Self::tAIBased(TAIBasedMDT::decode(reader)?)
-                        }
-                        None => {
-                            let reader = &mut Reader::new(&octets);
-                            let value = TAIBasedMDT::decode(reader)?;
-                            Self::tAIBased(value.into_owned())
-                        }
-                    }
+                    let reader = &mut Reader::new(&octets);
+                    Self::tAIBased(TAIBasedMDT::decode(reader)?)
                 }
             })
         }
     }
-    impl Encode for AreaScopeOfMDT<'_> {
+    impl Encode for AreaScopeOfMDT {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::cellBased(value) => {
@@ -1678,7 +1644,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AreaScopeOfMDT<'_> {
+    impl Json for AreaScopeOfMDT {
         fn to_json(&self) -> Value {
             match self {
                 Self::cellBased(value) => json::alternative("cellBased", value.to_json()),
@@ -1704,48 +1670,36 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum AreaScopeOfQMC<'a> {
-        cellBased(CellBasedQMC<'a>),
-        tABased(TABasedQMC<'a>),
-        tAIBased(TAIBasedQMC<'a>),
-        pLMNAreaBased(PLMNAreaBasedQMC<'a>),
+    pub enum AreaScopeOfQMC {
+        cellBased(CellBasedQMC),
+        tABased(TABasedQMC),
+        tAIBased(TAIBasedQMC),
+        pLMNAreaBased(PLMNAreaBasedQMC),
     }
-    impl<'a> AreaScopeOfQMC<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `AreaScopeOfQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> AreaScopeOfQMC<'static> {
-            match self {
-                Self::cellBased(value) => AreaScopeOfQMC::cellBased(value.into_owned()),
-                Self::tABased(value) => AreaScopeOfQMC::tABased(value.into_owned()),
-                Self::tAIBased(value) => AreaScopeOfQMC::tAIBased(value.into_owned()),
-                Self::pLMNAreaBased(value) => AreaScopeOfQMC::pLMNAreaBased(value.into_owned()),
-            }
-        }
-    }
-    impl<'a> From<CellBasedQMC<'a>> for AreaScopeOfQMC<'a> {
-        fn from(value: CellBasedQMC<'a>) -> Self {
+    impl From<CellBasedQMC> for AreaScopeOfQMC {
+        fn from(value: CellBasedQMC) -> Self {
             Self::cellBased(value)
         }
     }
-    impl<'a> From<TABasedQMC<'a>> for AreaScopeOfQMC<'a> {
-        fn from(value: TABasedQMC<'a>) -> Self {
+    impl From<TABasedQMC> for AreaScopeOfQMC {
+        fn from(value: TABasedQMC) -> Self {
             Self::tABased(value)
         }
     }
-    impl<'a> From<TAIBasedQMC<'a>> for AreaScopeOfQMC<'a> {
-        fn from(value: TAIBasedQMC<'a>) -> Self {
+    impl From<TAIBasedQMC> for AreaScopeOfQMC {
+        fn from(value: TAIBasedQMC) -> Self {
             Self::tAIBased(value)
         }
     }
-    impl<'a> From<PLMNAreaBasedQMC<'a>> for AreaScopeOfQMC<'a> {
-        fn from(value: PLMNAreaBasedQMC<'a>) -> Self {
+    impl From<PLMNAreaBasedQMC> for AreaScopeOfQMC {
+        fn from(value: PLMNAreaBasedQMC) -> Self {
             Self::pLMNAreaBased(value)
         }
     }
-    impl AsnType for AreaScopeOfQMC<'_> {
+    impl AsnType for AreaScopeOfQMC {
         const NAME: &'static str = "AreaScopeOfQMC";
     }
-    impl<'a> Decode<'a> for AreaScopeOfQMC<'a> {
+    impl<'a> Decode<'a> for AreaScopeOfQMC {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(4, 0, true)? {
                 0 => Self::cellBased(CellBasedQMC::decode(reader)?),
@@ -1755,7 +1709,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for AreaScopeOfQMC<'_> {
+    impl Encode for AreaScopeOfQMC {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::cellBased(value) => {
@@ -1779,7 +1733,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AreaScopeOfQMC<'_> {
+    impl Json for AreaScopeOfQMC {
         fn to_json(&self) -> Value {
             match self {
                 Self::cellBased(value) => json::alternative("cellBased", value.to_json()),
@@ -1812,12 +1766,12 @@ pub mod s1_ap_ies {
     pub struct AssistanceDataForCECapableUEs<'a> {
         pub cell_identifier_and_ce_level_for_ce_capable_ues:
             CellIdentifierAndCELevelForCECapableUEs<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> AssistanceDataForCECapableUEs<'a> {
         pub fn new(
             cell_identifier_and_ce_level_for_ce_capable_ues: CellIdentifierAndCELevelForCECapableUEs<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 cell_identifier_and_ce_level_for_ce_capable_ues,
@@ -1831,7 +1785,7 @@ pub mod s1_ap_ies {
                 cell_identifier_and_ce_level_for_ce_capable_ues: self
                     .cell_identifier_and_ce_level_for_ce_capable_ues
                     .into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -1852,10 +1806,13 @@ pub mod s1_ap_ies {
                     }
                 };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -1924,15 +1881,15 @@ pub mod s1_ap_ies {
     pub struct AssistanceDataForPaging<'a> {
         pub assistance_data_for_recommended_cells: Option<AssistanceDataForRecommendedCells<'a>>,
         pub assistance_data_for_ce_capable_ues: Option<AssistanceDataForCECapableUEs<'a>>,
-        pub paging_attempt_information: Option<PagingAttemptInformation<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub paging_attempt_information: Option<PagingAttemptInformation>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> AssistanceDataForPaging<'a> {
         pub fn new(
             assistance_data_for_recommended_cells: Option<AssistanceDataForRecommendedCells<'a>>,
             assistance_data_for_ce_capable_ues: Option<AssistanceDataForCECapableUEs<'a>>,
-            paging_attempt_information: Option<PagingAttemptInformation<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            paging_attempt_information: Option<PagingAttemptInformation>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 assistance_data_for_recommended_cells,
@@ -1951,10 +1908,8 @@ pub mod s1_ap_ies {
                 assistance_data_for_ce_capable_ues: self
                     .assistance_data_for_ce_capable_ues
                     .map(|value| value.into_owned()),
-                paging_attempt_information: self
-                    .paging_attempt_information
-                    .map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                paging_attempt_information: self.paging_attempt_information,
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -1992,10 +1947,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -2098,12 +2056,12 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct AssistanceDataForRecommendedCells<'a> {
         pub recommended_cells_for_paging: RecommendedCellsForPaging<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> AssistanceDataForRecommendedCells<'a> {
         pub fn new(
             recommended_cells_for_paging: RecommendedCellsForPaging<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 recommended_cells_for_paging,
@@ -2115,7 +2073,7 @@ pub mod s1_ap_ies {
         pub fn into_owned(self) -> AssistanceDataForRecommendedCells<'static> {
             AssistanceDataForRecommendedCells {
                 recommended_cells_for_paging: self.recommended_cells_for_paging.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -2131,10 +2089,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("recommended_cells_for_paging")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -2281,16 +2242,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct BearersSubjectToDLDiscardingItem<'a> {
+    pub struct BearersSubjectToDLDiscardingItem {
         pub e_rab_id: ERABID,
-        pub dl_discarding: DLDiscarding<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub dl_discarding: DLDiscarding,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> BearersSubjectToDLDiscardingItem<'a> {
+    impl BearersSubjectToDLDiscardingItem {
         pub fn new(
             e_rab_id: ERABID,
-            dl_discarding: DLDiscarding<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            dl_discarding: DLDiscarding,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -2298,20 +2259,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `BearersSubjectToDLDiscardingItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> BearersSubjectToDLDiscardingItem<'static> {
-            BearersSubjectToDLDiscardingItem {
-                e_rab_id: self.e_rab_id,
-                dl_discarding: self.dl_discarding.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for BearersSubjectToDLDiscardingItem<'_> {
+    impl AsnType for BearersSubjectToDLDiscardingItem {
         const NAME: &'static str = "Bearers-SubjectToDLDiscarding-Item";
     }
-    impl<'a> Decode<'a> for BearersSubjectToDLDiscardingItem<'a> {
+    impl<'a> Decode<'a> for BearersSubjectToDLDiscardingItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -2324,10 +2276,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("dl_discarding")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -2341,7 +2296,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for BearersSubjectToDLDiscardingItem<'_> {
+    impl Encode for BearersSubjectToDLDiscardingItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -2360,7 +2315,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BearersSubjectToDLDiscardingItem<'_> {
+    impl Json for BearersSubjectToDLDiscardingItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -2446,16 +2401,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct BearersSubjectToEarlyStatusTransferItem<'a> {
+    pub struct BearersSubjectToEarlyStatusTransferItem {
         pub e_rab_id: ERABID,
-        pub dl_count_pdcp_sn_length: DLCOUNTPDCPSNlength<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub dl_count_pdcp_sn_length: DLCOUNTPDCPSNlength,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> BearersSubjectToEarlyStatusTransferItem<'a> {
+    impl BearersSubjectToEarlyStatusTransferItem {
         pub fn new(
             e_rab_id: ERABID,
-            dl_count_pdcp_sn_length: DLCOUNTPDCPSNlength<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            dl_count_pdcp_sn_length: DLCOUNTPDCPSNlength,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -2463,20 +2418,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `BearersSubjectToEarlyStatusTransferItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> BearersSubjectToEarlyStatusTransferItem<'static> {
-            BearersSubjectToEarlyStatusTransferItem {
-                e_rab_id: self.e_rab_id,
-                dl_count_pdcp_sn_length: self.dl_count_pdcp_sn_length.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for BearersSubjectToEarlyStatusTransferItem<'_> {
+    impl AsnType for BearersSubjectToEarlyStatusTransferItem {
         const NAME: &'static str = "Bearers-SubjectToEarlyStatusTransfer-Item";
     }
-    impl<'a> Decode<'a> for BearersSubjectToEarlyStatusTransferItem<'a> {
+    impl<'a> Decode<'a> for BearersSubjectToEarlyStatusTransferItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -2489,10 +2435,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("dl_count_pdcp_sn_length")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -2506,7 +2455,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for BearersSubjectToEarlyStatusTransferItem<'_> {
+    impl Encode for BearersSubjectToEarlyStatusTransferItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -2525,7 +2474,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BearersSubjectToEarlyStatusTransferItem<'_> {
+    impl Json for BearersSubjectToEarlyStatusTransferItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -2619,18 +2568,18 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct BearersSubjectToStatusTransferItem<'a> {
         pub e_rab_id: ERABID,
-        pub ul_count_value: COUNTvalue<'a>,
-        pub dl_count_value: COUNTvalue<'a>,
+        pub ul_count_value: COUNTvalue,
+        pub dl_count_value: COUNTvalue,
         pub receive_statusof_ul_pdcp_sdus: Option<ReceiveStatusofULPDCPSDUs<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> BearersSubjectToStatusTransferItem<'a> {
         pub fn new(
             e_rab_id: ERABID,
-            ul_count_value: COUNTvalue<'a>,
-            dl_count_value: COUNTvalue<'a>,
+            ul_count_value: COUNTvalue,
+            dl_count_value: COUNTvalue,
             receive_statusof_ul_pdcp_sdus: Option<ReceiveStatusofULPDCPSDUs<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -2645,12 +2594,12 @@ pub mod s1_ap_ies {
         pub fn into_owned(self) -> BearersSubjectToStatusTransferItem<'static> {
             BearersSubjectToStatusTransferItem {
                 e_rab_id: self.e_rab_id,
-                ul_count_value: self.ul_count_value.into_owned(),
-                dl_count_value: self.dl_count_value.into_owned(),
+                ul_count_value: self.ul_count_value,
+                dl_count_value: self.dl_count_value,
                 receive_statusof_ul_pdcp_sdus: self
                     .receive_statusof_ul_pdcp_sdus
                     .map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -2682,10 +2631,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -3018,14 +2970,14 @@ pub mod s1_ap_ies {
         pub bluetooth_meas_config: BluetoothMeasConfig,
         pub bluetooth_meas_config_name_list: Option<BluetoothMeasConfigNameList<'a>>,
         pub bt_rssi: Option<BluetoothMeasurementConfigurationBtRssi>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> BluetoothMeasurementConfiguration<'a> {
         pub fn new(
             bluetooth_meas_config: BluetoothMeasConfig,
             bluetooth_meas_config_name_list: Option<BluetoothMeasConfigNameList<'a>>,
             bt_rssi: Option<BluetoothMeasurementConfigurationBtRssi>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 bluetooth_meas_config,
@@ -3043,7 +2995,7 @@ pub mod s1_ap_ies {
                     .bluetooth_meas_config_name_list
                     .map(|value| value.into_owned()),
                 bt_rssi: self.bt_rssi,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -3077,10 +3029,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -3230,47 +3185,30 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum BroadcastCancelledAreaList<'a> {
-        cellID_Cancelled(CellIDCancelled<'a>),
-        tAI_Cancelled(TAICancelled<'a>),
-        emergencyAreaID_Cancelled(EmergencyAreaIDCancelled<'a>),
+    pub enum BroadcastCancelledAreaList {
+        cellID_Cancelled(CellIDCancelled),
+        tAI_Cancelled(TAICancelled),
+        emergencyAreaID_Cancelled(EmergencyAreaIDCancelled),
     }
-    impl<'a> BroadcastCancelledAreaList<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `BroadcastCancelledAreaList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> BroadcastCancelledAreaList<'static> {
-            match self {
-                Self::cellID_Cancelled(value) => {
-                    BroadcastCancelledAreaList::cellID_Cancelled(value.into_owned())
-                }
-                Self::tAI_Cancelled(value) => {
-                    BroadcastCancelledAreaList::tAI_Cancelled(value.into_owned())
-                }
-                Self::emergencyAreaID_Cancelled(value) => {
-                    BroadcastCancelledAreaList::emergencyAreaID_Cancelled(value.into_owned())
-                }
-            }
-        }
-    }
-    impl<'a> From<CellIDCancelled<'a>> for BroadcastCancelledAreaList<'a> {
-        fn from(value: CellIDCancelled<'a>) -> Self {
+    impl From<CellIDCancelled> for BroadcastCancelledAreaList {
+        fn from(value: CellIDCancelled) -> Self {
             Self::cellID_Cancelled(value)
         }
     }
-    impl<'a> From<TAICancelled<'a>> for BroadcastCancelledAreaList<'a> {
-        fn from(value: TAICancelled<'a>) -> Self {
+    impl From<TAICancelled> for BroadcastCancelledAreaList {
+        fn from(value: TAICancelled) -> Self {
             Self::tAI_Cancelled(value)
         }
     }
-    impl<'a> From<EmergencyAreaIDCancelled<'a>> for BroadcastCancelledAreaList<'a> {
-        fn from(value: EmergencyAreaIDCancelled<'a>) -> Self {
+    impl From<EmergencyAreaIDCancelled> for BroadcastCancelledAreaList {
+        fn from(value: EmergencyAreaIDCancelled) -> Self {
             Self::emergencyAreaID_Cancelled(value)
         }
     }
-    impl AsnType for BroadcastCancelledAreaList<'_> {
+    impl AsnType for BroadcastCancelledAreaList {
         const NAME: &'static str = "BroadcastCancelledAreaList";
     }
-    impl<'a> Decode<'a> for BroadcastCancelledAreaList<'a> {
+    impl<'a> Decode<'a> for BroadcastCancelledAreaList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(3, 0, true)? {
                 0 => Self::cellID_Cancelled(CellIDCancelled::decode(reader)?),
@@ -3279,7 +3217,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for BroadcastCancelledAreaList<'_> {
+    impl Encode for BroadcastCancelledAreaList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::cellID_Cancelled(value) => {
@@ -3299,7 +3237,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BroadcastCancelledAreaList<'_> {
+    impl Json for BroadcastCancelledAreaList {
         fn to_json(&self) -> Value {
             match self {
                 Self::cellID_Cancelled(value) => {
@@ -3341,47 +3279,30 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum BroadcastCompletedAreaList<'a> {
-        cellID_Broadcast(CellIDBroadcast<'a>),
-        tAI_Broadcast(TAIBroadcast<'a>),
-        emergencyAreaID_Broadcast(EmergencyAreaIDBroadcast<'a>),
+    pub enum BroadcastCompletedAreaList {
+        cellID_Broadcast(CellIDBroadcast),
+        tAI_Broadcast(TAIBroadcast),
+        emergencyAreaID_Broadcast(EmergencyAreaIDBroadcast),
     }
-    impl<'a> BroadcastCompletedAreaList<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `BroadcastCompletedAreaList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> BroadcastCompletedAreaList<'static> {
-            match self {
-                Self::cellID_Broadcast(value) => {
-                    BroadcastCompletedAreaList::cellID_Broadcast(value.into_owned())
-                }
-                Self::tAI_Broadcast(value) => {
-                    BroadcastCompletedAreaList::tAI_Broadcast(value.into_owned())
-                }
-                Self::emergencyAreaID_Broadcast(value) => {
-                    BroadcastCompletedAreaList::emergencyAreaID_Broadcast(value.into_owned())
-                }
-            }
-        }
-    }
-    impl<'a> From<CellIDBroadcast<'a>> for BroadcastCompletedAreaList<'a> {
-        fn from(value: CellIDBroadcast<'a>) -> Self {
+    impl From<CellIDBroadcast> for BroadcastCompletedAreaList {
+        fn from(value: CellIDBroadcast) -> Self {
             Self::cellID_Broadcast(value)
         }
     }
-    impl<'a> From<TAIBroadcast<'a>> for BroadcastCompletedAreaList<'a> {
-        fn from(value: TAIBroadcast<'a>) -> Self {
+    impl From<TAIBroadcast> for BroadcastCompletedAreaList {
+        fn from(value: TAIBroadcast) -> Self {
             Self::tAI_Broadcast(value)
         }
     }
-    impl<'a> From<EmergencyAreaIDBroadcast<'a>> for BroadcastCompletedAreaList<'a> {
-        fn from(value: EmergencyAreaIDBroadcast<'a>) -> Self {
+    impl From<EmergencyAreaIDBroadcast> for BroadcastCompletedAreaList {
+        fn from(value: EmergencyAreaIDBroadcast) -> Self {
             Self::emergencyAreaID_Broadcast(value)
         }
     }
-    impl AsnType for BroadcastCompletedAreaList<'_> {
+    impl AsnType for BroadcastCompletedAreaList {
         const NAME: &'static str = "BroadcastCompletedAreaList";
     }
-    impl<'a> Decode<'a> for BroadcastCompletedAreaList<'a> {
+    impl<'a> Decode<'a> for BroadcastCompletedAreaList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(3, 0, true)? {
                 0 => Self::cellID_Broadcast(CellIDBroadcast::decode(reader)?),
@@ -3390,7 +3311,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for BroadcastCompletedAreaList<'_> {
+    impl Encode for BroadcastCompletedAreaList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::cellID_Broadcast(value) => {
@@ -3410,7 +3331,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BroadcastCompletedAreaList<'_> {
+    impl Json for BroadcastCompletedAreaList {
         fn to_json(&self) -> Value {
             match self {
                 Self::cellID_Broadcast(value) => {
@@ -3593,20 +3514,20 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CGI<'a> {
+    pub struct CGI {
         pub plmn_identity: PLMNidentity,
         pub lac: LAC,
         pub ci: CI,
         pub rac: Option<RAC>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CGI<'a> {
+    impl CGI {
         pub fn new(
             plmn_identity: PLMNidentity,
             lac: LAC,
             ci: CI,
             rac: Option<RAC>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -3616,22 +3537,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CGI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CGI<'static> {
-            CGI {
-                plmn_identity: self.plmn_identity,
-                lac: self.lac,
-                ci: self.ci,
-                rac: self.rac,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CGI<'_> {
+    impl AsnType for CGI {
         const NAME: &'static str = "CGI";
     }
-    impl<'a> Decode<'a> for CGI<'a> {
+    impl<'a> Decode<'a> for CGI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -3656,10 +3566,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -3675,7 +3588,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CGI<'_> {
+    impl Encode for CGI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.rac.is_some());
@@ -3703,7 +3616,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CGI<'_> {
+    impl Json for CGI {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMNidentity", self.plmn_identity.to_json());
@@ -3873,29 +3786,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct CNTypeRestrictions<'a>(pub Vec<CNTypeRestrictionsItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<CNTypeRestrictionsItem<'a>>> for CNTypeRestrictions<'a> {
+    pub struct CNTypeRestrictions(pub Vec<CNTypeRestrictionsItem>);
+    impl crate::message::__Field<Vec<CNTypeRestrictionsItem>> for CNTypeRestrictions {
         #[inline]
-        fn __field(self) -> Vec<CNTypeRestrictionsItem<'a>> {
+        fn __field(self) -> Vec<CNTypeRestrictionsItem> {
             self.0
         }
     }
-    impl<'a> CNTypeRestrictions<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CNTypeRestrictions<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CNTypeRestrictions<'static> {
-            CNTypeRestrictions(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<CNTypeRestrictionsItem<'a>>> for CNTypeRestrictions<'a> {
-        fn from(value: Vec<CNTypeRestrictionsItem<'a>>) -> Self {
+    impl From<Vec<CNTypeRestrictionsItem>> for CNTypeRestrictions {
+        fn from(value: Vec<CNTypeRestrictionsItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for CNTypeRestrictions<'_> {
+    impl AsnType for CNTypeRestrictions {
         const NAME: &'static str = "CNTypeRestrictions";
     }
-    impl<'a> Decode<'a> for CNTypeRestrictions<'a> {
+    impl<'a> Decode<'a> for CNTypeRestrictions {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 16)?;
@@ -3907,7 +3813,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for CNTypeRestrictions<'_> {
+    impl Encode for CNTypeRestrictions {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 16)?;
             for item in self.0.iter() {
@@ -3917,7 +3823,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CNTypeRestrictions<'_> {
+    impl Json for CNTypeRestrictions {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -3929,16 +3835,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CNTypeRestrictionsItem<'a> {
+    pub struct CNTypeRestrictionsItem {
         pub plmn_identity: PLMNidentity,
         pub cn_type: CNType,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CNTypeRestrictionsItem<'a> {
+    impl CNTypeRestrictionsItem {
         pub fn new(
             plmn_identity: PLMNidentity,
             cn_type: CNType,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -3946,20 +3852,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CNTypeRestrictionsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CNTypeRestrictionsItem<'static> {
-            CNTypeRestrictionsItem {
-                plmn_identity: self.plmn_identity,
-                cn_type: self.cn_type,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CNTypeRestrictionsItem<'_> {
+    impl AsnType for CNTypeRestrictionsItem {
         const NAME: &'static str = "CNTypeRestrictions-Item";
     }
-    impl<'a> Decode<'a> for CNTypeRestrictionsItem<'a> {
+    impl<'a> Decode<'a> for CNTypeRestrictionsItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -3972,10 +3869,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("cn_type")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -3989,7 +3889,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CNTypeRestrictionsItem<'_> {
+    impl Encode for CNTypeRestrictionsItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -4008,7 +3908,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CNTypeRestrictionsItem<'_> {
+    impl Json for CNTypeRestrictionsItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMN-Identity", self.plmn_identity.to_json());
@@ -4034,16 +3934,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct COUNTValueExtended<'a> {
+    pub struct COUNTValueExtended {
         pub pdcp_sn_extended: PDCPSNExtended,
         pub hfn_modified: HFNModified,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> COUNTValueExtended<'a> {
+    impl COUNTValueExtended {
         pub fn new(
             pdcp_sn_extended: PDCPSNExtended,
             hfn_modified: HFNModified,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 pdcp_sn_extended,
@@ -4051,20 +3951,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `COUNTValueExtended<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> COUNTValueExtended<'static> {
-            COUNTValueExtended {
-                pdcp_sn_extended: self.pdcp_sn_extended,
-                hfn_modified: self.hfn_modified,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for COUNTValueExtended<'_> {
+    impl AsnType for COUNTValueExtended {
         const NAME: &'static str = "COUNTValueExtended";
     }
-    impl<'a> Decode<'a> for COUNTValueExtended<'a> {
+    impl<'a> Decode<'a> for COUNTValueExtended {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -4077,10 +3968,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("hfn_modified")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -4094,7 +3988,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for COUNTValueExtended<'_> {
+    impl Encode for COUNTValueExtended {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -4113,7 +4007,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for COUNTValueExtended<'_> {
+    impl Json for COUNTValueExtended {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pDCP-SNExtended", self.pdcp_sn_extended.to_json());
@@ -4140,16 +4034,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct COUNTvalue<'a> {
+    pub struct COUNTvalue {
         pub pdcp_sn: PDCPSN,
         pub hfn: HFN,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> COUNTvalue<'a> {
+    impl COUNTvalue {
         pub fn new(
             pdcp_sn: PDCPSN,
             hfn: HFN,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 pdcp_sn,
@@ -4157,20 +4051,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `COUNTvalue<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> COUNTvalue<'static> {
-            COUNTvalue {
-                pdcp_sn: self.pdcp_sn,
-                hfn: self.hfn,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for COUNTvalue<'_> {
+    impl AsnType for COUNTvalue {
         const NAME: &'static str = "COUNTvalue";
     }
-    impl<'a> Decode<'a> for COUNTvalue<'a> {
+    impl<'a> Decode<'a> for COUNTvalue {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -4183,10 +4068,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("hfn")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -4200,7 +4088,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for COUNTvalue<'_> {
+    impl Encode for COUNTvalue {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -4219,7 +4107,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for COUNTvalue<'_> {
+    impl Json for COUNTvalue {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pDCP-SN", self.pdcp_sn.to_json());
@@ -4245,16 +4133,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct COUNTvaluePDCPSNlength18<'a> {
+    pub struct COUNTvaluePDCPSNlength18 {
         pub pdcp_sn_length18: PDCPSNlength18,
         pub hfn_for_pdcp_sn_length18: HFNforPDCPSNlength18,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> COUNTvaluePDCPSNlength18<'a> {
+    impl COUNTvaluePDCPSNlength18 {
         pub fn new(
             pdcp_sn_length18: PDCPSNlength18,
             hfn_for_pdcp_sn_length18: HFNforPDCPSNlength18,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 pdcp_sn_length18,
@@ -4262,20 +4150,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `COUNTvaluePDCPSNlength18<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> COUNTvaluePDCPSNlength18<'static> {
-            COUNTvaluePDCPSNlength18 {
-                pdcp_sn_length18: self.pdcp_sn_length18,
-                hfn_for_pdcp_sn_length18: self.hfn_for_pdcp_sn_length18,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for COUNTvaluePDCPSNlength18<'_> {
+    impl AsnType for COUNTvaluePDCPSNlength18 {
         const NAME: &'static str = "COUNTvaluePDCP-SNlength18";
     }
-    impl<'a> Decode<'a> for COUNTvaluePDCPSNlength18<'a> {
+    impl<'a> Decode<'a> for COUNTvaluePDCPSNlength18 {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -4288,10 +4167,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("hfn_for_pdcp_sn_length18")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -4305,7 +4187,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for COUNTvaluePDCPSNlength18<'_> {
+    impl Encode for COUNTvaluePDCPSNlength18 {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -4324,7 +4206,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for COUNTvaluePDCPSNlength18<'_> {
+    impl Json for COUNTvaluePDCPSNlength18 {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pDCP-SNlength18", self.pdcp_sn_length18.to_json());
@@ -4449,29 +4331,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct CSGIdList<'a>(pub Vec<CSGIdListItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<CSGIdListItem<'a>>> for CSGIdList<'a> {
+    pub struct CSGIdList(pub Vec<CSGIdListItem>);
+    impl crate::message::__Field<Vec<CSGIdListItem>> for CSGIdList {
         #[inline]
-        fn __field(self) -> Vec<CSGIdListItem<'a>> {
+        fn __field(self) -> Vec<CSGIdListItem> {
             self.0
         }
     }
-    impl<'a> CSGIdList<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CSGIdList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CSGIdList<'static> {
-            CSGIdList(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<CSGIdListItem<'a>>> for CSGIdList<'a> {
-        fn from(value: Vec<CSGIdListItem<'a>>) -> Self {
+    impl From<Vec<CSGIdListItem>> for CSGIdList {
+        fn from(value: Vec<CSGIdListItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for CSGIdList<'_> {
+    impl AsnType for CSGIdList {
         const NAME: &'static str = "CSG-IdList";
     }
-    impl<'a> Decode<'a> for CSGIdList<'a> {
+    impl<'a> Decode<'a> for CSGIdList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 256)?;
@@ -4483,7 +4358,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for CSGIdList<'_> {
+    impl Encode for CSGIdList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 256)?;
             for item in self.0.iter() {
@@ -4493,7 +4368,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CSGIdList<'_> {
+    impl Json for CSGIdList {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -4505,30 +4380,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CSGIdListItem<'a> {
+    pub struct CSGIdListItem {
         pub csg_id: CSGId,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CSGIdListItem<'a> {
-        pub fn new(csg_id: CSGId, ie_extensions: Option<ProtocolExtensionContainer<'a>>) -> Self {
+    impl CSGIdListItem {
+        pub fn new(
+            csg_id: CSGId,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
+        ) -> Self {
             Self {
                 csg_id,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CSGIdListItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CSGIdListItem<'static> {
-            CSGIdListItem {
-                csg_id: self.csg_id,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CSGIdListItem<'_> {
+    impl AsnType for CSGIdListItem {
         const NAME: &'static str = "CSG-IdList-Item";
     }
-    impl<'a> Decode<'a> for CSGIdListItem<'a> {
+    impl<'a> Decode<'a> for CSGIdListItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -4537,10 +4407,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("csg_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -4553,7 +4426,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CSGIdListItem<'_> {
+    impl Encode for CSGIdListItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -4569,7 +4442,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CSGIdListItem<'_> {
+    impl Json for CSGIdListItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("cSG-Id", self.csg_id.to_json());
@@ -4634,29 +4507,22 @@ pub mod s1_ap_ies {
     }
     #[doc = " C"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct CancelledCellinEAI<'a>(pub Vec<CancelledCellinEAIItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<CancelledCellinEAIItem<'a>>> for CancelledCellinEAI<'a> {
+    pub struct CancelledCellinEAI(pub Vec<CancelledCellinEAIItem>);
+    impl crate::message::__Field<Vec<CancelledCellinEAIItem>> for CancelledCellinEAI {
         #[inline]
-        fn __field(self) -> Vec<CancelledCellinEAIItem<'a>> {
+        fn __field(self) -> Vec<CancelledCellinEAIItem> {
             self.0
         }
     }
-    impl<'a> CancelledCellinEAI<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CancelledCellinEAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CancelledCellinEAI<'static> {
-            CancelledCellinEAI(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<CancelledCellinEAIItem<'a>>> for CancelledCellinEAI<'a> {
-        fn from(value: Vec<CancelledCellinEAIItem<'a>>) -> Self {
+    impl From<Vec<CancelledCellinEAIItem>> for CancelledCellinEAI {
+        fn from(value: Vec<CancelledCellinEAIItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for CancelledCellinEAI<'_> {
+    impl AsnType for CancelledCellinEAI {
         const NAME: &'static str = "CancelledCellinEAI";
     }
-    impl<'a> Decode<'a> for CancelledCellinEAI<'a> {
+    impl<'a> Decode<'a> for CancelledCellinEAI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -4668,7 +4534,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for CancelledCellinEAI<'_> {
+    impl Encode for CancelledCellinEAI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -4678,7 +4544,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CancelledCellinEAI<'_> {
+    impl Json for CancelledCellinEAI {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -4690,16 +4556,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CancelledCellinEAIItem<'a> {
-        pub ecgi: EUTRANCGI<'a>,
+    pub struct CancelledCellinEAIItem {
+        pub ecgi: EUTRANCGI,
         pub number_of_broadcasts: NumberOfBroadcasts,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CancelledCellinEAIItem<'a> {
+    impl CancelledCellinEAIItem {
         pub fn new(
-            ecgi: EUTRANCGI<'a>,
+            ecgi: EUTRANCGI,
             number_of_broadcasts: NumberOfBroadcasts,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ecgi,
@@ -4707,20 +4573,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CancelledCellinEAIItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CancelledCellinEAIItem<'static> {
-            CancelledCellinEAIItem {
-                ecgi: self.ecgi.into_owned(),
-                number_of_broadcasts: self.number_of_broadcasts,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CancelledCellinEAIItem<'_> {
+    impl AsnType for CancelledCellinEAIItem {
         const NAME: &'static str = "CancelledCellinEAI-Item";
     }
-    impl<'a> Decode<'a> for CancelledCellinEAIItem<'a> {
+    impl<'a> Decode<'a> for CancelledCellinEAIItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -4733,10 +4590,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("number_of_broadcasts")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -4750,7 +4610,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CancelledCellinEAIItem<'_> {
+    impl Encode for CancelledCellinEAIItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -4769,7 +4629,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CancelledCellinEAIItem<'_> {
+    impl Json for CancelledCellinEAIItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("eCGI", self.ecgi.to_json());
@@ -4796,29 +4656,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct CancelledCellinTAI<'a>(pub Vec<CancelledCellinTAIItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<CancelledCellinTAIItem<'a>>> for CancelledCellinTAI<'a> {
+    pub struct CancelledCellinTAI(pub Vec<CancelledCellinTAIItem>);
+    impl crate::message::__Field<Vec<CancelledCellinTAIItem>> for CancelledCellinTAI {
         #[inline]
-        fn __field(self) -> Vec<CancelledCellinTAIItem<'a>> {
+        fn __field(self) -> Vec<CancelledCellinTAIItem> {
             self.0
         }
     }
-    impl<'a> CancelledCellinTAI<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CancelledCellinTAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CancelledCellinTAI<'static> {
-            CancelledCellinTAI(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<CancelledCellinTAIItem<'a>>> for CancelledCellinTAI<'a> {
-        fn from(value: Vec<CancelledCellinTAIItem<'a>>) -> Self {
+    impl From<Vec<CancelledCellinTAIItem>> for CancelledCellinTAI {
+        fn from(value: Vec<CancelledCellinTAIItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for CancelledCellinTAI<'_> {
+    impl AsnType for CancelledCellinTAI {
         const NAME: &'static str = "CancelledCellinTAI";
     }
-    impl<'a> Decode<'a> for CancelledCellinTAI<'a> {
+    impl<'a> Decode<'a> for CancelledCellinTAI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -4830,7 +4683,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for CancelledCellinTAI<'_> {
+    impl Encode for CancelledCellinTAI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -4840,7 +4693,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CancelledCellinTAI<'_> {
+    impl Json for CancelledCellinTAI {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -4852,16 +4705,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CancelledCellinTAIItem<'a> {
-        pub ecgi: EUTRANCGI<'a>,
+    pub struct CancelledCellinTAIItem {
+        pub ecgi: EUTRANCGI,
         pub number_of_broadcasts: NumberOfBroadcasts,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CancelledCellinTAIItem<'a> {
+    impl CancelledCellinTAIItem {
         pub fn new(
-            ecgi: EUTRANCGI<'a>,
+            ecgi: EUTRANCGI,
             number_of_broadcasts: NumberOfBroadcasts,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ecgi,
@@ -4869,20 +4722,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CancelledCellinTAIItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CancelledCellinTAIItem<'static> {
-            CancelledCellinTAIItem {
-                ecgi: self.ecgi.into_owned(),
-                number_of_broadcasts: self.number_of_broadcasts,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CancelledCellinTAIItem<'_> {
+    impl AsnType for CancelledCellinTAIItem {
         const NAME: &'static str = "CancelledCellinTAI-Item";
     }
-    impl<'a> Decode<'a> for CancelledCellinTAIItem<'a> {
+    impl<'a> Decode<'a> for CancelledCellinTAIItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -4895,10 +4739,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("number_of_broadcasts")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -4912,7 +4759,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CancelledCellinTAIItem<'_> {
+    impl Encode for CancelledCellinTAIItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -4931,7 +4778,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CancelledCellinTAIItem<'_> {
+    impl Json for CancelledCellinTAIItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("eCGI", self.ecgi.to_json());
@@ -5794,14 +5641,14 @@ pub mod s1_ap_ies {
         pub cdma2000_one_xmeid: Cdma2000OneXMEID<'a>,
         pub cdma2000_one_xmsi: Cdma2000OneXMSI<'a>,
         pub cdma2000_one_x_pilot: Cdma2000OneXPilot<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> Cdma2000OneXSRVCCInfo<'a> {
         pub fn new(
             cdma2000_one_xmeid: Cdma2000OneXMEID<'a>,
             cdma2000_one_xmsi: Cdma2000OneXMSI<'a>,
             cdma2000_one_x_pilot: Cdma2000OneXPilot<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 cdma2000_one_xmeid,
@@ -5817,7 +5664,7 @@ pub mod s1_ap_ies {
                 cdma2000_one_xmeid: self.cdma2000_one_xmeid.into_owned(),
                 cdma2000_one_xmsi: self.cdma2000_one_xmsi.into_owned(),
                 cdma2000_one_x_pilot: self.cdma2000_one_x_pilot.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -5841,10 +5688,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("cdma2000_one_x_pilot")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -6161,33 +6011,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CellBasedMDT<'a> {
-        pub cell_id_listfor_mdt: CellIdListforMDT<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct CellBasedMDT {
+        pub cell_id_listfor_mdt: CellIdListforMDT,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CellBasedMDT<'a> {
+    impl CellBasedMDT {
         pub fn new(
-            cell_id_listfor_mdt: CellIdListforMDT<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            cell_id_listfor_mdt: CellIdListforMDT,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 cell_id_listfor_mdt,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellBasedMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CellBasedMDT<'static> {
-            CellBasedMDT {
-                cell_id_listfor_mdt: self.cell_id_listfor_mdt.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CellBasedMDT<'_> {
+    impl AsnType for CellBasedMDT {
         const NAME: &'static str = "CellBasedMDT";
     }
-    impl<'a> Decode<'a> for CellBasedMDT<'a> {
+    impl<'a> Decode<'a> for CellBasedMDT {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -6196,10 +6038,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("cell_id_listfor_mdt")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -6212,7 +6057,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CellBasedMDT<'_> {
+    impl Encode for CellBasedMDT {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -6228,7 +6073,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellBasedMDT<'_> {
+    impl Json for CellBasedMDT {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("cellIdListforMDT", self.cell_id_listfor_mdt.to_json());
@@ -6251,33 +6096,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CellBasedQMC<'a> {
-        pub cell_id_listfor_qmc: CellIdListforQMC<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct CellBasedQMC {
+        pub cell_id_listfor_qmc: CellIdListforQMC,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CellBasedQMC<'a> {
+    impl CellBasedQMC {
         pub fn new(
-            cell_id_listfor_qmc: CellIdListforQMC<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            cell_id_listfor_qmc: CellIdListforQMC,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 cell_id_listfor_qmc,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellBasedQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CellBasedQMC<'static> {
-            CellBasedQMC {
-                cell_id_listfor_qmc: self.cell_id_listfor_qmc.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CellBasedQMC<'_> {
+    impl AsnType for CellBasedQMC {
         const NAME: &'static str = "CellBasedQMC";
     }
-    impl<'a> Decode<'a> for CellBasedQMC<'a> {
+    impl<'a> Decode<'a> for CellBasedQMC {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -6286,10 +6123,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("cell_id_listfor_qmc")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -6302,7 +6142,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CellBasedQMC<'_> {
+    impl Encode for CellBasedQMC {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -6318,7 +6158,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellBasedQMC<'_> {
+    impl Json for CellBasedQMC {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("cellIdListforQMC", self.cell_id_listfor_qmc.to_json());
@@ -6340,29 +6180,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct CellIDBroadcast<'a>(pub Vec<CellIDBroadcastItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<CellIDBroadcastItem<'a>>> for CellIDBroadcast<'a> {
+    pub struct CellIDBroadcast(pub Vec<CellIDBroadcastItem>);
+    impl crate::message::__Field<Vec<CellIDBroadcastItem>> for CellIDBroadcast {
         #[inline]
-        fn __field(self) -> Vec<CellIDBroadcastItem<'a>> {
+        fn __field(self) -> Vec<CellIDBroadcastItem> {
             self.0
         }
     }
-    impl<'a> CellIDBroadcast<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIDBroadcast<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CellIDBroadcast<'static> {
-            CellIDBroadcast(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<CellIDBroadcastItem<'a>>> for CellIDBroadcast<'a> {
-        fn from(value: Vec<CellIDBroadcastItem<'a>>) -> Self {
+    impl From<Vec<CellIDBroadcastItem>> for CellIDBroadcast {
+        fn from(value: Vec<CellIDBroadcastItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for CellIDBroadcast<'_> {
+    impl AsnType for CellIDBroadcast {
         const NAME: &'static str = "CellID-Broadcast";
     }
-    impl<'a> Decode<'a> for CellIDBroadcast<'a> {
+    impl<'a> Decode<'a> for CellIDBroadcast {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -6374,7 +6207,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for CellIDBroadcast<'_> {
+    impl Encode for CellIDBroadcast {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -6384,7 +6217,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIDBroadcast<'_> {
+    impl Json for CellIDBroadcast {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -6396,33 +6229,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CellIDBroadcastItem<'a> {
-        pub ecgi: EUTRANCGI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct CellIDBroadcastItem {
+        pub ecgi: EUTRANCGI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CellIDBroadcastItem<'a> {
+    impl CellIDBroadcastItem {
         pub fn new(
-            ecgi: EUTRANCGI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ecgi: EUTRANCGI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ecgi,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIDBroadcastItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CellIDBroadcastItem<'static> {
-            CellIDBroadcastItem {
-                ecgi: self.ecgi.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CellIDBroadcastItem<'_> {
+    impl AsnType for CellIDBroadcastItem {
         const NAME: &'static str = "CellID-Broadcast-Item";
     }
-    impl<'a> Decode<'a> for CellIDBroadcastItem<'a> {
+    impl<'a> Decode<'a> for CellIDBroadcastItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -6431,10 +6256,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ecgi")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -6447,7 +6275,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CellIDBroadcastItem<'_> {
+    impl Encode for CellIDBroadcastItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -6463,7 +6291,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIDBroadcastItem<'_> {
+    impl Json for CellIDBroadcastItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("eCGI", self.ecgi.to_json());
@@ -6485,29 +6313,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct CellIDCancelled<'a>(pub Vec<CellIDCancelledItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<CellIDCancelledItem<'a>>> for CellIDCancelled<'a> {
+    pub struct CellIDCancelled(pub Vec<CellIDCancelledItem>);
+    impl crate::message::__Field<Vec<CellIDCancelledItem>> for CellIDCancelled {
         #[inline]
-        fn __field(self) -> Vec<CellIDCancelledItem<'a>> {
+        fn __field(self) -> Vec<CellIDCancelledItem> {
             self.0
         }
     }
-    impl<'a> CellIDCancelled<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIDCancelled<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CellIDCancelled<'static> {
-            CellIDCancelled(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<CellIDCancelledItem<'a>>> for CellIDCancelled<'a> {
-        fn from(value: Vec<CellIDCancelledItem<'a>>) -> Self {
+    impl From<Vec<CellIDCancelledItem>> for CellIDCancelled {
+        fn from(value: Vec<CellIDCancelledItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for CellIDCancelled<'_> {
+    impl AsnType for CellIDCancelled {
         const NAME: &'static str = "CellID-Cancelled";
     }
-    impl<'a> Decode<'a> for CellIDCancelled<'a> {
+    impl<'a> Decode<'a> for CellIDCancelled {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -6519,7 +6340,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for CellIDCancelled<'_> {
+    impl Encode for CellIDCancelled {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -6529,7 +6350,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIDCancelled<'_> {
+    impl Json for CellIDCancelled {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -6541,16 +6362,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CellIDCancelledItem<'a> {
-        pub ecgi: EUTRANCGI<'a>,
+    pub struct CellIDCancelledItem {
+        pub ecgi: EUTRANCGI,
         pub number_of_broadcasts: NumberOfBroadcasts,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CellIDCancelledItem<'a> {
+    impl CellIDCancelledItem {
         pub fn new(
-            ecgi: EUTRANCGI<'a>,
+            ecgi: EUTRANCGI,
             number_of_broadcasts: NumberOfBroadcasts,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ecgi,
@@ -6558,20 +6379,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIDCancelledItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CellIDCancelledItem<'static> {
-            CellIDCancelledItem {
-                ecgi: self.ecgi.into_owned(),
-                number_of_broadcasts: self.number_of_broadcasts,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CellIDCancelledItem<'_> {
+    impl AsnType for CellIDCancelledItem {
         const NAME: &'static str = "CellID-Cancelled-Item";
     }
-    impl<'a> Decode<'a> for CellIDCancelledItem<'a> {
+    impl<'a> Decode<'a> for CellIDCancelledItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -6584,10 +6396,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("number_of_broadcasts")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -6601,7 +6416,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CellIDCancelledItem<'_> {
+    impl Encode for CellIDCancelledItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -6620,7 +6435,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIDCancelledItem<'_> {
+    impl Json for CellIDCancelledItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("eCGI", self.ecgi.to_json());
@@ -6647,29 +6462,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct CellIdListforMDT<'a>(pub Vec<EUTRANCGI<'a>>);
-    impl<'a> crate::message::__Field<Vec<EUTRANCGI<'a>>> for CellIdListforMDT<'a> {
+    pub struct CellIdListforMDT(pub Vec<EUTRANCGI>);
+    impl crate::message::__Field<Vec<EUTRANCGI>> for CellIdListforMDT {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI<'a>> {
+        fn __field(self) -> Vec<EUTRANCGI> {
             self.0
         }
     }
-    impl<'a> CellIdListforMDT<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIdListforMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CellIdListforMDT<'static> {
-            CellIdListforMDT(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<EUTRANCGI<'a>>> for CellIdListforMDT<'a> {
-        fn from(value: Vec<EUTRANCGI<'a>>) -> Self {
+    impl From<Vec<EUTRANCGI>> for CellIdListforMDT {
+        fn from(value: Vec<EUTRANCGI>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for CellIdListforMDT<'_> {
+    impl AsnType for CellIdListforMDT {
         const NAME: &'static str = "CellIdListforMDT";
     }
-    impl<'a> Decode<'a> for CellIdListforMDT<'a> {
+    impl<'a> Decode<'a> for CellIdListforMDT {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 32)?;
@@ -6681,7 +6489,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for CellIdListforMDT<'_> {
+    impl Encode for CellIdListforMDT {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 32)?;
             for item in self.0.iter() {
@@ -6691,7 +6499,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIdListforMDT<'_> {
+    impl Json for CellIdListforMDT {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -6702,29 +6510,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct CellIdListforQMC<'a>(pub Vec<EUTRANCGI<'a>>);
-    impl<'a> crate::message::__Field<Vec<EUTRANCGI<'a>>> for CellIdListforQMC<'a> {
+    pub struct CellIdListforQMC(pub Vec<EUTRANCGI>);
+    impl crate::message::__Field<Vec<EUTRANCGI>> for CellIdListforQMC {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI<'a>> {
+        fn __field(self) -> Vec<EUTRANCGI> {
             self.0
         }
     }
-    impl<'a> CellIdListforQMC<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIdListforQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CellIdListforQMC<'static> {
-            CellIdListforQMC(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<EUTRANCGI<'a>>> for CellIdListforQMC<'a> {
-        fn from(value: Vec<EUTRANCGI<'a>>) -> Self {
+    impl From<Vec<EUTRANCGI>> for CellIdListforQMC {
+        fn from(value: Vec<EUTRANCGI>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for CellIdListforQMC<'_> {
+    impl AsnType for CellIdListforQMC {
         const NAME: &'static str = "CellIdListforQMC";
     }
-    impl<'a> Decode<'a> for CellIdListforQMC<'a> {
+    impl<'a> Decode<'a> for CellIdListforQMC {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 32)?;
@@ -6736,7 +6537,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for CellIdListforQMC<'_> {
+    impl Encode for CellIdListforQMC {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 32)?;
             for item in self.0.iter() {
@@ -6746,7 +6547,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIdListforQMC<'_> {
+    impl Json for CellIdListforQMC {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -6759,15 +6560,15 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub struct CellIdentifierAndCELevelForCECapableUEs<'a> {
-        pub global_cell_id: EUTRANCGI<'a>,
+        pub global_cell_id: EUTRANCGI,
         pub ce_level: CELevel<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> CellIdentifierAndCELevelForCECapableUEs<'a> {
         pub fn new(
-            global_cell_id: EUTRANCGI<'a>,
+            global_cell_id: EUTRANCGI,
             ce_level: CELevel<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 global_cell_id,
@@ -6779,9 +6580,9 @@ pub mod s1_ap_ies {
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellIdentifierAndCELevelForCECapableUEs<'static> {
             CellIdentifierAndCELevelForCECapableUEs {
-                global_cell_id: self.global_cell_id.into_owned(),
+                global_cell_id: self.global_cell_id,
                 ce_level: self.ce_level.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -6801,10 +6602,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ce_level")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -6912,33 +6716,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CellType<'a> {
+    pub struct CellType {
         pub cell_size: CellSize,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CellType<'a> {
+    impl CellType {
         pub fn new(
             cell_size: CellSize,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 cell_size,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CellType<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CellType<'static> {
-            CellType {
-                cell_size: self.cell_size,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CellType<'_> {
+    impl AsnType for CellType {
         const NAME: &'static str = "CellType";
     }
-    impl<'a> Decode<'a> for CellType<'a> {
+    impl<'a> Decode<'a> for CellType {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -6947,10 +6743,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("cell_size")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -6963,7 +6762,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CellType<'_> {
+    impl Encode for CellType {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -6979,7 +6778,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellType<'_> {
+    impl Json for CellType {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("cell-Size", self.cell_size.to_json());
@@ -7099,29 +6898,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct CompletedCellinEAI<'a>(pub Vec<CompletedCellinEAIItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<CompletedCellinEAIItem<'a>>> for CompletedCellinEAI<'a> {
+    pub struct CompletedCellinEAI(pub Vec<CompletedCellinEAIItem>);
+    impl crate::message::__Field<Vec<CompletedCellinEAIItem>> for CompletedCellinEAI {
         #[inline]
-        fn __field(self) -> Vec<CompletedCellinEAIItem<'a>> {
+        fn __field(self) -> Vec<CompletedCellinEAIItem> {
             self.0
         }
     }
-    impl<'a> CompletedCellinEAI<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CompletedCellinEAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CompletedCellinEAI<'static> {
-            CompletedCellinEAI(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<CompletedCellinEAIItem<'a>>> for CompletedCellinEAI<'a> {
-        fn from(value: Vec<CompletedCellinEAIItem<'a>>) -> Self {
+    impl From<Vec<CompletedCellinEAIItem>> for CompletedCellinEAI {
+        fn from(value: Vec<CompletedCellinEAIItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for CompletedCellinEAI<'_> {
+    impl AsnType for CompletedCellinEAI {
         const NAME: &'static str = "CompletedCellinEAI";
     }
-    impl<'a> Decode<'a> for CompletedCellinEAI<'a> {
+    impl<'a> Decode<'a> for CompletedCellinEAI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -7133,7 +6925,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for CompletedCellinEAI<'_> {
+    impl Encode for CompletedCellinEAI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -7143,7 +6935,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CompletedCellinEAI<'_> {
+    impl Json for CompletedCellinEAI {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -7155,33 +6947,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CompletedCellinEAIItem<'a> {
-        pub ecgi: EUTRANCGI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct CompletedCellinEAIItem {
+        pub ecgi: EUTRANCGI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CompletedCellinEAIItem<'a> {
+    impl CompletedCellinEAIItem {
         pub fn new(
-            ecgi: EUTRANCGI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ecgi: EUTRANCGI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ecgi,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CompletedCellinEAIItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CompletedCellinEAIItem<'static> {
-            CompletedCellinEAIItem {
-                ecgi: self.ecgi.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CompletedCellinEAIItem<'_> {
+    impl AsnType for CompletedCellinEAIItem {
         const NAME: &'static str = "CompletedCellinEAI-Item";
     }
-    impl<'a> Decode<'a> for CompletedCellinEAIItem<'a> {
+    impl<'a> Decode<'a> for CompletedCellinEAIItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -7190,10 +6974,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ecgi")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -7206,7 +6993,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CompletedCellinEAIItem<'_> {
+    impl Encode for CompletedCellinEAIItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -7222,7 +7009,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CompletedCellinEAIItem<'_> {
+    impl Json for CompletedCellinEAIItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("eCGI", self.ecgi.to_json());
@@ -7244,29 +7031,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct CompletedCellinTAI<'a>(pub Vec<CompletedCellinTAIItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<CompletedCellinTAIItem<'a>>> for CompletedCellinTAI<'a> {
+    pub struct CompletedCellinTAI(pub Vec<CompletedCellinTAIItem>);
+    impl crate::message::__Field<Vec<CompletedCellinTAIItem>> for CompletedCellinTAI {
         #[inline]
-        fn __field(self) -> Vec<CompletedCellinTAIItem<'a>> {
+        fn __field(self) -> Vec<CompletedCellinTAIItem> {
             self.0
         }
     }
-    impl<'a> CompletedCellinTAI<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CompletedCellinTAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CompletedCellinTAI<'static> {
-            CompletedCellinTAI(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<CompletedCellinTAIItem<'a>>> for CompletedCellinTAI<'a> {
-        fn from(value: Vec<CompletedCellinTAIItem<'a>>) -> Self {
+    impl From<Vec<CompletedCellinTAIItem>> for CompletedCellinTAI {
+        fn from(value: Vec<CompletedCellinTAIItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for CompletedCellinTAI<'_> {
+    impl AsnType for CompletedCellinTAI {
         const NAME: &'static str = "CompletedCellinTAI";
     }
-    impl<'a> Decode<'a> for CompletedCellinTAI<'a> {
+    impl<'a> Decode<'a> for CompletedCellinTAI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -7278,7 +7058,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for CompletedCellinTAI<'_> {
+    impl Encode for CompletedCellinTAI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -7288,7 +7068,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CompletedCellinTAI<'_> {
+    impl Json for CompletedCellinTAI {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -7300,33 +7080,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CompletedCellinTAIItem<'a> {
-        pub ecgi: EUTRANCGI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct CompletedCellinTAIItem {
+        pub ecgi: EUTRANCGI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CompletedCellinTAIItem<'a> {
+    impl CompletedCellinTAIItem {
         pub fn new(
-            ecgi: EUTRANCGI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ecgi: EUTRANCGI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ecgi,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CompletedCellinTAIItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CompletedCellinTAIItem<'static> {
-            CompletedCellinTAIItem {
-                ecgi: self.ecgi.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CompletedCellinTAIItem<'_> {
+    impl AsnType for CompletedCellinTAIItem {
         const NAME: &'static str = "CompletedCellinTAI-Item";
     }
-    impl<'a> Decode<'a> for CompletedCellinTAIItem<'a> {
+    impl<'a> Decode<'a> for CompletedCellinTAIItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -7335,10 +7107,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ecgi")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -7351,7 +7126,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CompletedCellinTAIItem<'_> {
+    impl Encode for CompletedCellinTAIItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -7367,7 +7142,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CompletedCellinTAIItem<'_> {
+    impl Json for CompletedCellinTAIItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("eCGI", self.ecgi.to_json());
@@ -7433,14 +7208,14 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct ConnectedengNBItem<'a> {
         pub en_gnb_id: EnGNBID<'a>,
-        pub supported_tas: SupportedTAs<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub supported_tas: SupportedTAs,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ConnectedengNBItem<'a> {
         pub fn new(
             en_gnb_id: EnGNBID<'a>,
-            supported_tas: SupportedTAs<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            supported_tas: SupportedTAs,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 en_gnb_id,
@@ -7453,8 +7228,8 @@ pub mod s1_ap_ies {
         pub fn into_owned(self) -> ConnectedengNBItem<'static> {
             ConnectedengNBItem {
                 en_gnb_id: self.en_gnb_id.into_owned(),
-                supported_tas: self.supported_tas.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                supported_tas: self.supported_tas,
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -7474,10 +7249,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("supported_tas")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -7592,16 +7370,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ContextatSource<'a> {
-        pub source_ng_ran_node_id: GlobalRANNODEID<'a>,
+    pub struct ContextatSource {
+        pub source_ng_ran_node_id: GlobalRANNODEID,
         pub ran_ue_ngap_id: RANUENGAPID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ContextatSource<'a> {
+    impl ContextatSource {
         pub fn new(
-            source_ng_ran_node_id: GlobalRANNODEID<'a>,
+            source_ng_ran_node_id: GlobalRANNODEID,
             ran_ue_ngap_id: RANUENGAPID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 source_ng_ran_node_id,
@@ -7609,20 +7387,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ContextatSource<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ContextatSource<'static> {
-            ContextatSource {
-                source_ng_ran_node_id: self.source_ng_ran_node_id.into_owned(),
-                ran_ue_ngap_id: self.ran_ue_ngap_id,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ContextatSource<'_> {
+    impl AsnType for ContextatSource {
         const NAME: &'static str = "ContextatSource";
     }
-    impl<'a> Decode<'a> for ContextatSource<'a> {
+    impl<'a> Decode<'a> for ContextatSource {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -7635,10 +7404,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ran_ue_ngap_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -7652,7 +7424,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ContextatSource<'_> {
+    impl Encode for ContextatSource {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -7671,7 +7443,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ContextatSource<'_> {
+    impl Json for ContextatSource {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("sourceNG-RAN-node-ID", self.source_ng_ran_node_id.to_json());
@@ -7793,20 +7565,20 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CriticalityDiagnostics<'a> {
+    pub struct CriticalityDiagnostics {
         pub procedure_code: Option<ProcedureCode>,
         pub triggering_message: Option<TriggeringMessage>,
         pub procedure_criticality: Option<Criticality>,
-        pub ies_criticality_diagnostics: Option<CriticalityDiagnosticsIEList<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ies_criticality_diagnostics: Option<CriticalityDiagnosticsIEList>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CriticalityDiagnostics<'a> {
+    impl CriticalityDiagnostics {
         pub fn new(
             procedure_code: Option<ProcedureCode>,
             triggering_message: Option<TriggeringMessage>,
             procedure_criticality: Option<Criticality>,
-            ies_criticality_diagnostics: Option<CriticalityDiagnosticsIEList<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ies_criticality_diagnostics: Option<CriticalityDiagnosticsIEList>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 procedure_code,
@@ -7816,24 +7588,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CriticalityDiagnostics<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CriticalityDiagnostics<'static> {
-            CriticalityDiagnostics {
-                procedure_code: self.procedure_code,
-                triggering_message: self.triggering_message,
-                procedure_criticality: self.procedure_criticality,
-                ies_criticality_diagnostics: self
-                    .ies_criticality_diagnostics
-                    .map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CriticalityDiagnostics<'_> {
+    impl AsnType for CriticalityDiagnostics {
         const NAME: &'static str = "CriticalityDiagnostics";
     }
-    impl<'a> Decode<'a> for CriticalityDiagnostics<'a> {
+    impl<'a> Decode<'a> for CriticalityDiagnostics {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(5)?;
@@ -7870,10 +7629,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -7889,7 +7651,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CriticalityDiagnostics<'_> {
+    impl Encode for CriticalityDiagnostics {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.procedure_code.is_some());
@@ -7926,7 +7688,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CriticalityDiagnostics<'_> {
+    impl Json for CriticalityDiagnostics {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -7986,18 +7748,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CriticalityDiagnosticsIEItem<'a> {
+    pub struct CriticalityDiagnosticsIEItem {
         pub ie_criticality: Criticality,
         pub ie_id: ProtocolIEID,
         pub type_of_error: TypeOfError,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CriticalityDiagnosticsIEItem<'a> {
+    impl CriticalityDiagnosticsIEItem {
         pub fn new(
             ie_criticality: Criticality,
             ie_id: ProtocolIEID,
             type_of_error: TypeOfError,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ie_criticality,
@@ -8006,21 +7768,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CriticalityDiagnosticsIEItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CriticalityDiagnosticsIEItem<'static> {
-            CriticalityDiagnosticsIEItem {
-                ie_criticality: self.ie_criticality,
-                ie_id: self.ie_id,
-                type_of_error: self.type_of_error,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CriticalityDiagnosticsIEItem<'_> {
+    impl AsnType for CriticalityDiagnosticsIEItem {
         const NAME: &'static str = "CriticalityDiagnostics-IE-Item";
     }
-    impl<'a> Decode<'a> for CriticalityDiagnosticsIEItem<'a> {
+    impl<'a> Decode<'a> for CriticalityDiagnosticsIEItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -8037,10 +7789,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("type_of_error")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -8055,7 +7810,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for CriticalityDiagnosticsIEItem<'_> {
+    impl Encode for CriticalityDiagnosticsIEItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -8077,7 +7832,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CriticalityDiagnosticsIEItem<'_> {
+    impl Json for CriticalityDiagnosticsIEItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("iECriticality", self.ie_criticality.to_json());
@@ -8108,31 +7863,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct CriticalityDiagnosticsIEList<'a>(pub Vec<CriticalityDiagnosticsIEItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<CriticalityDiagnosticsIEItem<'a>>>
-        for CriticalityDiagnosticsIEList<'a>
-    {
+    pub struct CriticalityDiagnosticsIEList(pub Vec<CriticalityDiagnosticsIEItem>);
+    impl crate::message::__Field<Vec<CriticalityDiagnosticsIEItem>> for CriticalityDiagnosticsIEList {
         #[inline]
-        fn __field(self) -> Vec<CriticalityDiagnosticsIEItem<'a>> {
+        fn __field(self) -> Vec<CriticalityDiagnosticsIEItem> {
             self.0
         }
     }
-    impl<'a> CriticalityDiagnosticsIEList<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CriticalityDiagnosticsIEList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CriticalityDiagnosticsIEList<'static> {
-            CriticalityDiagnosticsIEList(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<CriticalityDiagnosticsIEItem<'a>>> for CriticalityDiagnosticsIEList<'a> {
-        fn from(value: Vec<CriticalityDiagnosticsIEItem<'a>>) -> Self {
+    impl From<Vec<CriticalityDiagnosticsIEItem>> for CriticalityDiagnosticsIEList {
+        fn from(value: Vec<CriticalityDiagnosticsIEItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for CriticalityDiagnosticsIEList<'_> {
+    impl AsnType for CriticalityDiagnosticsIEList {
         const NAME: &'static str = "CriticalityDiagnostics-IE-List";
     }
-    impl<'a> Decode<'a> for CriticalityDiagnosticsIEList<'a> {
+    impl<'a> Decode<'a> for CriticalityDiagnosticsIEList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 256)?;
@@ -8144,7 +7890,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for CriticalityDiagnosticsIEList<'_> {
+    impl Encode for CriticalityDiagnosticsIEList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 256)?;
             for item in self.0.iter() {
@@ -8154,7 +7900,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CriticalityDiagnosticsIEList<'_> {
+    impl Json for CriticalityDiagnosticsIEList {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -8210,33 +7956,25 @@ pub mod s1_ap_ies {
     #[doc = " D"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct DAPSRequestInfo<'a> {
+    pub struct DAPSRequestInfo {
         pub daps_indicator: DAPSRequestInfoDAPSIndicator,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> DAPSRequestInfo<'a> {
+    impl DAPSRequestInfo {
         pub fn new(
             daps_indicator: DAPSRequestInfoDAPSIndicator,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 daps_indicator,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `DAPSRequestInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> DAPSRequestInfo<'static> {
-            DAPSRequestInfo {
-                daps_indicator: self.daps_indicator,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for DAPSRequestInfo<'_> {
+    impl AsnType for DAPSRequestInfo {
         const NAME: &'static str = "DAPSRequestInfo";
     }
-    impl<'a> Decode<'a> for DAPSRequestInfo<'a> {
+    impl<'a> Decode<'a> for DAPSRequestInfo {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -8245,10 +7983,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("daps_indicator")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -8261,7 +8002,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for DAPSRequestInfo<'_> {
+    impl Encode for DAPSRequestInfo {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -8277,7 +8018,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DAPSRequestInfo<'_> {
+    impl Json for DAPSRequestInfo {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("dAPSIndicator", self.daps_indicator.to_json());
@@ -8345,33 +8086,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct DAPSResponseInfo<'a> {
+    pub struct DAPSResponseInfo {
         pub dapsresponseindicator: DAPSResponseInfoDapsresponseindicator,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> DAPSResponseInfo<'a> {
+    impl DAPSResponseInfo {
         pub fn new(
             dapsresponseindicator: DAPSResponseInfoDapsresponseindicator,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 dapsresponseindicator,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `DAPSResponseInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> DAPSResponseInfo<'static> {
-            DAPSResponseInfo {
-                dapsresponseindicator: self.dapsresponseindicator,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for DAPSResponseInfo<'_> {
+    impl AsnType for DAPSResponseInfo {
         const NAME: &'static str = "DAPSResponseInfo";
     }
-    impl<'a> Decode<'a> for DAPSResponseInfo<'a> {
+    impl<'a> Decode<'a> for DAPSResponseInfo {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -8381,10 +8114,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("dapsresponseindicator")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -8397,7 +8133,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for DAPSResponseInfo<'_> {
+    impl Encode for DAPSResponseInfo {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -8413,7 +8149,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DAPSResponseInfo<'_> {
+    impl Json for DAPSResponseInfo {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -8443,16 +8179,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct DAPSResponseInfoItem<'a> {
+    pub struct DAPSResponseInfoItem {
         pub e_rab_id: ERABID,
-        pub daps_response_info: DAPSResponseInfo<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub daps_response_info: DAPSResponseInfo,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> DAPSResponseInfoItem<'a> {
+    impl DAPSResponseInfoItem {
         pub fn new(
             e_rab_id: ERABID,
-            daps_response_info: DAPSResponseInfo<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            daps_response_info: DAPSResponseInfo,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -8460,20 +8196,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `DAPSResponseInfoItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> DAPSResponseInfoItem<'static> {
-            DAPSResponseInfoItem {
-                e_rab_id: self.e_rab_id,
-                daps_response_info: self.daps_response_info.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for DAPSResponseInfoItem<'_> {
+    impl AsnType for DAPSResponseInfoItem {
         const NAME: &'static str = "DAPSResponseInfoItem";
     }
-    impl<'a> Decode<'a> for DAPSResponseInfoItem<'a> {
+    impl<'a> Decode<'a> for DAPSResponseInfoItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -8486,10 +8213,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("daps_response_info")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -8503,7 +8233,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for DAPSResponseInfoItem<'_> {
+    impl Encode for DAPSResponseInfoItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -8522,7 +8252,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DAPSResponseInfoItem<'_> {
+    impl Json for DAPSResponseInfoItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -8646,33 +8376,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct DLCPSecurityInformation<'a> {
+    pub struct DLCPSecurityInformation {
         pub dl_nas_mac: DLNASMAC,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> DLCPSecurityInformation<'a> {
+    impl DLCPSecurityInformation {
         pub fn new(
             dl_nas_mac: DLNASMAC,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 dl_nas_mac,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `DLCPSecurityInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> DLCPSecurityInformation<'static> {
-            DLCPSecurityInformation {
-                dl_nas_mac: self.dl_nas_mac,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for DLCPSecurityInformation<'_> {
+    impl AsnType for DLCPSecurityInformation {
         const NAME: &'static str = "DL-CP-SecurityInformation";
     }
-    impl<'a> Decode<'a> for DLCPSecurityInformation<'a> {
+    impl<'a> Decode<'a> for DLCPSecurityInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -8681,10 +8403,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("dl_nas_mac")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -8697,7 +8422,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for DLCPSecurityInformation<'_> {
+    impl Encode for DLCPSecurityInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -8713,7 +8438,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DLCPSecurityInformation<'_> {
+    impl Json for DLCPSecurityInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("dl-NAS-MAC", self.dl_nas_mac.to_json());
@@ -8826,47 +8551,30 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum DLCOUNTPDCPSNlength<'a> {
-        dLCOUNTValuePDCP_SNlength12(COUNTvalue<'a>),
-        dLCOUNTValuePDCP_SNlength15(COUNTValueExtended<'a>),
-        dLCOUNTValuePDCP_SNlength18(COUNTvaluePDCPSNlength18<'a>),
+    pub enum DLCOUNTPDCPSNlength {
+        dLCOUNTValuePDCP_SNlength12(COUNTvalue),
+        dLCOUNTValuePDCP_SNlength15(COUNTValueExtended),
+        dLCOUNTValuePDCP_SNlength18(COUNTvaluePDCPSNlength18),
     }
-    impl<'a> DLCOUNTPDCPSNlength<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `DLCOUNTPDCPSNlength<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> DLCOUNTPDCPSNlength<'static> {
-            match self {
-                Self::dLCOUNTValuePDCP_SNlength12(value) => {
-                    DLCOUNTPDCPSNlength::dLCOUNTValuePDCP_SNlength12(value.into_owned())
-                }
-                Self::dLCOUNTValuePDCP_SNlength15(value) => {
-                    DLCOUNTPDCPSNlength::dLCOUNTValuePDCP_SNlength15(value.into_owned())
-                }
-                Self::dLCOUNTValuePDCP_SNlength18(value) => {
-                    DLCOUNTPDCPSNlength::dLCOUNTValuePDCP_SNlength18(value.into_owned())
-                }
-            }
-        }
-    }
-    impl<'a> From<COUNTvalue<'a>> for DLCOUNTPDCPSNlength<'a> {
-        fn from(value: COUNTvalue<'a>) -> Self {
+    impl From<COUNTvalue> for DLCOUNTPDCPSNlength {
+        fn from(value: COUNTvalue) -> Self {
             Self::dLCOUNTValuePDCP_SNlength12(value)
         }
     }
-    impl<'a> From<COUNTValueExtended<'a>> for DLCOUNTPDCPSNlength<'a> {
-        fn from(value: COUNTValueExtended<'a>) -> Self {
+    impl From<COUNTValueExtended> for DLCOUNTPDCPSNlength {
+        fn from(value: COUNTValueExtended) -> Self {
             Self::dLCOUNTValuePDCP_SNlength15(value)
         }
     }
-    impl<'a> From<COUNTvaluePDCPSNlength18<'a>> for DLCOUNTPDCPSNlength<'a> {
-        fn from(value: COUNTvaluePDCPSNlength18<'a>) -> Self {
+    impl From<COUNTvaluePDCPSNlength18> for DLCOUNTPDCPSNlength {
+        fn from(value: COUNTvaluePDCPSNlength18) -> Self {
             Self::dLCOUNTValuePDCP_SNlength18(value)
         }
     }
-    impl AsnType for DLCOUNTPDCPSNlength<'_> {
+    impl AsnType for DLCOUNTPDCPSNlength {
         const NAME: &'static str = "DLCOUNT-PDCP-SNlength";
     }
-    impl<'a> Decode<'a> for DLCOUNTPDCPSNlength<'a> {
+    impl<'a> Decode<'a> for DLCOUNTPDCPSNlength {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(3, 0, true)? {
                 0 => Self::dLCOUNTValuePDCP_SNlength12(COUNTvalue::decode(reader)?),
@@ -8875,7 +8583,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for DLCOUNTPDCPSNlength<'_> {
+    impl Encode for DLCOUNTPDCPSNlength {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::dLCOUNTValuePDCP_SNlength12(value) => {
@@ -8895,7 +8603,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DLCOUNTPDCPSNlength<'_> {
+    impl Json for DLCOUNTPDCPSNlength {
         fn to_json(&self) -> Value {
             match self {
                 Self::dLCOUNTValuePDCP_SNlength12(value) => {
@@ -8939,47 +8647,30 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum DLDiscarding<'a> {
-        discardDLCOUNTValuePDCP_SNlength12(COUNTvalue<'a>),
-        discardDLCOUNTValuePDCP_SNlength15(COUNTValueExtended<'a>),
-        discardDLCOUNTValuePDCP_SNlength18(COUNTvaluePDCPSNlength18<'a>),
+    pub enum DLDiscarding {
+        discardDLCOUNTValuePDCP_SNlength12(COUNTvalue),
+        discardDLCOUNTValuePDCP_SNlength15(COUNTValueExtended),
+        discardDLCOUNTValuePDCP_SNlength18(COUNTvaluePDCPSNlength18),
     }
-    impl<'a> DLDiscarding<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `DLDiscarding<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> DLDiscarding<'static> {
-            match self {
-                Self::discardDLCOUNTValuePDCP_SNlength12(value) => {
-                    DLDiscarding::discardDLCOUNTValuePDCP_SNlength12(value.into_owned())
-                }
-                Self::discardDLCOUNTValuePDCP_SNlength15(value) => {
-                    DLDiscarding::discardDLCOUNTValuePDCP_SNlength15(value.into_owned())
-                }
-                Self::discardDLCOUNTValuePDCP_SNlength18(value) => {
-                    DLDiscarding::discardDLCOUNTValuePDCP_SNlength18(value.into_owned())
-                }
-            }
-        }
-    }
-    impl<'a> From<COUNTvalue<'a>> for DLDiscarding<'a> {
-        fn from(value: COUNTvalue<'a>) -> Self {
+    impl From<COUNTvalue> for DLDiscarding {
+        fn from(value: COUNTvalue) -> Self {
             Self::discardDLCOUNTValuePDCP_SNlength12(value)
         }
     }
-    impl<'a> From<COUNTValueExtended<'a>> for DLDiscarding<'a> {
-        fn from(value: COUNTValueExtended<'a>) -> Self {
+    impl From<COUNTValueExtended> for DLDiscarding {
+        fn from(value: COUNTValueExtended) -> Self {
             Self::discardDLCOUNTValuePDCP_SNlength15(value)
         }
     }
-    impl<'a> From<COUNTvaluePDCPSNlength18<'a>> for DLDiscarding<'a> {
-        fn from(value: COUNTvaluePDCPSNlength18<'a>) -> Self {
+    impl From<COUNTvaluePDCPSNlength18> for DLDiscarding {
+        fn from(value: COUNTvaluePDCPSNlength18) -> Self {
             Self::discardDLCOUNTValuePDCP_SNlength18(value)
         }
     }
-    impl AsnType for DLDiscarding<'_> {
+    impl AsnType for DLDiscarding {
         const NAME: &'static str = "DLDiscarding";
     }
-    impl<'a> Decode<'a> for DLDiscarding<'a> {
+    impl<'a> Decode<'a> for DLDiscarding {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(3, 0, true)? {
                 0 => Self::discardDLCOUNTValuePDCP_SNlength12(COUNTvalue::decode(reader)?),
@@ -8990,7 +8681,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for DLDiscarding<'_> {
+    impl Encode for DLDiscarding {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::discardDLCOUNTValuePDCP_SNlength12(value) => {
@@ -9010,7 +8701,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DLDiscarding<'_> {
+    impl Json for DLDiscarding {
         fn to_json(&self) -> Value {
             match self {
                 Self::discardDLCOUNTValuePDCP_SNlength12(value) => {
@@ -9359,16 +9050,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABInformationListItem<'a> {
+    pub struct ERABInformationListItem {
         pub e_rab_id: ERABID,
         pub dl_forwarding: Option<DLForwarding>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABInformationListItem<'a> {
+    impl ERABInformationListItem {
         pub fn new(
             e_rab_id: ERABID,
             dl_forwarding: Option<DLForwarding>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -9376,20 +9067,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABInformationListItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABInformationListItem<'static> {
-            ERABInformationListItem {
-                e_rab_id: self.e_rab_id,
-                dl_forwarding: self.dl_forwarding,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABInformationListItem<'_> {
+    impl AsnType for ERABInformationListItem {
         const NAME: &'static str = "E-RABInformationListItem";
     }
-    impl<'a> Decode<'a> for ERABInformationListItem<'a> {
+    impl<'a> Decode<'a> for ERABInformationListItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -9406,10 +9088,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -9423,7 +9108,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ERABInformationListItem<'_> {
+    impl Encode for ERABInformationListItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.dl_forwarding.is_some());
@@ -9445,7 +9130,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABInformationListItem<'_> {
+    impl Json for ERABInformationListItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -9475,16 +9160,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABItem<'a> {
+    pub struct ERABItem {
         pub e_rab_id: ERABID,
         pub cause: Cause,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABItem<'a> {
+    impl ERABItem {
         pub fn new(
             e_rab_id: ERABID,
             cause: Cause,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -9492,20 +9177,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABItem<'static> {
-            ERABItem {
-                e_rab_id: self.e_rab_id,
-                cause: self.cause,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABItem<'_> {
+    impl AsnType for ERABItem {
         const NAME: &'static str = "E-RABItem";
     }
-    impl<'a> Decode<'a> for ERABItem<'a> {
+    impl<'a> Decode<'a> for ERABItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -9518,10 +9194,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("cause")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -9535,7 +9214,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ERABItem<'_> {
+    impl Encode for ERABItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -9554,7 +9233,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABItem<'_> {
+    impl Json for ERABItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -9580,18 +9259,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABLevelQoSParameters<'a> {
+    pub struct ERABLevelQoSParameters {
         pub qci: QCI,
-        pub allocation_retention_priority: AllocationAndRetentionPriority<'a>,
-        pub gbr_qos_information: Option<GBRQosInformation<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub allocation_retention_priority: AllocationAndRetentionPriority,
+        pub gbr_qos_information: Option<GBRQosInformation>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABLevelQoSParameters<'a> {
+    impl ERABLevelQoSParameters {
         pub fn new(
             qci: QCI,
-            allocation_retention_priority: AllocationAndRetentionPriority<'a>,
-            gbr_qos_information: Option<GBRQosInformation<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            allocation_retention_priority: AllocationAndRetentionPriority,
+            gbr_qos_information: Option<GBRQosInformation>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 qci,
@@ -9600,21 +9279,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABLevelQoSParameters<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABLevelQoSParameters<'static> {
-            ERABLevelQoSParameters {
-                qci: self.qci,
-                allocation_retention_priority: self.allocation_retention_priority.into_owned(),
-                gbr_qos_information: self.gbr_qos_information.map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABLevelQoSParameters<'_> {
+    impl AsnType for ERABLevelQoSParameters {
         const NAME: &'static str = "E-RABLevelQoSParameters";
     }
-    impl<'a> Decode<'a> for ERABLevelQoSParameters<'a> {
+    impl<'a> Decode<'a> for ERABLevelQoSParameters {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -9636,10 +9305,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -9654,7 +9326,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ERABLevelQoSParameters<'_> {
+    impl Encode for ERABLevelQoSParameters {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.gbr_qos_information.is_some());
@@ -9679,7 +9351,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABLevelQoSParameters<'_> {
+    impl Json for ERABLevelQoSParameters {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("qCI", self.qci.to_json());
@@ -9781,16 +9453,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABSecurityResultItem<'a> {
+    pub struct ERABSecurityResultItem {
         pub e_rab_id: ERABID,
-        pub security_result: SecurityResult<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub security_result: SecurityResult,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABSecurityResultItem<'a> {
+    impl ERABSecurityResultItem {
         pub fn new(
             e_rab_id: ERABID,
-            security_result: SecurityResult<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            security_result: SecurityResult,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -9798,20 +9470,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSecurityResultItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABSecurityResultItem<'static> {
-            ERABSecurityResultItem {
-                e_rab_id: self.e_rab_id,
-                security_result: self.security_result.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABSecurityResultItem<'_> {
+    impl AsnType for ERABSecurityResultItem {
         const NAME: &'static str = "E-RABSecurityResultItem";
     }
-    impl<'a> Decode<'a> for ERABSecurityResultItem<'a> {
+    impl<'a> Decode<'a> for ERABSecurityResultItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -9824,10 +9487,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("security_result")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -9841,7 +9507,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ERABSecurityResultItem<'_> {
+    impl Encode for ERABSecurityResultItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -9860,7 +9526,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABSecurityResultItem<'_> {
+    impl Json for ERABSecurityResultItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -9942,20 +9608,20 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABUsageReportItem<'a> {
+    pub struct ERABUsageReportItem {
         pub start_timestamp: [u8; 4],
         pub end_timestamp: [u8; 4],
         pub usage_count_ul: u64,
         pub usage_count_dl: u64,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABUsageReportItem<'a> {
+    impl ERABUsageReportItem {
         pub fn new(
             start_timestamp: [u8; 4],
             end_timestamp: [u8; 4],
             usage_count_ul: u64,
             usage_count_dl: u64,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 start_timestamp,
@@ -9965,22 +9631,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABUsageReportItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABUsageReportItem<'static> {
-            ERABUsageReportItem {
-                start_timestamp: self.start_timestamp,
-                end_timestamp: self.end_timestamp,
-                usage_count_ul: self.usage_count_ul,
-                usage_count_dl: self.usage_count_dl,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABUsageReportItem<'_> {
+    impl AsnType for ERABUsageReportItem {
         const NAME: &'static str = "E-RABUsageReportItem";
     }
-    impl<'a> Decode<'a> for ERABUsageReportItem<'a> {
+    impl<'a> Decode<'a> for ERABUsageReportItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -10001,10 +9656,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("usage_count_dl")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -10020,7 +9678,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ERABUsageReportItem<'_> {
+    impl Encode for ERABUsageReportItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -10041,7 +9699,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABUsageReportItem<'_> {
+    impl Json for ERABUsageReportItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("startTimestamp", json::octets(&self.start_timestamp));
@@ -10234,29 +9892,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ECGI_List<'a>(pub Vec<EUTRANCGI<'a>>);
-    impl<'a> crate::message::__Field<Vec<EUTRANCGI<'a>>> for ECGI_List<'a> {
+    pub struct ECGI_List(pub Vec<EUTRANCGI>);
+    impl crate::message::__Field<Vec<EUTRANCGI>> for ECGI_List {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI<'a>> {
+        fn __field(self) -> Vec<EUTRANCGI> {
             self.0
         }
     }
-    impl<'a> ECGI_List<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ECGI_List<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ECGI_List<'static> {
-            ECGI_List(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<EUTRANCGI<'a>>> for ECGI_List<'a> {
-        fn from(value: Vec<EUTRANCGI<'a>>) -> Self {
+    impl From<Vec<EUTRANCGI>> for ECGI_List {
+        fn from(value: Vec<EUTRANCGI>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for ECGI_List<'_> {
+    impl AsnType for ECGI_List {
         const NAME: &'static str = "ECGI-List";
     }
-    impl<'a> Decode<'a> for ECGI_List<'a> {
+    impl<'a> Decode<'a> for ECGI_List {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 256)?;
@@ -10268,7 +9919,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for ECGI_List<'_> {
+    impl Encode for ECGI_List {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 256)?;
             for item in self.0.iter() {
@@ -10278,7 +9929,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ECGI_List<'_> {
+    impl Json for ECGI_List {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -10289,29 +9940,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ECGIList<'a>(pub Vec<EUTRANCGI<'a>>);
-    impl<'a> crate::message::__Field<Vec<EUTRANCGI<'a>>> for ECGIList<'a> {
+    pub struct ECGIList(pub Vec<EUTRANCGI>);
+    impl crate::message::__Field<Vec<EUTRANCGI>> for ECGIList {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI<'a>> {
+        fn __field(self) -> Vec<EUTRANCGI> {
             self.0
         }
     }
-    impl<'a> ECGIList<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ECGIList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ECGIList<'static> {
-            ECGIList(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<EUTRANCGI<'a>>> for ECGIList<'a> {
-        fn from(value: Vec<EUTRANCGI<'a>>) -> Self {
+    impl From<Vec<EUTRANCGI>> for ECGIList {
+        fn from(value: Vec<EUTRANCGI>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for ECGIList<'_> {
+    impl AsnType for ECGIList {
         const NAME: &'static str = "ECGIList";
     }
-    impl<'a> Decode<'a> for ECGIList<'a> {
+    impl<'a> Decode<'a> for ECGIList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -10323,7 +9967,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for ECGIList<'_> {
+    impl Encode for ECGIList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -10333,7 +9977,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ECGIList<'_> {
+    impl Json for ECGIList {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -10344,29 +9988,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ECGIListForRestart<'a>(pub Vec<EUTRANCGI<'a>>);
-    impl<'a> crate::message::__Field<Vec<EUTRANCGI<'a>>> for ECGIListForRestart<'a> {
+    pub struct ECGIListForRestart(pub Vec<EUTRANCGI>);
+    impl crate::message::__Field<Vec<EUTRANCGI>> for ECGIListForRestart {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI<'a>> {
+        fn __field(self) -> Vec<EUTRANCGI> {
             self.0
         }
     }
-    impl<'a> ECGIListForRestart<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ECGIListForRestart<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ECGIListForRestart<'static> {
-            ECGIListForRestart(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<EUTRANCGI<'a>>> for ECGIListForRestart<'a> {
-        fn from(value: Vec<EUTRANCGI<'a>>) -> Self {
+    impl From<Vec<EUTRANCGI>> for ECGIListForRestart {
+        fn from(value: Vec<EUTRANCGI>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for ECGIListForRestart<'_> {
+    impl AsnType for ECGIListForRestart {
         const NAME: &'static str = "ECGIListForRestart";
     }
-    impl<'a> Decode<'a> for ECGIListForRestart<'a> {
+    impl<'a> Decode<'a> for ECGIListForRestart {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 256)?;
@@ -10378,7 +10015,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for ECGIListForRestart<'_> {
+    impl Encode for ECGIListForRestart {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 256)?;
             for item in self.0.iter() {
@@ -10388,7 +10025,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ECGIListForRestart<'_> {
+    impl Json for ECGIListForRestart {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -10446,14 +10083,14 @@ pub mod s1_ap_ies {
         pub transfertype: ENDCSONTransferType<'a>,
         pub son_information: SONInformation<'a>,
         pub x2_tnl_config_info: Option<X2TNLConfigurationInfo<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENDCSONConfigurationTransfer<'a> {
         pub fn new(
             transfertype: ENDCSONTransferType<'a>,
             son_information: SONInformation<'a>,
             x2_tnl_config_info: Option<X2TNLConfigurationInfo<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 transfertype,
@@ -10469,7 +10106,7 @@ pub mod s1_ap_ies {
                 transfertype: self.transfertype.into_owned(),
                 son_information: self.son_information.into_owned(),
                 x2_tnl_config_info: self.x2_tnl_config_info.map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -10497,10 +10134,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -10657,16 +10297,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ENDCSONeNBIdentification<'a> {
-        pub global_enb_id: GlobalENBID<'a>,
-        pub selected_tai: TAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct ENDCSONeNBIdentification {
+        pub global_enb_id: GlobalENBID,
+        pub selected_tai: TAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ENDCSONeNBIdentification<'a> {
+    impl ENDCSONeNBIdentification {
         pub fn new(
-            global_enb_id: GlobalENBID<'a>,
-            selected_tai: TAI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            global_enb_id: GlobalENBID,
+            selected_tai: TAI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 global_enb_id,
@@ -10674,20 +10314,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ENDCSONeNBIdentification<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ENDCSONeNBIdentification<'static> {
-            ENDCSONeNBIdentification {
-                global_enb_id: self.global_enb_id.into_owned(),
-                selected_tai: self.selected_tai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ENDCSONeNBIdentification<'_> {
+    impl AsnType for ENDCSONeNBIdentification {
         const NAME: &'static str = "EN-DCSONeNBIdentification";
     }
-    impl<'a> Decode<'a> for ENDCSONeNBIdentification<'a> {
+    impl<'a> Decode<'a> for ENDCSONeNBIdentification {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -10700,10 +10331,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("selected_tai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -10717,7 +10351,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ENDCSONeNBIdentification<'_> {
+    impl Encode for ENDCSONeNBIdentification {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -10736,7 +10370,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENDCSONeNBIdentification<'_> {
+    impl Json for ENDCSONeNBIdentification {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("globaleNBID", self.global_enb_id.to_json());
@@ -10765,14 +10399,14 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct ENDCSONengNBIdentification<'a> {
         pub globalen_gnb_id: GlobalEnGNBID<'a>,
-        pub selected_tai: TAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub selected_tai: TAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENDCSONengNBIdentification<'a> {
         pub fn new(
             globalen_gnb_id: GlobalEnGNBID<'a>,
-            selected_tai: TAI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            selected_tai: TAI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 globalen_gnb_id,
@@ -10785,8 +10419,8 @@ pub mod s1_ap_ies {
         pub fn into_owned(self) -> ENDCSONengNBIdentification<'static> {
             ENDCSONengNBIdentification {
                 globalen_gnb_id: self.globalen_gnb_id.into_owned(),
-                selected_tai: self.selected_tai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                selected_tai: self.selected_tai,
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -10806,10 +10440,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("selected_tai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -10871,14 +10508,14 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct ENDCTransferTypeReply<'a> {
         pub source_en_gnb: ENDCSONengNBIdentification<'a>,
-        pub target_enb: ENDCSONeNBIdentification<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub target_enb: ENDCSONeNBIdentification,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENDCTransferTypeReply<'a> {
         pub fn new(
             source_en_gnb: ENDCSONengNBIdentification<'a>,
-            target_enb: ENDCSONeNBIdentification<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            target_enb: ENDCSONeNBIdentification,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 source_en_gnb,
@@ -10891,8 +10528,8 @@ pub mod s1_ap_ies {
         pub fn into_owned(self) -> ENDCTransferTypeReply<'static> {
             ENDCTransferTypeReply {
                 source_en_gnb: self.source_en_gnb.into_owned(),
-                target_enb: self.target_enb.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                target_enb: self.target_enb,
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -10912,10 +10549,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("target_enb")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -10976,21 +10616,21 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub struct ENDCTransferTypeRequest<'a> {
-        pub source_enb: ENDCSONeNBIdentification<'a>,
+        pub source_enb: ENDCSONeNBIdentification,
         pub target_en_gnb: ENDCSONengNBIdentification<'a>,
-        pub target_enb: Option<ENDCSONeNBIdentification<'a>>,
-        pub associated_tai: Option<TAI<'a>>,
-        pub broadcast_5gs_tai: Option<FiveGSTAI<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub target_enb: Option<ENDCSONeNBIdentification>,
+        pub associated_tai: Option<TAI>,
+        pub broadcast_5gs_tai: Option<FiveGSTAI>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENDCTransferTypeRequest<'a> {
         pub fn new(
-            source_enb: ENDCSONeNBIdentification<'a>,
+            source_enb: ENDCSONeNBIdentification,
             target_en_gnb: ENDCSONengNBIdentification<'a>,
-            target_enb: Option<ENDCSONeNBIdentification<'a>>,
-            associated_tai: Option<TAI<'a>>,
-            broadcast_5gs_tai: Option<FiveGSTAI<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            target_enb: Option<ENDCSONeNBIdentification>,
+            associated_tai: Option<TAI>,
+            broadcast_5gs_tai: Option<FiveGSTAI>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 source_enb,
@@ -11005,12 +10645,12 @@ pub mod s1_ap_ies {
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENDCTransferTypeRequest<'static> {
             ENDCTransferTypeRequest {
-                source_enb: self.source_enb.into_owned(),
+                source_enb: self.source_enb,
                 target_en_gnb: self.target_en_gnb.into_owned(),
-                target_enb: self.target_enb.map(|value| value.into_owned()),
-                associated_tai: self.associated_tai.map(|value| value.into_owned()),
-                broadcast_5gs_tai: self.broadcast_5gs_tai.map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                target_enb: self.target_enb,
+                associated_tai: self.associated_tai,
+                broadcast_5gs_tai: self.broadcast_5gs_tai,
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -11054,10 +10694,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -11169,14 +10812,14 @@ pub mod s1_ap_ies {
     pub struct ENBEarlyStatusTransferTransparentContainer<'a> {
         pub bearers_subject_to_early_status_transfer_list:
             BearersSubjectToEarlyStatusTransferList<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENBEarlyStatusTransferTransparentContainer<'a> {
         pub fn new(
             bearers_subject_to_early_status_transfer_list: BearersSubjectToEarlyStatusTransferList<
                 'a,
             >,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 bearers_subject_to_early_status_transfer_list,
@@ -11190,7 +10833,7 @@ pub mod s1_ap_ies {
                 bearers_subject_to_early_status_transfer_list: self
                     .bearers_subject_to_early_status_transfer_list
                     .into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -11209,10 +10852,13 @@ pub mod s1_ap_ies {
                     }
                 };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -11387,12 +11033,12 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct ENBStatusTransferTransparentContainer<'a> {
         pub bearers_subject_to_status_transfer_list: BearersSubjectToStatusTransferList<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENBStatusTransferTransparentContainer<'a> {
         pub fn new(
             bearers_subject_to_status_transfer_list: BearersSubjectToStatusTransferList<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 bearers_subject_to_status_transfer_list,
@@ -11406,7 +11052,7 @@ pub mod s1_ap_ies {
                 bearers_subject_to_status_transfer_list: self
                     .bearers_subject_to_status_transfer_list
                     .into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -11425,10 +11071,13 @@ pub mod s1_ap_ies {
                     }
                 };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -11591,13 +11240,13 @@ pub mod s1_ap_ies {
     pub struct ENBX2ExtTLA<'a> {
         pub ipsec_tla: Option<TransportLayerAddress<'a>>,
         pub gtp_tlaa: Option<ENBX2GTPTLAs<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENBX2ExtTLA<'a> {
         pub fn new(
             ipsec_tla: Option<TransportLayerAddress<'a>>,
             gtp_tlaa: Option<ENBX2GTPTLAs<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ipsec_tla,
@@ -11611,7 +11260,7 @@ pub mod s1_ap_ies {
             ENBX2ExtTLA {
                 ipsec_tla: self.ipsec_tla.map(|value| value.into_owned()),
                 gtp_tlaa: self.gtp_tlaa.map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -11639,10 +11288,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -11982,16 +11634,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct EUTRANCGI<'a> {
+    pub struct EUTRANCGI {
         pub plmn_identity: PLMNidentity,
         pub cell_id: CellIdentity,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> EUTRANCGI<'a> {
+    impl EUTRANCGI {
         pub fn new(
             plmn_identity: PLMNidentity,
             cell_id: CellIdentity,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -11999,20 +11651,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `EUTRANCGI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> EUTRANCGI<'static> {
-            EUTRANCGI {
-                plmn_identity: self.plmn_identity,
-                cell_id: self.cell_id,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for EUTRANCGI<'_> {
+    impl AsnType for EUTRANCGI {
         const NAME: &'static str = "EUTRAN-CGI";
     }
-    impl<'a> Decode<'a> for EUTRANCGI<'a> {
+    impl<'a> Decode<'a> for EUTRANCGI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -12025,10 +11668,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("cell_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -12042,7 +11688,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for EUTRANCGI<'_> {
+    impl Encode for EUTRANCGI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -12061,7 +11707,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EUTRANCGI<'_> {
+    impl Json for EUTRANCGI {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMNidentity", self.plmn_identity.to_json());
@@ -12179,31 +11825,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct EmergencyAreaIDBroadcast<'a>(pub Vec<EmergencyAreaIDBroadcastItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<EmergencyAreaIDBroadcastItem<'a>>>
-        for EmergencyAreaIDBroadcast<'a>
-    {
+    pub struct EmergencyAreaIDBroadcast(pub Vec<EmergencyAreaIDBroadcastItem>);
+    impl crate::message::__Field<Vec<EmergencyAreaIDBroadcastItem>> for EmergencyAreaIDBroadcast {
         #[inline]
-        fn __field(self) -> Vec<EmergencyAreaIDBroadcastItem<'a>> {
+        fn __field(self) -> Vec<EmergencyAreaIDBroadcastItem> {
             self.0
         }
     }
-    impl<'a> EmergencyAreaIDBroadcast<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `EmergencyAreaIDBroadcast<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> EmergencyAreaIDBroadcast<'static> {
-            EmergencyAreaIDBroadcast(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<EmergencyAreaIDBroadcastItem<'a>>> for EmergencyAreaIDBroadcast<'a> {
-        fn from(value: Vec<EmergencyAreaIDBroadcastItem<'a>>) -> Self {
+    impl From<Vec<EmergencyAreaIDBroadcastItem>> for EmergencyAreaIDBroadcast {
+        fn from(value: Vec<EmergencyAreaIDBroadcastItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for EmergencyAreaIDBroadcast<'_> {
+    impl AsnType for EmergencyAreaIDBroadcast {
         const NAME: &'static str = "EmergencyAreaID-Broadcast";
     }
-    impl<'a> Decode<'a> for EmergencyAreaIDBroadcast<'a> {
+    impl<'a> Decode<'a> for EmergencyAreaIDBroadcast {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -12215,7 +11852,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for EmergencyAreaIDBroadcast<'_> {
+    impl Encode for EmergencyAreaIDBroadcast {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -12225,7 +11862,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyAreaIDBroadcast<'_> {
+    impl Json for EmergencyAreaIDBroadcast {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -12237,16 +11874,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct EmergencyAreaIDBroadcastItem<'a> {
+    pub struct EmergencyAreaIDBroadcastItem {
         pub emergency_area_id: EmergencyAreaID,
-        pub completed_cellin_eai: CompletedCellinEAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub completed_cellin_eai: CompletedCellinEAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> EmergencyAreaIDBroadcastItem<'a> {
+    impl EmergencyAreaIDBroadcastItem {
         pub fn new(
             emergency_area_id: EmergencyAreaID,
-            completed_cellin_eai: CompletedCellinEAI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            completed_cellin_eai: CompletedCellinEAI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 emergency_area_id,
@@ -12254,20 +11891,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `EmergencyAreaIDBroadcastItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> EmergencyAreaIDBroadcastItem<'static> {
-            EmergencyAreaIDBroadcastItem {
-                emergency_area_id: self.emergency_area_id,
-                completed_cellin_eai: self.completed_cellin_eai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for EmergencyAreaIDBroadcastItem<'_> {
+    impl AsnType for EmergencyAreaIDBroadcastItem {
         const NAME: &'static str = "EmergencyAreaID-Broadcast-Item";
     }
-    impl<'a> Decode<'a> for EmergencyAreaIDBroadcastItem<'a> {
+    impl<'a> Decode<'a> for EmergencyAreaIDBroadcastItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -12280,10 +11908,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("completed_cellin_eai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -12297,7 +11928,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for EmergencyAreaIDBroadcastItem<'_> {
+    impl Encode for EmergencyAreaIDBroadcastItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -12316,7 +11947,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyAreaIDBroadcastItem<'_> {
+    impl Json for EmergencyAreaIDBroadcastItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("emergencyAreaID", self.emergency_area_id.to_json());
@@ -12345,31 +11976,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct EmergencyAreaIDCancelled<'a>(pub Vec<EmergencyAreaIDCancelledItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<EmergencyAreaIDCancelledItem<'a>>>
-        for EmergencyAreaIDCancelled<'a>
-    {
+    pub struct EmergencyAreaIDCancelled(pub Vec<EmergencyAreaIDCancelledItem>);
+    impl crate::message::__Field<Vec<EmergencyAreaIDCancelledItem>> for EmergencyAreaIDCancelled {
         #[inline]
-        fn __field(self) -> Vec<EmergencyAreaIDCancelledItem<'a>> {
+        fn __field(self) -> Vec<EmergencyAreaIDCancelledItem> {
             self.0
         }
     }
-    impl<'a> EmergencyAreaIDCancelled<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `EmergencyAreaIDCancelled<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> EmergencyAreaIDCancelled<'static> {
-            EmergencyAreaIDCancelled(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<EmergencyAreaIDCancelledItem<'a>>> for EmergencyAreaIDCancelled<'a> {
-        fn from(value: Vec<EmergencyAreaIDCancelledItem<'a>>) -> Self {
+    impl From<Vec<EmergencyAreaIDCancelledItem>> for EmergencyAreaIDCancelled {
+        fn from(value: Vec<EmergencyAreaIDCancelledItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for EmergencyAreaIDCancelled<'_> {
+    impl AsnType for EmergencyAreaIDCancelled {
         const NAME: &'static str = "EmergencyAreaID-Cancelled";
     }
-    impl<'a> Decode<'a> for EmergencyAreaIDCancelled<'a> {
+    impl<'a> Decode<'a> for EmergencyAreaIDCancelled {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -12381,7 +12003,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for EmergencyAreaIDCancelled<'_> {
+    impl Encode for EmergencyAreaIDCancelled {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -12391,7 +12013,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyAreaIDCancelled<'_> {
+    impl Json for EmergencyAreaIDCancelled {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -12403,16 +12025,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct EmergencyAreaIDCancelledItem<'a> {
+    pub struct EmergencyAreaIDCancelledItem {
         pub emergency_area_id: EmergencyAreaID,
-        pub cancelled_cellin_eai: CancelledCellinEAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub cancelled_cellin_eai: CancelledCellinEAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> EmergencyAreaIDCancelledItem<'a> {
+    impl EmergencyAreaIDCancelledItem {
         pub fn new(
             emergency_area_id: EmergencyAreaID,
-            cancelled_cellin_eai: CancelledCellinEAI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            cancelled_cellin_eai: CancelledCellinEAI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 emergency_area_id,
@@ -12420,20 +12042,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `EmergencyAreaIDCancelledItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> EmergencyAreaIDCancelledItem<'static> {
-            EmergencyAreaIDCancelledItem {
-                emergency_area_id: self.emergency_area_id,
-                cancelled_cellin_eai: self.cancelled_cellin_eai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for EmergencyAreaIDCancelledItem<'_> {
+    impl AsnType for EmergencyAreaIDCancelledItem {
         const NAME: &'static str = "EmergencyAreaID-Cancelled-Item";
     }
-    impl<'a> Decode<'a> for EmergencyAreaIDCancelledItem<'a> {
+    impl<'a> Decode<'a> for EmergencyAreaIDCancelledItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -12446,10 +12059,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("cancelled_cellin_eai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -12463,7 +12079,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for EmergencyAreaIDCancelledItem<'_> {
+    impl Encode for EmergencyAreaIDCancelledItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -12482,7 +12098,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyAreaIDCancelledItem<'_> {
+    impl Json for EmergencyAreaIDCancelledItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("emergencyAreaID", self.emergency_area_id.to_json());
@@ -12869,18 +12485,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct EventL1LoggedMDTConfig<'a> {
-        pub l1_threshold: MeasurementThresholdL1LoggedMDT<'a>,
+    pub struct EventL1LoggedMDTConfig {
+        pub l1_threshold: MeasurementThresholdL1LoggedMDT,
         pub hysteresis: Hysteresis,
         pub time_to_trigger: TimeToTrigger,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> EventL1LoggedMDTConfig<'a> {
+    impl EventL1LoggedMDTConfig {
         pub fn new(
-            l1_threshold: MeasurementThresholdL1LoggedMDT<'a>,
+            l1_threshold: MeasurementThresholdL1LoggedMDT,
             hysteresis: Hysteresis,
             time_to_trigger: TimeToTrigger,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 l1_threshold,
@@ -12889,21 +12505,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `EventL1LoggedMDTConfig<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> EventL1LoggedMDTConfig<'static> {
-            EventL1LoggedMDTConfig {
-                l1_threshold: self.l1_threshold.into_owned(),
-                hysteresis: self.hysteresis,
-                time_to_trigger: self.time_to_trigger,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for EventL1LoggedMDTConfig<'_> {
+    impl AsnType for EventL1LoggedMDTConfig {
         const NAME: &'static str = "EventL1LoggedMDTConfig";
     }
-    impl<'a> Decode<'a> for EventL1LoggedMDTConfig<'a> {
+    impl<'a> Decode<'a> for EventL1LoggedMDTConfig {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -12920,10 +12526,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("time_to_trigger")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -12938,7 +12547,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for EventL1LoggedMDTConfig<'_> {
+    impl Encode for EventL1LoggedMDTConfig {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -12960,7 +12569,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EventL1LoggedMDTConfig<'_> {
+    impl Json for EventL1LoggedMDTConfig {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("l1Threshold", self.l1_threshold.to_json());
@@ -13040,54 +12649,39 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub enum EventTrigger<'a> {
+    pub enum EventTrigger {
         outOfCoverage(EventTriggerOutOfCoverage),
-        eventL1LoggedMDTConfig(EventL1LoggedMDTConfig<'a>),
-        choice_Extensions(ProtocolIEField<'a>),
+        eventL1LoggedMDTConfig(EventL1LoggedMDTConfig),
+        choice_Extensions(ProtocolIEField<'static>),
     }
-    impl<'a> EventTrigger<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `EventTrigger<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> EventTrigger<'static> {
-            match self {
-                Self::outOfCoverage(value) => EventTrigger::outOfCoverage(value),
-                Self::eventL1LoggedMDTConfig(value) => {
-                    EventTrigger::eventL1LoggedMDTConfig(value.into_owned())
-                }
-                Self::choice_Extensions(value) => {
-                    EventTrigger::choice_Extensions(value.into_owned())
-                }
-            }
-        }
-    }
-    impl<'a> From<EventTriggerOutOfCoverage> for EventTrigger<'a> {
+    impl From<EventTriggerOutOfCoverage> for EventTrigger {
         fn from(value: EventTriggerOutOfCoverage) -> Self {
             Self::outOfCoverage(value)
         }
     }
-    impl<'a> From<EventL1LoggedMDTConfig<'a>> for EventTrigger<'a> {
-        fn from(value: EventL1LoggedMDTConfig<'a>) -> Self {
+    impl From<EventL1LoggedMDTConfig> for EventTrigger {
+        fn from(value: EventL1LoggedMDTConfig) -> Self {
             Self::eventL1LoggedMDTConfig(value)
         }
     }
-    impl<'a> From<ProtocolIEField<'a>> for EventTrigger<'a> {
-        fn from(value: ProtocolIEField<'a>) -> Self {
+    impl From<ProtocolIEField<'static>> for EventTrigger {
+        fn from(value: ProtocolIEField<'static>) -> Self {
             Self::choice_Extensions(value)
         }
     }
-    impl AsnType for EventTrigger<'_> {
+    impl AsnType for EventTrigger {
         const NAME: &'static str = "EventTrigger";
     }
-    impl<'a> Decode<'a> for EventTrigger<'a> {
+    impl<'a> Decode<'a> for EventTrigger {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(3, 0, false)? {
                 0 => Self::outOfCoverage(EventTriggerOutOfCoverage::decode(reader)?),
                 1 => Self::eventL1LoggedMDTConfig(EventL1LoggedMDTConfig::decode(reader)?),
-                _ => Self::choice_Extensions(ProtocolIEField::decode(reader)?),
+                _ => Self::choice_Extensions((ProtocolIEField::decode(reader)?).into_owned()),
             })
         }
     }
-    impl Encode for EventTrigger<'_> {
+    impl Encode for EventTrigger {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::outOfCoverage(value) => {
@@ -13107,7 +12701,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EventTrigger<'_> {
+    impl Json for EventTrigger {
         fn to_json(&self) -> Value {
             match self {
                 Self::outOfCoverage(value) => json::alternative("outOfCoverage", value.to_json()),
@@ -13341,21 +12935,21 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ExpectedUEActivityBehaviour<'a> {
+    pub struct ExpectedUEActivityBehaviour {
         pub expected_activity_period: Option<ExpectedActivityPeriod>,
         pub expected_idle_period: Option<ExpectedIdlePeriod>,
         pub sourceof_ue_activity_behaviour_information:
             Option<SourceOfUEActivityBehaviourInformation>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ExpectedUEActivityBehaviour<'a> {
+    impl ExpectedUEActivityBehaviour {
         pub fn new(
             expected_activity_period: Option<ExpectedActivityPeriod>,
             expected_idle_period: Option<ExpectedIdlePeriod>,
             sourceof_ue_activity_behaviour_information: Option<
                 SourceOfUEActivityBehaviourInformation,
             >,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 expected_activity_period,
@@ -13364,22 +12958,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ExpectedUEActivityBehaviour<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ExpectedUEActivityBehaviour<'static> {
-            ExpectedUEActivityBehaviour {
-                expected_activity_period: self.expected_activity_period,
-                expected_idle_period: self.expected_idle_period,
-                sourceof_ue_activity_behaviour_information: self
-                    .sourceof_ue_activity_behaviour_information,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ExpectedUEActivityBehaviour<'_> {
+    impl AsnType for ExpectedUEActivityBehaviour {
         const NAME: &'static str = "ExpectedUEActivityBehaviour";
     }
-    impl<'a> Decode<'a> for ExpectedUEActivityBehaviour<'a> {
+    impl<'a> Decode<'a> for ExpectedUEActivityBehaviour {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(4)?;
@@ -13412,10 +12995,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -13430,7 +13016,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ExpectedUEActivityBehaviour<'_> {
+    impl Encode for ExpectedUEActivityBehaviour {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.expected_activity_period.is_some());
@@ -13461,7 +13047,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ExpectedUEActivityBehaviour<'_> {
+    impl Json for ExpectedUEActivityBehaviour {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -13519,16 +13105,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ExpectedUEBehaviour<'a> {
-        pub expected_activity: Option<ExpectedUEActivityBehaviour<'a>>,
+    pub struct ExpectedUEBehaviour {
+        pub expected_activity: Option<ExpectedUEActivityBehaviour>,
         pub expected_ho_interval: Option<ExpectedHOInterval>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ExpectedUEBehaviour<'a> {
+    impl ExpectedUEBehaviour {
         pub fn new(
-            expected_activity: Option<ExpectedUEActivityBehaviour<'a>>,
+            expected_activity: Option<ExpectedUEActivityBehaviour>,
             expected_ho_interval: Option<ExpectedHOInterval>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 expected_activity,
@@ -13536,20 +13122,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ExpectedUEBehaviour<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ExpectedUEBehaviour<'static> {
-            ExpectedUEBehaviour {
-                expected_activity: self.expected_activity.map(|value| value.into_owned()),
-                expected_ho_interval: self.expected_ho_interval,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ExpectedUEBehaviour<'_> {
+    impl AsnType for ExpectedUEBehaviour {
         const NAME: &'static str = "ExpectedUEBehaviour";
     }
-    impl<'a> Decode<'a> for ExpectedUEBehaviour<'a> {
+    impl<'a> Decode<'a> for ExpectedUEBehaviour {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
@@ -13570,10 +13147,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -13587,7 +13167,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ExpectedUEBehaviour<'_> {
+    impl Encode for ExpectedUEBehaviour {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.expected_activity.is_some());
@@ -13612,7 +13192,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ExpectedUEBehaviour<'_> {
+    impl Json for ExpectedUEBehaviour {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -13875,16 +13455,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct FiveGSTAI<'a> {
+    pub struct FiveGSTAI {
         pub plmn_identity: PLMNidentity,
         pub five_gs_tac: FiveGSTAC,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> FiveGSTAI<'a> {
+    impl FiveGSTAI {
         pub fn new(
             plmn_identity: PLMNidentity,
             five_gs_tac: FiveGSTAC,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -13892,20 +13472,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `FiveGSTAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> FiveGSTAI<'static> {
-            FiveGSTAI {
-                plmn_identity: self.plmn_identity,
-                five_gs_tac: self.five_gs_tac,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for FiveGSTAI<'_> {
+    impl AsnType for FiveGSTAI {
         const NAME: &'static str = "FiveGSTAI";
     }
-    impl<'a> Decode<'a> for FiveGSTAI<'a> {
+    impl<'a> Decode<'a> for FiveGSTAI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -13918,10 +13489,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("five_gs_tac")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -13935,7 +13509,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for FiveGSTAI<'_> {
+    impl Encode for FiveGSTAI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -13954,7 +13528,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for FiveGSTAI<'_> {
+    impl Json for FiveGSTAI {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMNidentity", self.plmn_identity.to_json());
@@ -14127,29 +13701,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ForbiddenLAs<'a>(pub Vec<ForbiddenLAsItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<ForbiddenLAsItem<'a>>> for ForbiddenLAs<'a> {
+    pub struct ForbiddenLAs(pub Vec<ForbiddenLAsItem>);
+    impl crate::message::__Field<Vec<ForbiddenLAsItem>> for ForbiddenLAs {
         #[inline]
-        fn __field(self) -> Vec<ForbiddenLAsItem<'a>> {
+        fn __field(self) -> Vec<ForbiddenLAsItem> {
             self.0
         }
     }
-    impl<'a> ForbiddenLAs<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ForbiddenLAs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ForbiddenLAs<'static> {
-            ForbiddenLAs(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<ForbiddenLAsItem<'a>>> for ForbiddenLAs<'a> {
-        fn from(value: Vec<ForbiddenLAsItem<'a>>) -> Self {
+    impl From<Vec<ForbiddenLAsItem>> for ForbiddenLAs {
+        fn from(value: Vec<ForbiddenLAsItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for ForbiddenLAs<'_> {
+    impl AsnType for ForbiddenLAs {
         const NAME: &'static str = "ForbiddenLAs";
     }
-    impl<'a> Decode<'a> for ForbiddenLAs<'a> {
+    impl<'a> Decode<'a> for ForbiddenLAs {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 16)?;
@@ -14161,7 +13728,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for ForbiddenLAs<'_> {
+    impl Encode for ForbiddenLAs {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 16)?;
             for item in self.0.iter() {
@@ -14171,7 +13738,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ForbiddenLAs<'_> {
+    impl Json for ForbiddenLAs {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -14183,16 +13750,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ForbiddenLAsItem<'a> {
+    pub struct ForbiddenLAsItem {
         pub plmn_identity: PLMNidentity,
         pub forbidden_lacs: ForbiddenLACs,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ForbiddenLAsItem<'a> {
+    impl ForbiddenLAsItem {
         pub fn new(
             plmn_identity: PLMNidentity,
             forbidden_lacs: ForbiddenLACs,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -14200,20 +13767,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ForbiddenLAsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ForbiddenLAsItem<'static> {
-            ForbiddenLAsItem {
-                plmn_identity: self.plmn_identity,
-                forbidden_lacs: self.forbidden_lacs,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ForbiddenLAsItem<'_> {
+    impl AsnType for ForbiddenLAsItem {
         const NAME: &'static str = "ForbiddenLAs-Item";
     }
-    impl<'a> Decode<'a> for ForbiddenLAsItem<'a> {
+    impl<'a> Decode<'a> for ForbiddenLAsItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -14226,10 +13784,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("forbidden_lacs")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -14243,7 +13804,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ForbiddenLAsItem<'_> {
+    impl Encode for ForbiddenLAsItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -14262,7 +13823,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ForbiddenLAsItem<'_> {
+    impl Json for ForbiddenLAsItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMN-Identity", self.plmn_identity.to_json());
@@ -14336,29 +13897,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ForbiddenTAs<'a>(pub Vec<ForbiddenTAsItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<ForbiddenTAsItem<'a>>> for ForbiddenTAs<'a> {
+    pub struct ForbiddenTAs(pub Vec<ForbiddenTAsItem>);
+    impl crate::message::__Field<Vec<ForbiddenTAsItem>> for ForbiddenTAs {
         #[inline]
-        fn __field(self) -> Vec<ForbiddenTAsItem<'a>> {
+        fn __field(self) -> Vec<ForbiddenTAsItem> {
             self.0
         }
     }
-    impl<'a> ForbiddenTAs<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ForbiddenTAs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ForbiddenTAs<'static> {
-            ForbiddenTAs(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<ForbiddenTAsItem<'a>>> for ForbiddenTAs<'a> {
-        fn from(value: Vec<ForbiddenTAsItem<'a>>) -> Self {
+    impl From<Vec<ForbiddenTAsItem>> for ForbiddenTAs {
+        fn from(value: Vec<ForbiddenTAsItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for ForbiddenTAs<'_> {
+    impl AsnType for ForbiddenTAs {
         const NAME: &'static str = "ForbiddenTAs";
     }
-    impl<'a> Decode<'a> for ForbiddenTAs<'a> {
+    impl<'a> Decode<'a> for ForbiddenTAs {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 16)?;
@@ -14370,7 +13924,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for ForbiddenTAs<'_> {
+    impl Encode for ForbiddenTAs {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 16)?;
             for item in self.0.iter() {
@@ -14380,7 +13934,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ForbiddenTAs<'_> {
+    impl Json for ForbiddenTAs {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -14392,16 +13946,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ForbiddenTAsItem<'a> {
+    pub struct ForbiddenTAsItem {
         pub plmn_identity: PLMNidentity,
         pub forbidden_tacs: ForbiddenTACs,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ForbiddenTAsItem<'a> {
+    impl ForbiddenTAsItem {
         pub fn new(
             plmn_identity: PLMNidentity,
             forbidden_tacs: ForbiddenTACs,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -14409,20 +13963,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ForbiddenTAsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ForbiddenTAsItem<'static> {
-            ForbiddenTAsItem {
-                plmn_identity: self.plmn_identity,
-                forbidden_tacs: self.forbidden_tacs,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ForbiddenTAsItem<'_> {
+    impl AsnType for ForbiddenTAsItem {
         const NAME: &'static str = "ForbiddenTAs-Item";
     }
-    impl<'a> Decode<'a> for ForbiddenTAsItem<'a> {
+    impl<'a> Decode<'a> for ForbiddenTAsItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -14435,10 +13980,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("forbidden_tacs")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -14452,7 +14000,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ForbiddenTAsItem<'_> {
+    impl Encode for ForbiddenTAsItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -14471,7 +14019,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ForbiddenTAsItem<'_> {
+    impl Json for ForbiddenTAsItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMN-Identity", self.plmn_identity.to_json());
@@ -14499,20 +14047,20 @@ pub mod s1_ap_ies {
     #[doc = " G"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct GBRQosInformation<'a> {
+    pub struct GBRQosInformation {
         pub e_rab_maximum_bitrate_dl: BitRate,
         pub e_rab_maximum_bitrate_ul: BitRate,
         pub e_rab_guaranteed_bitrate_dl: BitRate,
         pub e_rab_guaranteed_bitrate_ul: BitRate,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> GBRQosInformation<'a> {
+    impl GBRQosInformation {
         pub fn new(
             e_rab_maximum_bitrate_dl: BitRate,
             e_rab_maximum_bitrate_ul: BitRate,
             e_rab_guaranteed_bitrate_dl: BitRate,
             e_rab_guaranteed_bitrate_ul: BitRate,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_maximum_bitrate_dl,
@@ -14522,22 +14070,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `GBRQosInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> GBRQosInformation<'static> {
-            GBRQosInformation {
-                e_rab_maximum_bitrate_dl: self.e_rab_maximum_bitrate_dl,
-                e_rab_maximum_bitrate_ul: self.e_rab_maximum_bitrate_ul,
-                e_rab_guaranteed_bitrate_dl: self.e_rab_guaranteed_bitrate_dl,
-                e_rab_guaranteed_bitrate_ul: self.e_rab_guaranteed_bitrate_ul,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for GBRQosInformation<'_> {
+    impl AsnType for GBRQosInformation {
         const NAME: &'static str = "GBR-QosInformation";
     }
-    impl<'a> Decode<'a> for GBRQosInformation<'a> {
+    impl<'a> Decode<'a> for GBRQosInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -14558,10 +14095,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("e_rab_guaranteed_bitrate_ul")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -14577,7 +14117,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for GBRQosInformation<'_> {
+    impl Encode for GBRQosInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -14602,7 +14142,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GBRQosInformation<'_> {
+    impl Json for GBRQosInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -14655,18 +14195,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct GERANCellID<'a> {
-        pub lai: LAI<'a>,
+    pub struct GERANCellID {
+        pub lai: LAI,
         pub rac: RAC,
         pub ci: CI,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> GERANCellID<'a> {
+    impl GERANCellID {
         pub fn new(
-            lai: LAI<'a>,
+            lai: LAI,
             rac: RAC,
             ci: CI,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 lai,
@@ -14675,21 +14215,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `GERANCellID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> GERANCellID<'static> {
-            GERANCellID {
-                lai: self.lai.into_owned(),
-                rac: self.rac,
-                ci: self.ci,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for GERANCellID<'_> {
+    impl AsnType for GERANCellID {
         const NAME: &'static str = "GERAN-Cell-ID";
     }
-    impl<'a> Decode<'a> for GERANCellID<'a> {
+    impl<'a> Decode<'a> for GERANCellID {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -14706,10 +14236,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ci")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -14724,7 +14257,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for GERANCellID<'_> {
+    impl Encode for GERANCellID {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -14746,7 +14279,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GERANCellID<'_> {
+    impl Json for GERANCellID {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("lAI", self.lai.to_json());
@@ -14775,33 +14308,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct GNB<'a> {
-        pub global_gnb_id: GlobalGNBID<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct GNB {
+        pub global_gnb_id: GlobalGNBID,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> GNB<'a> {
+    impl GNB {
         pub fn new(
-            global_gnb_id: GlobalGNBID<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            global_gnb_id: GlobalGNBID,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 global_gnb_id,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `GNB<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> GNB<'static> {
-            GNB {
-                global_gnb_id: self.global_gnb_id.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for GNB<'_> {
+    impl AsnType for GNB {
         const NAME: &'static str = "GNB";
     }
-    impl<'a> Decode<'a> for GNB<'a> {
+    impl<'a> Decode<'a> for GNB {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -14810,10 +14335,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("global_gnb_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -14826,7 +14354,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for GNB<'_> {
+    impl Encode for GNB {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -14842,7 +14370,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GNB<'_> {
+    impl Json for GNB {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("global-gNB-ID", self.global_gnb_id.to_json());
@@ -15003,18 +14531,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct GUMMEI<'a> {
+    pub struct GUMMEI {
         pub plmn_identity: PLMNidentity,
         pub mme_group_id: MMEGroupID,
         pub mme_code: MMECode,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> GUMMEI<'a> {
+    impl GUMMEI {
         pub fn new(
             plmn_identity: PLMNidentity,
             mme_group_id: MMEGroupID,
             mme_code: MMECode,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -15023,21 +14551,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `GUMMEI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> GUMMEI<'static> {
-            GUMMEI {
-                plmn_identity: self.plmn_identity,
-                mme_group_id: self.mme_group_id,
-                mme_code: self.mme_code,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for GUMMEI<'_> {
+    impl AsnType for GUMMEI {
         const NAME: &'static str = "GUMMEI";
     }
-    impl<'a> Decode<'a> for GUMMEI<'a> {
+    impl<'a> Decode<'a> for GUMMEI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -15054,10 +14572,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("mme_code")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -15072,7 +14593,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for GUMMEI<'_> {
+    impl Encode for GUMMEI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -15094,7 +14615,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GUMMEI<'_> {
+    impl Json for GUMMEI {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMN-Identity", self.plmn_identity.to_json());
@@ -15125,29 +14646,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct GUMMEIList<'a>(pub Vec<GUMMEI<'a>>);
-    impl<'a> crate::message::__Field<Vec<GUMMEI<'a>>> for GUMMEIList<'a> {
+    pub struct GUMMEIList(pub Vec<GUMMEI>);
+    impl crate::message::__Field<Vec<GUMMEI>> for GUMMEIList {
         #[inline]
-        fn __field(self) -> Vec<GUMMEI<'a>> {
+        fn __field(self) -> Vec<GUMMEI> {
             self.0
         }
     }
-    impl<'a> GUMMEIList<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `GUMMEIList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> GUMMEIList<'static> {
-            GUMMEIList(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<GUMMEI<'a>>> for GUMMEIList<'a> {
-        fn from(value: Vec<GUMMEI<'a>>) -> Self {
+    impl From<Vec<GUMMEI>> for GUMMEIList {
+        fn from(value: Vec<GUMMEI>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for GUMMEIList<'_> {
+    impl AsnType for GUMMEIList {
         const NAME: &'static str = "GUMMEIList";
     }
-    impl<'a> Decode<'a> for GUMMEIList<'a> {
+    impl<'a> Decode<'a> for GUMMEIList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 256)?;
@@ -15159,7 +14673,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for GUMMEIList<'_> {
+    impl Encode for GUMMEIList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 256)?;
             for item in self.0.iter() {
@@ -15169,7 +14683,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GUMMEIList<'_> {
+    impl Json for GUMMEIList {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -15267,16 +14781,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct GlobalENBID<'a> {
+    pub struct GlobalENBID {
         pub plmn_identity: PLMNidentity,
         pub enb_id: ENBID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> GlobalENBID<'a> {
+    impl GlobalENBID {
         pub fn new(
             plmn_identity: PLMNidentity,
             enb_id: ENBID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -15284,20 +14798,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `GlobalENBID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> GlobalENBID<'static> {
-            GlobalENBID {
-                plmn_identity: self.plmn_identity,
-                enb_id: self.enb_id,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for GlobalENBID<'_> {
+    impl AsnType for GlobalENBID {
         const NAME: &'static str = "Global-ENB-ID";
     }
-    impl<'a> Decode<'a> for GlobalENBID<'a> {
+    impl<'a> Decode<'a> for GlobalENBID {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -15310,10 +14815,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("enb_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -15327,7 +14835,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for GlobalENBID<'_> {
+    impl Encode for GlobalENBID {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -15346,7 +14854,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GlobalENBID<'_> {
+    impl Json for GlobalENBID {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMNidentity", self.plmn_identity.to_json());
@@ -15372,16 +14880,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct GlobalGNBID<'a> {
+    pub struct GlobalGNBID {
         pub plmn_identity: PLMNidentity,
         pub gnb_id: GNBIdentity,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> GlobalGNBID<'a> {
+    impl GlobalGNBID {
         pub fn new(
             plmn_identity: PLMNidentity,
             gnb_id: GNBIdentity,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -15389,20 +14897,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `GlobalGNBID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> GlobalGNBID<'static> {
-            GlobalGNBID {
-                plmn_identity: self.plmn_identity,
-                gnb_id: self.gnb_id,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for GlobalGNBID<'_> {
+    impl AsnType for GlobalGNBID {
         const NAME: &'static str = "Global-GNB-ID";
     }
-    impl<'a> Decode<'a> for GlobalGNBID<'a> {
+    impl<'a> Decode<'a> for GlobalGNBID {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -15415,10 +14914,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("gnb_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -15432,7 +14934,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for GlobalGNBID<'_> {
+    impl Encode for GlobalGNBID {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -15451,7 +14953,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GlobalGNBID<'_> {
+    impl Json for GlobalGNBID {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMN-Identity", self.plmn_identity.to_json());
@@ -15477,34 +14979,24 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum GlobalRANNODEID<'a> {
-        gNB(GNB<'a>),
-        ng_eNB(NGENB<'a>),
+    pub enum GlobalRANNODEID {
+        gNB(GNB),
+        ng_eNB(NGENB),
     }
-    impl<'a> GlobalRANNODEID<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `GlobalRANNODEID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> GlobalRANNODEID<'static> {
-            match self {
-                Self::gNB(value) => GlobalRANNODEID::gNB(value.into_owned()),
-                Self::ng_eNB(value) => GlobalRANNODEID::ng_eNB(value.into_owned()),
-            }
-        }
-    }
-    impl<'a> From<GNB<'a>> for GlobalRANNODEID<'a> {
-        fn from(value: GNB<'a>) -> Self {
+    impl From<GNB> for GlobalRANNODEID {
+        fn from(value: GNB) -> Self {
             Self::gNB(value)
         }
     }
-    impl<'a> From<NGENB<'a>> for GlobalRANNODEID<'a> {
-        fn from(value: NGENB<'a>) -> Self {
+    impl From<NGENB> for GlobalRANNODEID {
+        fn from(value: NGENB) -> Self {
             Self::ng_eNB(value)
         }
     }
-    impl AsnType for GlobalRANNODEID<'_> {
+    impl AsnType for GlobalRANNODEID {
         const NAME: &'static str = "Global-RAN-NODE-ID";
     }
-    impl<'a> Decode<'a> for GlobalRANNODEID<'a> {
+    impl<'a> Decode<'a> for GlobalRANNODEID {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(2, 0, true)? {
                 0 => Self::gNB(GNB::decode(reader)?),
@@ -15512,7 +15004,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for GlobalRANNODEID<'_> {
+    impl Encode for GlobalRANNODEID {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::gNB(value) => {
@@ -15528,7 +15020,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GlobalRANNODEID<'_> {
+    impl Json for GlobalRANNODEID {
         fn to_json(&self) -> Value {
             match self {
                 Self::gNB(value) => json::alternative("gNB", value.to_json()),
@@ -15548,13 +15040,13 @@ pub mod s1_ap_ies {
     pub struct GlobalEnGNBID<'a> {
         pub plmn_identity: PLMNidentity,
         pub en_gnb_id: EnGNBID<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> GlobalEnGNBID<'a> {
         pub fn new(
             plmn_identity: PLMNidentity,
             en_gnb_id: EnGNBID<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -15568,7 +15060,7 @@ pub mod s1_ap_ies {
             GlobalEnGNBID {
                 plmn_identity: self.plmn_identity,
                 en_gnb_id: self.en_gnb_id.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -15588,10 +15080,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("en_gnb_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -15820,22 +15315,22 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct HandoverRestrictionList<'a> {
+    pub struct HandoverRestrictionList {
         pub serving_plmn: PLMNidentity,
         pub equivalent_plmns: Option<EPLMNs>,
-        pub forbidden_tas: Option<ForbiddenTAs<'a>>,
-        pub forbidden_las: Option<ForbiddenLAs<'a>>,
+        pub forbidden_tas: Option<ForbiddenTAs>,
+        pub forbidden_las: Option<ForbiddenLAs>,
         pub forbidden_inter_rats: Option<ForbiddenInterRATs>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> HandoverRestrictionList<'a> {
+    impl HandoverRestrictionList {
         pub fn new(
             serving_plmn: PLMNidentity,
             equivalent_plmns: Option<EPLMNs>,
-            forbidden_tas: Option<ForbiddenTAs<'a>>,
-            forbidden_las: Option<ForbiddenLAs<'a>>,
+            forbidden_tas: Option<ForbiddenTAs>,
+            forbidden_las: Option<ForbiddenLAs>,
             forbidden_inter_rats: Option<ForbiddenInterRATs>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 serving_plmn,
@@ -15846,23 +15341,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverRestrictionList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> HandoverRestrictionList<'static> {
-            HandoverRestrictionList {
-                serving_plmn: self.serving_plmn,
-                equivalent_plmns: self.equivalent_plmns,
-                forbidden_tas: self.forbidden_tas.map(|value| value.into_owned()),
-                forbidden_las: self.forbidden_las.map(|value| value.into_owned()),
-                forbidden_inter_rats: self.forbidden_inter_rats,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for HandoverRestrictionList<'_> {
+    impl AsnType for HandoverRestrictionList {
         const NAME: &'static str = "HandoverRestrictionList";
     }
-    impl<'a> Decode<'a> for HandoverRestrictionList<'a> {
+    impl<'a> Decode<'a> for HandoverRestrictionList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(5)?;
@@ -15903,10 +15386,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -15923,7 +15409,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for HandoverRestrictionList<'_> {
+    impl Encode for HandoverRestrictionList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.equivalent_plmns.is_some());
@@ -15963,7 +15449,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverRestrictionList<'_> {
+    impl Json for HandoverRestrictionList {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("servingPLMN", self.serving_plmn.to_json());
@@ -16436,20 +15922,20 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ImmediateMDT<'a> {
+    pub struct ImmediateMDT {
         pub measurements_to_activate: MeasurementsToActivate,
         pub m1_reporting_trigger: M1ReportingTrigger,
-        pub m1_thresholdevent_a2: Option<M1ThresholdEventA2<'a>>,
-        pub m1_periodic_reporting: Option<M1PeriodicReporting<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub m1_thresholdevent_a2: Option<M1ThresholdEventA2>,
+        pub m1_periodic_reporting: Option<M1PeriodicReporting>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ImmediateMDT<'a> {
+    impl ImmediateMDT {
         pub fn new(
             measurements_to_activate: MeasurementsToActivate,
             m1_reporting_trigger: M1ReportingTrigger,
-            m1_thresholdevent_a2: Option<M1ThresholdEventA2<'a>>,
-            m1_periodic_reporting: Option<M1PeriodicReporting<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            m1_thresholdevent_a2: Option<M1ThresholdEventA2>,
+            m1_periodic_reporting: Option<M1PeriodicReporting>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 measurements_to_activate,
@@ -16459,22 +15945,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ImmediateMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ImmediateMDT<'static> {
-            ImmediateMDT {
-                measurements_to_activate: self.measurements_to_activate,
-                m1_reporting_trigger: self.m1_reporting_trigger,
-                m1_thresholdevent_a2: self.m1_thresholdevent_a2.map(|value| value.into_owned()),
-                m1_periodic_reporting: self.m1_periodic_reporting.map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ImmediateMDT<'_> {
+    impl AsnType for ImmediateMDT {
         const NAME: &'static str = "ImmediateMDT";
     }
-    impl<'a> Decode<'a> for ImmediateMDT<'a> {
+    impl<'a> Decode<'a> for ImmediateMDT {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
@@ -16503,10 +15978,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -16522,7 +16000,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ImmediateMDT<'_> {
+    impl Encode for ImmediateMDT {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.m1_thresholdevent_a2.is_some());
@@ -16553,7 +16031,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ImmediateMDT<'_> {
+    impl Json for ImmediateMDT {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -16614,13 +16092,13 @@ pub mod s1_ap_ies {
     pub struct InformationOnRecommendedCellsAndENBsForPaging<'a> {
         pub recommended_cells_for_paging: RecommendedCellsForPaging<'a>,
         pub recommend_enbs_for_paging: RecommendedENBsForPaging<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> InformationOnRecommendedCellsAndENBsForPaging<'a> {
         pub fn new(
             recommended_cells_for_paging: RecommendedCellsForPaging<'a>,
             recommend_enbs_for_paging: RecommendedENBsForPaging<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 recommended_cells_for_paging,
@@ -16634,7 +16112,7 @@ pub mod s1_ap_ies {
             InformationOnRecommendedCellsAndENBsForPaging {
                 recommended_cells_for_paging: self.recommended_cells_for_paging.into_owned(),
                 recommend_enbs_for_paging: self.recommend_enbs_for_paging.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -16654,10 +16132,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("recommend_enbs_for_paging")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -16971,7 +16452,7 @@ pub mod s1_ap_ies {
         pub ss_rssi_measurement: Option<Octets<'a>>,
         pub quantity_config_nr_r15: Option<Octets<'a>>,
         pub excluded_cells_to_add_mod_list: Option<Octets<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> InterSystemMeasurementItem<'a> {
         pub fn new(
@@ -16985,7 +16466,7 @@ pub mod s1_ap_ies {
             ss_rssi_measurement: Option<Octets<'a>>,
             quantity_config_nr_r15: Option<Octets<'a>>,
             excluded_cells_to_add_mod_list: Option<Octets<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 freq_band_indicator_nr,
@@ -17017,7 +16498,7 @@ pub mod s1_ap_ies {
                 excluded_cells_to_add_mod_list: self
                     .excluded_cells_to_add_mod_list
                     .map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -17097,10 +16578,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -17363,13 +16847,13 @@ pub mod s1_ap_ies {
     pub struct InterSystemMeasurementParameters<'a> {
         pub measurement_duration: u8,
         pub inter_system_measurement_list: Option<InterSystemMeasurementList<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> InterSystemMeasurementParameters<'a> {
         pub fn new(
             measurement_duration: u8,
             inter_system_measurement_list: Option<InterSystemMeasurementList<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 measurement_duration,
@@ -17385,7 +16869,7 @@ pub mod s1_ap_ies {
                 inter_system_measurement_list: self
                     .inter_system_measurement_list
                     .map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -17409,10 +16893,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -17545,7 +17032,7 @@ pub mod s1_ap_ies {
         pub rsrq: Option<u8>,
         pub sinr: Option<u8>,
         pub inter_system_measurement_parameters: InterSystemMeasurementParameters<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> IntersystemMeasurementConfiguration<'a> {
         pub fn new(
@@ -17553,7 +17040,7 @@ pub mod s1_ap_ies {
             rsrq: Option<u8>,
             sinr: Option<u8>,
             inter_system_measurement_parameters: InterSystemMeasurementParameters<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 rsrp,
@@ -17573,7 +17060,7 @@ pub mod s1_ap_ies {
                 inter_system_measurement_parameters: self
                     .inter_system_measurement_parameters
                     .into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -17614,10 +17101,13 @@ pub mod s1_ap_ies {
                     Err(error) => return Err(error.in_field("inter_system_measurement_parameters")),
                 };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -17940,16 +17430,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct LAI<'a> {
+    pub struct LAI {
         pub plmn_identity: PLMNidentity,
         pub lac: LAC,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> LAI<'a> {
+    impl LAI {
         pub fn new(
             plmn_identity: PLMNidentity,
             lac: LAC,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -17957,20 +17447,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `LAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> LAI<'static> {
-            LAI {
-                plmn_identity: self.plmn_identity,
-                lac: self.lac,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for LAI<'_> {
+    impl AsnType for LAI {
         const NAME: &'static str = "LAI";
     }
-    impl<'a> Decode<'a> for LAI<'a> {
+    impl<'a> Decode<'a> for LAI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -17983,10 +17464,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("lac")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -18000,7 +17484,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for LAI<'_> {
+    impl Encode for LAI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -18019,7 +17503,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LAI<'_> {
+    impl Json for LAI {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMNidentity", self.plmn_identity.to_json());
@@ -18200,18 +17684,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct LTENTNTAIInformation<'a> {
+    pub struct LTENTNTAIInformation {
         pub serving_plmn: PLMNidentity,
         pub tac_list_in_lte_ntn: TACListInLTENTN,
         pub ue_location_derived_tac: Option<TAC>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> LTENTNTAIInformation<'a> {
+    impl LTENTNTAIInformation {
         pub fn new(
             serving_plmn: PLMNidentity,
             tac_list_in_lte_ntn: TACListInLTENTN,
             ue_location_derived_tac: Option<TAC>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 serving_plmn,
@@ -18220,21 +17704,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `LTENTNTAIInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> LTENTNTAIInformation<'static> {
-            LTENTNTAIInformation {
-                serving_plmn: self.serving_plmn,
-                tac_list_in_lte_ntn: self.tac_list_in_lte_ntn,
-                ue_location_derived_tac: self.ue_location_derived_tac,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for LTENTNTAIInformation<'_> {
+    impl AsnType for LTENTNTAIInformation {
         const NAME: &'static str = "LTE-NTN-TAI-Information";
     }
-    impl<'a> Decode<'a> for LTENTNTAIInformation<'a> {
+    impl<'a> Decode<'a> for LTENTNTAIInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -18255,10 +17729,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -18273,7 +17750,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for LTENTNTAIInformation<'_> {
+    impl Encode for LTENTNTAIInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ue_location_derived_tac.is_some());
@@ -18298,7 +17775,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LTENTNTAIInformation<'_> {
+    impl Json for LTENTNTAIInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("servingPLMN", self.serving_plmn.to_json());
@@ -18341,7 +17818,7 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum LastVisitedCellItem<'a> {
-        e_UTRAN_Cell(LastVisitedEUTRANCellInformation<'a>),
+        e_UTRAN_Cell(LastVisitedEUTRANCellInformation),
         uTRAN_Cell(LastVisitedUTRANCellInformation<'a>),
         gERAN_Cell(LastVisitedGERANCellInformation),
         nG_RAN_Cell(LastVisitedNGRANCellInformation<'a>),
@@ -18351,15 +17828,15 @@ pub mod s1_ap_ies {
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LastVisitedCellItem<'static> {
             match self {
-                Self::e_UTRAN_Cell(value) => LastVisitedCellItem::e_UTRAN_Cell(value.into_owned()),
+                Self::e_UTRAN_Cell(value) => LastVisitedCellItem::e_UTRAN_Cell(value),
                 Self::uTRAN_Cell(value) => LastVisitedCellItem::uTRAN_Cell(value.into_owned()),
                 Self::gERAN_Cell(value) => LastVisitedCellItem::gERAN_Cell(value),
                 Self::nG_RAN_Cell(value) => LastVisitedCellItem::nG_RAN_Cell(value.into_owned()),
             }
         }
     }
-    impl<'a> From<LastVisitedEUTRANCellInformation<'a>> for LastVisitedCellItem<'a> {
-        fn from(value: LastVisitedEUTRANCellInformation<'a>) -> Self {
+    impl<'a> From<LastVisitedEUTRANCellInformation> for LastVisitedCellItem<'a> {
+        fn from(value: LastVisitedEUTRANCellInformation) -> Self {
             Self::e_UTRAN_Cell(value)
         }
     }
@@ -18470,18 +17947,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct LastVisitedEUTRANCellInformation<'a> {
-        pub global_cell_id: EUTRANCGI<'a>,
-        pub cell_type: CellType<'a>,
+    pub struct LastVisitedEUTRANCellInformation {
+        pub global_cell_id: EUTRANCGI,
+        pub cell_type: CellType,
         pub time_ue_stayed_in_cell: TimeUEStayedInCell,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> LastVisitedEUTRANCellInformation<'a> {
+    impl LastVisitedEUTRANCellInformation {
         pub fn new(
-            global_cell_id: EUTRANCGI<'a>,
-            cell_type: CellType<'a>,
+            global_cell_id: EUTRANCGI,
+            cell_type: CellType,
             time_ue_stayed_in_cell: TimeUEStayedInCell,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 global_cell_id,
@@ -18490,21 +17967,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `LastVisitedEUTRANCellInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> LastVisitedEUTRANCellInformation<'static> {
-            LastVisitedEUTRANCellInformation {
-                global_cell_id: self.global_cell_id.into_owned(),
-                cell_type: self.cell_type.into_owned(),
-                time_ue_stayed_in_cell: self.time_ue_stayed_in_cell,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for LastVisitedEUTRANCellInformation<'_> {
+    impl AsnType for LastVisitedEUTRANCellInformation {
         const NAME: &'static str = "LastVisitedEUTRANCellInformation";
     }
-    impl<'a> Decode<'a> for LastVisitedEUTRANCellInformation<'a> {
+    impl<'a> Decode<'a> for LastVisitedEUTRANCellInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -18521,10 +17988,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("time_ue_stayed_in_cell")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -18539,7 +18009,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for LastVisitedEUTRANCellInformation<'_> {
+    impl Encode for LastVisitedEUTRANCellInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -18561,7 +18031,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LastVisitedEUTRANCellInformation<'_> {
+    impl Json for LastVisitedEUTRANCellInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("global-Cell-ID", self.global_cell_id.to_json());
@@ -18708,16 +18178,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct LastVisitedPSCellInformation<'a> {
-        pub ps_cell_id: Option<PSCellInformation<'a>>,
+    pub struct LastVisitedPSCellInformation {
+        pub ps_cell_id: Option<PSCellInformation>,
         pub time_stay: u16,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> LastVisitedPSCellInformation<'a> {
+    impl LastVisitedPSCellInformation {
         pub fn new(
-            ps_cell_id: Option<PSCellInformation<'a>>,
+            ps_cell_id: Option<PSCellInformation>,
             time_stay: u16,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ps_cell_id,
@@ -18725,20 +18195,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `LastVisitedPSCellInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> LastVisitedPSCellInformation<'static> {
-            LastVisitedPSCellInformation {
-                ps_cell_id: self.ps_cell_id.map(|value| value.into_owned()),
-                time_stay: self.time_stay,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for LastVisitedPSCellInformation<'_> {
+    impl AsnType for LastVisitedPSCellInformation {
         const NAME: &'static str = "LastVisitedPSCellInformation";
     }
-    impl<'a> Decode<'a> for LastVisitedPSCellInformation<'a> {
+    impl<'a> Decode<'a> for LastVisitedPSCellInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -18755,10 +18216,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("time_stay")),
             } as u16;
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -18772,7 +18236,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for LastVisitedPSCellInformation<'_> {
+    impl Encode for LastVisitedPSCellInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ps_cell_id.is_some());
@@ -18794,7 +18258,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LastVisitedPSCellInformation<'_> {
+    impl Json for LastVisitedPSCellInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -18826,31 +18290,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct LastVisitedPSCellList<'a>(pub Vec<LastVisitedPSCellInformation<'a>>);
-    impl<'a> crate::message::__Field<Vec<LastVisitedPSCellInformation<'a>>>
-        for LastVisitedPSCellList<'a>
-    {
+    pub struct LastVisitedPSCellList(pub Vec<LastVisitedPSCellInformation>);
+    impl crate::message::__Field<Vec<LastVisitedPSCellInformation>> for LastVisitedPSCellList {
         #[inline]
-        fn __field(self) -> Vec<LastVisitedPSCellInformation<'a>> {
+        fn __field(self) -> Vec<LastVisitedPSCellInformation> {
             self.0
         }
     }
-    impl<'a> LastVisitedPSCellList<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `LastVisitedPSCellList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> LastVisitedPSCellList<'static> {
-            LastVisitedPSCellList(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<LastVisitedPSCellInformation<'a>>> for LastVisitedPSCellList<'a> {
-        fn from(value: Vec<LastVisitedPSCellInformation<'a>>) -> Self {
+    impl From<Vec<LastVisitedPSCellInformation>> for LastVisitedPSCellList {
+        fn from(value: Vec<LastVisitedPSCellInformation>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for LastVisitedPSCellList<'_> {
+    impl AsnType for LastVisitedPSCellList {
         const NAME: &'static str = "LastVisitedPSCellList";
     }
-    impl<'a> Decode<'a> for LastVisitedPSCellList<'a> {
+    impl<'a> Decode<'a> for LastVisitedPSCellList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 8)?;
@@ -18862,7 +18317,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for LastVisitedPSCellList<'_> {
+    impl Encode for LastVisitedPSCellList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 8)?;
             for item in self.0.iter() {
@@ -18872,7 +18327,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LastVisitedPSCellList<'_> {
+    impl Json for LastVisitedPSCellList {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -19033,16 +18488,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ListeningSubframePattern<'a> {
+    pub struct ListeningSubframePattern {
         pub pattern_period: ListeningSubframePatternPatternPeriod,
         pub pattern_offset: u64,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ListeningSubframePattern<'a> {
+    impl ListeningSubframePattern {
         pub fn new(
             pattern_period: ListeningSubframePatternPatternPeriod,
             pattern_offset: u64,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 pattern_period,
@@ -19050,20 +18505,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ListeningSubframePattern<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ListeningSubframePattern<'static> {
-            ListeningSubframePattern {
-                pattern_period: self.pattern_period,
-                pattern_offset: self.pattern_offset,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ListeningSubframePattern<'_> {
+    impl AsnType for ListeningSubframePattern {
         const NAME: &'static str = "ListeningSubframePattern";
     }
-    impl<'a> Decode<'a> for ListeningSubframePattern<'a> {
+    impl<'a> Decode<'a> for ListeningSubframePattern {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -19076,10 +18522,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("pattern_offset")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -19093,7 +18542,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ListeningSubframePattern<'_> {
+    impl Encode for ListeningSubframePattern {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -19112,7 +18561,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ListeningSubframePattern<'_> {
+    impl Json for ListeningSubframePattern {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pattern-period", self.pattern_period.to_json());
@@ -19147,18 +18596,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct LoggedMBSFNMDT<'a> {
+    pub struct LoggedMBSFNMDT {
         pub logging_interval: LoggingInterval,
         pub logging_duration: LoggingDuration,
-        pub mbsfn_result_to_log: Option<MBSFNResultToLog<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub mbsfn_result_to_log: Option<MBSFNResultToLog>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> LoggedMBSFNMDT<'a> {
+    impl LoggedMBSFNMDT {
         pub fn new(
             logging_interval: LoggingInterval,
             logging_duration: LoggingDuration,
-            mbsfn_result_to_log: Option<MBSFNResultToLog<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            mbsfn_result_to_log: Option<MBSFNResultToLog>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 logging_interval,
@@ -19167,21 +18616,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `LoggedMBSFNMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> LoggedMBSFNMDT<'static> {
-            LoggedMBSFNMDT {
-                logging_interval: self.logging_interval,
-                logging_duration: self.logging_duration,
-                mbsfn_result_to_log: self.mbsfn_result_to_log.map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for LoggedMBSFNMDT<'_> {
+    impl AsnType for LoggedMBSFNMDT {
         const NAME: &'static str = "LoggedMBSFNMDT";
     }
-    impl<'a> Decode<'a> for LoggedMBSFNMDT<'a> {
+    impl<'a> Decode<'a> for LoggedMBSFNMDT {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -19202,10 +18641,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -19220,7 +18662,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for LoggedMBSFNMDT<'_> {
+    impl Encode for LoggedMBSFNMDT {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.mbsfn_result_to_log.is_some());
@@ -19245,7 +18687,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LoggedMBSFNMDT<'_> {
+    impl Json for LoggedMBSFNMDT {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("loggingInterval", self.logging_interval.to_json());
@@ -19287,16 +18729,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct LoggedMDT<'a> {
+    pub struct LoggedMDT {
         pub logging_interval: LoggingInterval,
         pub logging_duration: LoggingDuration,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> LoggedMDT<'a> {
+    impl LoggedMDT {
         pub fn new(
             logging_interval: LoggingInterval,
             logging_duration: LoggingDuration,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 logging_interval,
@@ -19304,20 +18746,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `LoggedMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> LoggedMDT<'static> {
-            LoggedMDT {
-                logging_interval: self.logging_interval,
-                logging_duration: self.logging_duration,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for LoggedMDT<'_> {
+    impl AsnType for LoggedMDT {
         const NAME: &'static str = "LoggedMDT";
     }
-    impl<'a> Decode<'a> for LoggedMDT<'a> {
+    impl<'a> Decode<'a> for LoggedMDT {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -19330,10 +18763,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("logging_duration")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -19347,7 +18783,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for LoggedMDT<'_> {
+    impl Encode for LoggedMDT {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -19366,7 +18802,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LoggedMDT<'_> {
+    impl Json for LoggedMDT {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("loggingInterval", self.logging_interval.to_json());
@@ -19395,34 +18831,24 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum LoggedMDTTrigger<'a> {
+    pub enum LoggedMDTTrigger {
         periodical(()),
-        eventTrigger(EventTrigger<'a>),
+        eventTrigger(EventTrigger),
     }
-    impl<'a> LoggedMDTTrigger<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `LoggedMDTTrigger<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> LoggedMDTTrigger<'static> {
-            match self {
-                Self::periodical(value) => LoggedMDTTrigger::periodical(value),
-                Self::eventTrigger(value) => LoggedMDTTrigger::eventTrigger(value.into_owned()),
-            }
-        }
-    }
-    impl<'a> From<()> for LoggedMDTTrigger<'a> {
+    impl From<()> for LoggedMDTTrigger {
         fn from(value: ()) -> Self {
             Self::periodical(value)
         }
     }
-    impl<'a> From<EventTrigger<'a>> for LoggedMDTTrigger<'a> {
-        fn from(value: EventTrigger<'a>) -> Self {
+    impl From<EventTrigger> for LoggedMDTTrigger {
+        fn from(value: EventTrigger) -> Self {
             Self::eventTrigger(value)
         }
     }
-    impl AsnType for LoggedMDTTrigger<'_> {
+    impl AsnType for LoggedMDTTrigger {
         const NAME: &'static str = "LoggedMDTTrigger";
     }
-    impl<'a> Decode<'a> for LoggedMDTTrigger<'a> {
+    impl<'a> Decode<'a> for LoggedMDTTrigger {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(2, 0, true)? {
                 0 => Self::periodical(()),
@@ -19430,7 +18856,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for LoggedMDTTrigger<'_> {
+    impl Encode for LoggedMDTTrigger {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::periodical(value) => {
@@ -19445,7 +18871,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LoggedMDTTrigger<'_> {
+    impl Json for LoggedMDTTrigger {
         fn to_json(&self) -> Value {
             match self {
                 Self::periodical(value) => json::alternative("periodical", Value::Null),
@@ -19631,16 +19057,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct M1PeriodicReporting<'a> {
+    pub struct M1PeriodicReporting {
         pub report_interval: ReportIntervalMDT,
         pub report_amount: ReportAmountMDT,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> M1PeriodicReporting<'a> {
+    impl M1PeriodicReporting {
         pub fn new(
             report_interval: ReportIntervalMDT,
             report_amount: ReportAmountMDT,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 report_interval,
@@ -19648,20 +19074,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `M1PeriodicReporting<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> M1PeriodicReporting<'static> {
-            M1PeriodicReporting {
-                report_interval: self.report_interval,
-                report_amount: self.report_amount,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for M1PeriodicReporting<'_> {
+    impl AsnType for M1PeriodicReporting {
         const NAME: &'static str = "M1PeriodicReporting";
     }
-    impl<'a> Decode<'a> for M1PeriodicReporting<'a> {
+    impl<'a> Decode<'a> for M1PeriodicReporting {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -19674,10 +19091,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("report_amount")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -19691,7 +19111,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for M1PeriodicReporting<'_> {
+    impl Encode for M1PeriodicReporting {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -19710,7 +19130,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M1PeriodicReporting<'_> {
+    impl Json for M1PeriodicReporting {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("reportInterval", self.report_interval.to_json());
@@ -19787,33 +19207,25 @@ pub mod s1_ap_ies {
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct M1ThresholdEventA2<'a> {
+    pub struct M1ThresholdEventA2 {
         pub measurement_threshold: MeasurementThresholdA2,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> M1ThresholdEventA2<'a> {
+    impl M1ThresholdEventA2 {
         pub fn new(
             measurement_threshold: MeasurementThresholdA2,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 measurement_threshold,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `M1ThresholdEventA2<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> M1ThresholdEventA2<'static> {
-            M1ThresholdEventA2 {
-                measurement_threshold: self.measurement_threshold,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for M1ThresholdEventA2<'_> {
+    impl AsnType for M1ThresholdEventA2 {
         const NAME: &'static str = "M1ThresholdEventA2";
     }
-    impl<'a> Decode<'a> for M1ThresholdEventA2<'a> {
+    impl<'a> Decode<'a> for M1ThresholdEventA2 {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -19822,10 +19234,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("measurement_threshold")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -19838,7 +19253,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for M1ThresholdEventA2<'_> {
+    impl Encode for M1ThresholdEventA2 {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -19854,7 +19269,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M1ThresholdEventA2<'_> {
+    impl Json for M1ThresholdEventA2 {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("measurementThreshold", self.measurement_threshold.to_json());
@@ -19879,33 +19294,25 @@ pub mod s1_ap_ies {
     #[doc = " M"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct M3Configuration<'a> {
+    pub struct M3Configuration {
         pub m3_period: M3period,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> M3Configuration<'a> {
+    impl M3Configuration {
         pub fn new(
             m3_period: M3period,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 m3_period,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `M3Configuration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> M3Configuration<'static> {
-            M3Configuration {
-                m3_period: self.m3_period,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for M3Configuration<'_> {
+    impl AsnType for M3Configuration {
         const NAME: &'static str = "M3Configuration";
     }
-    impl<'a> Decode<'a> for M3Configuration<'a> {
+    impl<'a> Decode<'a> for M3Configuration {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -19914,10 +19321,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("m3_period")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -19930,7 +19340,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for M3Configuration<'_> {
+    impl Encode for M3Configuration {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -19946,7 +19356,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M3Configuration<'_> {
+    impl Json for M3Configuration {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("m3period", self.m3_period.to_json());
@@ -20034,16 +19444,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct M4Configuration<'a> {
+    pub struct M4Configuration {
         pub m4_period: M4period,
         pub m4_links_to_log: LinksToLog,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> M4Configuration<'a> {
+    impl M4Configuration {
         pub fn new(
             m4_period: M4period,
             m4_links_to_log: LinksToLog,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 m4_period,
@@ -20051,20 +19461,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `M4Configuration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> M4Configuration<'static> {
-            M4Configuration {
-                m4_period: self.m4_period,
-                m4_links_to_log: self.m4_links_to_log,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for M4Configuration<'_> {
+    impl AsnType for M4Configuration {
         const NAME: &'static str = "M4Configuration";
     }
-    impl<'a> Decode<'a> for M4Configuration<'a> {
+    impl<'a> Decode<'a> for M4Configuration {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -20077,10 +19478,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("m4_links_to_log")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -20094,7 +19498,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for M4Configuration<'_> {
+    impl Encode for M4Configuration {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -20113,7 +19517,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M4Configuration<'_> {
+    impl Json for M4Configuration {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("m4period", self.m4_period.to_json());
@@ -20252,16 +19656,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct M5Configuration<'a> {
+    pub struct M5Configuration {
         pub m5_period: M5period,
         pub m5_links_to_log: LinksToLog,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> M5Configuration<'a> {
+    impl M5Configuration {
         pub fn new(
             m5_period: M5period,
             m5_links_to_log: LinksToLog,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 m5_period,
@@ -20269,20 +19673,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `M5Configuration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> M5Configuration<'static> {
-            M5Configuration {
-                m5_period: self.m5_period,
-                m5_links_to_log: self.m5_links_to_log,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for M5Configuration<'_> {
+    impl AsnType for M5Configuration {
         const NAME: &'static str = "M5Configuration";
     }
-    impl<'a> Decode<'a> for M5Configuration<'a> {
+    impl<'a> Decode<'a> for M5Configuration {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -20295,10 +19690,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("m5_links_to_log")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -20312,7 +19710,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for M5Configuration<'_> {
+    impl Encode for M5Configuration {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -20331,7 +19729,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M5Configuration<'_> {
+    impl Json for M5Configuration {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("m5period", self.m5_period.to_json());
@@ -20470,18 +19868,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct M6Configuration<'a> {
+    pub struct M6Configuration {
         pub m6_report_interval: M6reportInterval,
         pub m6_delay_threshold: Option<M6delayThreshold>,
         pub m6_links_to_log: LinksToLog,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> M6Configuration<'a> {
+    impl M6Configuration {
         pub fn new(
             m6_report_interval: M6reportInterval,
             m6_delay_threshold: Option<M6delayThreshold>,
             m6_links_to_log: LinksToLog,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 m6_report_interval,
@@ -20490,21 +19888,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `M6Configuration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> M6Configuration<'static> {
-            M6Configuration {
-                m6_report_interval: self.m6_report_interval,
-                m6_delay_threshold: self.m6_delay_threshold,
-                m6_links_to_log: self.m6_links_to_log,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for M6Configuration<'_> {
+    impl AsnType for M6Configuration {
         const NAME: &'static str = "M6Configuration";
     }
-    impl<'a> Decode<'a> for M6Configuration<'a> {
+    impl<'a> Decode<'a> for M6Configuration {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -20525,10 +19913,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("m6_links_to_log")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -20543,7 +19934,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for M6Configuration<'_> {
+    impl Encode for M6Configuration {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.m6_delay_threshold.is_some());
@@ -20568,7 +19959,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M6Configuration<'_> {
+    impl Json for M6Configuration {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("m6report-Interval", self.m6_report_interval.to_json());
@@ -20784,16 +20175,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct M7Configuration<'a> {
+    pub struct M7Configuration {
         pub m7_period: M7period,
         pub m7_links_to_log: LinksToLog,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> M7Configuration<'a> {
+    impl M7Configuration {
         pub fn new(
             m7_period: M7period,
             m7_links_to_log: LinksToLog,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 m7_period,
@@ -20801,20 +20192,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `M7Configuration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> M7Configuration<'static> {
-            M7Configuration {
-                m7_period: self.m7_period,
-                m7_links_to_log: self.m7_links_to_log,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for M7Configuration<'_> {
+    impl AsnType for M7Configuration {
         const NAME: &'static str = "M7Configuration";
     }
-    impl<'a> Decode<'a> for M7Configuration<'a> {
+    impl<'a> Decode<'a> for M7Configuration {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -20827,10 +20209,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("m7_links_to_log")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -20844,7 +20229,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for M7Configuration<'_> {
+    impl Encode for M7Configuration {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -20863,7 +20248,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M7Configuration<'_> {
+    impl Json for M7Configuration {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("m7period", self.m7_period.to_json());
@@ -20986,29 +20371,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct MBSFNResultToLog<'a>(pub Vec<MBSFNResultToLogInfo<'a>>);
-    impl<'a> crate::message::__Field<Vec<MBSFNResultToLogInfo<'a>>> for MBSFNResultToLog<'a> {
+    pub struct MBSFNResultToLog(pub Vec<MBSFNResultToLogInfo>);
+    impl crate::message::__Field<Vec<MBSFNResultToLogInfo>> for MBSFNResultToLog {
         #[inline]
-        fn __field(self) -> Vec<MBSFNResultToLogInfo<'a>> {
+        fn __field(self) -> Vec<MBSFNResultToLogInfo> {
             self.0
         }
     }
-    impl<'a> MBSFNResultToLog<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `MBSFNResultToLog<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> MBSFNResultToLog<'static> {
-            MBSFNResultToLog(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<MBSFNResultToLogInfo<'a>>> for MBSFNResultToLog<'a> {
-        fn from(value: Vec<MBSFNResultToLogInfo<'a>>) -> Self {
+    impl From<Vec<MBSFNResultToLogInfo>> for MBSFNResultToLog {
+        fn from(value: Vec<MBSFNResultToLogInfo>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for MBSFNResultToLog<'_> {
+    impl AsnType for MBSFNResultToLog {
         const NAME: &'static str = "MBSFN-ResultToLog";
     }
-    impl<'a> Decode<'a> for MBSFNResultToLog<'a> {
+    impl<'a> Decode<'a> for MBSFNResultToLog {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 8)?;
@@ -21020,7 +20398,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for MBSFNResultToLog<'_> {
+    impl Encode for MBSFNResultToLog {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 8)?;
             for item in self.0.iter() {
@@ -21030,7 +20408,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MBSFNResultToLog<'_> {
+    impl Json for MBSFNResultToLog {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -21042,16 +20420,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct MBSFNResultToLogInfo<'a> {
+    pub struct MBSFNResultToLogInfo {
         pub mbsfn_area_id: Option<u8>,
         pub carrier_freq: EARFCN,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> MBSFNResultToLogInfo<'a> {
+    impl MBSFNResultToLogInfo {
         pub fn new(
             mbsfn_area_id: Option<u8>,
             carrier_freq: EARFCN,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 mbsfn_area_id,
@@ -21059,20 +20437,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `MBSFNResultToLogInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> MBSFNResultToLogInfo<'static> {
-            MBSFNResultToLogInfo {
-                mbsfn_area_id: self.mbsfn_area_id,
-                carrier_freq: self.carrier_freq,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for MBSFNResultToLogInfo<'_> {
+    impl AsnType for MBSFNResultToLogInfo {
         const NAME: &'static str = "MBSFN-ResultToLogInfo";
     }
-    impl<'a> Decode<'a> for MBSFNResultToLogInfo<'a> {
+    impl<'a> Decode<'a> for MBSFNResultToLogInfo {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -21089,10 +20458,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("carrier_freq")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -21106,7 +20478,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for MBSFNResultToLogInfo<'_> {
+    impl Encode for MBSFNResultToLogInfo {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.mbsfn_area_id.is_some());
@@ -21128,7 +20500,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MBSFNResultToLogInfo<'_> {
+    impl Json for MBSFNResultToLogInfo {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -21219,16 +20591,16 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct MDTConfiguration<'a> {
         pub mdt_activation: MDTActivation,
-        pub area_scope_of_mdt: AreaScopeOfMDT<'a>,
+        pub area_scope_of_mdt: AreaScopeOfMDT,
         pub mdt_mode: MDTMode<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> MDTConfiguration<'a> {
         pub fn new(
             mdt_activation: MDTActivation,
-            area_scope_of_mdt: AreaScopeOfMDT<'a>,
+            area_scope_of_mdt: AreaScopeOfMDT,
             mdt_mode: MDTMode<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 mdt_activation,
@@ -21242,9 +20614,9 @@ pub mod s1_ap_ies {
         pub fn into_owned(self) -> MDTConfiguration<'static> {
             MDTConfiguration {
                 mdt_activation: self.mdt_activation,
-                area_scope_of_mdt: self.area_scope_of_mdt.into_owned(),
+                area_scope_of_mdt: self.area_scope_of_mdt,
                 mdt_mode: self.mdt_mode.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -21268,10 +20640,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("mdt_mode")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -21450,8 +20825,8 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum MDTMode<'a> {
-        immediateMDT(ImmediateMDT<'a>),
-        loggedMDT(LoggedMDT<'a>),
+        immediateMDT(ImmediateMDT),
+        loggedMDT(LoggedMDT),
         mDTMode_Extension(ProtocolIEField<'a>),
     }
     impl<'a> MDTMode<'a> {
@@ -21459,19 +20834,19 @@ pub mod s1_ap_ies {
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MDTMode<'static> {
             match self {
-                Self::immediateMDT(value) => MDTMode::immediateMDT(value.into_owned()),
-                Self::loggedMDT(value) => MDTMode::loggedMDT(value.into_owned()),
+                Self::immediateMDT(value) => MDTMode::immediateMDT(value),
+                Self::loggedMDT(value) => MDTMode::loggedMDT(value),
                 Self::mDTMode_Extension(value) => MDTMode::mDTMode_Extension(value.into_owned()),
             }
         }
     }
-    impl<'a> From<ImmediateMDT<'a>> for MDTMode<'a> {
-        fn from(value: ImmediateMDT<'a>) -> Self {
+    impl<'a> From<ImmediateMDT> for MDTMode<'a> {
+        fn from(value: ImmediateMDT) -> Self {
             Self::immediateMDT(value)
         }
     }
-    impl<'a> From<LoggedMDT<'a>> for MDTMode<'a> {
-        fn from(value: LoggedMDT<'a>) -> Self {
+    impl<'a> From<LoggedMDT> for MDTMode<'a> {
+        fn from(value: LoggedMDT) -> Self {
             Self::loggedMDT(value)
         }
     }
@@ -21749,34 +21124,24 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum MMEPagingTarget<'a> {
-        global_ENB_ID(GlobalENBID<'a>),
-        tAI(TAI<'a>),
+    pub enum MMEPagingTarget {
+        global_ENB_ID(GlobalENBID),
+        tAI(TAI),
     }
-    impl<'a> MMEPagingTarget<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEPagingTarget<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> MMEPagingTarget<'static> {
-            match self {
-                Self::global_ENB_ID(value) => MMEPagingTarget::global_ENB_ID(value.into_owned()),
-                Self::tAI(value) => MMEPagingTarget::tAI(value.into_owned()),
-            }
-        }
-    }
-    impl<'a> From<GlobalENBID<'a>> for MMEPagingTarget<'a> {
-        fn from(value: GlobalENBID<'a>) -> Self {
+    impl From<GlobalENBID> for MMEPagingTarget {
+        fn from(value: GlobalENBID) -> Self {
             Self::global_ENB_ID(value)
         }
     }
-    impl<'a> From<TAI<'a>> for MMEPagingTarget<'a> {
-        fn from(value: TAI<'a>) -> Self {
+    impl From<TAI> for MMEPagingTarget {
+        fn from(value: TAI) -> Self {
             Self::tAI(value)
         }
     }
-    impl AsnType for MMEPagingTarget<'_> {
+    impl AsnType for MMEPagingTarget {
         const NAME: &'static str = "MMEPagingTarget";
     }
-    impl<'a> Decode<'a> for MMEPagingTarget<'a> {
+    impl<'a> Decode<'a> for MMEPagingTarget {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(2, 0, true)? {
                 0 => Self::global_ENB_ID(GlobalENBID::decode(reader)?),
@@ -21784,7 +21149,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for MMEPagingTarget<'_> {
+    impl Encode for MMEPagingTarget {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::global_ENB_ID(value) => {
@@ -21800,7 +21165,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEPagingTarget<'_> {
+    impl Json for MMEPagingTarget {
         fn to_json(&self) -> Value {
             match self {
                 Self::global_ENB_ID(value) => json::alternative("global-ENB-ID", value.to_json()),
@@ -22190,58 +21555,40 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub enum MeasurementThresholdL1LoggedMDT<'a> {
+    pub enum MeasurementThresholdL1LoggedMDT {
         threshold_RSRP(ThresholdRSRP),
         threshold_RSRQ(ThresholdRSRQ),
-        choice_Extensions(ProtocolIEField<'a>),
+        choice_Extensions(ProtocolIEField<'static>),
     }
-    impl<'a> MeasurementThresholdL1LoggedMDT<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `MeasurementThresholdL1LoggedMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        #[inline]
-        pub fn into_owned(self) -> MeasurementThresholdL1LoggedMDT<'static> {
-            match self {
-                Self::threshold_RSRP(value) => {
-                    MeasurementThresholdL1LoggedMDT::threshold_RSRP(value)
-                }
-                Self::threshold_RSRQ(value) => {
-                    MeasurementThresholdL1LoggedMDT::threshold_RSRQ(value)
-                }
-                Self::choice_Extensions(value) => {
-                    MeasurementThresholdL1LoggedMDT::choice_Extensions(value.into_owned())
-                }
-            }
-        }
-    }
-    impl<'a> From<ThresholdRSRP> for MeasurementThresholdL1LoggedMDT<'a> {
+    impl From<ThresholdRSRP> for MeasurementThresholdL1LoggedMDT {
         fn from(value: ThresholdRSRP) -> Self {
             Self::threshold_RSRP(value)
         }
     }
-    impl<'a> From<ThresholdRSRQ> for MeasurementThresholdL1LoggedMDT<'a> {
+    impl From<ThresholdRSRQ> for MeasurementThresholdL1LoggedMDT {
         fn from(value: ThresholdRSRQ) -> Self {
             Self::threshold_RSRQ(value)
         }
     }
-    impl<'a> From<ProtocolIEField<'a>> for MeasurementThresholdL1LoggedMDT<'a> {
-        fn from(value: ProtocolIEField<'a>) -> Self {
+    impl From<ProtocolIEField<'static>> for MeasurementThresholdL1LoggedMDT {
+        fn from(value: ProtocolIEField<'static>) -> Self {
             Self::choice_Extensions(value)
         }
     }
-    impl AsnType for MeasurementThresholdL1LoggedMDT<'_> {
+    impl AsnType for MeasurementThresholdL1LoggedMDT {
         const NAME: &'static str = "MeasurementThresholdL1LoggedMDT";
     }
-    impl<'a> Decode<'a> for MeasurementThresholdL1LoggedMDT<'a> {
+    impl<'a> Decode<'a> for MeasurementThresholdL1LoggedMDT {
         #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(3, 0, false)? {
                 0 => Self::threshold_RSRP(ThresholdRSRP::decode(reader)?),
                 1 => Self::threshold_RSRQ(ThresholdRSRQ::decode(reader)?),
-                _ => Self::choice_Extensions(ProtocolIEField::decode(reader)?),
+                _ => Self::choice_Extensions((ProtocolIEField::decode(reader)?).into_owned()),
             })
         }
     }
-    impl Encode for MeasurementThresholdL1LoggedMDT<'_> {
+    impl Encode for MeasurementThresholdL1LoggedMDT {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
@@ -22262,7 +21609,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MeasurementThresholdL1LoggedMDT<'_> {
+    impl Json for MeasurementThresholdL1LoggedMDT {
         fn to_json(&self) -> Value {
             match self {
                 Self::threshold_RSRP(value) => json::alternative("threshold-RSRP", value.to_json()),
@@ -22539,16 +21886,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct MutingPatternInformation<'a> {
+    pub struct MutingPatternInformation {
         pub muting_pattern_period: MutingPatternInformationMutingPatternPeriod,
         pub muting_pattern_offset: Option<u64>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> MutingPatternInformation<'a> {
+    impl MutingPatternInformation {
         pub fn new(
             muting_pattern_period: MutingPatternInformationMutingPatternPeriod,
             muting_pattern_offset: Option<u64>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 muting_pattern_period,
@@ -22556,20 +21903,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `MutingPatternInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> MutingPatternInformation<'static> {
-            MutingPatternInformation {
-                muting_pattern_period: self.muting_pattern_period,
-                muting_pattern_offset: self.muting_pattern_offset,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for MutingPatternInformation<'_> {
+    impl AsnType for MutingPatternInformation {
         const NAME: &'static str = "MutingPatternInformation";
     }
-    impl<'a> Decode<'a> for MutingPatternInformation<'a> {
+    impl<'a> Decode<'a> for MutingPatternInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -22587,10 +21925,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -22604,7 +21945,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for MutingPatternInformation<'_> {
+    impl Encode for MutingPatternInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.muting_pattern_offset.is_some());
@@ -22626,7 +21967,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MutingPatternInformation<'_> {
+    impl Json for MutingPatternInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -22960,16 +22301,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct NBIoTPagingEDRXInformation<'a> {
+    pub struct NBIoTPagingEDRXInformation {
         pub nb_iot_paging_edrx_cycle: NBIoTPagingEDRXCycle,
         pub nb_iot_paging_time_window: Option<NBIoTPagingTimeWindow>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> NBIoTPagingEDRXInformation<'a> {
+    impl NBIoTPagingEDRXInformation {
         pub fn new(
             nb_iot_paging_edrx_cycle: NBIoTPagingEDRXCycle,
             nb_iot_paging_time_window: Option<NBIoTPagingTimeWindow>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 nb_iot_paging_edrx_cycle,
@@ -22977,20 +22318,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `NBIoTPagingEDRXInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> NBIoTPagingEDRXInformation<'static> {
-            NBIoTPagingEDRXInformation {
-                nb_iot_paging_edrx_cycle: self.nb_iot_paging_edrx_cycle,
-                nb_iot_paging_time_window: self.nb_iot_paging_time_window,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for NBIoTPagingEDRXInformation<'_> {
+    impl AsnType for NBIoTPagingEDRXInformation {
         const NAME: &'static str = "NB-IoT-Paging-eDRXInformation";
     }
-    impl<'a> Decode<'a> for NBIoTPagingEDRXInformation<'a> {
+    impl<'a> Decode<'a> for NBIoTPagingEDRXInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -23007,10 +22339,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -23024,7 +22359,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for NBIoTPagingEDRXInformation<'_> {
+    impl Encode for NBIoTPagingEDRXInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.nb_iot_paging_time_window.is_some());
@@ -23046,7 +22381,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NBIoTPagingEDRXInformation<'_> {
+    impl Json for NBIoTPagingEDRXInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -23324,33 +22659,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct NGENB<'a> {
-        pub global_ng_enb_id: GlobalENBID<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct NGENB {
+        pub global_ng_enb_id: GlobalENBID,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> NGENB<'a> {
+    impl NGENB {
         pub fn new(
-            global_ng_enb_id: GlobalENBID<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            global_ng_enb_id: GlobalENBID,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 global_ng_enb_id,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `NGENB<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> NGENB<'static> {
-            NGENB {
-                global_ng_enb_id: self.global_ng_enb_id.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for NGENB<'_> {
+    impl AsnType for NGENB {
         const NAME: &'static str = "NG-eNB";
     }
-    impl<'a> Decode<'a> for NGENB<'a> {
+    impl<'a> Decode<'a> for NGENB {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -23359,10 +22686,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("global_ng_enb_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -23375,7 +22705,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for NGENB<'_> {
+    impl Encode for NGENB {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -23391,7 +22721,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NGENB<'_> {
+    impl Json for NGENB {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("global-ng-eNB-ID", self.global_ng_enb_id.to_json());
@@ -23414,16 +22744,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct NRCGI<'a> {
+    pub struct NRCGI {
         pub plmn_identity: PLMNidentity,
         pub nr_cell_identity: NRCellIdentity,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> NRCGI<'a> {
+    impl NRCGI {
         pub fn new(
             plmn_identity: PLMNidentity,
             nr_cell_identity: NRCellIdentity,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -23431,20 +22761,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `NRCGI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> NRCGI<'static> {
-            NRCGI {
-                plmn_identity: self.plmn_identity,
-                nr_cell_identity: self.nr_cell_identity,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for NRCGI<'_> {
+    impl AsnType for NRCGI {
         const NAME: &'static str = "NR-CGI";
     }
-    impl<'a> Decode<'a> for NRCGI<'a> {
+    impl<'a> Decode<'a> for NRCGI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -23457,10 +22778,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("nr_cell_identity")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -23474,7 +22798,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for NRCGI<'_> {
+    impl Encode for NRCGI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -23493,7 +22817,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRCGI<'_> {
+    impl Json for NRCGI {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMNIdentity", self.plmn_identity.to_json());
@@ -23571,13 +22895,13 @@ pub mod s1_ap_ies {
     pub struct NRUESecurityCapabilities<'a> {
         pub nr_encryption_algorithms: NRencryptionAlgorithms<'a>,
         pub nr_integrity_protection_algorithms: NRintegrityProtectionAlgorithms<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> NRUESecurityCapabilities<'a> {
         pub fn new(
             nr_encryption_algorithms: NRencryptionAlgorithms<'a>,
             nr_integrity_protection_algorithms: NRintegrityProtectionAlgorithms<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 nr_encryption_algorithms,
@@ -23593,7 +22917,7 @@ pub mod s1_ap_ies {
                 nr_integrity_protection_algorithms: self
                     .nr_integrity_protection_algorithms
                     .into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -23614,10 +22938,13 @@ pub mod s1_ap_ies {
                     Err(error) => return Err(error.in_field("nr_integrity_protection_algorithms")),
                 };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -23691,33 +23018,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct NRUESidelinkAggregateMaximumBitrate<'a> {
+    pub struct NRUESidelinkAggregateMaximumBitrate {
         pub ue_aggregate_maximum_bit_rate: BitRate,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> NRUESidelinkAggregateMaximumBitrate<'a> {
+    impl NRUESidelinkAggregateMaximumBitrate {
         pub fn new(
             ue_aggregate_maximum_bit_rate: BitRate,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ue_aggregate_maximum_bit_rate,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `NRUESidelinkAggregateMaximumBitrate<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> NRUESidelinkAggregateMaximumBitrate<'static> {
-            NRUESidelinkAggregateMaximumBitrate {
-                ue_aggregate_maximum_bit_rate: self.ue_aggregate_maximum_bit_rate,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for NRUESidelinkAggregateMaximumBitrate<'_> {
+    impl AsnType for NRUESidelinkAggregateMaximumBitrate {
         const NAME: &'static str = "NRUESidelinkAggregateMaximumBitrate";
     }
-    impl<'a> Decode<'a> for NRUESidelinkAggregateMaximumBitrate<'a> {
+    impl<'a> Decode<'a> for NRUESidelinkAggregateMaximumBitrate {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -23726,10 +23045,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ue_aggregate_maximum_bit_rate")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -23742,7 +23064,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for NRUESidelinkAggregateMaximumBitrate<'_> {
+    impl Encode for NRUESidelinkAggregateMaximumBitrate {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -23758,7 +23080,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRUESidelinkAggregateMaximumBitrate<'_> {
+    impl Json for NRUESidelinkAggregateMaximumBitrate {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -23785,16 +23107,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct NRV2XServicesAuthorized<'a> {
+    pub struct NRV2XServicesAuthorized {
         pub vehicle_ue: Option<VehicleUE>,
         pub pedestrian_ue: Option<PedestrianUE>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> NRV2XServicesAuthorized<'a> {
+    impl NRV2XServicesAuthorized {
         pub fn new(
             vehicle_ue: Option<VehicleUE>,
             pedestrian_ue: Option<PedestrianUE>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 vehicle_ue,
@@ -23802,20 +23124,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `NRV2XServicesAuthorized<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> NRV2XServicesAuthorized<'static> {
-            NRV2XServicesAuthorized {
-                vehicle_ue: self.vehicle_ue,
-                pedestrian_ue: self.pedestrian_ue,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for NRV2XServicesAuthorized<'_> {
+    impl AsnType for NRV2XServicesAuthorized {
         const NAME: &'static str = "NRV2XServicesAuthorized";
     }
-    impl<'a> Decode<'a> for NRV2XServicesAuthorized<'a> {
+    impl<'a> Decode<'a> for NRV2XServicesAuthorized {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
@@ -23836,10 +23149,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -23853,7 +23169,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for NRV2XServicesAuthorized<'_> {
+    impl Encode for NRV2XServicesAuthorized {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.vehicle_ue.is_some());
@@ -23878,7 +23194,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRV2XServicesAuthorized<'_> {
+    impl Json for NRV2XServicesAuthorized {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -24424,16 +23740,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct PC5FlowBitRates<'a> {
+    pub struct PC5FlowBitRates {
         pub guaranteed_flow_bit_rate: BitRate,
         pub maximum_flow_bit_rate: BitRate,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> PC5FlowBitRates<'a> {
+    impl PC5FlowBitRates {
         pub fn new(
             guaranteed_flow_bit_rate: BitRate,
             maximum_flow_bit_rate: BitRate,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 guaranteed_flow_bit_rate,
@@ -24441,20 +23757,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `PC5FlowBitRates<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> PC5FlowBitRates<'static> {
-            PC5FlowBitRates {
-                guaranteed_flow_bit_rate: self.guaranteed_flow_bit_rate,
-                maximum_flow_bit_rate: self.maximum_flow_bit_rate,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for PC5FlowBitRates<'_> {
+    impl AsnType for PC5FlowBitRates {
         const NAME: &'static str = "PC5FlowBitRates";
     }
-    impl<'a> Decode<'a> for PC5FlowBitRates<'a> {
+    impl<'a> Decode<'a> for PC5FlowBitRates {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -24467,10 +23774,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("maximum_flow_bit_rate")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -24484,7 +23794,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for PC5FlowBitRates<'_> {
+    impl Encode for PC5FlowBitRates {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -24503,7 +23813,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PC5FlowBitRates<'_> {
+    impl Json for PC5FlowBitRates {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -24539,18 +23849,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct PC5QoSFlowItem<'a> {
+    pub struct PC5QoSFlowItem {
         pub pqi: FiveQI,
-        pub pc5_flow_bit_rates: Option<PC5FlowBitRates<'a>>,
+        pub pc5_flow_bit_rates: Option<PC5FlowBitRates>,
         pub range: Option<Range>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> PC5QoSFlowItem<'a> {
+    impl PC5QoSFlowItem {
         pub fn new(
             pqi: FiveQI,
-            pc5_flow_bit_rates: Option<PC5FlowBitRates<'a>>,
+            pc5_flow_bit_rates: Option<PC5FlowBitRates>,
             range: Option<Range>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 pqi,
@@ -24559,21 +23869,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `PC5QoSFlowItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> PC5QoSFlowItem<'static> {
-            PC5QoSFlowItem {
-                pqi: self.pqi,
-                pc5_flow_bit_rates: self.pc5_flow_bit_rates.map(|value| value.into_owned()),
-                range: self.range,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for PC5QoSFlowItem<'_> {
+    impl AsnType for PC5QoSFlowItem {
         const NAME: &'static str = "PC5QoSFlowItem";
     }
-    impl<'a> Decode<'a> for PC5QoSFlowItem<'a> {
+    impl<'a> Decode<'a> for PC5QoSFlowItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
@@ -24598,10 +23898,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -24616,7 +23919,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for PC5QoSFlowItem<'_> {
+    impl Encode for PC5QoSFlowItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.pc5_flow_bit_rates.is_some());
@@ -24644,7 +23947,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PC5QoSFlowItem<'_> {
+    impl Json for PC5QoSFlowItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pQI", self.pqi.to_json());
@@ -24678,29 +23981,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct PC5QoSFlowList<'a>(pub Vec<PC5QoSFlowItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<PC5QoSFlowItem<'a>>> for PC5QoSFlowList<'a> {
+    pub struct PC5QoSFlowList(pub Vec<PC5QoSFlowItem>);
+    impl crate::message::__Field<Vec<PC5QoSFlowItem>> for PC5QoSFlowList {
         #[inline]
-        fn __field(self) -> Vec<PC5QoSFlowItem<'a>> {
+        fn __field(self) -> Vec<PC5QoSFlowItem> {
             self.0
         }
     }
-    impl<'a> PC5QoSFlowList<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `PC5QoSFlowList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> PC5QoSFlowList<'static> {
-            PC5QoSFlowList(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<PC5QoSFlowItem<'a>>> for PC5QoSFlowList<'a> {
-        fn from(value: Vec<PC5QoSFlowItem<'a>>) -> Self {
+    impl From<Vec<PC5QoSFlowItem>> for PC5QoSFlowList {
+        fn from(value: Vec<PC5QoSFlowItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for PC5QoSFlowList<'_> {
+    impl AsnType for PC5QoSFlowList {
         const NAME: &'static str = "PC5QoSFlowList";
     }
-    impl<'a> Decode<'a> for PC5QoSFlowList<'a> {
+    impl<'a> Decode<'a> for PC5QoSFlowList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 2048)?;
@@ -24712,7 +24008,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for PC5QoSFlowList<'_> {
+    impl Encode for PC5QoSFlowList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 2048)?;
             for item in self.0.iter() {
@@ -24722,7 +24018,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PC5QoSFlowList<'_> {
+    impl Json for PC5QoSFlowList {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -24734,16 +24030,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct PC5QoSParameters<'a> {
-        pub pc5_qos_flow_list: PC5QoSFlowList<'a>,
+    pub struct PC5QoSParameters {
+        pub pc5_qos_flow_list: PC5QoSFlowList,
         pub pc5_link_aggregated_bit_rates: Option<BitRate>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> PC5QoSParameters<'a> {
+    impl PC5QoSParameters {
         pub fn new(
-            pc5_qos_flow_list: PC5QoSFlowList<'a>,
+            pc5_qos_flow_list: PC5QoSFlowList,
             pc5_link_aggregated_bit_rates: Option<BitRate>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 pc5_qos_flow_list,
@@ -24751,20 +24047,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `PC5QoSParameters<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> PC5QoSParameters<'static> {
-            PC5QoSParameters {
-                pc5_qos_flow_list: self.pc5_qos_flow_list.into_owned(),
-                pc5_link_aggregated_bit_rates: self.pc5_link_aggregated_bit_rates,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for PC5QoSParameters<'_> {
+    impl AsnType for PC5QoSParameters {
         const NAME: &'static str = "PC5QoSParameters";
     }
-    impl<'a> Decode<'a> for PC5QoSParameters<'a> {
+    impl<'a> Decode<'a> for PC5QoSParameters {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -24781,10 +24068,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -24798,7 +24088,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for PC5QoSParameters<'_> {
+    impl Encode for PC5QoSParameters {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.pc5_link_aggregated_bit_rates.is_some());
@@ -24820,7 +24110,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PC5QoSParameters<'_> {
+    impl Json for PC5QoSParameters {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pc5QoSFlowList", self.pc5_qos_flow_list.to_json());
@@ -24985,33 +24275,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct PLMNAreaBasedQMC<'a> {
+    pub struct PLMNAreaBasedQMC {
         pub plmn_listfor_qmc: PLMNListforQMC,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> PLMNAreaBasedQMC<'a> {
+    impl PLMNAreaBasedQMC {
         pub fn new(
             plmn_listfor_qmc: PLMNListforQMC,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_listfor_qmc,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `PLMNAreaBasedQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> PLMNAreaBasedQMC<'static> {
-            PLMNAreaBasedQMC {
-                plmn_listfor_qmc: self.plmn_listfor_qmc,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for PLMNAreaBasedQMC<'_> {
+    impl AsnType for PLMNAreaBasedQMC {
         const NAME: &'static str = "PLMNAreaBasedQMC";
     }
-    impl<'a> Decode<'a> for PLMNAreaBasedQMC<'a> {
+    impl<'a> Decode<'a> for PLMNAreaBasedQMC {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -25020,10 +24302,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("plmn_listfor_qmc")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -25036,7 +24321,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for PLMNAreaBasedQMC<'_> {
+    impl Encode for PLMNAreaBasedQMC {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -25052,7 +24337,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PLMNAreaBasedQMC<'_> {
+    impl Json for PLMNAreaBasedQMC {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("plmnListforQMC", self.plmn_listfor_qmc.to_json());
@@ -25234,30 +24519,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct PSCellInformation<'a> {
-        pub ncgi: NRCGI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct PSCellInformation {
+        pub ncgi: NRCGI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> PSCellInformation<'a> {
-        pub fn new(ncgi: NRCGI<'a>, ie_extensions: Option<ProtocolExtensionContainer<'a>>) -> Self {
+    impl PSCellInformation {
+        pub fn new(
+            ncgi: NRCGI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
+        ) -> Self {
             Self {
                 ncgi,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `PSCellInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> PSCellInformation<'static> {
-            PSCellInformation {
-                ncgi: self.ncgi.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for PSCellInformation<'_> {
+    impl AsnType for PSCellInformation {
         const NAME: &'static str = "PSCellInformation";
     }
-    impl<'a> Decode<'a> for PSCellInformation<'a> {
+    impl<'a> Decode<'a> for PSCellInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -25266,10 +24546,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ncgi")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -25282,7 +24565,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for PSCellInformation<'_> {
+    impl Encode for PSCellInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -25298,7 +24581,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PSCellInformation<'_> {
+    impl Json for PSCellInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("nCGI", self.ncgi.to_json());
@@ -25320,29 +24603,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct PWSfailedECGIList<'a>(pub Vec<EUTRANCGI<'a>>);
-    impl<'a> crate::message::__Field<Vec<EUTRANCGI<'a>>> for PWSfailedECGIList<'a> {
+    pub struct PWSfailedECGIList(pub Vec<EUTRANCGI>);
+    impl crate::message::__Field<Vec<EUTRANCGI>> for PWSfailedECGIList {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI<'a>> {
+        fn __field(self) -> Vec<EUTRANCGI> {
             self.0
         }
     }
-    impl<'a> PWSfailedECGIList<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `PWSfailedECGIList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> PWSfailedECGIList<'static> {
-            PWSfailedECGIList(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<EUTRANCGI<'a>>> for PWSfailedECGIList<'a> {
-        fn from(value: Vec<EUTRANCGI<'a>>) -> Self {
+    impl From<Vec<EUTRANCGI>> for PWSfailedECGIList {
+        fn from(value: Vec<EUTRANCGI>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for PWSfailedECGIList<'_> {
+    impl AsnType for PWSfailedECGIList {
         const NAME: &'static str = "PWSfailedECGIList";
     }
-    impl<'a> Decode<'a> for PWSfailedECGIList<'a> {
+    impl<'a> Decode<'a> for PWSfailedECGIList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 256)?;
@@ -25354,7 +24630,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for PWSfailedECGIList<'_> {
+    impl Encode for PWSfailedECGIList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 256)?;
             for item in self.0.iter() {
@@ -25364,7 +24640,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PWSfailedECGIList<'_> {
+    impl Json for PWSfailedECGIList {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -25492,16 +24768,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct PagingEDRXInformation<'a> {
+    pub struct PagingEDRXInformation {
         pub paging_edrx_cycle: PagingEDRXCycle,
         pub paging_time_window: Option<PagingTimeWindow>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> PagingEDRXInformation<'a> {
+    impl PagingEDRXInformation {
         pub fn new(
             paging_edrx_cycle: PagingEDRXCycle,
             paging_time_window: Option<PagingTimeWindow>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 paging_edrx_cycle,
@@ -25509,20 +24785,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `PagingEDRXInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> PagingEDRXInformation<'static> {
-            PagingEDRXInformation {
-                paging_edrx_cycle: self.paging_edrx_cycle,
-                paging_time_window: self.paging_time_window,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for PagingEDRXInformation<'_> {
+    impl AsnType for PagingEDRXInformation {
         const NAME: &'static str = "Paging-eDRXInformation";
     }
-    impl<'a> Decode<'a> for PagingEDRXInformation<'a> {
+    impl<'a> Decode<'a> for PagingEDRXInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -25539,10 +24806,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -25556,7 +24826,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for PagingEDRXInformation<'_> {
+    impl Encode for PagingEDRXInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.paging_time_window.is_some());
@@ -25578,7 +24848,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PagingEDRXInformation<'_> {
+    impl Json for PagingEDRXInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("paging-eDRX-Cycle", self.paging_edrx_cycle.to_json());
@@ -25650,18 +24920,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct PagingAttemptInformation<'a> {
+    pub struct PagingAttemptInformation {
         pub paging_attempt_count: PagingAttemptCount,
         pub intended_number_of_paging_attempts: IntendedNumberOfPagingAttempts,
         pub next_paging_area_scope: Option<NextPagingAreaScope>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> PagingAttemptInformation<'a> {
+    impl PagingAttemptInformation {
         pub fn new(
             paging_attempt_count: PagingAttemptCount,
             intended_number_of_paging_attempts: IntendedNumberOfPagingAttempts,
             next_paging_area_scope: Option<NextPagingAreaScope>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 paging_attempt_count,
@@ -25670,21 +24940,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `PagingAttemptInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> PagingAttemptInformation<'static> {
-            PagingAttemptInformation {
-                paging_attempt_count: self.paging_attempt_count,
-                intended_number_of_paging_attempts: self.intended_number_of_paging_attempts,
-                next_paging_area_scope: self.next_paging_area_scope,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for PagingAttemptInformation<'_> {
+    impl AsnType for PagingAttemptInformation {
         const NAME: &'static str = "PagingAttemptInformation";
     }
-    impl<'a> Decode<'a> for PagingAttemptInformation<'a> {
+    impl<'a> Decode<'a> for PagingAttemptInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -25706,10 +24966,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -25724,7 +24987,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for PagingAttemptInformation<'_> {
+    impl Encode for PagingAttemptInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.next_paging_area_scope.is_some());
@@ -25749,7 +25012,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PagingAttemptInformation<'_> {
+    impl Json for PagingAttemptInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pagingAttemptCount", self.paging_attempt_count.to_json());
@@ -26422,16 +25685,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ProSeAuthorized<'a> {
+    pub struct ProSeAuthorized {
         pub prose_direct_discovery: Option<ProSeDirectDiscovery>,
         pub prose_direct_communication: Option<ProSeDirectCommunication>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ProSeAuthorized<'a> {
+    impl ProSeAuthorized {
         pub fn new(
             prose_direct_discovery: Option<ProSeDirectDiscovery>,
             prose_direct_communication: Option<ProSeDirectCommunication>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 prose_direct_discovery,
@@ -26439,20 +25702,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ProSeAuthorized<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ProSeAuthorized<'static> {
-            ProSeAuthorized {
-                prose_direct_discovery: self.prose_direct_discovery,
-                prose_direct_communication: self.prose_direct_communication,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ProSeAuthorized<'_> {
+    impl AsnType for ProSeAuthorized {
         const NAME: &'static str = "ProSeAuthorized";
     }
-    impl<'a> Decode<'a> for ProSeAuthorized<'a> {
+    impl<'a> Decode<'a> for ProSeAuthorized {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
@@ -26473,10 +25727,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -26490,7 +25747,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ProSeAuthorized<'_> {
+    impl Encode for ProSeAuthorized {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.prose_direct_discovery.is_some());
@@ -26515,7 +25772,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProSeAuthorized<'_> {
+    impl Json for ProSeAuthorized {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -26924,13 +26181,13 @@ pub mod s1_ap_ies {
     pub struct RATRestrictionsItem<'a> {
         pub plmn_identity: PLMNidentity,
         pub rat_restriction_information: BitString<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> RATRestrictionsItem<'a> {
         pub fn new(
             plmn_identity: PLMNidentity,
             rat_restriction_information: BitString<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -26944,7 +26201,7 @@ pub mod s1_ap_ies {
             RATRestrictionsItem {
                 plmn_identity: self.plmn_identity,
                 rat_restriction_information: self.rat_restriction_information.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -26964,10 +26221,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("rat_restriction_information")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -27166,57 +26426,37 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum RIMRoutingAddress<'a> {
-        gERAN_Cell_ID(GERANCellID<'a>),
-        targetRNC_ID(TargetRNCID<'a>),
+    pub enum RIMRoutingAddress {
+        gERAN_Cell_ID(GERANCellID),
+        targetRNC_ID(TargetRNCID),
         eHRPD_Sector_ID([u8; 16]),
     }
-    impl<'a> RIMRoutingAddress<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `RIMRoutingAddress<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> RIMRoutingAddress<'static> {
-            match self {
-                Self::gERAN_Cell_ID(value) => RIMRoutingAddress::gERAN_Cell_ID(value.into_owned()),
-                Self::targetRNC_ID(value) => RIMRoutingAddress::targetRNC_ID(value.into_owned()),
-                Self::eHRPD_Sector_ID(value) => RIMRoutingAddress::eHRPD_Sector_ID(value),
-            }
-        }
-    }
-    impl<'a> From<GERANCellID<'a>> for RIMRoutingAddress<'a> {
-        fn from(value: GERANCellID<'a>) -> Self {
+    impl From<GERANCellID> for RIMRoutingAddress {
+        fn from(value: GERANCellID) -> Self {
             Self::gERAN_Cell_ID(value)
         }
     }
-    impl<'a> From<TargetRNCID<'a>> for RIMRoutingAddress<'a> {
-        fn from(value: TargetRNCID<'a>) -> Self {
+    impl From<TargetRNCID> for RIMRoutingAddress {
+        fn from(value: TargetRNCID) -> Self {
             Self::targetRNC_ID(value)
         }
     }
-    impl<'a> From<[u8; 16]> for RIMRoutingAddress<'a> {
+    impl From<[u8; 16]> for RIMRoutingAddress {
         fn from(value: [u8; 16]) -> Self {
             Self::eHRPD_Sector_ID(value)
         }
     }
-    impl AsnType for RIMRoutingAddress<'_> {
+    impl AsnType for RIMRoutingAddress {
         const NAME: &'static str = "RIMRoutingAddress";
     }
-    impl<'a> Decode<'a> for RIMRoutingAddress<'a> {
+    impl<'a> Decode<'a> for RIMRoutingAddress {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(1, 2, true)? {
                 0 => Self::gERAN_Cell_ID(GERANCellID::decode(reader)?),
                 1 => {
                     let octets = reader.open_type()?;
-                    match octets.as_borrowed() {
-                        Some(octets) => {
-                            let reader = &mut Reader::new(octets);
-                            Self::targetRNC_ID(TargetRNCID::decode(reader)?)
-                        }
-                        None => {
-                            let reader = &mut Reader::new(&octets);
-                            let value = TargetRNCID::decode(reader)?;
-                            Self::targetRNC_ID(value.into_owned())
-                        }
-                    }
+                    let reader = &mut Reader::new(&octets);
+                    Self::targetRNC_ID(TargetRNCID::decode(reader)?)
                 }
                 _ => {
                     let octets = reader.open_type()?;
@@ -27226,7 +26466,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for RIMRoutingAddress<'_> {
+    impl Encode for RIMRoutingAddress {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::gERAN_Cell_ID(value) => {
@@ -27250,7 +26490,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RIMRoutingAddress<'_> {
+    impl Json for RIMRoutingAddress {
         fn to_json(&self) -> Value {
             match self {
                 Self::gERAN_Cell_ID(value) => json::alternative("gERAN-Cell-ID", value.to_json()),
@@ -27286,14 +26526,14 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct RIMTransfer<'a> {
         pub rim_information: RIMInformation<'a>,
-        pub rim_routing_address: Option<RIMRoutingAddress<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub rim_routing_address: Option<RIMRoutingAddress>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> RIMTransfer<'a> {
         pub fn new(
             rim_information: RIMInformation<'a>,
-            rim_routing_address: Option<RIMRoutingAddress<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            rim_routing_address: Option<RIMRoutingAddress>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 rim_information,
@@ -27306,8 +26546,8 @@ pub mod s1_ap_ies {
         pub fn into_owned(self) -> RIMTransfer<'static> {
             RIMTransfer {
                 rim_information: self.rim_information.into_owned(),
-                rim_routing_address: self.rim_routing_address.map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                rim_routing_address: self.rim_routing_address,
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -27331,10 +26571,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -27409,7 +26652,7 @@ pub mod s1_ap_ies {
         pub ue_rlf_report_container: UERLFReportContainer<'a>,
         pub ue_rlf_report_container_for_extended_bands:
             Option<UERLFReportContainerForExtendedBands<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> RLFReportInformation<'a> {
         pub fn new(
@@ -27417,7 +26660,7 @@ pub mod s1_ap_ies {
             ue_rlf_report_container_for_extended_bands: Option<
                 UERLFReportContainerForExtendedBands<'a>,
             >,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ue_rlf_report_container,
@@ -27433,7 +26676,7 @@ pub mod s1_ap_ies {
                 ue_rlf_report_container_for_extended_bands: self
                     .ue_rlf_report_container_for_extended_bands
                     .map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -27459,10 +26702,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -27911,16 +27157,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct RecommendedCellItem<'a> {
-        pub eutran_cgi: EUTRANCGI<'a>,
+    pub struct RecommendedCellItem {
+        pub eutran_cgi: EUTRANCGI,
         pub time_stayed_in_cell: Option<u16>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> RecommendedCellItem<'a> {
+    impl RecommendedCellItem {
         pub fn new(
-            eutran_cgi: EUTRANCGI<'a>,
+            eutran_cgi: EUTRANCGI,
             time_stayed_in_cell: Option<u16>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 eutran_cgi,
@@ -27928,20 +27174,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `RecommendedCellItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> RecommendedCellItem<'static> {
-            RecommendedCellItem {
-                eutran_cgi: self.eutran_cgi.into_owned(),
-                time_stayed_in_cell: self.time_stayed_in_cell,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for RecommendedCellItem<'_> {
+    impl AsnType for RecommendedCellItem {
         const NAME: &'static str = "RecommendedCellItem";
     }
-    impl<'a> Decode<'a> for RecommendedCellItem<'a> {
+    impl<'a> Decode<'a> for RecommendedCellItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -27958,10 +27195,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -27975,7 +27215,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for RecommendedCellItem<'_> {
+    impl Encode for RecommendedCellItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.time_stayed_in_cell.is_some());
@@ -27997,7 +27237,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RecommendedCellItem<'_> {
+    impl Json for RecommendedCellItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("eUTRAN-CGI", self.eutran_cgi.to_json());
@@ -28088,12 +27328,12 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct RecommendedCellsForPaging<'a> {
         pub recommended_cell_list: RecommendedCellList<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> RecommendedCellsForPaging<'a> {
         pub fn new(
             recommended_cell_list: RecommendedCellList<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 recommended_cell_list,
@@ -28105,7 +27345,7 @@ pub mod s1_ap_ies {
         pub fn into_owned(self) -> RecommendedCellsForPaging<'static> {
             RecommendedCellsForPaging {
                 recommended_cell_list: self.recommended_cell_list.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -28121,10 +27361,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("recommended_cell_list")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -28177,33 +27420,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct RecommendedENBItem<'a> {
-        pub mme_paging_target: MMEPagingTarget<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct RecommendedENBItem {
+        pub mme_paging_target: MMEPagingTarget,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> RecommendedENBItem<'a> {
+    impl RecommendedENBItem {
         pub fn new(
-            mme_paging_target: MMEPagingTarget<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            mme_paging_target: MMEPagingTarget,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 mme_paging_target,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `RecommendedENBItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> RecommendedENBItem<'static> {
-            RecommendedENBItem {
-                mme_paging_target: self.mme_paging_target.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for RecommendedENBItem<'_> {
+    impl AsnType for RecommendedENBItem {
         const NAME: &'static str = "RecommendedENBItem";
     }
-    impl<'a> Decode<'a> for RecommendedENBItem<'a> {
+    impl<'a> Decode<'a> for RecommendedENBItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -28212,10 +27447,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("mme_paging_target")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -28228,7 +27466,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for RecommendedENBItem<'_> {
+    impl Encode for RecommendedENBItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -28244,7 +27482,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RecommendedENBItem<'_> {
+    impl Json for RecommendedENBItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("mMEPagingTarget", self.mme_paging_target.to_json());
@@ -28324,12 +27562,12 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct RecommendedENBsForPaging<'a> {
         pub recommended_enb_list: RecommendedENBList<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> RecommendedENBsForPaging<'a> {
         pub fn new(
             recommended_enb_list: RecommendedENBList<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 recommended_enb_list,
@@ -28341,7 +27579,7 @@ pub mod s1_ap_ies {
         pub fn into_owned(self) -> RecommendedENBsForPaging<'static> {
             RecommendedENBsForPaging {
                 recommended_enb_list: self.recommended_enb_list.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -28357,10 +27595,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("recommended_enb_list")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -28707,16 +27948,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct RequestType<'a> {
+    pub struct RequestType {
         pub event_type: EventType,
         pub report_area: ReportArea,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> RequestType<'a> {
+    impl RequestType {
         pub fn new(
             event_type: EventType,
             report_area: ReportArea,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 event_type,
@@ -28724,20 +27965,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `RequestType<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> RequestType<'static> {
-            RequestType {
-                event_type: self.event_type,
-                report_area: self.report_area,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for RequestType<'_> {
+    impl AsnType for RequestType {
         const NAME: &'static str = "RequestType";
     }
-    impl<'a> Decode<'a> for RequestType<'a> {
+    impl<'a> Decode<'a> for RequestType {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -28750,10 +27982,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("report_area")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -28767,7 +28002,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for RequestType<'_> {
+    impl Encode for RequestType {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -28786,7 +28021,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RequestType<'_> {
+    impl Json for RequestType {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("eventType", self.event_type.to_json());
@@ -28854,33 +28089,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct RequestedTNLInfo<'a> {
+    pub struct RequestedTNLInfo {
         pub plmn_identity: PLMNidentity,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> RequestedTNLInfo<'a> {
+    impl RequestedTNLInfo {
         pub fn new(
             plmn_identity: PLMNidentity,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `RequestedTNLInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> RequestedTNLInfo<'static> {
-            RequestedTNLInfo {
-                plmn_identity: self.plmn_identity,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for RequestedTNLInfo<'_> {
+    impl AsnType for RequestedTNLInfo {
         const NAME: &'static str = "RequestedTNLInfo";
     }
-    impl<'a> Decode<'a> for RequestedTNLInfo<'a> {
+    impl<'a> Decode<'a> for RequestedTNLInfo {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -28889,10 +28116,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("plmn_identity")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -28905,7 +28135,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for RequestedTNLInfo<'_> {
+    impl Encode for RequestedTNLInfo {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -28921,7 +28151,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RequestedTNLInfo<'_> {
+    impl Json for RequestedTNLInfo {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMNidentity", self.plmn_identity.to_json());
@@ -28984,16 +28214,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct STMSI<'a> {
+    pub struct STMSI {
         pub mmec: MMECode,
         pub m_tmsi: MTMSI,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> STMSI<'a> {
+    impl STMSI {
         pub fn new(
             mmec: MMECode,
             m_tmsi: MTMSI,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 mmec,
@@ -29001,20 +28231,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `STMSI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> STMSI<'static> {
-            STMSI {
-                mmec: self.mmec,
-                m_tmsi: self.m_tmsi,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for STMSI<'_> {
+    impl AsnType for STMSI {
         const NAME: &'static str = "S-TMSI";
     }
-    impl<'a> Decode<'a> for STMSI<'a> {
+    impl<'a> Decode<'a> for STMSI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -29027,10 +28248,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("m_tmsi")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -29044,7 +28268,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for STMSI<'_> {
+    impl Encode for STMSI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -29063,7 +28287,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for STMSI<'_> {
+    impl Json for STMSI {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("mMEC", self.mmec.to_json());
@@ -29090,17 +28314,17 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub struct SONConfigurationTransfer<'a> {
-        pub target_enb_id: TargeteNBID<'a>,
-        pub source_enb_id: SourceeNBID<'a>,
+        pub target_enb_id: TargeteNBID,
+        pub source_enb_id: SourceeNBID,
         pub son_information: SONInformation<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> SONConfigurationTransfer<'a> {
         pub fn new(
-            target_enb_id: TargeteNBID<'a>,
-            source_enb_id: SourceeNBID<'a>,
+            target_enb_id: TargeteNBID,
+            source_enb_id: SourceeNBID,
             son_information: SONInformation<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 target_enb_id,
@@ -29113,10 +28337,10 @@ pub mod s1_ap_ies {
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SONConfigurationTransfer<'static> {
             SONConfigurationTransfer {
-                target_enb_id: self.target_enb_id.into_owned(),
-                source_enb_id: self.source_enb_id.into_owned(),
+                target_enb_id: self.target_enb_id,
+                source_enb_id: self.source_enb_id,
                 son_information: self.son_information.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -29140,10 +28364,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("son_information")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -29345,12 +28572,12 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct SONInformationReply<'a> {
         pub x2_tnl_configuration_info: Option<X2TNLConfigurationInfo<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> SONInformationReply<'a> {
         pub fn new(
             x2_tnl_configuration_info: Option<X2TNLConfigurationInfo<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 x2_tnl_configuration_info,
@@ -29364,7 +28591,7 @@ pub mod s1_ap_ies {
                 x2_tnl_configuration_info: self
                     .x2_tnl_configuration_info
                     .map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -29384,10 +28611,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -29694,18 +28924,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ScheduledCommunicationTime<'a> {
+    pub struct ScheduledCommunicationTime {
         pub dayof_week: Option<Bits>,
         pub timeof_day_start: Option<u64>,
         pub timeof_day_end: Option<u64>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ScheduledCommunicationTime<'a> {
+    impl ScheduledCommunicationTime {
         pub fn new(
             dayof_week: Option<Bits>,
             timeof_day_start: Option<u64>,
             timeof_day_end: Option<u64>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 dayof_week,
@@ -29714,21 +28944,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ScheduledCommunicationTime<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ScheduledCommunicationTime<'static> {
-            ScheduledCommunicationTime {
-                dayof_week: self.dayof_week,
-                timeof_day_start: self.timeof_day_start,
-                timeof_day_end: self.timeof_day_end,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ScheduledCommunicationTime<'_> {
+    impl AsnType for ScheduledCommunicationTime {
         const NAME: &'static str = "ScheduledCommunicationTime";
     }
-    impl<'a> Decode<'a> for ScheduledCommunicationTime<'a> {
+    impl<'a> Decode<'a> for ScheduledCommunicationTime {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(4)?;
@@ -29757,10 +28977,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -29775,7 +28998,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ScheduledCommunicationTime<'_> {
+    impl Encode for ScheduledCommunicationTime {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.dayof_week.is_some());
@@ -29806,7 +29029,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ScheduledCommunicationTime<'_> {
+    impl Json for ScheduledCommunicationTime {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -29867,14 +29090,14 @@ pub mod s1_ap_ies {
         pub e_rab_id: ERABID,
         pub secondary_rat_type: SecondaryRATType,
         pub e_rab_usage_report_list: ERABUsageReportList<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> SecondaryRATDataUsageReportItem<'a> {
         pub fn new(
             e_rab_id: ERABID,
             secondary_rat_type: SecondaryRATType,
             e_rab_usage_report_list: ERABUsageReportList<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -29890,7 +29113,7 @@ pub mod s1_ap_ies {
                 e_rab_id: self.e_rab_id,
                 secondary_rat_type: self.secondary_rat_type,
                 e_rab_usage_report_list: self.e_rab_usage_report_list.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -29914,10 +29137,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("e_rab_usage_report_list")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -30140,13 +29366,13 @@ pub mod s1_ap_ies {
     pub struct SecurityContext<'a> {
         pub next_hop_chaining_count: u8,
         pub next_hop_parameter: SecurityKey<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> SecurityContext<'a> {
         pub fn new(
             next_hop_chaining_count: u8,
             next_hop_parameter: SecurityKey<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 next_hop_chaining_count,
@@ -30160,7 +29386,7 @@ pub mod s1_ap_ies {
             SecurityContext {
                 next_hop_chaining_count: self.next_hop_chaining_count,
                 next_hop_parameter: self.next_hop_parameter.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -30180,10 +29406,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("next_hop_parameter")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -30250,33 +29479,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct SecurityIndication<'a> {
+    pub struct SecurityIndication {
         pub integrity_protection_indication: IntegrityProtectionIndication,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> SecurityIndication<'a> {
+    impl SecurityIndication {
         pub fn new(
             integrity_protection_indication: IntegrityProtectionIndication,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 integrity_protection_indication,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SecurityIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> SecurityIndication<'static> {
-            SecurityIndication {
-                integrity_protection_indication: self.integrity_protection_indication,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for SecurityIndication<'_> {
+    impl AsnType for SecurityIndication {
         const NAME: &'static str = "SecurityIndication";
     }
-    impl<'a> Decode<'a> for SecurityIndication<'a> {
+    impl<'a> Decode<'a> for SecurityIndication {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -30286,10 +29507,13 @@ pub mod s1_ap_ies {
                     Err(error) => return Err(error.in_field("integrity_protection_indication")),
                 };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -30302,7 +29526,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for SecurityIndication<'_> {
+    impl Encode for SecurityIndication {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -30318,7 +29542,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SecurityIndication<'_> {
+    impl Json for SecurityIndication {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -30403,33 +29627,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct SecurityResult<'a> {
+    pub struct SecurityResult {
         pub integrity_protection_result: IntegrityProtectionResult,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> SecurityResult<'a> {
+    impl SecurityResult {
         pub fn new(
             integrity_protection_result: IntegrityProtectionResult,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 integrity_protection_result,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SecurityResult<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> SecurityResult<'static> {
-            SecurityResult {
-                integrity_protection_result: self.integrity_protection_result,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for SecurityResult<'_> {
+    impl AsnType for SecurityResult {
         const NAME: &'static str = "SecurityResult";
     }
-    impl<'a> Decode<'a> for SecurityResult<'a> {
+    impl<'a> Decode<'a> for SecurityResult {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -30438,10 +29654,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("integrity_protection_result")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -30454,7 +29673,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for SecurityResult<'_> {
+    impl Encode for SecurityResult {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -30470,7 +29689,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SecurityResult<'_> {
+    impl Json for SecurityResult {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -30540,33 +29759,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct SensorMeasConfigNameItem<'a> {
-        pub sensor_name_config: SensorNameConfig<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct SensorMeasConfigNameItem {
+        pub sensor_name_config: SensorNameConfig,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> SensorMeasConfigNameItem<'a> {
+    impl SensorMeasConfigNameItem {
         pub fn new(
-            sensor_name_config: SensorNameConfig<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            sensor_name_config: SensorNameConfig,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 sensor_name_config,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SensorMeasConfigNameItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> SensorMeasConfigNameItem<'static> {
-            SensorMeasConfigNameItem {
-                sensor_name_config: self.sensor_name_config.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for SensorMeasConfigNameItem<'_> {
+    impl AsnType for SensorMeasConfigNameItem {
         const NAME: &'static str = "SensorMeasConfigNameItem";
     }
-    impl<'a> Decode<'a> for SensorMeasConfigNameItem<'a> {
+    impl<'a> Decode<'a> for SensorMeasConfigNameItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -30575,10 +29786,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("sensor_name_config")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -30591,7 +29805,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for SensorMeasConfigNameItem<'_> {
+    impl Encode for SensorMeasConfigNameItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -30607,7 +29821,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SensorMeasConfigNameItem<'_> {
+    impl Json for SensorMeasConfigNameItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("sensorNameConfig", self.sensor_name_config.to_json());
@@ -30629,31 +29843,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct SensorMeasConfigNameList<'a>(pub Vec<SensorMeasConfigNameItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<SensorMeasConfigNameItem<'a>>>
-        for SensorMeasConfigNameList<'a>
-    {
+    pub struct SensorMeasConfigNameList(pub Vec<SensorMeasConfigNameItem>);
+    impl crate::message::__Field<Vec<SensorMeasConfigNameItem>> for SensorMeasConfigNameList {
         #[inline]
-        fn __field(self) -> Vec<SensorMeasConfigNameItem<'a>> {
+        fn __field(self) -> Vec<SensorMeasConfigNameItem> {
             self.0
         }
     }
-    impl<'a> SensorMeasConfigNameList<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SensorMeasConfigNameList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> SensorMeasConfigNameList<'static> {
-            SensorMeasConfigNameList(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<SensorMeasConfigNameItem<'a>>> for SensorMeasConfigNameList<'a> {
-        fn from(value: Vec<SensorMeasConfigNameItem<'a>>) -> Self {
+    impl From<Vec<SensorMeasConfigNameItem>> for SensorMeasConfigNameList {
+        fn from(value: Vec<SensorMeasConfigNameItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for SensorMeasConfigNameList<'_> {
+    impl AsnType for SensorMeasConfigNameList {
         const NAME: &'static str = "SensorMeasConfigNameList";
     }
-    impl<'a> Decode<'a> for SensorMeasConfigNameList<'a> {
+    impl<'a> Decode<'a> for SensorMeasConfigNameList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 3)?;
@@ -30665,7 +29870,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for SensorMeasConfigNameList<'_> {
+    impl Encode for SensorMeasConfigNameList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 3)?;
             for item in self.0.iter() {
@@ -30675,7 +29880,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SensorMeasConfigNameList<'_> {
+    impl Json for SensorMeasConfigNameList {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -30687,16 +29892,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct SensorMeasurementConfiguration<'a> {
+    pub struct SensorMeasurementConfiguration {
         pub sensor_meas_config: SensorMeasConfig,
-        pub sensor_meas_config_name_list: Option<SensorMeasConfigNameList<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub sensor_meas_config_name_list: Option<SensorMeasConfigNameList>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> SensorMeasurementConfiguration<'a> {
+    impl SensorMeasurementConfiguration {
         pub fn new(
             sensor_meas_config: SensorMeasConfig,
-            sensor_meas_config_name_list: Option<SensorMeasConfigNameList<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            sensor_meas_config_name_list: Option<SensorMeasConfigNameList>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 sensor_meas_config,
@@ -30704,22 +29909,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SensorMeasurementConfiguration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> SensorMeasurementConfiguration<'static> {
-            SensorMeasurementConfiguration {
-                sensor_meas_config: self.sensor_meas_config,
-                sensor_meas_config_name_list: self
-                    .sensor_meas_config_name_list
-                    .map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for SensorMeasurementConfiguration<'_> {
+    impl AsnType for SensorMeasurementConfiguration {
         const NAME: &'static str = "SensorMeasurementConfiguration";
     }
-    impl<'a> Decode<'a> for SensorMeasurementConfiguration<'a> {
+    impl<'a> Decode<'a> for SensorMeasurementConfiguration {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -30736,10 +29930,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -30753,7 +29950,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for SensorMeasurementConfiguration<'_> {
+    impl Encode for SensorMeasurementConfiguration {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.sensor_meas_config_name_list.is_some());
@@ -30775,7 +29972,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SensorMeasurementConfiguration<'_> {
+    impl Json for SensorMeasurementConfiguration {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("sensorMeasConfig", self.sensor_meas_config.to_json());
@@ -30856,50 +30053,35 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub enum SensorNameConfig<'a> {
+    pub enum SensorNameConfig {
         uncompensatedBarometricConfig(SensorNameConfigUncompensatedBarometricConfig),
-        choice_Extensions(ProtocolIEField<'a>),
+        choice_Extensions(ProtocolIEField<'static>),
     }
-    impl<'a> SensorNameConfig<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SensorNameConfig<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        #[inline]
-        pub fn into_owned(self) -> SensorNameConfig<'static> {
-            match self {
-                Self::uncompensatedBarometricConfig(value) => {
-                    SensorNameConfig::uncompensatedBarometricConfig(value)
-                }
-                Self::choice_Extensions(value) => {
-                    SensorNameConfig::choice_Extensions(value.into_owned())
-                }
-            }
-        }
-    }
-    impl<'a> From<SensorNameConfigUncompensatedBarometricConfig> for SensorNameConfig<'a> {
+    impl From<SensorNameConfigUncompensatedBarometricConfig> for SensorNameConfig {
         fn from(value: SensorNameConfigUncompensatedBarometricConfig) -> Self {
             Self::uncompensatedBarometricConfig(value)
         }
     }
-    impl<'a> From<ProtocolIEField<'a>> for SensorNameConfig<'a> {
-        fn from(value: ProtocolIEField<'a>) -> Self {
+    impl From<ProtocolIEField<'static>> for SensorNameConfig {
+        fn from(value: ProtocolIEField<'static>) -> Self {
             Self::choice_Extensions(value)
         }
     }
-    impl AsnType for SensorNameConfig<'_> {
+    impl AsnType for SensorNameConfig {
         const NAME: &'static str = "SensorNameConfig";
     }
-    impl<'a> Decode<'a> for SensorNameConfig<'a> {
+    impl<'a> Decode<'a> for SensorNameConfig {
         #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(2, 0, false)? {
                 0 => Self::uncompensatedBarometricConfig(
                     SensorNameConfigUncompensatedBarometricConfig::decode(reader)?,
                 ),
-                _ => Self::choice_Extensions(ProtocolIEField::decode(reader)?),
+                _ => Self::choice_Extensions((ProtocolIEField::decode(reader)?).into_owned()),
             })
         }
     }
-    impl Encode for SensorNameConfig<'_> {
+    impl Encode for SensorNameConfig {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
@@ -30916,7 +30098,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SensorNameConfig<'_> {
+    impl Json for SensorNameConfig {
         fn to_json(&self) -> Value {
             match self {
                 Self::uncompensatedBarometricConfig(value) => {
@@ -30995,29 +30177,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ServedDCNs<'a>(pub Vec<ServedDCNsItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<ServedDCNsItem<'a>>> for ServedDCNs<'a> {
+    pub struct ServedDCNs(pub Vec<ServedDCNsItem>);
+    impl crate::message::__Field<Vec<ServedDCNsItem>> for ServedDCNs {
         #[inline]
-        fn __field(self) -> Vec<ServedDCNsItem<'a>> {
+        fn __field(self) -> Vec<ServedDCNsItem> {
             self.0
         }
     }
-    impl<'a> ServedDCNs<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ServedDCNs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ServedDCNs<'static> {
-            ServedDCNs(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<ServedDCNsItem<'a>>> for ServedDCNs<'a> {
-        fn from(value: Vec<ServedDCNsItem<'a>>) -> Self {
+    impl From<Vec<ServedDCNsItem>> for ServedDCNs {
+        fn from(value: Vec<ServedDCNsItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for ServedDCNs<'_> {
+    impl AsnType for ServedDCNs {
         const NAME: &'static str = "ServedDCNs";
     }
-    impl<'a> Decode<'a> for ServedDCNs<'a> {
+    impl<'a> Decode<'a> for ServedDCNs {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(0, 32)?;
@@ -31029,7 +30204,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for ServedDCNs<'_> {
+    impl Encode for ServedDCNs {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 0, 32)?;
             for item in self.0.iter() {
@@ -31039,7 +30214,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServedDCNs<'_> {
+    impl Json for ServedDCNs {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -31051,16 +30226,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ServedDCNsItem<'a> {
+    pub struct ServedDCNsItem {
         pub dcn_id: DCNID,
         pub relative_dcn_capacity: RelativeMMECapacity,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ServedDCNsItem<'a> {
+    impl ServedDCNsItem {
         pub fn new(
             dcn_id: DCNID,
             relative_dcn_capacity: RelativeMMECapacity,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 dcn_id,
@@ -31068,20 +30243,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ServedDCNsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ServedDCNsItem<'static> {
-            ServedDCNsItem {
-                dcn_id: self.dcn_id,
-                relative_dcn_capacity: self.relative_dcn_capacity,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ServedDCNsItem<'_> {
+    impl AsnType for ServedDCNsItem {
         const NAME: &'static str = "ServedDCNsItem";
     }
-    impl<'a> Decode<'a> for ServedDCNsItem<'a> {
+    impl<'a> Decode<'a> for ServedDCNsItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -31094,10 +30260,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("relative_dcn_capacity")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -31111,7 +30280,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ServedDCNsItem<'_> {
+    impl Encode for ServedDCNsItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -31130,7 +30299,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServedDCNsItem<'_> {
+    impl Json for ServedDCNsItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("dCN-ID", self.dcn_id.to_json());
@@ -31158,29 +30327,22 @@ pub mod s1_ap_ies {
     }
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ServedGUMMEIs<'a>(pub Vec<ServedGUMMEIsItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<ServedGUMMEIsItem<'a>>> for ServedGUMMEIs<'a> {
+    pub struct ServedGUMMEIs(pub Vec<ServedGUMMEIsItem>);
+    impl crate::message::__Field<Vec<ServedGUMMEIsItem>> for ServedGUMMEIs {
         #[inline]
-        fn __field(self) -> Vec<ServedGUMMEIsItem<'a>> {
+        fn __field(self) -> Vec<ServedGUMMEIsItem> {
             self.0
         }
     }
-    impl<'a> ServedGUMMEIs<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ServedGUMMEIs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ServedGUMMEIs<'static> {
-            ServedGUMMEIs(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<ServedGUMMEIsItem<'a>>> for ServedGUMMEIs<'a> {
-        fn from(value: Vec<ServedGUMMEIsItem<'a>>) -> Self {
+    impl From<Vec<ServedGUMMEIsItem>> for ServedGUMMEIs {
+        fn from(value: Vec<ServedGUMMEIsItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for ServedGUMMEIs<'_> {
+    impl AsnType for ServedGUMMEIs {
         const NAME: &'static str = "ServedGUMMEIs";
     }
-    impl<'a> Decode<'a> for ServedGUMMEIs<'a> {
+    impl<'a> Decode<'a> for ServedGUMMEIs {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 8)?;
@@ -31192,7 +30354,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for ServedGUMMEIs<'_> {
+    impl Encode for ServedGUMMEIs {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 8)?;
             for item in self.0.iter() {
@@ -31202,7 +30364,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServedGUMMEIs<'_> {
+    impl Json for ServedGUMMEIs {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -31214,18 +30376,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ServedGUMMEIsItem<'a> {
+    pub struct ServedGUMMEIsItem {
         pub served_plmns: ServedPLMNs,
         pub served_group_ids: ServedGroupIDs,
         pub served_mmecs: ServedMMECs,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ServedGUMMEIsItem<'a> {
+    impl ServedGUMMEIsItem {
         pub fn new(
             served_plmns: ServedPLMNs,
             served_group_ids: ServedGroupIDs,
             served_mmecs: ServedMMECs,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 served_plmns,
@@ -31234,21 +30396,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ServedGUMMEIsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ServedGUMMEIsItem<'static> {
-            ServedGUMMEIsItem {
-                served_plmns: self.served_plmns,
-                served_group_ids: self.served_group_ids,
-                served_mmecs: self.served_mmecs,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ServedGUMMEIsItem<'_> {
+    impl AsnType for ServedGUMMEIsItem {
         const NAME: &'static str = "ServedGUMMEIsItem";
     }
-    impl<'a> Decode<'a> for ServedGUMMEIsItem<'a> {
+    impl<'a> Decode<'a> for ServedGUMMEIsItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -31265,10 +30417,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("served_mmecs")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -31283,7 +30438,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ServedGUMMEIsItem<'_> {
+    impl Encode for ServedGUMMEIsItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -31305,7 +30460,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServedGUMMEIsItem<'_> {
+    impl Json for ServedGUMMEIsItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("servedPLMNs", self.served_plmns.to_json());
@@ -31645,16 +30800,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct SourceNgRanNodeID<'a> {
-        pub global_ran_node_id: GlobalRANNODEID<'a>,
-        pub selected_tai: FiveGSTAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct SourceNgRanNodeID {
+        pub global_ran_node_id: GlobalRANNODEID,
+        pub selected_tai: FiveGSTAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> SourceNgRanNodeID<'a> {
+    impl SourceNgRanNodeID {
         pub fn new(
-            global_ran_node_id: GlobalRANNODEID<'a>,
-            selected_tai: FiveGSTAI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            global_ran_node_id: GlobalRANNODEID,
+            selected_tai: FiveGSTAI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 global_ran_node_id,
@@ -31662,20 +30817,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SourceNgRanNodeID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> SourceNgRanNodeID<'static> {
-            SourceNgRanNodeID {
-                global_ran_node_id: self.global_ran_node_id.into_owned(),
-                selected_tai: self.selected_tai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for SourceNgRanNodeID<'_> {
+    impl AsnType for SourceNgRanNodeID {
         const NAME: &'static str = "SourceNgRanNode-ID";
     }
-    impl<'a> Decode<'a> for SourceNgRanNodeID<'a> {
+    impl<'a> Decode<'a> for SourceNgRanNodeID {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -31688,10 +30834,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("selected_tai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -31705,7 +30854,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for SourceNgRanNodeID<'_> {
+    impl Encode for SourceNgRanNodeID {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -31724,7 +30873,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SourceNgRanNodeID<'_> {
+    impl Json for SourceNgRanNodeID {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("global-RAN-NODE-ID", self.global_ran_node_id.to_json());
@@ -31812,7 +30961,7 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum SourceNodeID<'a> {
-        sourceNgRanNode_ID(SourceNgRanNodeID<'a>),
+        sourceNgRanNode_ID(SourceNgRanNodeID),
         sourceNodeID_Extension(ProtocolIEField<'a>),
     }
     impl<'a> SourceNodeID<'a> {
@@ -31820,17 +30969,15 @@ pub mod s1_ap_ies {
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SourceNodeID<'static> {
             match self {
-                Self::sourceNgRanNode_ID(value) => {
-                    SourceNodeID::sourceNgRanNode_ID(value.into_owned())
-                }
+                Self::sourceNgRanNode_ID(value) => SourceNodeID::sourceNgRanNode_ID(value),
                 Self::sourceNodeID_Extension(value) => {
                     SourceNodeID::sourceNodeID_Extension(value.into_owned())
                 }
             }
         }
     }
-    impl<'a> From<SourceNgRanNodeID<'a>> for SourceNodeID<'a> {
-        fn from(value: SourceNgRanNodeID<'a>) -> Self {
+    impl<'a> From<SourceNgRanNodeID> for SourceNodeID<'a> {
+        fn from(value: SourceNgRanNodeID) -> Self {
             Self::sourceNgRanNode_ID(value)
         }
     }
@@ -31995,16 +31142,16 @@ pub mod s1_ap_ies {
     }
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct SourceeNBID<'a> {
-        pub global_enb_id: GlobalENBID<'a>,
-        pub selected_tai: TAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct SourceeNBID {
+        pub global_enb_id: GlobalENBID,
+        pub selected_tai: TAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> SourceeNBID<'a> {
+    impl SourceeNBID {
         pub fn new(
-            global_enb_id: GlobalENBID<'a>,
-            selected_tai: TAI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            global_enb_id: GlobalENBID,
+            selected_tai: TAI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 global_enb_id,
@@ -32012,20 +31159,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SourceeNBID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> SourceeNBID<'static> {
-            SourceeNBID {
-                global_enb_id: self.global_enb_id.into_owned(),
-                selected_tai: self.selected_tai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for SourceeNBID<'_> {
+    impl AsnType for SourceeNBID {
         const NAME: &'static str = "SourceeNB-ID";
     }
-    impl<'a> Decode<'a> for SourceeNBID<'a> {
+    impl<'a> Decode<'a> for SourceeNBID {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let present = reader.bits(1)?;
             let global_enb_id = match GlobalENBID::decode(reader) {
@@ -32037,10 +31175,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("selected_tai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -32051,7 +31192,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for SourceeNBID<'_> {
+    impl Encode for SourceeNBID {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(self.ie_extensions.is_some());
             if let Err(error) = self.global_enb_id.encode(writer) {
@@ -32069,7 +31210,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SourceeNBID<'_> {
+    impl Json for SourceeNBID {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("global-ENB-ID", self.global_enb_id.to_json());
@@ -32099,19 +31240,19 @@ pub mod s1_ap_ies {
     pub struct SourceeNBToTargeteNBTransparentContainer<'a> {
         pub rrc_container: RRCContainer<'a>,
         pub e_rab_information_list: Option<ERABInformationList<'a>>,
-        pub target_cell_id: EUTRANCGI<'a>,
+        pub target_cell_id: EUTRANCGI,
         pub subscriber_profile_id_for_rfp: Option<SubscriberProfileIDforRFP>,
         pub ue_history_information: UEHistoryInformation<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> SourceeNBToTargeteNBTransparentContainer<'a> {
         pub fn new(
             rrc_container: RRCContainer<'a>,
             e_rab_information_list: Option<ERABInformationList<'a>>,
-            target_cell_id: EUTRANCGI<'a>,
+            target_cell_id: EUTRANCGI,
             subscriber_profile_id_for_rfp: Option<SubscriberProfileIDforRFP>,
             ue_history_information: UEHistoryInformation<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 rrc_container,
@@ -32128,10 +31269,10 @@ pub mod s1_ap_ies {
             SourceeNBToTargeteNBTransparentContainer {
                 rrc_container: self.rrc_container.into_owned(),
                 e_rab_information_list: self.e_rab_information_list.map(|value| value.into_owned()),
-                target_cell_id: self.target_cell_id.into_owned(),
+                target_cell_id: self.target_cell_id,
                 subscriber_profile_id_for_rfp: self.subscriber_profile_id_for_rfp,
                 ue_history_information: self.ue_history_information.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -32171,10 +31312,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ue_history_information")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -32558,30 +31702,30 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct SubscriptionBasedUEDifferentiationInfo<'a> {
+    pub struct SubscriptionBasedUEDifferentiationInfo {
         pub periodic_communication_indicator:
             Option<SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator>,
         pub periodic_time: Option<u64>,
-        pub scheduled_communication_time: Option<ScheduledCommunicationTime<'a>>,
+        pub scheduled_communication_time: Option<ScheduledCommunicationTime>,
         pub stationary_indication:
             Option<SubscriptionBasedUEDifferentiationInfoStationaryIndication>,
         pub traffic_profile: Option<SubscriptionBasedUEDifferentiationInfoTrafficProfile>,
         pub battery_indication: Option<SubscriptionBasedUEDifferentiationInfoBatteryIndication>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> SubscriptionBasedUEDifferentiationInfo<'a> {
+    impl SubscriptionBasedUEDifferentiationInfo {
         pub fn new(
             periodic_communication_indicator: Option<
                 SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator,
             >,
             periodic_time: Option<u64>,
-            scheduled_communication_time: Option<ScheduledCommunicationTime<'a>>,
+            scheduled_communication_time: Option<ScheduledCommunicationTime>,
             stationary_indication: Option<
                 SubscriptionBasedUEDifferentiationInfoStationaryIndication,
             >,
             traffic_profile: Option<SubscriptionBasedUEDifferentiationInfoTrafficProfile>,
             battery_indication: Option<SubscriptionBasedUEDifferentiationInfoBatteryIndication>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 periodic_communication_indicator,
@@ -32593,26 +31737,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SubscriptionBasedUEDifferentiationInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> SubscriptionBasedUEDifferentiationInfo<'static> {
-            SubscriptionBasedUEDifferentiationInfo {
-                periodic_communication_indicator: self.periodic_communication_indicator,
-                periodic_time: self.periodic_time,
-                scheduled_communication_time: self
-                    .scheduled_communication_time
-                    .map(|value| value.into_owned()),
-                stationary_indication: self.stationary_indication,
-                traffic_profile: self.traffic_profile,
-                battery_indication: self.battery_indication,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for SubscriptionBasedUEDifferentiationInfo<'_> {
+    impl AsnType for SubscriptionBasedUEDifferentiationInfo {
         const NAME: &'static str = "Subscription-Based-UE-DifferentiationInfo";
     }
-    impl<'a> Decode<'a> for SubscriptionBasedUEDifferentiationInfo<'a> {
+    impl<'a> Decode<'a> for SubscriptionBasedUEDifferentiationInfo {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(7)?;
@@ -32669,10 +31798,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -32690,7 +31822,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for SubscriptionBasedUEDifferentiationInfo<'_> {
+    impl Encode for SubscriptionBasedUEDifferentiationInfo {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.periodic_communication_indicator.is_some());
@@ -32739,7 +31871,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SubscriptionBasedUEDifferentiationInfo<'_> {
+    impl Json for SubscriptionBasedUEDifferentiationInfo {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -32834,29 +31966,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct SupportedTAs<'a>(pub Vec<SupportedTAsItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<SupportedTAsItem<'a>>> for SupportedTAs<'a> {
+    pub struct SupportedTAs(pub Vec<SupportedTAsItem>);
+    impl crate::message::__Field<Vec<SupportedTAsItem>> for SupportedTAs {
         #[inline]
-        fn __field(self) -> Vec<SupportedTAsItem<'a>> {
+        fn __field(self) -> Vec<SupportedTAsItem> {
             self.0
         }
     }
-    impl<'a> SupportedTAs<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SupportedTAs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> SupportedTAs<'static> {
-            SupportedTAs(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<SupportedTAsItem<'a>>> for SupportedTAs<'a> {
-        fn from(value: Vec<SupportedTAsItem<'a>>) -> Self {
+    impl From<Vec<SupportedTAsItem>> for SupportedTAs {
+        fn from(value: Vec<SupportedTAsItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for SupportedTAs<'_> {
+    impl AsnType for SupportedTAs {
         const NAME: &'static str = "SupportedTAs";
     }
-    impl<'a> Decode<'a> for SupportedTAs<'a> {
+    impl<'a> Decode<'a> for SupportedTAs {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 256)?;
@@ -32868,7 +31993,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for SupportedTAs<'_> {
+    impl Encode for SupportedTAs {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 256)?;
             for item in self.0.iter() {
@@ -32878,7 +32003,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SupportedTAs<'_> {
+    impl Json for SupportedTAs {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -32890,16 +32015,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct SupportedTAsItem<'a> {
+    pub struct SupportedTAsItem {
         pub tac: TAC,
         pub broadcast_plmns: BPLMNs,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> SupportedTAsItem<'a> {
+    impl SupportedTAsItem {
         pub fn new(
             tac: TAC,
             broadcast_plmns: BPLMNs,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 tac,
@@ -32907,20 +32032,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SupportedTAsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> SupportedTAsItem<'static> {
-            SupportedTAsItem {
-                tac: self.tac,
-                broadcast_plmns: self.broadcast_plmns,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for SupportedTAsItem<'_> {
+    impl AsnType for SupportedTAsItem {
         const NAME: &'static str = "SupportedTAs-Item";
     }
-    impl<'a> Decode<'a> for SupportedTAsItem<'a> {
+    impl<'a> Decode<'a> for SupportedTAsItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -32933,10 +32049,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("broadcast_plmns")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -32950,7 +32069,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for SupportedTAsItem<'_> {
+    impl Encode for SupportedTAsItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -32969,7 +32088,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SupportedTAsItem<'_> {
+    impl Json for SupportedTAsItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("tAC", self.tac.to_json());
@@ -32995,18 +32114,18 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct SynchronisationInformation<'a> {
+    pub struct SynchronisationInformation {
         pub source_stratum_level: Option<StratumLevel>,
-        pub listening_subframe_pattern: Option<ListeningSubframePattern<'a>>,
-        pub aggressor_ecgi_list: Option<ECGI_List<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub listening_subframe_pattern: Option<ListeningSubframePattern>,
+        pub aggressor_ecgi_list: Option<ECGI_List>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> SynchronisationInformation<'a> {
+    impl SynchronisationInformation {
         pub fn new(
             source_stratum_level: Option<StratumLevel>,
-            listening_subframe_pattern: Option<ListeningSubframePattern<'a>>,
-            aggressor_ecgi_list: Option<ECGI_List<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            listening_subframe_pattern: Option<ListeningSubframePattern>,
+            aggressor_ecgi_list: Option<ECGI_List>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 source_stratum_level,
@@ -33015,23 +32134,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `SynchronisationInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> SynchronisationInformation<'static> {
-            SynchronisationInformation {
-                source_stratum_level: self.source_stratum_level,
-                listening_subframe_pattern: self
-                    .listening_subframe_pattern
-                    .map(|value| value.into_owned()),
-                aggressor_ecgi_list: self.aggressor_ecgi_list.map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for SynchronisationInformation<'_> {
+    impl AsnType for SynchronisationInformation {
         const NAME: &'static str = "SynchronisationInformation";
     }
-    impl<'a> Decode<'a> for SynchronisationInformation<'a> {
+    impl<'a> Decode<'a> for SynchronisationInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(4)?;
@@ -33060,10 +32167,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -33078,7 +32188,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for SynchronisationInformation<'_> {
+    impl Encode for SynchronisationInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.source_stratum_level.is_some());
@@ -33109,7 +32219,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SynchronisationInformation<'_> {
+    impl Json for SynchronisationInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -33205,33 +32315,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TABasedMDT<'a> {
+    pub struct TABasedMDT {
         pub ta_listfor_mdt: TAListforMDT,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TABasedMDT<'a> {
+    impl TABasedMDT {
         pub fn new(
             ta_listfor_mdt: TAListforMDT,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ta_listfor_mdt,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TABasedMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TABasedMDT<'static> {
-            TABasedMDT {
-                ta_listfor_mdt: self.ta_listfor_mdt,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TABasedMDT<'_> {
+    impl AsnType for TABasedMDT {
         const NAME: &'static str = "TABasedMDT";
     }
-    impl<'a> Decode<'a> for TABasedMDT<'a> {
+    impl<'a> Decode<'a> for TABasedMDT {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -33240,10 +32342,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ta_listfor_mdt")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -33256,7 +32361,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TABasedMDT<'_> {
+    impl Encode for TABasedMDT {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -33272,7 +32377,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TABasedMDT<'_> {
+    impl Json for TABasedMDT {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("tAListforMDT", self.ta_listfor_mdt.to_json());
@@ -33295,33 +32400,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TABasedQMC<'a> {
+    pub struct TABasedQMC {
         pub ta_listfor_qmc: TAListforQMC,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TABasedQMC<'a> {
+    impl TABasedQMC {
         pub fn new(
             ta_listfor_qmc: TAListforQMC,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ta_listfor_qmc,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TABasedQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TABasedQMC<'static> {
-            TABasedQMC {
-                ta_listfor_qmc: self.ta_listfor_qmc,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TABasedQMC<'_> {
+    impl AsnType for TABasedQMC {
         const NAME: &'static str = "TABasedQMC";
     }
-    impl<'a> Decode<'a> for TABasedQMC<'a> {
+    impl<'a> Decode<'a> for TABasedQMC {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -33330,10 +32427,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ta_listfor_qmc")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -33346,7 +32446,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TABasedQMC<'_> {
+    impl Encode for TABasedQMC {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -33362,7 +32462,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TABasedQMC<'_> {
+    impl Json for TABasedQMC {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("tAListforQMC", self.ta_listfor_qmc.to_json());
@@ -33485,16 +32585,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TAI<'a> {
+    pub struct TAI {
         pub plmn_identity: PLMNidentity,
         pub tac: TAC,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TAI<'a> {
+    impl TAI {
         pub fn new(
             plmn_identity: PLMNidentity,
             tac: TAC,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 plmn_identity,
@@ -33502,20 +32602,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAI<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAI<'static> {
-            TAI {
-                plmn_identity: self.plmn_identity,
-                tac: self.tac,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TAI<'_> {
+    impl AsnType for TAI {
         const NAME: &'static str = "TAI";
     }
-    impl<'a> Decode<'a> for TAI<'a> {
+    impl<'a> Decode<'a> for TAI {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -33528,10 +32619,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("tac")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -33545,7 +32639,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TAI<'_> {
+    impl Encode for TAI {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -33564,7 +32658,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAI<'_> {
+    impl Json for TAI {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("pLMNidentity", self.plmn_identity.to_json());
@@ -33589,29 +32683,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct TAIBroadcast<'a>(pub Vec<TAIBroadcastItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<TAIBroadcastItem<'a>>> for TAIBroadcast<'a> {
+    pub struct TAIBroadcast(pub Vec<TAIBroadcastItem>);
+    impl crate::message::__Field<Vec<TAIBroadcastItem>> for TAIBroadcast {
         #[inline]
-        fn __field(self) -> Vec<TAIBroadcastItem<'a>> {
+        fn __field(self) -> Vec<TAIBroadcastItem> {
             self.0
         }
     }
-    impl<'a> TAIBroadcast<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIBroadcast<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAIBroadcast<'static> {
-            TAIBroadcast(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<TAIBroadcastItem<'a>>> for TAIBroadcast<'a> {
-        fn from(value: Vec<TAIBroadcastItem<'a>>) -> Self {
+    impl From<Vec<TAIBroadcastItem>> for TAIBroadcast {
+        fn from(value: Vec<TAIBroadcastItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for TAIBroadcast<'_> {
+    impl AsnType for TAIBroadcast {
         const NAME: &'static str = "TAI-Broadcast";
     }
-    impl<'a> Decode<'a> for TAIBroadcast<'a> {
+    impl<'a> Decode<'a> for TAIBroadcast {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -33623,7 +32710,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for TAIBroadcast<'_> {
+    impl Encode for TAIBroadcast {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -33633,7 +32720,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIBroadcast<'_> {
+    impl Json for TAIBroadcast {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -33645,16 +32732,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TAIBroadcastItem<'a> {
-        pub tai: TAI<'a>,
-        pub completed_cellin_tai: CompletedCellinTAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct TAIBroadcastItem {
+        pub tai: TAI,
+        pub completed_cellin_tai: CompletedCellinTAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TAIBroadcastItem<'a> {
+    impl TAIBroadcastItem {
         pub fn new(
-            tai: TAI<'a>,
-            completed_cellin_tai: CompletedCellinTAI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            tai: TAI,
+            completed_cellin_tai: CompletedCellinTAI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 tai,
@@ -33662,20 +32749,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIBroadcastItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAIBroadcastItem<'static> {
-            TAIBroadcastItem {
-                tai: self.tai.into_owned(),
-                completed_cellin_tai: self.completed_cellin_tai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TAIBroadcastItem<'_> {
+    impl AsnType for TAIBroadcastItem {
         const NAME: &'static str = "TAI-Broadcast-Item";
     }
-    impl<'a> Decode<'a> for TAIBroadcastItem<'a> {
+    impl<'a> Decode<'a> for TAIBroadcastItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -33688,10 +32766,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("completed_cellin_tai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -33705,7 +32786,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TAIBroadcastItem<'_> {
+    impl Encode for TAIBroadcastItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -33724,7 +32805,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIBroadcastItem<'_> {
+    impl Json for TAIBroadcastItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("tAI", self.tai.to_json());
@@ -33751,29 +32832,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct TAICancelled<'a>(pub Vec<TAICancelledItem<'a>>);
-    impl<'a> crate::message::__Field<Vec<TAICancelledItem<'a>>> for TAICancelled<'a> {
+    pub struct TAICancelled(pub Vec<TAICancelledItem>);
+    impl crate::message::__Field<Vec<TAICancelledItem>> for TAICancelled {
         #[inline]
-        fn __field(self) -> Vec<TAICancelledItem<'a>> {
+        fn __field(self) -> Vec<TAICancelledItem> {
             self.0
         }
     }
-    impl<'a> TAICancelled<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAICancelled<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAICancelled<'static> {
-            TAICancelled(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<TAICancelledItem<'a>>> for TAICancelled<'a> {
-        fn from(value: Vec<TAICancelledItem<'a>>) -> Self {
+    impl From<Vec<TAICancelledItem>> for TAICancelled {
+        fn from(value: Vec<TAICancelledItem>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for TAICancelled<'_> {
+    impl AsnType for TAICancelled {
         const NAME: &'static str = "TAI-Cancelled";
     }
-    impl<'a> Decode<'a> for TAICancelled<'a> {
+    impl<'a> Decode<'a> for TAICancelled {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -33785,7 +32859,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for TAICancelled<'_> {
+    impl Encode for TAICancelled {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -33795,7 +32869,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAICancelled<'_> {
+    impl Json for TAICancelled {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -33807,16 +32881,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TAICancelledItem<'a> {
-        pub tai: TAI<'a>,
-        pub cancelled_cellin_tai: CancelledCellinTAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct TAICancelledItem {
+        pub tai: TAI,
+        pub cancelled_cellin_tai: CancelledCellinTAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TAICancelledItem<'a> {
+    impl TAICancelledItem {
         pub fn new(
-            tai: TAI<'a>,
-            cancelled_cellin_tai: CancelledCellinTAI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            tai: TAI,
+            cancelled_cellin_tai: CancelledCellinTAI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 tai,
@@ -33824,20 +32898,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAICancelledItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAICancelledItem<'static> {
-            TAICancelledItem {
-                tai: self.tai.into_owned(),
-                cancelled_cellin_tai: self.cancelled_cellin_tai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TAICancelledItem<'_> {
+    impl AsnType for TAICancelledItem {
         const NAME: &'static str = "TAI-Cancelled-Item";
     }
-    impl<'a> Decode<'a> for TAICancelledItem<'a> {
+    impl<'a> Decode<'a> for TAICancelledItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -33850,10 +32915,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("cancelled_cellin_tai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -33867,7 +32935,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TAICancelledItem<'_> {
+    impl Encode for TAICancelledItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -33886,7 +32954,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAICancelledItem<'_> {
+    impl Json for TAICancelledItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("tAI", self.tai.to_json());
@@ -33914,33 +32982,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TAIBasedMDT<'a> {
-        pub tai_listfor_mdt: TAIListforMDT<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct TAIBasedMDT {
+        pub tai_listfor_mdt: TAIListforMDT,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TAIBasedMDT<'a> {
+    impl TAIBasedMDT {
         pub fn new(
-            tai_listfor_mdt: TAIListforMDT<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            tai_listfor_mdt: TAIListforMDT,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 tai_listfor_mdt,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIBasedMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAIBasedMDT<'static> {
-            TAIBasedMDT {
-                tai_listfor_mdt: self.tai_listfor_mdt.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TAIBasedMDT<'_> {
+    impl AsnType for TAIBasedMDT {
         const NAME: &'static str = "TAIBasedMDT";
     }
-    impl<'a> Decode<'a> for TAIBasedMDT<'a> {
+    impl<'a> Decode<'a> for TAIBasedMDT {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -33949,10 +33009,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("tai_listfor_mdt")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -33965,7 +33028,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TAIBasedMDT<'_> {
+    impl Encode for TAIBasedMDT {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -33981,7 +33044,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIBasedMDT<'_> {
+    impl Json for TAIBasedMDT {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("tAIListforMDT", self.tai_listfor_mdt.to_json());
@@ -34004,33 +33067,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TAIBasedQMC<'a> {
-        pub tai_listfor_qmc: TAIListforQMC<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct TAIBasedQMC {
+        pub tai_listfor_qmc: TAIListforQMC,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TAIBasedQMC<'a> {
+    impl TAIBasedQMC {
         pub fn new(
-            tai_listfor_qmc: TAIListforQMC<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            tai_listfor_qmc: TAIListforQMC,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 tai_listfor_qmc,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIBasedQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAIBasedQMC<'static> {
-            TAIBasedQMC {
-                tai_listfor_qmc: self.tai_listfor_qmc.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TAIBasedQMC<'_> {
+    impl AsnType for TAIBasedQMC {
         const NAME: &'static str = "TAIBasedQMC";
     }
-    impl<'a> Decode<'a> for TAIBasedQMC<'a> {
+    impl<'a> Decode<'a> for TAIBasedQMC {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -34039,10 +33094,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("tai_listfor_qmc")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -34055,7 +33113,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TAIBasedQMC<'_> {
+    impl Encode for TAIBasedQMC {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -34071,7 +33129,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIBasedQMC<'_> {
+    impl Json for TAIBasedQMC {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("tAIListforQMC", self.tai_listfor_qmc.to_json());
@@ -34093,29 +33151,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct TAIListForRestart<'a>(pub Vec<TAI<'a>>);
-    impl<'a> crate::message::__Field<Vec<TAI<'a>>> for TAIListForRestart<'a> {
+    pub struct TAIListForRestart(pub Vec<TAI>);
+    impl crate::message::__Field<Vec<TAI>> for TAIListForRestart {
         #[inline]
-        fn __field(self) -> Vec<TAI<'a>> {
+        fn __field(self) -> Vec<TAI> {
             self.0
         }
     }
-    impl<'a> TAIListForRestart<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIListForRestart<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAIListForRestart<'static> {
-            TAIListForRestart(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<TAI<'a>>> for TAIListForRestart<'a> {
-        fn from(value: Vec<TAI<'a>>) -> Self {
+    impl From<Vec<TAI>> for TAIListForRestart {
+        fn from(value: Vec<TAI>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for TAIListForRestart<'_> {
+    impl AsnType for TAIListForRestart {
         const NAME: &'static str = "TAIListForRestart";
     }
-    impl<'a> Decode<'a> for TAIListForRestart<'a> {
+    impl<'a> Decode<'a> for TAIListForRestart {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 2048)?;
@@ -34127,7 +33178,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for TAIListForRestart<'_> {
+    impl Encode for TAIListForRestart {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 2048)?;
             for item in self.0.iter() {
@@ -34137,7 +33188,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIListForRestart<'_> {
+    impl Json for TAIListForRestart {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -34148,29 +33199,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct TAIListforMDT<'a>(pub Vec<TAI<'a>>);
-    impl<'a> crate::message::__Field<Vec<TAI<'a>>> for TAIListforMDT<'a> {
+    pub struct TAIListforMDT(pub Vec<TAI>);
+    impl crate::message::__Field<Vec<TAI>> for TAIListforMDT {
         #[inline]
-        fn __field(self) -> Vec<TAI<'a>> {
+        fn __field(self) -> Vec<TAI> {
             self.0
         }
     }
-    impl<'a> TAIListforMDT<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIListforMDT<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAIListforMDT<'static> {
-            TAIListforMDT(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<TAI<'a>>> for TAIListforMDT<'a> {
-        fn from(value: Vec<TAI<'a>>) -> Self {
+    impl From<Vec<TAI>> for TAIListforMDT {
+        fn from(value: Vec<TAI>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for TAIListforMDT<'_> {
+    impl AsnType for TAIListforMDT {
         const NAME: &'static str = "TAIListforMDT";
     }
-    impl<'a> Decode<'a> for TAIListforMDT<'a> {
+    impl<'a> Decode<'a> for TAIListforMDT {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 8)?;
@@ -34182,7 +33226,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for TAIListforMDT<'_> {
+    impl Encode for TAIListforMDT {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 8)?;
             for item in self.0.iter() {
@@ -34192,7 +33236,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIListforMDT<'_> {
+    impl Json for TAIListforMDT {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -34203,29 +33247,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct TAIListforQMC<'a>(pub Vec<TAI<'a>>);
-    impl<'a> crate::message::__Field<Vec<TAI<'a>>> for TAIListforQMC<'a> {
+    pub struct TAIListforQMC(pub Vec<TAI>);
+    impl crate::message::__Field<Vec<TAI>> for TAIListforQMC {
         #[inline]
-        fn __field(self) -> Vec<TAI<'a>> {
+        fn __field(self) -> Vec<TAI> {
             self.0
         }
     }
-    impl<'a> TAIListforQMC<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIListforQMC<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAIListforQMC<'static> {
-            TAIListforQMC(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<TAI<'a>>> for TAIListforQMC<'a> {
-        fn from(value: Vec<TAI<'a>>) -> Self {
+    impl From<Vec<TAI>> for TAIListforQMC {
+        fn from(value: Vec<TAI>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for TAIListforQMC<'_> {
+    impl AsnType for TAIListforQMC {
         const NAME: &'static str = "TAIListforQMC";
     }
-    impl<'a> Decode<'a> for TAIListforQMC<'a> {
+    impl<'a> Decode<'a> for TAIListforQMC {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 8)?;
@@ -34237,7 +33274,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for TAIListforQMC<'_> {
+    impl Encode for TAIListforQMC {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 8)?;
             for item in self.0.iter() {
@@ -34247,7 +33284,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIListforQMC<'_> {
+    impl Json for TAIListforQMC {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -34258,29 +33295,22 @@ pub mod s1_ap_ies {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct TAIListforWarning<'a>(pub Vec<TAI<'a>>);
-    impl<'a> crate::message::__Field<Vec<TAI<'a>>> for TAIListforWarning<'a> {
+    pub struct TAIListforWarning(pub Vec<TAI>);
+    impl crate::message::__Field<Vec<TAI>> for TAIListforWarning {
         #[inline]
-        fn __field(self) -> Vec<TAI<'a>> {
+        fn __field(self) -> Vec<TAI> {
             self.0
         }
     }
-    impl<'a> TAIListforWarning<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIListforWarning<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAIListforWarning<'static> {
-            TAIListforWarning(self.0.into_iter().map(|item| item.into_owned()).collect())
-        }
-    }
-    impl<'a> From<Vec<TAI<'a>>> for TAIListforWarning<'a> {
-        fn from(value: Vec<TAI<'a>>) -> Self {
+    impl From<Vec<TAI>> for TAIListforWarning {
+        fn from(value: Vec<TAI>) -> Self {
             Self(value)
         }
     }
-    impl AsnType for TAIListforWarning<'_> {
+    impl AsnType for TAIListforWarning {
         const NAME: &'static str = "TAIListforWarning";
     }
-    impl<'a> Decode<'a> for TAIListforWarning<'a> {
+    impl<'a> Decode<'a> for TAIListforWarning {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(Self({
                 let count = reader.size(1, 65535)?;
@@ -34292,7 +33322,7 @@ pub mod s1_ap_ies {
             }))
         }
     }
-    impl Encode for TAIListforWarning<'_> {
+    impl Encode for TAIListforWarning {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.size(self.0.len(), 1, 65535)?;
             for item in self.0.iter() {
@@ -34302,7 +33332,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIListforWarning<'_> {
+    impl Json for TAIListforWarning {
         fn to_json(&self) -> Value {
             Value::Array(self.0.iter().map(|item| item.to_json()).collect())
         }
@@ -34574,50 +33604,36 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum TargetID<'a> {
-        targeteNB_ID(TargeteNBID<'a>),
-        targetRNC_ID(TargetRNCID<'a>),
-        cGI(CGI<'a>),
-        targetgNgRanNode_ID(TargetNgRanNodeID<'a>),
+    pub enum TargetID {
+        targeteNB_ID(TargeteNBID),
+        targetRNC_ID(TargetRNCID),
+        cGI(CGI),
+        targetgNgRanNode_ID(TargetNgRanNodeID),
     }
-    impl<'a> TargetID<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargetID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TargetID<'static> {
-            match self {
-                Self::targeteNB_ID(value) => TargetID::targeteNB_ID(value.into_owned()),
-                Self::targetRNC_ID(value) => TargetID::targetRNC_ID(value.into_owned()),
-                Self::cGI(value) => TargetID::cGI(value.into_owned()),
-                Self::targetgNgRanNode_ID(value) => {
-                    TargetID::targetgNgRanNode_ID(value.into_owned())
-                }
-            }
-        }
-    }
-    impl<'a> From<TargeteNBID<'a>> for TargetID<'a> {
-        fn from(value: TargeteNBID<'a>) -> Self {
+    impl From<TargeteNBID> for TargetID {
+        fn from(value: TargeteNBID) -> Self {
             Self::targeteNB_ID(value)
         }
     }
-    impl<'a> From<TargetRNCID<'a>> for TargetID<'a> {
-        fn from(value: TargetRNCID<'a>) -> Self {
+    impl From<TargetRNCID> for TargetID {
+        fn from(value: TargetRNCID) -> Self {
             Self::targetRNC_ID(value)
         }
     }
-    impl<'a> From<CGI<'a>> for TargetID<'a> {
-        fn from(value: CGI<'a>) -> Self {
+    impl From<CGI> for TargetID {
+        fn from(value: CGI) -> Self {
             Self::cGI(value)
         }
     }
-    impl<'a> From<TargetNgRanNodeID<'a>> for TargetID<'a> {
-        fn from(value: TargetNgRanNodeID<'a>) -> Self {
+    impl From<TargetNgRanNodeID> for TargetID {
+        fn from(value: TargetNgRanNodeID) -> Self {
             Self::targetgNgRanNode_ID(value)
         }
     }
-    impl AsnType for TargetID<'_> {
+    impl AsnType for TargetID {
         const NAME: &'static str = "TargetID";
     }
-    impl<'a> Decode<'a> for TargetID<'a> {
+    impl<'a> Decode<'a> for TargetID {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(3, 1, true)? {
                 0 => Self::targeteNB_ID(TargeteNBID::decode(reader)?),
@@ -34625,22 +33641,13 @@ pub mod s1_ap_ies {
                 2 => Self::cGI(CGI::decode(reader)?),
                 _ => {
                     let octets = reader.open_type()?;
-                    match octets.as_borrowed() {
-                        Some(octets) => {
-                            let reader = &mut Reader::new(octets);
-                            Self::targetgNgRanNode_ID(TargetNgRanNodeID::decode(reader)?)
-                        }
-                        None => {
-                            let reader = &mut Reader::new(&octets);
-                            let value = TargetNgRanNodeID::decode(reader)?;
-                            Self::targetgNgRanNode_ID(value.into_owned())
-                        }
-                    }
+                    let reader = &mut Reader::new(&octets);
+                    Self::targetgNgRanNode_ID(TargetNgRanNodeID::decode(reader)?)
                 }
             })
         }
     }
-    impl Encode for TargetID<'_> {
+    impl Encode for TargetID {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::targeteNB_ID(value) => {
@@ -34666,7 +33673,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargetID<'_> {
+    impl Json for TargetID {
         fn to_json(&self) -> Value {
             match self {
                 Self::targeteNB_ID(value) => json::alternative("targeteNB-ID", value.to_json()),
@@ -34704,16 +33711,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TargetNgRanNodeID<'a> {
-        pub global_ran_node_id: GlobalRANNODEID<'a>,
-        pub selected_tai: FiveGSTAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct TargetNgRanNodeID {
+        pub global_ran_node_id: GlobalRANNODEID,
+        pub selected_tai: FiveGSTAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TargetNgRanNodeID<'a> {
+    impl TargetNgRanNodeID {
         pub fn new(
-            global_ran_node_id: GlobalRANNODEID<'a>,
-            selected_tai: FiveGSTAI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            global_ran_node_id: GlobalRANNODEID,
+            selected_tai: FiveGSTAI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 global_ran_node_id,
@@ -34721,20 +33728,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargetNgRanNodeID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TargetNgRanNodeID<'static> {
-            TargetNgRanNodeID {
-                global_ran_node_id: self.global_ran_node_id.into_owned(),
-                selected_tai: self.selected_tai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TargetNgRanNodeID<'_> {
+    impl AsnType for TargetNgRanNodeID {
         const NAME: &'static str = "TargetNgRanNode-ID";
     }
-    impl<'a> Decode<'a> for TargetNgRanNodeID<'a> {
+    impl<'a> Decode<'a> for TargetNgRanNodeID {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -34747,10 +33745,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("selected_tai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -34764,7 +33765,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TargetNgRanNodeID<'_> {
+    impl Encode for TargetNgRanNodeID {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -34783,7 +33784,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargetNgRanNodeID<'_> {
+    impl Json for TargetNgRanNodeID {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("global-RAN-NODE-ID", self.global_ran_node_id.to_json());
@@ -34871,20 +33872,20 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TargetRNCID<'a> {
-        pub lai: LAI<'a>,
+    pub struct TargetRNCID {
+        pub lai: LAI,
         pub rac: Option<RAC>,
         pub rnc_id: RNCID,
         pub extended_rnc_id: Option<ExtendedRNCID>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TargetRNCID<'a> {
+    impl TargetRNCID {
         pub fn new(
-            lai: LAI<'a>,
+            lai: LAI,
             rac: Option<RAC>,
             rnc_id: RNCID,
             extended_rnc_id: Option<ExtendedRNCID>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 lai,
@@ -34894,22 +33895,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargetRNCID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TargetRNCID<'static> {
-            TargetRNCID {
-                lai: self.lai.into_owned(),
-                rac: self.rac,
-                rnc_id: self.rnc_id,
-                extended_rnc_id: self.extended_rnc_id,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TargetRNCID<'_> {
+    impl AsnType for TargetRNCID {
         const NAME: &'static str = "TargetRNC-ID";
     }
-    impl<'a> Decode<'a> for TargetRNCID<'a> {
+    impl<'a> Decode<'a> for TargetRNCID {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
@@ -34938,10 +33928,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -34957,7 +33950,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TargetRNCID<'_> {
+    impl Encode for TargetRNCID {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.rac.is_some());
@@ -34988,7 +33981,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargetRNCID<'_> {
+    impl Json for TargetRNCID {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("lAI", self.lai.to_json());
@@ -35084,16 +34077,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TargeteNBID<'a> {
-        pub global_enb_id: GlobalENBID<'a>,
-        pub selected_tai: TAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct TargeteNBID {
+        pub global_enb_id: GlobalENBID,
+        pub selected_tai: TAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TargeteNBID<'a> {
+    impl TargeteNBID {
         pub fn new(
-            global_enb_id: GlobalENBID<'a>,
-            selected_tai: TAI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            global_enb_id: GlobalENBID,
+            selected_tai: TAI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 global_enb_id,
@@ -35101,20 +34094,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TargeteNBID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TargeteNBID<'static> {
-            TargeteNBID {
-                global_enb_id: self.global_enb_id.into_owned(),
-                selected_tai: self.selected_tai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TargeteNBID<'_> {
+    impl AsnType for TargeteNBID {
         const NAME: &'static str = "TargeteNB-ID";
     }
-    impl<'a> Decode<'a> for TargeteNBID<'a> {
+    impl<'a> Decode<'a> for TargeteNBID {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -35127,10 +34111,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("selected_tai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -35144,7 +34131,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TargeteNBID<'_> {
+    impl Encode for TargeteNBID {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -35163,7 +34150,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargeteNBID<'_> {
+    impl Json for TargeteNBID {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("global-ENB-ID", self.global_enb_id.to_json());
@@ -35192,12 +34179,12 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct TargeteNBToSourceeNBTransparentContainer<'a> {
         pub rrc_container: RRCContainer<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> TargeteNBToSourceeNBTransparentContainer<'a> {
         pub fn new(
             rrc_container: RRCContainer<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 rrc_container,
@@ -35209,7 +34196,7 @@ pub mod s1_ap_ies {
         pub fn into_owned(self) -> TargeteNBToSourceeNBTransparentContainer<'static> {
             TargeteNBToSourceeNBTransparentContainer {
                 rrc_container: self.rrc_container.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -35225,10 +34212,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("rrc_container")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -35444,16 +34434,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TimeBasedHandoverInformation<'a> {
+    pub struct TimeBasedHandoverInformation {
         pub ho_window_start: HandoverWindowStart,
         pub ho_window_duration: HandoverWindowDuration,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TimeBasedHandoverInformation<'a> {
+    impl TimeBasedHandoverInformation {
         pub fn new(
             ho_window_start: HandoverWindowStart,
             ho_window_duration: HandoverWindowDuration,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ho_window_start,
@@ -35461,20 +34451,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TimeBasedHandoverInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TimeBasedHandoverInformation<'static> {
-            TimeBasedHandoverInformation {
-                ho_window_start: self.ho_window_start,
-                ho_window_duration: self.ho_window_duration,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TimeBasedHandoverInformation<'_> {
+    impl AsnType for TimeBasedHandoverInformation {
         const NAME: &'static str = "TimeBasedHandoverInformation";
     }
-    impl<'a> Decode<'a> for TimeBasedHandoverInformation<'a> {
+    impl<'a> Decode<'a> for TimeBasedHandoverInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -35487,10 +34468,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ho_window_duration")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -35504,7 +34488,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TimeBasedHandoverInformation<'_> {
+    impl Encode for TimeBasedHandoverInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -35523,7 +34507,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TimeBasedHandoverInformation<'_> {
+    impl Json for TimeBasedHandoverInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("hOWindowStart", self.ho_window_start.to_json());
@@ -35646,16 +34630,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TimeSynchronisationInfo<'a> {
+    pub struct TimeSynchronisationInfo {
         pub stratum_level: StratumLevel,
         pub synchronisation_status: SynchronisationStatus,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TimeSynchronisationInfo<'a> {
+    impl TimeSynchronisationInfo {
         pub fn new(
             stratum_level: StratumLevel,
             synchronisation_status: SynchronisationStatus,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 stratum_level,
@@ -35663,20 +34647,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TimeSynchronisationInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TimeSynchronisationInfo<'static> {
-            TimeSynchronisationInfo {
-                stratum_level: self.stratum_level,
-                synchronisation_status: self.synchronisation_status,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TimeSynchronisationInfo<'_> {
+    impl AsnType for TimeSynchronisationInfo {
         const NAME: &'static str = "TimeSynchronisationInfo";
     }
-    impl<'a> Decode<'a> for TimeSynchronisationInfo<'a> {
+    impl<'a> Decode<'a> for TimeSynchronisationInfo {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -35689,10 +34664,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("synchronisation_status")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -35706,7 +34684,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for TimeSynchronisationInfo<'_> {
+    impl Encode for TimeSynchronisationInfo {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -35725,7 +34703,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TimeSynchronisationInfo<'_> {
+    impl Json for TimeSynchronisationInfo {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("stratumLevel", self.stratum_level.to_json());
@@ -35893,7 +34871,7 @@ pub mod s1_ap_ies {
         pub interfaces_to_trace: InterfacesToTrace,
         pub trace_depth: TraceDepth,
         pub trace_collection_entity_ip_address: TransportLayerAddress<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> TraceActivation<'a> {
         pub fn new(
@@ -35901,7 +34879,7 @@ pub mod s1_ap_ies {
             interfaces_to_trace: InterfacesToTrace,
             trace_depth: TraceDepth,
             trace_collection_entity_ip_address: TransportLayerAddress<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_utran_trace_id,
@@ -35921,7 +34899,7 @@ pub mod s1_ap_ies {
                 trace_collection_entity_ip_address: self
                     .trace_collection_entity_ip_address
                     .into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -35949,10 +34927,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("trace_collection_entity_ip_address")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -36270,13 +35251,13 @@ pub mod s1_ap_ies {
     pub struct TunnelInformation<'a> {
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub udp_port_number: Option<PortNumber>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> TunnelInformation<'a> {
         pub fn new(
             transport_layer_address: TransportLayerAddress<'a>,
             udp_port_number: Option<PortNumber>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 transport_layer_address,
@@ -36290,7 +35271,7 @@ pub mod s1_ap_ies {
             TunnelInformation {
                 transport_layer_address: self.transport_layer_address.into_owned(),
                 udp_port_number: self.udp_port_number,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -36314,10 +35295,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -36745,16 +35729,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct UES1APIDPair<'a> {
+    pub struct UES1APIDPair {
         pub mme_ue_s1ap_id: MMEUES1APID,
         pub enb_ue_s1ap_id: ENBUES1APID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> UES1APIDPair<'a> {
+    impl UES1APIDPair {
         pub fn new(
             mme_ue_s1ap_id: MMEUES1APID,
             enb_ue_s1ap_id: ENBUES1APID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 mme_ue_s1ap_id,
@@ -36762,20 +35746,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `UES1APIDPair<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> UES1APIDPair<'static> {
-            UES1APIDPair {
-                mme_ue_s1ap_id: self.mme_ue_s1ap_id,
-                enb_ue_s1ap_id: self.enb_ue_s1ap_id,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for UES1APIDPair<'_> {
+    impl AsnType for UES1APIDPair {
         const NAME: &'static str = "UE-S1AP-ID-pair";
     }
-    impl<'a> Decode<'a> for UES1APIDPair<'a> {
+    impl<'a> Decode<'a> for UES1APIDPair {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -36788,10 +35763,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("enb_ue_s1ap_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -36805,7 +35783,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for UES1APIDPair<'_> {
+    impl Encode for UES1APIDPair {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -36824,7 +35802,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UES1APIDPair<'_> {
+    impl Json for UES1APIDPair {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("mME-UE-S1AP-ID", self.mme_ue_s1ap_id.to_json());
@@ -36853,34 +35831,24 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum UES1APIDs<'a> {
-        uE_S1AP_ID_pair(UES1APIDPair<'a>),
+    pub enum UES1APIDs {
+        uE_S1AP_ID_pair(UES1APIDPair),
         mME_UE_S1AP_ID(MMEUES1APID),
     }
-    impl<'a> UES1APIDs<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `UES1APIDs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> UES1APIDs<'static> {
-            match self {
-                Self::uE_S1AP_ID_pair(value) => UES1APIDs::uE_S1AP_ID_pair(value.into_owned()),
-                Self::mME_UE_S1AP_ID(value) => UES1APIDs::mME_UE_S1AP_ID(value),
-            }
-        }
-    }
-    impl<'a> From<UES1APIDPair<'a>> for UES1APIDs<'a> {
-        fn from(value: UES1APIDPair<'a>) -> Self {
+    impl From<UES1APIDPair> for UES1APIDs {
+        fn from(value: UES1APIDPair) -> Self {
             Self::uE_S1AP_ID_pair(value)
         }
     }
-    impl<'a> From<MMEUES1APID> for UES1APIDs<'a> {
+    impl From<MMEUES1APID> for UES1APIDs {
         fn from(value: MMEUES1APID) -> Self {
             Self::mME_UE_S1AP_ID(value)
         }
     }
-    impl AsnType for UES1APIDs<'_> {
+    impl AsnType for UES1APIDs {
         const NAME: &'static str = "UE-S1AP-IDs";
     }
-    impl<'a> Decode<'a> for UES1APIDs<'a> {
+    impl<'a> Decode<'a> for UES1APIDs {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(2, 0, true)? {
                 0 => Self::uE_S1AP_ID_pair(UES1APIDPair::decode(reader)?),
@@ -36888,7 +35856,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for UES1APIDs<'_> {
+    impl Encode for UES1APIDs {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::uE_S1AP_ID_pair(value) => {
@@ -36904,7 +35872,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UES1APIDs<'_> {
+    impl Json for UES1APIDs {
         fn to_json(&self) -> Value {
             match self {
                 Self::uE_S1AP_ID_pair(value) => {
@@ -36972,16 +35940,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct UEAssociatedLogicalS1ConnectionItem<'a> {
+    pub struct UEAssociatedLogicalS1ConnectionItem {
         pub mme_ue_s1ap_id: Option<MMEUES1APID>,
         pub enb_ue_s1ap_id: Option<ENBUES1APID>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> UEAssociatedLogicalS1ConnectionItem<'a> {
+    impl UEAssociatedLogicalS1ConnectionItem {
         pub fn new(
             mme_ue_s1ap_id: Option<MMEUES1APID>,
             enb_ue_s1ap_id: Option<ENBUES1APID>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 mme_ue_s1ap_id,
@@ -36989,20 +35957,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEAssociatedLogicalS1ConnectionItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> UEAssociatedLogicalS1ConnectionItem<'static> {
-            UEAssociatedLogicalS1ConnectionItem {
-                mme_ue_s1ap_id: self.mme_ue_s1ap_id,
-                enb_ue_s1ap_id: self.enb_ue_s1ap_id,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for UEAssociatedLogicalS1ConnectionItem<'_> {
+    impl AsnType for UEAssociatedLogicalS1ConnectionItem {
         const NAME: &'static str = "UE-associatedLogicalS1-ConnectionItem";
     }
-    impl<'a> Decode<'a> for UEAssociatedLogicalS1ConnectionItem<'a> {
+    impl<'a> Decode<'a> for UEAssociatedLogicalS1ConnectionItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
@@ -37023,10 +35982,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -37040,7 +36002,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for UEAssociatedLogicalS1ConnectionItem<'_> {
+    impl Encode for UEAssociatedLogicalS1ConnectionItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.mme_ue_s1ap_id.is_some());
@@ -37065,7 +36027,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEAssociatedLogicalS1ConnectionItem<'_> {
+    impl Json for UEAssociatedLogicalS1ConnectionItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -37101,16 +36063,16 @@ pub mod s1_ap_ies {
     #[doc = " U"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct UEAggregateMaximumBitrate<'a> {
+    pub struct UEAggregateMaximumBitrate {
         pub ue_aggregate_maximum_bit_rate_dl: BitRate,
         pub ue_aggregate_maximum_bit_rate_ul: BitRate,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> UEAggregateMaximumBitrate<'a> {
+    impl UEAggregateMaximumBitrate {
         pub fn new(
             ue_aggregate_maximum_bit_rate_dl: BitRate,
             ue_aggregate_maximum_bit_rate_ul: BitRate,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ue_aggregate_maximum_bit_rate_dl,
@@ -37118,20 +36080,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `UEAggregateMaximumBitrate<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> UEAggregateMaximumBitrate<'static> {
-            UEAggregateMaximumBitrate {
-                ue_aggregate_maximum_bit_rate_dl: self.ue_aggregate_maximum_bit_rate_dl,
-                ue_aggregate_maximum_bit_rate_ul: self.ue_aggregate_maximum_bit_rate_ul,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for UEAggregateMaximumBitrate<'_> {
+    impl AsnType for UEAggregateMaximumBitrate {
         const NAME: &'static str = "UEAggregateMaximumBitrate";
     }
-    impl<'a> Decode<'a> for UEAggregateMaximumBitrate<'a> {
+    impl<'a> Decode<'a> for UEAggregateMaximumBitrate {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -37144,10 +36097,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ue_aggregate_maximum_bit_rate_ul")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -37161,7 +36117,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for UEAggregateMaximumBitrate<'_> {
+    impl Encode for UEAggregateMaximumBitrate {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -37180,7 +36136,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEAggregateMaximumBitrate<'_> {
+    impl Json for UEAggregateMaximumBitrate {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -37223,14 +36179,14 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct UEAppLayerMeasConfig<'a> {
         pub container_for_app_layer_meas_config: Octets<'a>,
-        pub area_scope_of_qmc: AreaScopeOfQMC<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub area_scope_of_qmc: AreaScopeOfQMC,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> UEAppLayerMeasConfig<'a> {
         pub fn new(
             container_for_app_layer_meas_config: Octets<'a>,
-            area_scope_of_qmc: AreaScopeOfQMC<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            area_scope_of_qmc: AreaScopeOfQMC,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 container_for_app_layer_meas_config,
@@ -37245,8 +36201,8 @@ pub mod s1_ap_ies {
                 container_for_app_layer_meas_config: self
                     .container_for_app_layer_meas_config
                     .into_owned(),
-                area_scope_of_qmc: self.area_scope_of_qmc.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                area_scope_of_qmc: self.area_scope_of_qmc,
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -37266,10 +36222,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("area_scope_of_qmc")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -37432,7 +36391,7 @@ pub mod s1_ap_ies {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum UEPagingID<'a> {
-        s_TMSI(STMSI<'a>),
+        s_TMSI(STMSI),
         iMSI(IMSI<'a>),
     }
     impl<'a> UEPagingID<'a> {
@@ -37440,13 +36399,13 @@ pub mod s1_ap_ies {
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEPagingID<'static> {
             match self {
-                Self::s_TMSI(value) => UEPagingID::s_TMSI(value.into_owned()),
+                Self::s_TMSI(value) => UEPagingID::s_TMSI(value),
                 Self::iMSI(value) => UEPagingID::iMSI(value.into_owned()),
             }
         }
     }
-    impl<'a> From<STMSI<'a>> for UEPagingID<'a> {
-        fn from(value: STMSI<'a>) -> Self {
+    impl<'a> From<STMSI> for UEPagingID<'a> {
+        fn from(value: STMSI) -> Self {
             Self::s_TMSI(value)
         }
     }
@@ -37670,13 +36629,13 @@ pub mod s1_ap_ies {
     pub struct UESecurityCapabilities<'a> {
         pub encryption_algorithms: EncryptionAlgorithms<'a>,
         pub integrity_protection_algorithms: IntegrityProtectionAlgorithms<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> UESecurityCapabilities<'a> {
         pub fn new(
             encryption_algorithms: EncryptionAlgorithms<'a>,
             integrity_protection_algorithms: IntegrityProtectionAlgorithms<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 encryption_algorithms,
@@ -37690,7 +36649,7 @@ pub mod s1_ap_ies {
             UESecurityCapabilities {
                 encryption_algorithms: self.encryption_algorithms.into_owned(),
                 integrity_protection_algorithms: self.integrity_protection_algorithms.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -37711,10 +36670,13 @@ pub mod s1_ap_ies {
                     Err(error) => return Err(error.in_field("integrity_protection_algorithms")),
                 };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -37785,33 +36747,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct UESidelinkAggregateMaximumBitrate<'a> {
+    pub struct UESidelinkAggregateMaximumBitrate {
         pub ue_sidelink_aggregate_maximum_bit_rate: BitRate,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> UESidelinkAggregateMaximumBitrate<'a> {
+    impl UESidelinkAggregateMaximumBitrate {
         pub fn new(
             ue_sidelink_aggregate_maximum_bit_rate: BitRate,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ue_sidelink_aggregate_maximum_bit_rate,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `UESidelinkAggregateMaximumBitrate<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> UESidelinkAggregateMaximumBitrate<'static> {
-            UESidelinkAggregateMaximumBitrate {
-                ue_sidelink_aggregate_maximum_bit_rate: self.ue_sidelink_aggregate_maximum_bit_rate,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for UESidelinkAggregateMaximumBitrate<'_> {
+    impl AsnType for UESidelinkAggregateMaximumBitrate {
         const NAME: &'static str = "UESidelinkAggregateMaximumBitrate";
     }
-    impl<'a> Decode<'a> for UESidelinkAggregateMaximumBitrate<'a> {
+    impl<'a> Decode<'a> for UESidelinkAggregateMaximumBitrate {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -37820,10 +36774,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ue_sidelink_aggregate_maximum_bit_rate")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -37836,7 +36793,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for UESidelinkAggregateMaximumBitrate<'_> {
+    impl Encode for UESidelinkAggregateMaximumBitrate {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -37852,7 +36809,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UESidelinkAggregateMaximumBitrate<'_> {
+    impl Json for UESidelinkAggregateMaximumBitrate {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -37924,16 +36881,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ULCPSecurityInformation<'a> {
+    pub struct ULCPSecurityInformation {
         pub ul_nas_mac: ULNASMAC,
         pub ul_nas_count: ULNASCount,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ULCPSecurityInformation<'a> {
+    impl ULCPSecurityInformation {
         pub fn new(
             ul_nas_mac: ULNASMAC,
             ul_nas_count: ULNASCount,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 ul_nas_mac,
@@ -37941,20 +36898,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ULCPSecurityInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ULCPSecurityInformation<'static> {
-            ULCPSecurityInformation {
-                ul_nas_mac: self.ul_nas_mac,
-                ul_nas_count: self.ul_nas_count,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ULCPSecurityInformation<'_> {
+    impl AsnType for ULCPSecurityInformation {
         const NAME: &'static str = "UL-CP-SecurityInformation";
     }
-    impl<'a> Decode<'a> for ULCPSecurityInformation<'a> {
+    impl<'a> Decode<'a> for ULCPSecurityInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -37967,10 +36915,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("ul_nas_count")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -37984,7 +36935,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for ULCPSecurityInformation<'_> {
+    impl Encode for ULCPSecurityInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -38003,7 +36954,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ULCPSecurityInformation<'_> {
+    impl Json for ULCPSecurityInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("ul-NAS-MAC", self.ul_nas_mac.to_json());
@@ -38224,16 +37175,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct UserLocationInformation<'a> {
-        pub eutran_cgi: EUTRANCGI<'a>,
-        pub tai: TAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct UserLocationInformation {
+        pub eutran_cgi: EUTRANCGI,
+        pub tai: TAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> UserLocationInformation<'a> {
+    impl UserLocationInformation {
         pub fn new(
-            eutran_cgi: EUTRANCGI<'a>,
-            tai: TAI<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            eutran_cgi: EUTRANCGI,
+            tai: TAI,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 eutran_cgi,
@@ -38241,20 +37192,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `UserLocationInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> UserLocationInformation<'static> {
-            UserLocationInformation {
-                eutran_cgi: self.eutran_cgi.into_owned(),
-                tai: self.tai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for UserLocationInformation<'_> {
+    impl AsnType for UserLocationInformation {
         const NAME: &'static str = "UserLocationInformation";
     }
-    impl<'a> Decode<'a> for UserLocationInformation<'a> {
+    impl<'a> Decode<'a> for UserLocationInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -38267,10 +37209,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("tai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -38284,7 +37229,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for UserLocationInformation<'_> {
+    impl Encode for UserLocationInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -38303,7 +37248,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UserLocationInformation<'_> {
+    impl Json for UserLocationInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("eutran-cgi", self.eutran_cgi.to_json());
@@ -38329,16 +37274,16 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct V2XServicesAuthorized<'a> {
+    pub struct V2XServicesAuthorized {
         pub vehicle_ue: Option<VehicleUE>,
         pub pedestrian_ue: Option<PedestrianUE>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> V2XServicesAuthorized<'a> {
+    impl V2XServicesAuthorized {
         pub fn new(
             vehicle_ue: Option<VehicleUE>,
             pedestrian_ue: Option<PedestrianUE>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 vehicle_ue,
@@ -38346,20 +37291,11 @@ pub mod s1_ap_ies {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `V2XServicesAuthorized<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> V2XServicesAuthorized<'static> {
-            V2XServicesAuthorized {
-                vehicle_ue: self.vehicle_ue,
-                pedestrian_ue: self.pedestrian_ue,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for V2XServicesAuthorized<'_> {
+    impl AsnType for V2XServicesAuthorized {
         const NAME: &'static str = "V2XServicesAuthorized";
     }
-    impl<'a> Decode<'a> for V2XServicesAuthorized<'a> {
+    impl<'a> Decode<'a> for V2XServicesAuthorized {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
@@ -38380,10 +37316,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -38397,7 +37336,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for V2XServicesAuthorized<'_> {
+    impl Encode for V2XServicesAuthorized {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.vehicle_ue.is_some());
@@ -38422,7 +37361,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for V2XServicesAuthorized<'_> {
+    impl Json for V2XServicesAuthorized {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
@@ -38733,7 +37672,7 @@ pub mod s1_ap_ies {
         pub wlan_meas_config_name_list: Option<WLANMeasConfigNameList<'a>>,
         pub wlan_rssi: Option<WLANMeasurementConfigurationWlanRssi>,
         pub wlan_rtt: Option<WLANMeasurementConfigurationWlanRtt>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> WLANMeasurementConfiguration<'a> {
         pub fn new(
@@ -38741,7 +37680,7 @@ pub mod s1_ap_ies {
             wlan_meas_config_name_list: Option<WLANMeasConfigNameList<'a>>,
             wlan_rssi: Option<WLANMeasurementConfigurationWlanRssi>,
             wlan_rtt: Option<WLANMeasurementConfigurationWlanRtt>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 wlan_meas_config,
@@ -38761,7 +37700,7 @@ pub mod s1_ap_ies {
                     .map(|value| value.into_owned()),
                 wlan_rssi: self.wlan_rssi,
                 wlan_rtt: self.wlan_rtt,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -38801,10 +37740,13 @@ pub mod s1_ap_ies {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -38965,33 +37907,25 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct WUSAssistanceInformation<'a> {
+    pub struct WUSAssistanceInformation {
         pub paging_probability_information: PagingProbabilityInformation,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> WUSAssistanceInformation<'a> {
+    impl WUSAssistanceInformation {
         pub fn new(
             paging_probability_information: PagingProbabilityInformation,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 paging_probability_information,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `WUSAssistanceInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> WUSAssistanceInformation<'static> {
-            WUSAssistanceInformation {
-                paging_probability_information: self.paging_probability_information,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for WUSAssistanceInformation<'_> {
+    impl AsnType for WUSAssistanceInformation {
         const NAME: &'static str = "WUS-Assistance-Information";
     }
-    impl<'a> Decode<'a> for WUSAssistanceInformation<'a> {
+    impl<'a> Decode<'a> for WUSAssistanceInformation {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -39001,10 +37935,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("paging_probability_information")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -39017,7 +37954,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for WUSAssistanceInformation<'_> {
+    impl Encode for WUSAssistanceInformation {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -39033,7 +37970,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WUSAssistanceInformation<'_> {
+    impl Json for WUSAssistanceInformation {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
@@ -39118,43 +38055,30 @@ pub mod s1_ap_ies {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub enum WarningAreaList<'a> {
-        cellIDList(ECGIList<'a>),
-        trackingAreaListforWarning(TAIListforWarning<'a>),
+    pub enum WarningAreaList {
+        cellIDList(ECGIList),
+        trackingAreaListforWarning(TAIListforWarning),
         emergencyAreaIDList(EmergencyAreaIDList),
     }
-    impl<'a> WarningAreaList<'a> {
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `WarningAreaList<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> WarningAreaList<'static> {
-            match self {
-                Self::cellIDList(value) => WarningAreaList::cellIDList(value.into_owned()),
-                Self::trackingAreaListforWarning(value) => {
-                    WarningAreaList::trackingAreaListforWarning(value.into_owned())
-                }
-                Self::emergencyAreaIDList(value) => WarningAreaList::emergencyAreaIDList(value),
-            }
-        }
-    }
-    impl<'a> From<ECGIList<'a>> for WarningAreaList<'a> {
-        fn from(value: ECGIList<'a>) -> Self {
+    impl From<ECGIList> for WarningAreaList {
+        fn from(value: ECGIList) -> Self {
             Self::cellIDList(value)
         }
     }
-    impl<'a> From<TAIListforWarning<'a>> for WarningAreaList<'a> {
-        fn from(value: TAIListforWarning<'a>) -> Self {
+    impl From<TAIListforWarning> for WarningAreaList {
+        fn from(value: TAIListforWarning) -> Self {
             Self::trackingAreaListforWarning(value)
         }
     }
-    impl<'a> From<EmergencyAreaIDList> for WarningAreaList<'a> {
+    impl From<EmergencyAreaIDList> for WarningAreaList {
         fn from(value: EmergencyAreaIDList) -> Self {
             Self::emergencyAreaIDList(value)
         }
     }
-    impl AsnType for WarningAreaList<'_> {
+    impl AsnType for WarningAreaList {
         const NAME: &'static str = "WarningAreaList";
     }
-    impl<'a> Decode<'a> for WarningAreaList<'a> {
+    impl<'a> Decode<'a> for WarningAreaList {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             Ok(match reader.choice(3, 0, true)? {
                 0 => Self::cellIDList(ECGIList::decode(reader)?),
@@ -39163,7 +38087,7 @@ pub mod s1_ap_ies {
             })
         }
     }
-    impl Encode for WarningAreaList<'_> {
+    impl Encode for WarningAreaList {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             match self {
                 Self::cellIDList(value) => {
@@ -39183,7 +38107,7 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WarningAreaList<'_> {
+    impl Json for WarningAreaList {
         fn to_json(&self) -> Value {
             match self {
                 Self::cellIDList(value) => json::alternative("cellIDList", value.to_json()),
@@ -39382,12 +38306,12 @@ pub mod s1_ap_ies {
     #[non_exhaustive]
     pub struct X2TNLConfigurationInfo<'a> {
         pub enb_x2_transport_layer_addresses: ENBX2TLAs<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> X2TNLConfigurationInfo<'a> {
         pub fn new(
             enb_x2_transport_layer_addresses: ENBX2TLAs<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 enb_x2_transport_layer_addresses,
@@ -39401,7 +38325,7 @@ pub mod s1_ap_ies {
                 enb_x2_transport_layer_addresses: self
                     .enb_x2_transport_layer_addresses
                     .into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -39417,10 +38341,13 @@ pub mod s1_ap_ies {
                 Err(error) => return Err(error.in_field("enb_x2_transport_layer_addresses")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -39498,20 +38425,20 @@ pub mod s1_ap_pdu_contents {
     use serde_json::Value;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct CSGMembershipInfo<'a> {
+    pub struct CSGMembershipInfo {
         pub csg_membership_status: CSGMembershipStatus,
         pub csg_id: CSGId,
         pub cell_access_mode: Option<CellAccessMode>,
         pub plmn_identity: Option<PLMNidentity>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> CSGMembershipInfo<'a> {
+    impl CSGMembershipInfo {
         pub fn new(
             csg_membership_status: CSGMembershipStatus,
             csg_id: CSGId,
             cell_access_mode: Option<CellAccessMode>,
             plmn_identity: Option<PLMNidentity>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 csg_membership_status,
@@ -39521,22 +38448,11 @@ pub mod s1_ap_pdu_contents {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `CSGMembershipInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> CSGMembershipInfo<'static> {
-            CSGMembershipInfo {
-                csg_membership_status: self.csg_membership_status,
-                csg_id: self.csg_id,
-                cell_access_mode: self.cell_access_mode,
-                plmn_identity: self.plmn_identity,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for CSGMembershipInfo<'_> {
+    impl AsnType for CSGMembershipInfo {
         const NAME: &'static str = "CSGMembershipInfo";
     }
-    impl<'a> Decode<'a> for CSGMembershipInfo<'a> {
+    impl<'a> Decode<'a> for CSGMembershipInfo {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
@@ -39565,10 +38481,13 @@ pub mod s1_ap_pdu_contents {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -39584,7 +38503,7 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
-    impl Encode for CSGMembershipInfo<'_> {
+    impl Encode for CSGMembershipInfo {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.cell_access_mode.is_some());
@@ -39615,7 +38534,7 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CSGMembershipInfo<'_> {
+    impl Json for CSGMembershipInfo {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("cSGMembershipStatus", self.csg_membership_status.to_json());
@@ -40116,7 +39035,7 @@ pub mod s1_ap_pdu_contents {
         pub dl_gtp_teid: Option<GTPTEID>,
         pub ul_transport_layer_address: Option<TransportLayerAddress<'a>>,
         pub ul_gtp_teid: Option<GTPTEID>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABAdmittedItem<'a> {
         pub fn new(
@@ -40127,7 +39046,7 @@ pub mod s1_ap_pdu_contents {
             dl_gtp_teid: Option<GTPTEID>,
             ul_transport_layer_address: Option<TransportLayerAddress<'a>>,
             ul_gtp_teid: Option<GTPTEID>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -40155,7 +39074,7 @@ pub mod s1_ap_pdu_contents {
                     .ul_transport_layer_address
                     .map(|value| value.into_owned()),
                 ul_gtp_teid: self.ul_gtp_teid,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -40211,10 +39130,13 @@ pub mod s1_ap_pdu_contents {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -40415,7 +39337,7 @@ pub mod s1_ap_pdu_contents {
         pub dl_gtp_teid: Option<GTPTEID>,
         pub ul_transport_layer_address: Option<TransportLayerAddress<'a>>,
         pub ul_gtp_teid: Option<GTPTEID>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABDataForwardingItem<'a> {
         pub fn new(
@@ -40424,7 +39346,7 @@ pub mod s1_ap_pdu_contents {
             dl_gtp_teid: Option<GTPTEID>,
             ul_transport_layer_address: Option<TransportLayerAddress<'a>>,
             ul_gtp_teid: Option<GTPTEID>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -40448,7 +39370,7 @@ pub mod s1_ap_pdu_contents {
                     .ul_transport_layer_address
                     .map(|value| value.into_owned()),
                 ul_gtp_teid: self.ul_gtp_teid,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -40496,10 +39418,13 @@ pub mod s1_ap_pdu_contents {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -40619,16 +39544,16 @@ pub mod s1_ap_pdu_contents {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABFailedToResumeItemResumeReq<'a> {
+    pub struct ERABFailedToResumeItemResumeReq {
         pub e_rab_id: ERABID,
         pub cause: Cause,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABFailedToResumeItemResumeReq<'a> {
+    impl ERABFailedToResumeItemResumeReq {
         pub fn new(
             e_rab_id: ERABID,
             cause: Cause,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -40636,20 +39561,11 @@ pub mod s1_ap_pdu_contents {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABFailedToResumeItemResumeReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABFailedToResumeItemResumeReq<'static> {
-            ERABFailedToResumeItemResumeReq {
-                e_rab_id: self.e_rab_id,
-                cause: self.cause,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABFailedToResumeItemResumeReq<'_> {
+    impl AsnType for ERABFailedToResumeItemResumeReq {
         const NAME: &'static str = "E-RABFailedToResumeItemResumeReq";
     }
-    impl<'a> Decode<'a> for ERABFailedToResumeItemResumeReq<'a> {
+    impl<'a> Decode<'a> for ERABFailedToResumeItemResumeReq {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -40662,10 +39578,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("cause")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -40679,7 +39598,7 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
-    impl Encode for ERABFailedToResumeItemResumeReq<'_> {
+    impl Encode for ERABFailedToResumeItemResumeReq {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -40698,7 +39617,7 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABFailedToResumeItemResumeReq<'_> {
+    impl Json for ERABFailedToResumeItemResumeReq {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -40724,16 +39643,16 @@ pub mod s1_ap_pdu_contents {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABFailedToResumeItemResumeRes<'a> {
+    pub struct ERABFailedToResumeItemResumeRes {
         pub e_rab_id: ERABID,
         pub cause: Cause,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABFailedToResumeItemResumeRes<'a> {
+    impl ERABFailedToResumeItemResumeRes {
         pub fn new(
             e_rab_id: ERABID,
             cause: Cause,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -40741,20 +39660,11 @@ pub mod s1_ap_pdu_contents {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABFailedToResumeItemResumeRes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABFailedToResumeItemResumeRes<'static> {
-            ERABFailedToResumeItemResumeRes {
-                e_rab_id: self.e_rab_id,
-                cause: self.cause,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABFailedToResumeItemResumeRes<'_> {
+    impl AsnType for ERABFailedToResumeItemResumeRes {
         const NAME: &'static str = "E-RABFailedToResumeItemResumeRes";
     }
-    impl<'a> Decode<'a> for ERABFailedToResumeItemResumeRes<'a> {
+    impl<'a> Decode<'a> for ERABFailedToResumeItemResumeRes {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -40767,10 +39677,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("cause")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -40784,7 +39697,7 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
-    impl Encode for ERABFailedToResumeItemResumeRes<'_> {
+    impl Encode for ERABFailedToResumeItemResumeRes {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -40803,7 +39716,7 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABFailedToResumeItemResumeRes<'_> {
+    impl Json for ERABFailedToResumeItemResumeRes {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -40943,16 +39856,16 @@ pub mod s1_ap_pdu_contents {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABFailedToSetupItemHOReqAck<'a> {
+    pub struct ERABFailedToSetupItemHOReqAck {
         pub e_rab_id: ERABID,
         pub cause: Cause,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABFailedToSetupItemHOReqAck<'a> {
+    impl ERABFailedToSetupItemHOReqAck {
         pub fn new(
             e_rab_id: ERABID,
             cause: Cause,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -40960,20 +39873,11 @@ pub mod s1_ap_pdu_contents {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABFailedToSetupItemHOReqAck<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABFailedToSetupItemHOReqAck<'static> {
-            ERABFailedToSetupItemHOReqAck {
-                e_rab_id: self.e_rab_id,
-                cause: self.cause,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABFailedToSetupItemHOReqAck<'_> {
+    impl AsnType for ERABFailedToSetupItemHOReqAck {
         const NAME: &'static str = "E-RABFailedToSetupItemHOReqAck";
     }
-    impl<'a> Decode<'a> for ERABFailedToSetupItemHOReqAck<'a> {
+    impl<'a> Decode<'a> for ERABFailedToSetupItemHOReqAck {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -40986,10 +39890,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("cause")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -41003,7 +39910,7 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
-    impl Encode for ERABFailedToSetupItemHOReqAck<'_> {
+    impl Encode for ERABFailedToSetupItemHOReqAck {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -41022,7 +39929,7 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABFailedToSetupItemHOReqAck<'_> {
+    impl Json for ERABFailedToSetupItemHOReqAck {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -41230,33 +40137,25 @@ pub mod s1_ap_pdu_contents {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABModifyItemBearerModConf<'a> {
+    pub struct ERABModifyItemBearerModConf {
         pub e_rab_id: ERABID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABModifyItemBearerModConf<'a> {
+    impl ERABModifyItemBearerModConf {
         pub fn new(
             e_rab_id: ERABID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModifyItemBearerModConf<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABModifyItemBearerModConf<'static> {
-            ERABModifyItemBearerModConf {
-                e_rab_id: self.e_rab_id,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABModifyItemBearerModConf<'_> {
+    impl AsnType for ERABModifyItemBearerModConf {
         const NAME: &'static str = "E-RABModifyItemBearerModConf";
     }
-    impl<'a> Decode<'a> for ERABModifyItemBearerModConf<'a> {
+    impl<'a> Decode<'a> for ERABModifyItemBearerModConf {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -41265,10 +40164,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("e_rab_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -41281,7 +40183,7 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
-    impl Encode for ERABModifyItemBearerModConf<'_> {
+    impl Encode for ERABModifyItemBearerModConf {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -41297,7 +40199,7 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABModifyItemBearerModConf<'_> {
+    impl Json for ERABModifyItemBearerModConf {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -41320,33 +40222,25 @@ pub mod s1_ap_pdu_contents {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABModifyItemBearerModRes<'a> {
+    pub struct ERABModifyItemBearerModRes {
         pub e_rab_id: ERABID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABModifyItemBearerModRes<'a> {
+    impl ERABModifyItemBearerModRes {
         pub fn new(
             e_rab_id: ERABID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModifyItemBearerModRes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABModifyItemBearerModRes<'static> {
-            ERABModifyItemBearerModRes {
-                e_rab_id: self.e_rab_id,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABModifyItemBearerModRes<'_> {
+    impl AsnType for ERABModifyItemBearerModRes {
         const NAME: &'static str = "E-RABModifyItemBearerModRes";
     }
-    impl<'a> Decode<'a> for ERABModifyItemBearerModRes<'a> {
+    impl<'a> Decode<'a> for ERABModifyItemBearerModRes {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -41355,10 +40249,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("e_rab_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -41371,7 +40268,7 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
-    impl Encode for ERABModifyItemBearerModRes<'_> {
+    impl Encode for ERABModifyItemBearerModRes {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -41387,7 +40284,7 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABModifyItemBearerModRes<'_> {
+    impl Json for ERABModifyItemBearerModRes {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -41649,14 +40546,14 @@ pub mod s1_ap_pdu_contents {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub dl_gtp_teid: GTPTEID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABNotToBeModifiedItemBearerModInd<'a> {
         pub fn new(
             e_rab_id: ERABID,
             transport_layer_address: TransportLayerAddress<'a>,
             dl_gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -41672,7 +40569,7 @@ pub mod s1_ap_pdu_contents {
                 e_rab_id: self.e_rab_id,
                 transport_layer_address: self.transport_layer_address.into_owned(),
                 dl_gtp_teid: self.dl_gtp_teid,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -41696,10 +40593,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("dl_gtp_teid")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -41966,33 +40866,25 @@ pub mod s1_ap_pdu_contents {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABReleaseItemBearerRelComp<'a> {
+    pub struct ERABReleaseItemBearerRelComp {
         pub e_rab_id: ERABID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABReleaseItemBearerRelComp<'a> {
+    impl ERABReleaseItemBearerRelComp {
         pub fn new(
             e_rab_id: ERABID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABReleaseItemBearerRelComp<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABReleaseItemBearerRelComp<'static> {
-            ERABReleaseItemBearerRelComp {
-                e_rab_id: self.e_rab_id,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABReleaseItemBearerRelComp<'_> {
+    impl AsnType for ERABReleaseItemBearerRelComp {
         const NAME: &'static str = "E-RABReleaseItemBearerRelComp";
     }
-    impl<'a> Decode<'a> for ERABReleaseItemBearerRelComp<'a> {
+    impl<'a> Decode<'a> for ERABReleaseItemBearerRelComp {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -42001,10 +40893,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("e_rab_id")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -42017,7 +40912,7 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
-    impl Encode for ERABReleaseItemBearerRelComp<'_> {
+    impl Encode for ERABReleaseItemBearerRelComp {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -42033,7 +40928,7 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABReleaseItemBearerRelComp<'_> {
+    impl Json for ERABReleaseItemBearerRelComp {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -42175,14 +41070,14 @@ pub mod s1_ap_pdu_contents {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub gtp_teid: GTPTEID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABSetupItemBearerSURes<'a> {
         pub fn new(
             e_rab_id: ERABID,
             transport_layer_address: TransportLayerAddress<'a>,
             gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -42198,7 +41093,7 @@ pub mod s1_ap_pdu_contents {
                 e_rab_id: self.e_rab_id,
                 transport_layer_address: self.transport_layer_address.into_owned(),
                 gtp_teid: self.gtp_teid,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -42222,10 +41117,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("gtp_teid")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -42307,14 +41205,14 @@ pub mod s1_ap_pdu_contents {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub gtp_teid: GTPTEID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABSetupItemCtxtSURes<'a> {
         pub fn new(
             e_rab_id: ERABID,
             transport_layer_address: TransportLayerAddress<'a>,
             gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -42330,7 +41228,7 @@ pub mod s1_ap_pdu_contents {
                 e_rab_id: self.e_rab_id,
                 transport_layer_address: self.transport_layer_address.into_owned(),
                 gtp_teid: self.gtp_teid,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -42354,10 +41252,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("gtp_teid")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -42731,14 +41632,14 @@ pub mod s1_ap_pdu_contents {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub dl_gtp_teid: GTPTEID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeModifiedItemBearerModInd<'a> {
         pub fn new(
             e_rab_id: ERABID,
             transport_layer_address: TransportLayerAddress<'a>,
             dl_gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -42754,7 +41655,7 @@ pub mod s1_ap_pdu_contents {
                 e_rab_id: self.e_rab_id,
                 transport_layer_address: self.transport_layer_address.into_owned(),
                 dl_gtp_teid: self.dl_gtp_teid,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -42778,10 +41679,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("dl_gtp_teid")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -42861,16 +41765,16 @@ pub mod s1_ap_pdu_contents {
     #[non_exhaustive]
     pub struct ERABToBeModifiedItemBearerModReq<'a> {
         pub e_rab_id: ERABID,
-        pub e_rab_level_qos_parameters: ERABLevelQoSParameters<'a>,
+        pub e_rab_level_qos_parameters: ERABLevelQoSParameters,
         pub nas_pdu: NASPDU<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeModifiedItemBearerModReq<'a> {
         pub fn new(
             e_rab_id: ERABID,
-            e_rab_level_qos_parameters: ERABLevelQoSParameters<'a>,
+            e_rab_level_qos_parameters: ERABLevelQoSParameters,
             nas_pdu: NASPDU<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -42884,9 +41788,9 @@ pub mod s1_ap_pdu_contents {
         pub fn into_owned(self) -> ERABToBeModifiedItemBearerModReq<'static> {
             ERABToBeModifiedItemBearerModReq {
                 e_rab_id: self.e_rab_id,
-                e_rab_level_qos_parameters: self.e_rab_level_qos_parameters.into_owned(),
+                e_rab_level_qos_parameters: self.e_rab_level_qos_parameters,
                 nas_pdu: self.nas_pdu.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -42910,10 +41814,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("nas_pdu")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -43111,20 +42018,20 @@ pub mod s1_ap_pdu_contents {
     #[non_exhaustive]
     pub struct ERABToBeSetupItemBearerSUReq<'a> {
         pub e_rab_id: ERABID,
-        pub e_rab_level_qos_parameters: ERABLevelQoSParameters<'a>,
+        pub e_rab_level_qos_parameters: ERABLevelQoSParameters,
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub gtp_teid: GTPTEID,
         pub nas_pdu: NASPDU<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeSetupItemBearerSUReq<'a> {
         pub fn new(
             e_rab_id: ERABID,
-            e_rab_level_qos_parameters: ERABLevelQoSParameters<'a>,
+            e_rab_level_qos_parameters: ERABLevelQoSParameters,
             transport_layer_address: TransportLayerAddress<'a>,
             gtp_teid: GTPTEID,
             nas_pdu: NASPDU<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -43140,11 +42047,11 @@ pub mod s1_ap_pdu_contents {
         pub fn into_owned(self) -> ERABToBeSetupItemBearerSUReq<'static> {
             ERABToBeSetupItemBearerSUReq {
                 e_rab_id: self.e_rab_id,
-                e_rab_level_qos_parameters: self.e_rab_level_qos_parameters.into_owned(),
+                e_rab_level_qos_parameters: self.e_rab_level_qos_parameters,
                 transport_layer_address: self.transport_layer_address.into_owned(),
                 gtp_teid: self.gtp_teid,
                 nas_pdu: self.nas_pdu.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -43176,10 +42083,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("nas_pdu")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -43279,20 +42189,20 @@ pub mod s1_ap_pdu_contents {
     #[non_exhaustive]
     pub struct ERABToBeSetupItemCtxtSUReq<'a> {
         pub e_rab_id: ERABID,
-        pub e_rab_level_qos_parameters: ERABLevelQoSParameters<'a>,
+        pub e_rab_level_qos_parameters: ERABLevelQoSParameters,
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub gtp_teid: GTPTEID,
         pub nas_pdu: Option<NASPDU<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeSetupItemCtxtSUReq<'a> {
         pub fn new(
             e_rab_id: ERABID,
-            e_rab_level_qos_parameters: ERABLevelQoSParameters<'a>,
+            e_rab_level_qos_parameters: ERABLevelQoSParameters,
             transport_layer_address: TransportLayerAddress<'a>,
             gtp_teid: GTPTEID,
             nas_pdu: Option<NASPDU<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -43308,11 +42218,11 @@ pub mod s1_ap_pdu_contents {
         pub fn into_owned(self) -> ERABToBeSetupItemCtxtSUReq<'static> {
             ERABToBeSetupItemCtxtSUReq {
                 e_rab_id: self.e_rab_id,
-                e_rab_level_qos_parameters: self.e_rab_level_qos_parameters.into_owned(),
+                e_rab_level_qos_parameters: self.e_rab_level_qos_parameters,
                 transport_layer_address: self.transport_layer_address.into_owned(),
                 gtp_teid: self.gtp_teid,
                 nas_pdu: self.nas_pdu.map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -43348,10 +42258,13 @@ pub mod s1_ap_pdu_contents {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -43459,16 +42372,16 @@ pub mod s1_ap_pdu_contents {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub gtp_teid: GTPTEID,
-        pub e_rab_level_qos_parameters: ERABLevelQoSParameters<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub e_rab_level_qos_parameters: ERABLevelQoSParameters,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeSetupItemHOReq<'a> {
         pub fn new(
             e_rab_id: ERABID,
             transport_layer_address: TransportLayerAddress<'a>,
             gtp_teid: GTPTEID,
-            e_rab_level_qos_parameters: ERABLevelQoSParameters<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            e_rab_level_qos_parameters: ERABLevelQoSParameters,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -43485,8 +42398,8 @@ pub mod s1_ap_pdu_contents {
                 e_rab_id: self.e_rab_id,
                 transport_layer_address: self.transport_layer_address.into_owned(),
                 gtp_teid: self.gtp_teid,
-                e_rab_level_qos_parameters: self.e_rab_level_qos_parameters.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                e_rab_level_qos_parameters: self.e_rab_level_qos_parameters,
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -43514,10 +42427,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("e_rab_level_qos_parameters")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -43776,14 +42692,14 @@ pub mod s1_ap_pdu_contents {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub gtp_teid: GTPTEID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeSwitchedDLItem<'a> {
         pub fn new(
             e_rab_id: ERABID,
             transport_layer_address: TransportLayerAddress<'a>,
             gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -43799,7 +42715,7 @@ pub mod s1_ap_pdu_contents {
                 e_rab_id: self.e_rab_id,
                 transport_layer_address: self.transport_layer_address.into_owned(),
                 gtp_teid: self.gtp_teid,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -43823,10 +42739,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("gtp_teid")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -43963,14 +42882,14 @@ pub mod s1_ap_pdu_contents {
         pub e_rab_id: ERABID,
         pub transport_layer_address: TransportLayerAddress<'a>,
         pub gtp_teid: GTPTEID,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeSwitchedULItem<'a> {
         pub fn new(
             e_rab_id: ERABID,
             transport_layer_address: TransportLayerAddress<'a>,
             gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -43986,7 +42905,7 @@ pub mod s1_ap_pdu_contents {
                 e_rab_id: self.e_rab_id,
                 transport_layer_address: self.transport_layer_address.into_owned(),
                 gtp_teid: self.gtp_teid,
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
+                ie_extensions: self.ie_extensions,
             }
         }
     }
@@ -44010,10 +42929,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("gtp_teid")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -44146,16 +43068,16 @@ pub mod s1_ap_pdu_contents {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct ERABToBeUpdatedItem<'a> {
+    pub struct ERABToBeUpdatedItem {
         pub e_rab_id: ERABID,
-        pub security_indication: Option<SecurityIndication<'a>>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+        pub security_indication: Option<SecurityIndication>,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> ERABToBeUpdatedItem<'a> {
+    impl ERABToBeUpdatedItem {
         pub fn new(
             e_rab_id: ERABID,
-            security_indication: Option<SecurityIndication<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+            security_indication: Option<SecurityIndication>,
+            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
         ) -> Self {
             Self {
                 e_rab_id,
@@ -44163,20 +43085,11 @@ pub mod s1_ap_pdu_contents {
                 ie_extensions,
             }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeUpdatedItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> ERABToBeUpdatedItem<'static> {
-            ERABToBeUpdatedItem {
-                e_rab_id: self.e_rab_id,
-                security_indication: self.security_indication.map(|value| value.into_owned()),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for ERABToBeUpdatedItem<'_> {
+    impl AsnType for ERABToBeUpdatedItem {
         const NAME: &'static str = "E-RABToBeUpdatedItem";
     }
-    impl<'a> Decode<'a> for ERABToBeUpdatedItem<'a> {
+    impl<'a> Decode<'a> for ERABToBeUpdatedItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
@@ -44193,10 +43106,13 @@ pub mod s1_ap_pdu_contents {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -44210,7 +43126,7 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
-    impl Encode for ERABToBeUpdatedItem<'_> {
+    impl Encode for ERABToBeUpdatedItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.security_indication.is_some());
@@ -44232,7 +43148,7 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeUpdatedItem<'_> {
+    impl Json for ERABToBeUpdatedItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("e-RAB-ID", self.e_rab_id.to_json());
@@ -48262,27 +47178,19 @@ pub mod s1_ap_pdu_contents {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
-    pub struct TAIItem<'a> {
-        pub tai: TAI<'a>,
-        pub ie_extensions: Option<ProtocolExtensionContainer<'a>>,
+    pub struct TAIItem {
+        pub tai: TAI,
+        pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl<'a> TAIItem<'a> {
-        pub fn new(tai: TAI<'a>, ie_extensions: Option<ProtocolExtensionContainer<'a>>) -> Self {
+    impl TAIItem {
+        pub fn new(tai: TAI, ie_extensions: Option<ProtocolExtensionContainer<'static>>) -> Self {
             Self { tai, ie_extensions }
         }
-        /// The same value, which borrows nothing and is kept as long as it is needed: a `TAIItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
-        #[doc(alias("to_owned", "owned", "keep"))]
-        pub fn into_owned(self) -> TAIItem<'static> {
-            TAIItem {
-                tai: self.tai.into_owned(),
-                ie_extensions: self.ie_extensions.map(|value| value.into_owned()),
-            }
-        }
     }
-    impl AsnType for TAIItem<'_> {
+    impl AsnType for TAIItem {
         const NAME: &'static str = "TAIItem";
     }
-    impl<'a> Decode<'a> for TAIItem<'a> {
+    impl<'a> Decode<'a> for TAIItem {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
@@ -48291,10 +47199,13 @@ pub mod s1_ap_pdu_contents {
                 Err(error) => return Err(error.in_field("tai")),
             };
             let ie_extensions = if present & 1 != 0 {
-                Some(match ProtocolExtensionContainer::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ie_extensions")),
-                })
+                Some(
+                    (match ProtocolExtensionContainer::decode(reader) {
+                        Ok(value) => value,
+                        Err(error) => return Err(error.in_field("ie_extensions")),
+                    })
+                    .into_owned(),
+                )
             } else {
                 None
             };
@@ -48304,7 +47215,7 @@ pub mod s1_ap_pdu_contents {
             Ok(Self { tai, ie_extensions })
         }
     }
-    impl Encode for TAIItem<'_> {
+    impl Encode for TAIItem {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
@@ -48320,7 +47231,7 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIItem<'_> {
+    impl Json for TAIItem {
         fn to_json(&self) -> Value {
             let mut members = json::Members::new();
             members.put("tAI", self.tai.to_json());
