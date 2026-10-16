@@ -475,7 +475,7 @@ fn an_argument_that_a_helper_does_not_take_is_an_error_and_no_panic() {
 
     // A TAC is two octets (clause 9.2.3.7), which the type of the argument says.
     let area = tai(network(), [0, 1]);
-    assert_eq!(area.t_ac.0[..], [0, 1]);
+    assert_eq!(area.tac.0[..], [0, 1]);
 }
 
 /// The errors of the `inspect` feature: a test for each kind, as a caller matches on it.

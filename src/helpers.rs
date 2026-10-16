@@ -241,7 +241,7 @@ mod tests {
             [0x00, 0x02, 0xf8, 0x39, 0x12, 0x34, 0x56, 0x70]
         );
         let enb = global_enb_id(plmn, 0x12345).unwrap();
-        let ENBID::macroENB_ID(bits) = enb.e_nb_id else {
+        let ENBID::macroENB_ID(bits) = enb.enb_id else {
             panic!("expected macro eNB ID");
         };
         assert_eq!(bits, Bits::new(0x12345, 20).unwrap());
@@ -257,7 +257,7 @@ mod tests {
 
         // A macro eNB ID of 20 bits, alone and before the 8 bits of a cell: the last
         // value, and the one after it.
-        let ENBID::macroENB_ID(last) = global_enb_id(network(), 0xf_ffff).unwrap().e_nb_id else {
+        let ENBID::macroENB_ID(last) = global_enb_id(network(), 0xf_ffff).unwrap().enb_id else {
             panic!("expected macro eNB ID");
         };
         assert_eq!((last.value(), last.len()), (0xf_ffff, 20));

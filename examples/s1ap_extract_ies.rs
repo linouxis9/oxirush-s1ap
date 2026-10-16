@@ -50,7 +50,7 @@ fn handle_handover_required(pdu: &S1AP_PDU) -> Result<Vec<String>, Error> {
 
         opt target: String = TargetID(target_value) => match target_value {
             TargetID::targeteNB_ID(value) => {
-                match plmn_from(&value.global_enb_id.p_lmnidentity) {
+                match plmn_from(&value.global_enb_id.plmn_identity) {
                     Some((mcc, mnc)) => format!("target eNB in PLMN {mcc}-{mnc}"),
                     None => "target eNB without a PLMN identity".to_string(),
                 }
@@ -85,7 +85,7 @@ fn handle_initial_context_setup(pdu: &S1AP_PDU) -> Result<Vec<String>, Error> {
             E_RABToBeSetupListCtxtSUReq(list) => list,
 
         opt ambr_dl: u64 = UEAggregateMaximumBitrate(ambr) =>
-            ambr.u_eaggregate_maximum_bit_rate_dl.0,
+            ambr.ue_aggregate_maximum_bit_rate_dl.0,
     );
 
     let erab_count = erabs.as_ref().map_or(0, |list| list.0.len());
@@ -223,6 +223,6 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq<'static> {
 fn nested_nas_len(list: &ERABToBeSetupListCtxtSUReq) -> Option<usize> {
     list.0.iter().find_map(|entry| {
         let item: ERABToBeSetupItemCtxtSUReq = decode_open_type(&entry.value).ok()?;
-        item.n_as_pdu.map(|nas| nas.0.len())
+        item.nas_pdu.map(|nas| nas.0.len())
     })
 }

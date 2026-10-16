@@ -577,7 +577,7 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
         decode_open_type(&message.protocol_ies.0[2].value).unwrap();
     let carried: SourceeNBToTargeteNBTransparentContainer =
         oxirush_s1ap::aper::decode(&octets.0).unwrap();
-    assert_eq!(carried.r_rc_container.0, [1, 2]);
+    assert_eq!(carried.rrc_container.0, [1, 2]);
     assert_eq!(oxirush_s1ap::aper::encode(&carried).unwrap(), octets.0);
     // Nothing says what the octets carry: a view and a tree have them as they are.
     let mut view = pdu.to_view().unwrap();

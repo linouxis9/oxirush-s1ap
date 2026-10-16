@@ -132,7 +132,7 @@ fn the_identities_of_an_s1_setup_are_those_that_tshark_reads() -> Result<(), Err
         req areas: SupportedTAs = SupportedTAs(areas) => areas,
     );
     let broadcast = areas.0[0].broadcast_plmns.0.iter();
-    let identities = std::iter::once(&enb.p_lmnidentity).chain(broadcast);
+    let identities = std::iter::once(&enb.plmn_identity).chain(broadcast);
     assert_eq!(
         identities.map(plmn_from).collect::<Option<Vec<_>>>(),
         Some(read)
@@ -233,7 +233,7 @@ fn the_notation_of_a_plmn_identity_has_the_octets_of_the_clause() {
         let edited = S1AP_PDU::from_view(&view).unwrap();
         let request: S1SetupRequest = edited.decode_value().unwrap();
         let enb: GlobalENBID = decode_open_type(&request.protocol_ies.0[0].value).unwrap();
-        assert_eq!(&enb.p_lmnidentity.0.0[..], octets, "{mcc}-{mnc}");
+        assert_eq!(&enb.plmn_identity.0.0[..], octets, "{mcc}-{mnc}");
         let shown = edited.to_view().unwrap();
         let shown = inspect::select(&shown, of_the_enb).unwrap();
         assert_eq!(shown, [&json!(format!("{mcc}-{mnc}"))]);

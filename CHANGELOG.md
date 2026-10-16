@@ -13,6 +13,12 @@ what each type became.
 
 ### Breaking changes relative to 0.2.0
 
+- A field has the words of the ASN.1 identifier of its member: `p_lmnidentity`
+  is `plmn_identity`, `t_ac` is `tac`, `i_e_extensions` is `ie_extensions`,
+  `e_nb_id` is `enb_id`, `m_me_code` is `mme_code`, `g_tp_teid` is `gtp_teid`. The README
+  says the rule, and `build/fields.tsv` of the repository has each field with
+  its name in 0.2.0, for a replacement by name. The JSON forms are as
+  they were.
 - The crate no longer depends on `rasn`, and `oxirush_s1ap::rasn` is not
   there. The bindings implement `AsnType`, `Decode` and `Encode` of
   `oxirush-aper`, which the crate re-exports as `oxirush_s1ap::aper`, and no
@@ -76,7 +82,7 @@ what each type became.
 - `ECGI-List`, of at most 256 cells, is `ECGI_List`. It was one type with
   `ECGIList`, of at most 65535, so the cell list of a warning request had a
   one-octet count. This changes the type of `SynchronisationInformation`'s
-  `aggressore_cgi_list`.
+  `aggressor_ecgi_list`.
 - The macros name each IE by its own identifier before any type alias, and a
   type name is an alias only for the one IE of that type: `GUMMEI` built
   id-GUMMEI-ID where a PATH SWITCH REQUEST carries id-SourceMME-GUMMEI.

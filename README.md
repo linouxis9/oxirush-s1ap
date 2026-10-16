@@ -255,6 +255,39 @@ of 140 octets takes 27 KB, and of a handover of 4 KB, 40 KB. `cargo bench
 --bench scale`, in `benches/`, measures the table, and `--bench allocations`
 the memory of each call on the messages of the fixtures.
 
+### The names of the fields
+
+A field has the words of the identifier that ASN.1 gives its member, in lower
+case with `_` between them, as a reader of the specification says them:
+`pLMNidentity` is `plmn_identity`, `tAC` is `tac`, `iE-Extensions` is
+`ie_extensions`, `eNB-ID` is `enb_id`, `mME-Code` is `mme_code`, `gTP-TEID` is
+`gtp_teid`.
+
+1. A hyphen ends a word, and so does a lower-case letter or a digit before a
+   capital: `procedureCode` is `procedure_code`.
+2. The first letter of an identifier belongs to the capitals after it: the
+   identifier starts in lower case whatever its first word is.
+3. Capitals in a row are an abbreviation, and the last of them starts a word
+   when a lower-case letter follows. When the capitals without it are no
+   abbreviation of the list and the capitals with it are one, they end the
+   abbreviation: `nRCellIdentity` is `nr_cell_identity`, and `pLMNIdentity`
+   is `plmn_identity` as `pLMNidentity` is. An `s` after them is their plural:
+   `protocolIEs` is `protocol_ies`.
+4. Capitals that are several abbreviations of the list are these:
+   `eNBX2TransportLayerAddresses` is `enb_x2_transport_layer_addresses`.
+5. An abbreviation that the specifications write with a lower-case letter is
+   one word wherever it is: `a2X`, `AIoT`, `IoT`, `QoS`, `QoE`, `ProSe`,
+   `eNB`, `gNB`, `IPsec`, `IPv4`, `IPv6`, `NRPPa`, `LPPa`, `n3IWF`, `eDRX`,
+   `eCGI`. `gNB-ID` is `gnb_id`.
+6. `fiveG` and `fiveGS` are `five_g` and `five_gs`, and `5GS` is one word.
+
+The list of the abbreviations is `ABBREVIATIONS` of `generator/src/names.rs`
+in oxirush-aper, which also has the identifiers that the specifications write
+otherwise than their others, with their names, as `parentTImeSource`. The
+generator writes `build/fields.tsv` in this repository: each field of each
+type, with the name that rasn-compiler gives it, which the fields had before
+this rule and have in 0.2.0 for every field of a type that 0.2.0 has but one, the `excludedCellsToAddModList` of `InterSystemMeasurementItem`. The JSON forms keep the identifiers of ASN.1.
+
 ### Keep a value after its PDU
 
 A value that is decoded borrows the octets that it holds: a type that holds

@@ -8,11 +8,7 @@ fn unknown_sequence_addition_preserves_the_following_tai() {
     let wire = hex::decode("00018002f83900010101000002f8390002").unwrap();
     let value = decode::<TAIListforWarning>(&wire).unwrap();
     assert_eq!(
-        value
-            .0
-            .iter()
-            .map(|tai| &tai.t_ac.0[..])
-            .collect::<Vec<_>>(),
+        value.0.iter().map(|tai| &tai.tac.0[..]).collect::<Vec<_>>(),
         [&[0, 1][..], &[0, 2][..]],
     );
     // The public type retains the known root, while future additions are ignored.
@@ -45,7 +41,7 @@ fn complete_warning_request_preserves_unknown_addition_bytes() {
         panic!("expected tracking area warning list");
     };
     assert_eq!(
-        list.0.iter().map(|tai| &tai.t_ac.0[..]).collect::<Vec<_>>(),
+        list.0.iter().map(|tai| &tai.tac.0[..]).collect::<Vec<_>>(),
         [&[0, 1][..], &[0, 2][..]],
     );
 }
