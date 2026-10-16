@@ -262,6 +262,95 @@ fn every_deviation_of_a_message_is_reported_in_the_order_of_the_message() -> Res
 }
 
 #[test]
+fn an_encoding_that_is_not_the_canonical_one_is_read_and_reported() -> Result<(), Error> {
+    use oxirush_s1ap::aper::{decode_strict, decode_with_faults};
+    use oxirush_s1ap::{Fault, Faults};
+    // UE CONTEXT RELEASE REQUEST, as its sender is to write it.
+    let canonical = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+        IGNORE, UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(42u32),
+        REJECT eNB_UE_S1AP_ID(7u32),
+        IGNORE Cause(cause()),
+    )?;
+    assert_eq!(canonical.check()?, []);
+    let octets = canonical.encode()?;
+    let whole = decode_with_faults::<S1APPDU>(&octets)?;
+    assert_eq!(whole, (canonical.clone(), Faults::default()));
+
+    // The same message from an encoder that is not canonical. The value of its first
+    // IE, a number of 0..4294967295, has the number of its octets in two bits,
+    // padding, then its octets: here two octets of which the first is zero (X.691
+    // §11.3.6), after padding of which a bit is one (§11.1.4).
+    let mut ies = canonical.protocol_ies()?.into_owned();
+    ies.0[0].value = Octets::owned(vec![0x41, 0x00, 0x2a]);
+    let mut other = canonical.clone();
+    other.set_protocol_ies(ies)?;
+    // And the length of that value in two octets (§11.9.3.6): the message starts after
+    // the four octets of the PDU, and the length is its seventh octet.
+    let mut octets = other.encode()?;
+    octets.insert(10, 0x80);
+    octets[3] += 1;
+    let other = S1AP_PDU::decode(&octets)?;
+
+    // It is read as the same message.
+    let ies = other.protocol_ies()?;
+    let read: MMEUES1APID = decode_open_type(&ies.0[0].value)?;
+    assert_eq!(read.0, 42);
+    assert_eq!(ies.0.len(), 3);
+    // And each of the three is reported, with its clause and the bit at which it is:
+    // that of the message first, then those of the value.
+    let ie = Some((0, "MME-UE-S1AP-ID", 0));
+    let deviations = other.check()?;
+    let not_canonical = |ie, fault, bit| Deviation::NotCanonical { ie, fault, bit };
+    assert_eq!(
+        deviations,
+        [
+            not_canonical(None, Fault::LengthInTwoOctets, 48),
+            not_canonical(ie, Fault::Padding, 2),
+            not_canonical(ie, Fault::LongNumber, 8),
+        ]
+    );
+    assert_eq!(
+        deviations[0].to_string(),
+        "the message is not written as its sender is to write it: at bit 48, a length of 127 \
+         or less is in two octets (X.691 §11.9.3.6)"
+    );
+    assert_eq!(
+        deviations[2].to_string(),
+        "the value of MME-UE-S1AP-ID (IE 0), at position 0, is not written as its sender is to \
+         write it: at bit 8, a whole number is in more octets than it needs (X.691 §11.3.6, \
+         11.4.6)"
+    );
+    // A receiver answers nothing for them.
+    for deviation in &deviations {
+        assert_eq!((deviation.ie(), deviation.cause()), (None, None));
+        assert!(deviation.diagnostics_item().is_none() && deviation.type_of_error().is_none());
+    }
+
+    // The octets before the message are the PDU, which was read when it was decoded: a
+    // decoding of the PDU has their faults, and a strict one refuses them. Here the
+    // length of the message is in two octets.
+    let mut octets = canonical.encode()?;
+    octets.insert(3, 0x80);
+    assert_eq!(S1AP_PDU::decode(&octets)?, canonical);
+    let (pdu, faults) = decode_with_faults::<S1APPDU>(&octets)?;
+    assert_eq!(pdu, canonical);
+    assert_eq!(
+        (faults.len(), faults[0].fault, faults[0].bit),
+        (1, Fault::LengthInTwoOctets, 24)
+    );
+    let error = decode_strict::<S1APPDU>(&octets).unwrap_err();
+    assert_eq!(error.kind(), ErrorKind::Decode);
+    assert!(
+        error
+            .to_string()
+            .contains("at bit 24, a length of 127 or less is in two octets")
+    );
+    assert_eq!(decode_strict::<S1APPDU>(&canonical.encode()?)?, canonical);
+    Ok(())
+}
+
+#[test]
 fn a_conditional_ie_is_not_reported_missing() -> Result<(), Error> {
     // HANDOVER COMMAND, with its four mandatory IEs. Its NASSecurityParametersfromE-UTRAN
     // is conditional: TS 36.413 clause 9.1.5.2 has it present when the Handover Type is

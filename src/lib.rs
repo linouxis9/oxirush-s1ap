@@ -203,7 +203,9 @@ pub use oxirush_utils::identity;
 
 pub use check::Deviation;
 pub use message::Message;
-pub use oxirush_aper::{AsnType, BitString, Bits, Decode, Encode, Error, ErrorKind, Octets};
+pub use oxirush_aper::{
+    AsnType, BitString, Bits, Decode, Encode, Error, ErrorKind, Fault, Faults, Octets,
+};
 pub use s1ap::S1apPduKind;
 
 /// The examples of the README, which the documentation tests compile and run.
