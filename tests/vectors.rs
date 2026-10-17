@@ -8,6 +8,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use oxirush_s1ap::inspect;
 use oxirush_s1ap::s1ap::S1AP_PDU;
+use oxirush_s1ap::tree;
 use oxirush_s1ap::tree::Value;
 
 const MESSAGES: &str = include_str!("fixtures/messages.tsv");
@@ -236,6 +237,51 @@ fn each_alternative_of_the_type_null_is_listed_and_selected() {
     assert_eq!(count, 8 + 8);
 }
 
+/// The view of an S1 SETUP REQUEST whose values are written in the JSON Encoding Rules of
+/// ITU-T X.697, as pycrate writes them, or as a view has them.
+fn setup_request(ies: Value) -> Value {
+    tree!({
+        "procedure_code": 17,
+        "direction": "InitiatingMessage",
+        "criticality": "reject",
+        "message": {"protocolIEs": ies},
+    })
+}
+
+/// The review of the release candidate is right that a string of decimal digits is never
+/// read as octets in a view, where it is a number or a PLMN identity; in the JSON Encoding
+/// Rules it is octets, and the values of the reference are written in them:
+/// `__view_of_jer` reads them as a view has them, and `from_view` refuses them as they are.
+#[test]
+fn a_view_in_the_json_encoding_rules_is_read_as_its_octets() {
+    let jer = setup_request(tree!([
+        {"id": 59, "criticality": "reject", "value": {
+            "pLMNidentity": "02F839",
+            "eNB-ID": {"macroENB-ID": "000010"},
+        }},
+        {"id": 64, "criticality": "reject", "value": [{
+            "tAC": "0001",
+            "broadcastPLMNs": ["02F839"],
+        }]},
+        {"id": 137, "criticality": "ignore", "value": "v128"},
+    ]));
+    let readable = setup_request(tree!([
+        {"id": 59, "criticality": "reject", "value": {
+            "pLMNidentity": "208-93",
+            "eNB-ID": {"macroENB-ID": "000010"},
+        }},
+        {"id": 64, "criticality": "reject", "value": [{
+            "tAC": 1,
+            "broadcastPLMNs": ["208-93"],
+        }]},
+        {"id": 137, "criticality": "ignore", "value": "v128"},
+    ]));
+    let error = S1AP_PDU::from_view(&jer).unwrap_err().to_string();
+    assert!(error.contains(r#""0001" is read in two ways"#), "{error}");
+    let read = S1AP_PDU::from_view(&inspect::__view_of_jer(&jer).unwrap()).unwrap();
+    assert_eq!(read, S1AP_PDU::from_view(&readable).unwrap());
+}
+
 /// The values of the vectors as the reference has them: `generate.py --values FILE` of
 /// oxirush-aper writes each as a view, in the JSON encoding of ASN.1, and
 /// `REFERENCE_VALUES` is that file. A PDU that is written from the view of a vector is
@@ -253,6 +299,8 @@ fn a_pdu_written_from_the_values_of_the_reference_is_the_octets_of_the_reference
         let (name, view) = line.split_once('\t').unwrap();
         let view: Value = serde_json::from_str(view).unwrap();
         count += 1;
+        // The values are written in the JSON Encoding Rules, which a view reads so.
+        let view = inspect::__view_of_jer(&view).unwrap();
         match octets(&view) {
             Ok(written) if written == hex::encode(&wires[name]) => {}
             Ok(_) => failures.push(format!("{name}: other octets")),
