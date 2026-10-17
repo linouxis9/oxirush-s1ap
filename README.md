@@ -103,13 +103,14 @@ and its README has the sections of this one.
 ```toml
 [dependencies]
 oxirush-s1ap = "0.3"
-# With the optional feature:
+# With the optional features:
 # oxirush-s1ap = { version = "0.3", features = ["inspect"] }
 ```
 
 | Feature | Adds | Through |
 |---------|------|---------|
 | `inspect` | A PDU as a `serde_json::Value`: its tree, in which a message is shown and written as its name and its IEs, its view and the paths of its values | `serde_json` |
+| `serde` | `Serialize` and `Deserialize` for every type of the bindings, through its tree: a PDU as its tree, and each other type in the form of its ASN.1 type. It turns on `inspect` | `serde_core` |
 
 No feature is on by default. With `inspect`, the members of a view and of a
 tree are in the order of the specification, through
@@ -895,7 +896,7 @@ println!("{}", edited.to_tree().unwrap());
 // What was not edited is the octets that were received
 let after = edited.to_view().unwrap();
 let octets = inspect::select(&after, "/s1ap/MME-UE-S1AP-ID/octets").unwrap();
-assert_eq!(octets, [&json!("002A")]);
+assert_eq!(octets, [&json!("002a")]);
 
 // A name that the type does not have is refused, and the view is as it was
 let wrong = inspect::set(&mut view, "/s1ap/Cause/radioNetwrok", json!("unspecified"));
@@ -933,7 +934,7 @@ println!("{}", edited.to_tree().unwrap()["ies"]);
 ```
 
 ```json
-[{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"C0FFEE"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"eNBname":"enb-1","criticality":"ignore"}]
+[{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"c0ffee"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"eNBname":"enb-1","criticality":"ignore"}]
 ```
 
 ### Write a message from its name and its IEs
@@ -995,8 +996,8 @@ println!("{}", edited.to_tree().unwrap());
 
 ```text
 0012401000000200000002002afde80003c0ffee
-{"id":65000,"criticality":"reject","value":"C0FFEE","_decode_error":"S1AP IE 65000 is unknown","_raw_value":"C0FFEE","_original_id":65000}
-{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":255},{"65000":{"octets":"C0FFEE"},"criticality":"reject"}]}
+{"id":65000,"criticality":"reject","value":"c0ffee","_decode_error":"S1AP IE 65000 is unknown","_raw_value":"c0ffee","_original_id":65000}
+{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":255},{"65000":{"octets":"c0ffee"},"criticality":"reject"}]}
 ```
 
 ### A repeated IE
@@ -1206,9 +1207,9 @@ println!("{}", edited.to_tree().unwrap()["ies"][2]);
 ```
 
 ```text
-{"Source-ToTarget-TransparentContainer":"000201020002F83900012340200100"}
+{"Source-ToTarget-TransparentContainer":"000201020002f83900012340200100"}
 {"rRC-Container":"0102","targetCell-ID":{"pLMNidentity":"208-93","cell-ID":4660},"uE-HistoryInformation":[{"uTRAN-Cell":"00"}]}
-{"Source-ToTarget-TransparentContainer":"000201020002F83900000070200100"}
+{"Source-ToTarget-TransparentContainer":"000201020002f83900000070200100"}
 ```
 
 The `rRC-Container` stays octets: it is a message of RRC. The secondary
@@ -1252,8 +1253,8 @@ written, and take them so.
 | `ENUMERATED` | the name of the value, read in any case |
 | `INTEGER` | a number, which 64 bits hold, as the bindings hold it |
 | a bit string whose size varies, as the identifier of a gNB | `{"value": "000004", "length": 22}`: the octets that hold it, in hexadecimal, and its length in bits |
-| a bit string of another size than the one that its type gives beside an extension marker, as an algorithm mask of 24 bits | `{"value": "C00000", "length": 24}`, where a mask of the 16 bits of its type is `"C000"` |
-| the other strings: keys and algorithm masks, the NAS-PDU and the other containers, the identifiers of an eNB, whose length says which kind they are | hexadecimal, read in either case |
+| a bit string of another size than the one that its type gives beside an extension marker, as an algorithm mask of 24 bits | `{"value": "c00000", "length": 24}`, where a mask of the 16 bits of its type is `"c000"` |
+| the other strings: keys and algorithm masks, the NAS-PDU and the other containers, the identifiers of an eNB, whose length says which kind they are | hexadecimal, written in lower case and read in either |
 
 Each is also read in the form of its ASN.1 type, and a value that does not
 fit its notation, such as a transport layer address of another length, stays

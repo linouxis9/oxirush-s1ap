@@ -192,12 +192,9 @@ fn octets_that_are_no_plmn_identity_are_shown_as_octets() {
         let pdu = S1AP_PDU::decode(&wire).unwrap();
         let view = pdu.to_view().unwrap();
         let shown = inspect::select(&view, "/s1ap/Global-ENB-ID/pLMNidentity").unwrap();
-        assert_eq!(shown, [&json!(octets.to_uppercase())]);
+        assert_eq!(shown, [&json!(octets)]);
         let tree = pdu.to_tree().unwrap();
-        assert_eq!(
-            tree["ies"][0]["Global-ENB-ID"]["pLMNidentity"],
-            octets.to_uppercase()
-        );
+        assert_eq!(tree["ies"][0]["Global-ENB-ID"]["pLMNidentity"], octets);
         assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
         assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
     }

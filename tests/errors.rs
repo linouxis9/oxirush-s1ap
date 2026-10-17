@@ -642,7 +642,8 @@ mod inspect_errors {
         assert_eq!(error.kind(), ErrorKind::NoSuchMember);
         assert_eq!(
             error.to_string(),
-            "this is not a value of Global-ENB-ID: \"other\" is not a member that its type has"
+            "this is not a value of Global-ENB-ID: \"other\" is not a member that its type has: it \
+             has pLMNidentity, eNB-ID, iE-Extensions"
         );
     }
 
@@ -694,7 +695,7 @@ mod inspect_errors {
         let view = written(unknown).unwrap().to_view().unwrap();
         assert_eq!(
             inspect::select(&view, "/s1ap/@id=65000/octets"),
-            Ok(vec![&json!("C0FFEE")])
+            Ok(vec![&json!("c0ffee")])
         );
         let error = inspect::select(&view, "/s1ap/@id=65000/value/member").unwrap_err();
         assert_eq!(error.kind(), ErrorKind::UndecodableIe);
@@ -719,21 +720,27 @@ mod inspect_errors {
         }
         assert_eq!(
             string.to_string(),
-            "this is not a value of MME-UE-S1AP-ID: a number is expected, and \"forty-two\" is written"
+            "this is not a value of MME-UE-S1AP-ID: a number from 0 to 4294967295 is expected, and \
+             \"forty-two\" is written"
         );
-        assert_eq!(
-            name.to_string(),
-            "this is not a value of Cause, at radioNetwork: \"no-such-cause\" is no value of the \
-             ENUMERATED"
+        // The names that it has are listed, and where it is written after them.
+        let name = name.to_string();
+        let names = "this is not a value of Cause: \"no-such-cause\" is none of its names: \
+                     unspecified, tx2relocoverall-expiry, successful-handover, ";
+        assert!(name.starts_with(names), "{name}");
+        assert!(
+            name.ends_with(", release-due-to-discontinuous-coverage, at radioNetwork"),
+            "{name}"
         );
         assert_eq!(
             outside.to_string(),
-            "this is not a value of MME-UE-S1AP-ID: 4294967296 is outside its constraint (0..4294967295)"
+            "this is not a value of MME-UE-S1AP-ID: a number from 0 to 4294967295 is expected, and \
+             4294967296 is written"
         );
         assert_eq!(
             octets.to_string(),
-            "this is not a value of UEContextReleaseRequest, at protocolIEs/0/value: octets in \
-             hexadecimal, two digits for each, are expected, and \"zz\" is written"
+            "this is not a value of UEContextReleaseRequest: octets in hexadecimal, two digits for \
+             each, are expected, and \"zz\" is written, at protocolIEs/0/value"
         );
 
         // A value of a member, by the names that ASN.1 gives the members on the way:
@@ -765,13 +772,13 @@ mod inspect_errors {
                 )
             );
         }
-        assert!(setup(json!("02F839"), json!({"macroENB-ID": "123450"})).is_ok());
+        assert!(setup(json!("02f839"), json!({"macroENB-ID": "123450"})).is_ok());
         let member = setup(json!("208-93"), json!(5)).unwrap_err();
         assert_eq!(member.kind(), ErrorKind::Value);
         assert_eq!(
             member.to_string(),
-            "this is not a value of Global-ENB-ID, at eNB-ID: an object with one member is \
-             expected, the name of an alternative with its value, and 5 is written"
+            "this is not a value of Global-ENB-ID: an object with one member, the name of an \
+             alternative with its value, is expected, and 5 is written, at eNB-ID"
         );
         assert!(std::error::Error::source(&member).is_none());
     }

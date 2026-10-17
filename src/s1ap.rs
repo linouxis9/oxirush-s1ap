@@ -14,7 +14,7 @@ pub mod s1_ap_common_data_types {
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
     #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Json, Reading, Refused};
+    use oxirush_aper::json::{self, Reading, Refused, Tree};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer,
@@ -56,14 +56,17 @@ pub mod s1_ap_common_data_types {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Criticality {
-        fn to_json(&self) -> Value {
+    impl Tree for Criticality {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Criticality);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum Presence {
         optional = 0,
@@ -99,14 +102,17 @@ pub mod s1_ap_common_data_types {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Presence {
-        fn to_json(&self) -> Value {
+    impl Tree for Presence {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Presence);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum PrivateIEID {
         local(u16),
@@ -151,14 +157,15 @@ pub mod s1_ap_common_data_types {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PrivateIEID {
-        fn to_json(&self) -> Value {
+    impl Tree for PrivateIEID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::local(value) => json::alternative("local", json::unsigned(u64::from(*value))),
                 Self::global(value) => json::alternative("global", json::object_identifier(value)),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(value, &["local", "global"])?;
             Ok(match position {
                 0 => Self::local(reading.within("local", value, |value, reading| {
@@ -167,11 +174,13 @@ pub mod s1_ap_common_data_types {
                         .map(|number| number as u16)
                 })?),
                 _ => Self::global(reading.within("global", value, |value, reading| {
-                    reading.object_identifier(value)
+                    json::read_object_identifier(reading, value)
                 })?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PrivateIEID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ProcedureCode(pub u8);
     impl crate::message::__Field<u8> for ProcedureCode {
@@ -202,16 +211,19 @@ pub mod s1_ap_common_data_types {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProcedureCode {
-        fn to_json(&self) -> Value {
+    impl Tree for ProcedureCode {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading.unsigned(value, 0, 255).map(|number| number as u8)?,
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ProcedureCode);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ProtocolExtensionID(pub u16);
     impl crate::message::__Field<u16> for ProtocolExtensionID {
@@ -242,11 +254,12 @@ pub mod s1_ap_common_data_types {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProtocolExtensionID {
-        fn to_json(&self) -> Value {
+    impl Tree for ProtocolExtensionID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 65535)
@@ -254,6 +267,8 @@ pub mod s1_ap_common_data_types {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ProtocolExtensionID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ProtocolIEID(pub u16);
     impl crate::message::__Field<u16> for ProtocolIEID {
@@ -284,11 +299,12 @@ pub mod s1_ap_common_data_types {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProtocolIEID {
-        fn to_json(&self) -> Value {
+    impl Tree for ProtocolIEID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 65535)
@@ -296,6 +312,8 @@ pub mod s1_ap_common_data_types {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ProtocolIEID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum TriggeringMessage {
         initiating_message = 0,
@@ -339,14 +357,17 @@ pub mod s1_ap_common_data_types {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TriggeringMessage {
-        fn to_json(&self) -> Value {
+    impl Tree for TriggeringMessage {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TriggeringMessage);
 }
 #[allow(
     non_camel_case_types,
@@ -361,7 +382,7 @@ pub mod s1_ap_constants {
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
     #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Json, Reading, Refused};
+    use oxirush_aper::json::{self, Reading, Refused, Tree};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer,
@@ -860,7 +881,7 @@ pub mod s1_ap_containers {
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
     #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Json, Reading, Refused};
+    use oxirush_aper::json::{self, Reading, Refused, Tree};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer,
@@ -950,19 +971,22 @@ pub mod s1_ap_containers {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProtocolIEField<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ProtocolIEField<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("id", self.id.to_json());
-            members.put("criticality", self.criticality.to_json());
+            members.put("id", self.id.to_tree());
+            members.put("criticality", self.criticality.to_tree());
             members.put("value", json::octets(&self.value));
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["id", "criticality", "value"])?;
-            let id = reading.member(&members, 0, ProtocolIEID::from_json)?;
-            let criticality = reading.member(&members, 1, Criticality::from_json)?;
-            let value = reading.member(&members, 2, |value, reading| reading.octets(value))?;
+            let id = reading.member(&members, 0, ProtocolIEID::from_tree)?;
+            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
+            let value = reading.member(&members, 2, |value, reading| {
+                json::read_octets(reading, value)
+            })?;
             Ok(Self {
                 id,
                 criticality,
@@ -970,6 +994,8 @@ pub mod s1_ap_containers {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ProtocolIEField<'a>);
     #[doc = " `ProtocolIE-Container`: the IEs of a message."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ProtocolIEContainer<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -1016,16 +1042,19 @@ pub mod s1_ap_containers {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProtocolIEContainer<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ProtocolIEContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ProtocolIEContainer<'a>);
     impl core::fmt::Debug for ProtocolExtensionField<'_> {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             let holds_key = crate::registry::KEY_IES.contains(&self.id.0);
@@ -1111,20 +1140,22 @@ pub mod s1_ap_containers {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProtocolExtensionField<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ProtocolExtensionField<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("id", self.id.to_json());
-            members.put("criticality", self.criticality.to_json());
+            members.put("id", self.id.to_tree());
+            members.put("criticality", self.criticality.to_tree());
             members.put("extensionValue", json::octets(&self.extension_value));
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["id", "criticality", "extensionValue"])?;
-            let id = reading.member(&members, 0, ProtocolExtensionID::from_json)?;
-            let criticality = reading.member(&members, 1, Criticality::from_json)?;
-            let extension_value =
-                reading.member(&members, 2, |value, reading| reading.octets(value))?;
+            let id = reading.member(&members, 0, ProtocolExtensionID::from_tree)?;
+            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
+            let extension_value = reading.member(&members, 2, |value, reading| {
+                json::read_octets(reading, value)
+            })?;
             Ok(Self {
                 id,
                 criticality,
@@ -1132,6 +1163,8 @@ pub mod s1_ap_containers {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ProtocolExtensionField<'a>);
     #[doc = " `ProtocolExtensionContainer`: the `iE-Extensions` of a type."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ProtocolExtensionContainer<'a>(pub Vec<ProtocolExtensionField<'a>>);
@@ -1180,16 +1213,19 @@ pub mod s1_ap_containers {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProtocolExtensionContainer<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ProtocolExtensionContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolExtensionField::from_json(value, reading)
+                ProtocolExtensionField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ProtocolExtensionContainer<'a>);
 }
 #[allow(
     non_camel_case_types,
@@ -1204,7 +1240,7 @@ pub mod s1_ap_ies {
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
     #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Json, Reading, Refused};
+    use oxirush_aper::json::{self, Reading, Refused, Tree};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer,
@@ -1286,23 +1322,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AdditionalGUTI {
-        fn to_json(&self) -> Value {
+    impl Tree for AdditionalGUTI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("gUMMEI", self.gummei.to_json());
-            members.put("m-TMSI", self.m_tmsi.to_json());
+            members.put("gUMMEI", self.gummei.to_tree());
+            members.put("m-TMSI", self.m_tmsi.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["gUMMEI", "m-TMSI", "iE-Extensions"])?;
-            let gummei = reading.member(&members, 0, GUMMEI::from_json)?;
-            let m_tmsi = reading.member(&members, 1, MTMSI::from_json)?;
+            let gummei = reading.member(&members, 0, GUMMEI::from_tree)?;
+            let m_tmsi = reading.member(&members, 1, MTMSI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 gummei,
                 m_tmsi,
@@ -1310,6 +1347,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(AdditionalGUTI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum AdditionalCSFallbackIndicator {
@@ -1345,14 +1384,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AdditionalCSFallbackIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for AdditionalCSFallbackIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(AdditionalCSFallbackIndicator);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct AdditionalRRMPriorityIndex(pub Bits);
     impl crate::message::__Field<Bits> for AdditionalRRMPriorityIndex {
@@ -1393,14 +1435,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AdditionalRRMPriorityIndex {
-        fn to_json(&self) -> Value {
+    impl Tree for AdditionalRRMPriorityIndex {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 32, 32)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 32, 32)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 32, 32)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(AdditionalRRMPriorityIndex);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum AerialUEsubscriptionInformation {
@@ -1436,14 +1481,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AerialUEsubscriptionInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for AerialUEsubscriptionInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(AerialUEsubscriptionInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct AllocationAndRetentionPriority {
         pub priority_level: PriorityLevel,
@@ -1529,25 +1577,26 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AllocationAndRetentionPriority {
-        fn to_json(&self) -> Value {
+    impl Tree for AllocationAndRetentionPriority {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("priorityLevel", self.priority_level.to_json());
+            members.put("priorityLevel", self.priority_level.to_tree());
             members.put(
                 "pre-emptionCapability",
-                self.pre_emption_capability.to_json(),
+                self.pre_emption_capability.to_tree(),
             );
             members.put(
                 "pre-emptionVulnerability",
-                self.pre_emption_vulnerability.to_json(),
+                self.pre_emption_vulnerability.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -1557,13 +1606,13 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let priority_level = reading.member(&members, 0, PriorityLevel::from_json)?;
+            let priority_level = reading.member(&members, 0, PriorityLevel::from_tree)?;
             let pre_emption_capability =
-                reading.member(&members, 1, PreEmptionCapability::from_json)?;
+                reading.member(&members, 1, PreEmptionCapability::from_tree)?;
             let pre_emption_vulnerability =
-                reading.member(&members, 2, PreEmptionVulnerability::from_json)?;
+                reading.member(&members, 2, PreEmptionVulnerability::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 priority_level,
                 pre_emption_capability,
@@ -1572,6 +1621,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(AllocationAndRetentionPriority);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum AreaScopeOfMDT {
@@ -1642,30 +1693,33 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AreaScopeOfMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for AreaScopeOfMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::cellBased(value) => json::alternative("cellBased", value.to_json()),
-                Self::tABased(value) => json::alternative("tABased", value.to_json()),
+                Self::cellBased(value) => json::alternative("cellBased", value.to_tree()),
+                Self::tABased(value) => json::alternative("tABased", value.to_tree()),
                 Self::pLMNWide(value) => json::alternative("pLMNWide", Value::Null),
-                Self::tAIBased(value) => json::alternative("tAIBased", value.to_json()),
+                Self::tAIBased(value) => json::alternative("tAIBased", value.to_tree()),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) =
                 reading.alternative(value, &["cellBased", "tABased", "pLMNWide", "tAIBased"])?;
             Ok(match position {
                 0 => {
-                    Self::cellBased(reading.within("cellBased", value, CellBasedMDT::from_json)?)
+                    Self::cellBased(reading.within("cellBased", value, CellBasedMDT::from_tree)?)
                 }
-                1 => Self::tABased(reading.within("tABased", value, TABasedMDT::from_json)?),
+                1 => Self::tABased(reading.within("tABased", value, TABasedMDT::from_tree)?),
                 2 => Self::pLMNWide(
                     reading.within("pLMNWide", value, |value, reading| reading.null(value))?,
                 ),
-                _ => Self::tAIBased(reading.within("tAIBased", value, TAIBasedMDT::from_json)?),
+                _ => Self::tAIBased(reading.within("tAIBased", value, TAIBasedMDT::from_tree)?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(AreaScopeOfMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum AreaScopeOfQMC {
@@ -1731,34 +1785,37 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AreaScopeOfQMC {
-        fn to_json(&self) -> Value {
+    impl Tree for AreaScopeOfQMC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::cellBased(value) => json::alternative("cellBased", value.to_json()),
-                Self::tABased(value) => json::alternative("tABased", value.to_json()),
-                Self::tAIBased(value) => json::alternative("tAIBased", value.to_json()),
-                Self::pLMNAreaBased(value) => json::alternative("pLMNAreaBased", value.to_json()),
+                Self::cellBased(value) => json::alternative("cellBased", value.to_tree()),
+                Self::tABased(value) => json::alternative("tABased", value.to_tree()),
+                Self::tAIBased(value) => json::alternative("tAIBased", value.to_tree()),
+                Self::pLMNAreaBased(value) => json::alternative("pLMNAreaBased", value.to_tree()),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &["cellBased", "tABased", "tAIBased", "pLMNAreaBased"],
             )?;
             Ok(match position {
                 0 => {
-                    Self::cellBased(reading.within("cellBased", value, CellBasedQMC::from_json)?)
+                    Self::cellBased(reading.within("cellBased", value, CellBasedQMC::from_tree)?)
                 }
-                1 => Self::tABased(reading.within("tABased", value, TABasedQMC::from_json)?),
-                2 => Self::tAIBased(reading.within("tAIBased", value, TAIBasedQMC::from_json)?),
+                1 => Self::tABased(reading.within("tABased", value, TABasedQMC::from_tree)?),
+                2 => Self::tAIBased(reading.within("tAIBased", value, TAIBasedQMC::from_tree)?),
                 _ => Self::pLMNAreaBased(reading.within(
                     "pLMNAreaBased",
                     value,
-                    PLMNAreaBasedQMC::from_json,
+                    PLMNAreaBasedQMC::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(AreaScopeOfQMC);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct AssistanceDataForCECapableUEs<'a> {
         pub cell_identifier_and_ce_level_for_ce_capable_ues:
@@ -1841,21 +1898,22 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AssistanceDataForCECapableUEs<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for AssistanceDataForCECapableUEs<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "cellIdentifierAndCELevelForCECapableUEs",
                 self.cell_identifier_and_ce_level_for_ce_capable_ues
-                    .to_json(),
+                    .to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["cellIdentifierAndCELevelForCECapableUEs", "iE-Extensions"],
@@ -1863,16 +1921,18 @@ pub mod s1_ap_ies {
             let cell_identifier_and_ce_level_for_ce_capable_ues = reading.member(
                 &members,
                 0,
-                CellIdentifierAndCELevelForCECapableUEs::from_json,
+                CellIdentifierAndCELevelForCECapableUEs::from_tree,
             )?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 cell_identifier_and_ce_level_for_ce_capable_ues,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(AssistanceDataForCECapableUEs<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct AssistanceDataForPaging<'a> {
         pub assistance_data_for_recommended_cells: Option<AssistanceDataForRecommendedCells<'a>>,
@@ -1995,34 +2055,35 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AssistanceDataForPaging<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for AssistanceDataForPaging<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "assistanceDataForRecommendedCells",
                 self.assistance_data_for_recommended_cells
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "assistanceDataForCECapableUEs",
                 self.assistance_data_for_ce_capable_ues
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "pagingAttemptInformation",
                 self.paging_attempt_information
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -2033,13 +2094,13 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let assistance_data_for_recommended_cells =
-                reading.optional(&members, 0, AssistanceDataForRecommendedCells::from_json)?;
+                reading.optional(&members, 0, AssistanceDataForRecommendedCells::from_tree)?;
             let assistance_data_for_ce_capable_ues =
-                reading.optional(&members, 1, AssistanceDataForCECapableUEs::from_json)?;
+                reading.optional(&members, 1, AssistanceDataForCECapableUEs::from_tree)?;
             let paging_attempt_information =
-                reading.optional(&members, 2, PagingAttemptInformation::from_json)?;
+                reading.optional(&members, 2, PagingAttemptInformation::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 assistance_data_for_recommended_cells,
                 assistance_data_for_ce_capable_ues,
@@ -2048,6 +2109,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(AssistanceDataForPaging<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct AssistanceDataForRecommendedCells<'a> {
         pub recommended_cells_for_paging: RecommendedCellsForPaging<'a>,
@@ -2119,32 +2182,35 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AssistanceDataForRecommendedCells<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for AssistanceDataForRecommendedCells<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "recommendedCellsForPaging",
-                self.recommended_cells_for_paging.to_json(),
+                self.recommended_cells_for_paging.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["recommendedCellsForPaging", "iE-Extensions"])?;
             let recommended_cells_for_paging =
-                reading.member(&members, 0, RecommendedCellsForPaging::from_json)?;
+                reading.member(&members, 0, RecommendedCellsForPaging::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 recommended_cells_for_paging,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(AssistanceDataForRecommendedCells<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BPLMNs(pub Vec<PLMNidentity>);
     impl crate::message::__Field<Vec<PLMNidentity>> for BPLMNs {
@@ -2183,16 +2249,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BPLMNs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for BPLMNs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                PLMNidentity::from_json(value, reading)
+                PLMNidentity::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BPLMNs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum BearerType {
@@ -2227,14 +2296,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BearerType {
-        fn to_json(&self) -> Value {
+    impl Tree for BearerType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BearerType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToDLDiscardingItem {
         pub e_rab_id: ERABID,
@@ -2309,24 +2381,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BearersSubjectToDLDiscardingItem {
-        fn to_json(&self) -> Value {
+    impl Tree for BearersSubjectToDLDiscardingItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
-            members.put("dL-Discarding", self.dl_discarding.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
+            members.put("dL-Discarding", self.dl_discarding.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["e-RAB-ID", "dL-Discarding", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
-            let dl_discarding = reading.member(&members, 1, DLDiscarding::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
+            let dl_discarding = reading.member(&members, 1, DLDiscarding::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 dl_discarding,
@@ -2334,6 +2407,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BearersSubjectToDLDiscardingItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToDLDiscardingList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>>
@@ -2383,16 +2458,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BearersSubjectToDLDiscardingList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for BearersSubjectToDLDiscardingList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BearersSubjectToDLDiscardingList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToEarlyStatusTransferItem {
         pub e_rab_id: ERABID,
@@ -2467,30 +2545,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BearersSubjectToEarlyStatusTransferItem {
-        fn to_json(&self) -> Value {
+    impl Tree for BearersSubjectToEarlyStatusTransferItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "dLCOUNT-PDCP-SNlength",
-                self.dl_count_pdcp_sn_length.to_json(),
+                self.dl_count_pdcp_sn_length.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["e-RAB-ID", "dLCOUNT-PDCP-SNlength", "iE-Extensions"],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let dl_count_pdcp_sn_length =
-                reading.member(&members, 1, DLCOUNTPDCPSNlength::from_json)?;
+                reading.member(&members, 1, DLCOUNTPDCPSNlength::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 dl_count_pdcp_sn_length,
@@ -2498,6 +2577,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BearersSubjectToEarlyStatusTransferItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToEarlyStatusTransferList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>>
@@ -2547,16 +2628,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BearersSubjectToEarlyStatusTransferList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for BearersSubjectToEarlyStatusTransferList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BearersSubjectToEarlyStatusTransferList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToStatusTransferItem<'a> {
         pub e_rab_id: ERABID,
@@ -2673,25 +2757,26 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BearersSubjectToStatusTransferItem<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for BearersSubjectToStatusTransferItem<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
-            members.put("uL-COUNTvalue", self.ul_count_value.to_json());
-            members.put("dL-COUNTvalue", self.dl_count_value.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
+            members.put("uL-COUNTvalue", self.ul_count_value.to_tree());
+            members.put("dL-COUNTvalue", self.dl_count_value.to_tree());
             members.put_optional(
                 "receiveStatusofULPDCPSDUs",
                 self.receive_statusof_ul_pdcp_sdus
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -2702,13 +2787,13 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
-            let ul_count_value = reading.member(&members, 1, COUNTvalue::from_json)?;
-            let dl_count_value = reading.member(&members, 2, COUNTvalue::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
+            let ul_count_value = reading.member(&members, 1, COUNTvalue::from_tree)?;
+            let dl_count_value = reading.member(&members, 2, COUNTvalue::from_tree)?;
             let receive_statusof_ul_pdcp_sdus =
-                reading.optional(&members, 3, ReceiveStatusofULPDCPSDUs::from_json)?;
+                reading.optional(&members, 3, ReceiveStatusofULPDCPSDUs::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 ul_count_value,
@@ -2718,6 +2803,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BearersSubjectToStatusTransferItem<'a>);
     #[doc = " B"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToStatusTransferList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -2768,16 +2855,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BearersSubjectToStatusTransferList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for BearersSubjectToStatusTransferList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BearersSubjectToStatusTransferList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct BitRate(pub u64);
     impl crate::message::__Field<u64> for BitRate {
@@ -2808,14 +2898,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BitRate {
-        fn to_json(&self) -> Value {
+    impl Tree for BitRate {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, 0, 10000000000)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BitRate);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum BluetoothMeasConfig {
@@ -2850,14 +2943,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BluetoothMeasConfig {
-        fn to_json(&self) -> Value {
+    impl Tree for BluetoothMeasConfig {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BluetoothMeasConfig);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BluetoothMeasConfigNameList<'a>(pub Vec<BluetoothName<'a>>);
     impl<'a> crate::message::__Field<Vec<BluetoothName<'a>>> for BluetoothMeasConfigNameList<'a> {
@@ -2903,16 +2999,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BluetoothMeasConfigNameList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for BluetoothMeasConfigNameList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                BluetoothName::from_json(value, reading)
+                BluetoothName::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BluetoothMeasConfigNameList<'a>);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -2948,14 +3047,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BluetoothMeasurementConfigurationBtRssi {
-        fn to_json(&self) -> Value {
+    impl Tree for BluetoothMeasurementConfigurationBtRssi {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BluetoothMeasurementConfigurationBtRssi);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BluetoothMeasurementConfiguration<'a> {
         pub bluetooth_meas_config: BluetoothMeasConfig,
@@ -3069,27 +3171,28 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BluetoothMeasurementConfiguration<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for BluetoothMeasurementConfiguration<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("bluetoothMeasConfig", self.bluetooth_meas_config.to_json());
+            members.put("bluetoothMeasConfig", self.bluetooth_meas_config.to_tree());
             members.put_optional(
                 "bluetoothMeasConfigNameList",
                 self.bluetooth_meas_config_name_list
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "bt-rssi",
-                self.bt_rssi.as_ref().map(|value| value.to_json()),
+                self.bt_rssi.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -3100,16 +3203,16 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let bluetooth_meas_config =
-                reading.member(&members, 0, BluetoothMeasConfig::from_json)?;
+                reading.member(&members, 0, BluetoothMeasConfig::from_tree)?;
             let bluetooth_meas_config_name_list =
-                reading.optional(&members, 1, BluetoothMeasConfigNameList::from_json)?;
+                reading.optional(&members, 1, BluetoothMeasConfigNameList::from_tree)?;
             let bt_rssi = reading.optional(
                 &members,
                 2,
-                BluetoothMeasurementConfigurationBtRssi::from_json,
+                BluetoothMeasurementConfigurationBtRssi::from_tree,
             )?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 bluetooth_meas_config,
                 bluetooth_meas_config_name_list,
@@ -3118,6 +3221,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BluetoothMeasurementConfiguration<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BluetoothName<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for BluetoothName<'a> {
@@ -3166,14 +3271,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BluetoothName<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for BluetoothName<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BluetoothName<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum BroadcastCancelledAreaList {
@@ -3228,19 +3336,20 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BroadcastCancelledAreaList {
-        fn to_json(&self) -> Value {
+    impl Tree for BroadcastCancelledAreaList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::cellID_Cancelled(value) => {
-                    json::alternative("cellID-Cancelled", value.to_json())
+                    json::alternative("cellID-Cancelled", value.to_tree())
                 }
-                Self::tAI_Cancelled(value) => json::alternative("tAI-Cancelled", value.to_json()),
+                Self::tAI_Cancelled(value) => json::alternative("tAI-Cancelled", value.to_tree()),
                 Self::emergencyAreaID_Cancelled(value) => {
-                    json::alternative("emergencyAreaID-Cancelled", value.to_json())
+                    json::alternative("emergencyAreaID-Cancelled", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &[
@@ -3253,21 +3362,23 @@ pub mod s1_ap_ies {
                 0 => Self::cellID_Cancelled(reading.within(
                     "cellID-Cancelled",
                     value,
-                    CellIDCancelled::from_json,
+                    CellIDCancelled::from_tree,
                 )?),
                 1 => Self::tAI_Cancelled(reading.within(
                     "tAI-Cancelled",
                     value,
-                    TAICancelled::from_json,
+                    TAICancelled::from_tree,
                 )?),
                 _ => Self::emergencyAreaID_Cancelled(reading.within(
                     "emergencyAreaID-Cancelled",
                     value,
-                    EmergencyAreaIDCancelled::from_json,
+                    EmergencyAreaIDCancelled::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BroadcastCancelledAreaList);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum BroadcastCompletedAreaList {
@@ -3322,19 +3433,20 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for BroadcastCompletedAreaList {
-        fn to_json(&self) -> Value {
+    impl Tree for BroadcastCompletedAreaList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::cellID_Broadcast(value) => {
-                    json::alternative("cellID-Broadcast", value.to_json())
+                    json::alternative("cellID-Broadcast", value.to_tree())
                 }
-                Self::tAI_Broadcast(value) => json::alternative("tAI-Broadcast", value.to_json()),
+                Self::tAI_Broadcast(value) => json::alternative("tAI-Broadcast", value.to_tree()),
                 Self::emergencyAreaID_Broadcast(value) => {
-                    json::alternative("emergencyAreaID-Broadcast", value.to_json())
+                    json::alternative("emergencyAreaID-Broadcast", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &[
@@ -3347,21 +3459,23 @@ pub mod s1_ap_ies {
                 0 => Self::cellID_Broadcast(reading.within(
                     "cellID-Broadcast",
                     value,
-                    CellIDBroadcast::from_json,
+                    CellIDBroadcast::from_tree,
                 )?),
                 1 => Self::tAI_Broadcast(reading.within(
                     "tAI-Broadcast",
                     value,
-                    TAIBroadcast::from_json,
+                    TAIBroadcast::from_tree,
                 )?),
                 _ => Self::emergencyAreaID_Broadcast(reading.within(
                     "emergencyAreaID-Broadcast",
                     value,
-                    EmergencyAreaIDBroadcast::from_json,
+                    EmergencyAreaIDBroadcast::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(BroadcastCompletedAreaList);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CEModeBRestricted {
@@ -3397,14 +3511,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CEModeBRestricted {
-        fn to_json(&self) -> Value {
+    impl Tree for CEModeBRestricted {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CEModeBRestricted);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CEModeBSupportIndicator {
@@ -3439,14 +3556,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CEModeBSupportIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for CEModeBSupportIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CEModeBSupportIndicator);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CELevel<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for CELevel<'a> {
@@ -3495,14 +3615,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CELevel<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for CELevel<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CELevel<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CGI {
         pub plmn_identity: PLMNidentity,
@@ -3606,30 +3729,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CGI {
-        fn to_json(&self) -> Value {
+    impl Tree for CGI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_json());
-            members.put("lAC", self.lac.to_json());
-            members.put("cI", self.ci.to_json());
-            members.put_optional("rAC", self.rac.as_ref().map(|value| value.to_json()));
+            members.put("pLMNidentity", self.plmn_identity.to_tree());
+            members.put("lAC", self.lac.to_tree());
+            members.put("cI", self.ci.to_tree());
+            members.put_optional("rAC", self.rac.as_ref().map(|value| value.to_tree()));
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["pLMNidentity", "lAC", "cI", "rAC", "iE-Extensions"],
             )?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let lac = reading.member(&members, 1, LAC::from_json)?;
-            let ci = reading.member(&members, 2, CI::from_json)?;
-            let rac = reading.optional(&members, 3, RAC::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let lac = reading.member(&members, 1, LAC::from_tree)?;
+            let ci = reading.member(&members, 2, CI::from_tree)?;
+            let rac = reading.optional(&members, 3, RAC::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 lac,
@@ -3639,6 +3763,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CGI);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for CI {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -3682,14 +3808,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CI {
-        fn to_json(&self) -> Value {
+    impl Tree for CI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<2>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum CNDomain {
         ps = 0,
@@ -3724,14 +3853,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CNDomain {
-        fn to_json(&self) -> Value {
+    impl Tree for CNDomain {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CNDomain);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CNType {
@@ -3767,14 +3899,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CNType {
-        fn to_json(&self) -> Value {
+    impl Tree for CNType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CNType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CNTypeRestrictions(pub Vec<CNTypeRestrictionsItem>);
     impl crate::message::__Field<Vec<CNTypeRestrictionsItem>> for CNTypeRestrictions {
@@ -3813,16 +3948,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CNTypeRestrictions {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for CNTypeRestrictions {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                CNTypeRestrictionsItem::from_json(value, reading)
+                CNTypeRestrictionsItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CNTypeRestrictions);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CNTypeRestrictionsItem {
         pub plmn_identity: PLMNidentity,
@@ -3897,23 +4035,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CNTypeRestrictionsItem {
-        fn to_json(&self) -> Value {
+    impl Tree for CNTypeRestrictionsItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMN-Identity", self.plmn_identity.to_json());
-            members.put("cNType", self.cn_type.to_json());
+            members.put("pLMN-Identity", self.plmn_identity.to_tree());
+            members.put("cNType", self.cn_type.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMN-Identity", "cNType", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let cn_type = reading.member(&members, 1, CNType::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let cn_type = reading.member(&members, 1, CNType::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 cn_type,
@@ -3921,6 +4060,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CNTypeRestrictionsItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct COUNTValueExtended {
         pub pdcp_sn_extended: PDCPSNExtended,
@@ -3995,24 +4136,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for COUNTValueExtended {
-        fn to_json(&self) -> Value {
+    impl Tree for COUNTValueExtended {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pDCP-SNExtended", self.pdcp_sn_extended.to_json());
-            members.put("hFNModified", self.hfn_modified.to_json());
+            members.put("pDCP-SNExtended", self.pdcp_sn_extended.to_tree());
+            members.put("hFNModified", self.hfn_modified.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pDCP-SNExtended", "hFNModified", "iE-Extensions"])?;
-            let pdcp_sn_extended = reading.member(&members, 0, PDCPSNExtended::from_json)?;
-            let hfn_modified = reading.member(&members, 1, HFNModified::from_json)?;
+            let pdcp_sn_extended = reading.member(&members, 0, PDCPSNExtended::from_tree)?;
+            let hfn_modified = reading.member(&members, 1, HFNModified::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 pdcp_sn_extended,
                 hfn_modified,
@@ -4020,6 +4162,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(COUNTValueExtended);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct COUNTvalue {
         pub pdcp_sn: PDCPSN,
@@ -4094,23 +4238,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for COUNTvalue {
-        fn to_json(&self) -> Value {
+    impl Tree for COUNTvalue {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pDCP-SN", self.pdcp_sn.to_json());
-            members.put("hFN", self.hfn.to_json());
+            members.put("pDCP-SN", self.pdcp_sn.to_tree());
+            members.put("hFN", self.hfn.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pDCP-SN", "hFN", "iE-Extensions"])?;
-            let pdcp_sn = reading.member(&members, 0, PDCPSN::from_json)?;
-            let hfn = reading.member(&members, 1, HFN::from_json)?;
+            let pdcp_sn = reading.member(&members, 0, PDCPSN::from_tree)?;
+            let hfn = reading.member(&members, 1, HFN::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 pdcp_sn,
                 hfn,
@@ -4118,6 +4263,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(COUNTvalue);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct COUNTvaluePDCPSNlength18 {
         pub pdcp_sn_length18: PDCPSNlength18,
@@ -4192,30 +4339,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for COUNTvaluePDCPSNlength18 {
-        fn to_json(&self) -> Value {
+    impl Tree for COUNTvaluePDCPSNlength18 {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pDCP-SNlength18", self.pdcp_sn_length18.to_json());
+            members.put("pDCP-SNlength18", self.pdcp_sn_length18.to_tree());
             members.put(
                 "hFNforPDCP-SNlength18",
-                self.hfn_for_pdcp_sn_length18.to_json(),
+                self.hfn_for_pdcp_sn_length18.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["pDCP-SNlength18", "hFNforPDCP-SNlength18", "iE-Extensions"],
             )?;
-            let pdcp_sn_length18 = reading.member(&members, 0, PDCPSNlength18::from_json)?;
+            let pdcp_sn_length18 = reading.member(&members, 0, PDCPSNlength18::from_tree)?;
             let hfn_for_pdcp_sn_length18 =
-                reading.member(&members, 1, HFNforPDCPSNlength18::from_json)?;
+                reading.member(&members, 1, HFNforPDCPSNlength18::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 pdcp_sn_length18,
                 hfn_for_pdcp_sn_length18,
@@ -4223,6 +4371,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(COUNTvaluePDCPSNlength18);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CSFallbackIndicator {
@@ -4260,14 +4410,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CSFallbackIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for CSFallbackIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CSFallbackIndicator);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct CSGId(pub Bits);
     impl crate::message::__Field<Bits> for CSGId {
@@ -4308,14 +4461,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CSGId {
-        fn to_json(&self) -> Value {
+    impl Tree for CSGId {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 27, 27)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 27, 27)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 27, 27)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CSGId);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CSGIdList(pub Vec<CSGIdListItem>);
     impl crate::message::__Field<Vec<CSGIdListItem>> for CSGIdList {
@@ -4354,16 +4510,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CSGIdList {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for CSGIdList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                CSGIdListItem::from_json(value, reading)
+                CSGIdListItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CSGIdList);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CSGIdListItem {
         pub csg_id: CSGId,
@@ -4427,27 +4586,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CSGIdListItem {
-        fn to_json(&self) -> Value {
+    impl Tree for CSGIdListItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("cSG-Id", self.csg_id.to_json());
+            members.put("cSG-Id", self.csg_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["cSG-Id", "iE-Extensions"])?;
-            let csg_id = reading.member(&members, 0, CSGId::from_json)?;
+            let csg_id = reading.member(&members, 0, CSGId::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 csg_id,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CSGIdListItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum CSGMembershipStatus {
         member = 0,
@@ -4482,14 +4644,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CSGMembershipStatus {
-        fn to_json(&self) -> Value {
+    impl Tree for CSGMembershipStatus {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CSGMembershipStatus);
     #[doc = " C"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CancelledCellinEAI(pub Vec<CancelledCellinEAIItem>);
@@ -4529,16 +4694,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CancelledCellinEAI {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for CancelledCellinEAI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                CancelledCellinEAIItem::from_json(value, reading)
+                CancelledCellinEAIItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CancelledCellinEAI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CancelledCellinEAIItem {
         pub ecgi: EUTRANCGI,
@@ -4613,25 +4781,26 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CancelledCellinEAIItem {
-        fn to_json(&self) -> Value {
+    impl Tree for CancelledCellinEAIItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_json());
-            members.put("numberOfBroadcasts", self.number_of_broadcasts.to_json());
+            members.put("eCGI", self.ecgi.to_tree());
+            members.put("numberOfBroadcasts", self.number_of_broadcasts.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["eCGI", "numberOfBroadcasts", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_json)?;
+            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
             let number_of_broadcasts =
-                reading.member(&members, 1, NumberOfBroadcasts::from_json)?;
+                reading.member(&members, 1, NumberOfBroadcasts::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ecgi,
                 number_of_broadcasts,
@@ -4639,6 +4808,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CancelledCellinEAIItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CancelledCellinTAI(pub Vec<CancelledCellinTAIItem>);
     impl crate::message::__Field<Vec<CancelledCellinTAIItem>> for CancelledCellinTAI {
@@ -4677,16 +4848,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CancelledCellinTAI {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for CancelledCellinTAI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                CancelledCellinTAIItem::from_json(value, reading)
+                CancelledCellinTAIItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CancelledCellinTAI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CancelledCellinTAIItem {
         pub ecgi: EUTRANCGI,
@@ -4761,25 +4935,26 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CancelledCellinTAIItem {
-        fn to_json(&self) -> Value {
+    impl Tree for CancelledCellinTAIItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_json());
-            members.put("numberOfBroadcasts", self.number_of_broadcasts.to_json());
+            members.put("eCGI", self.ecgi.to_tree());
+            members.put("numberOfBroadcasts", self.number_of_broadcasts.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["eCGI", "numberOfBroadcasts", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_json)?;
+            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
             let number_of_broadcasts =
-                reading.member(&members, 1, NumberOfBroadcasts::from_json)?;
+                reading.member(&members, 1, NumberOfBroadcasts::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ecgi,
                 number_of_broadcasts,
@@ -4787,6 +4962,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CancelledCellinTAIItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum Cause {
@@ -4865,17 +5042,18 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Cause {
-        fn to_json(&self) -> Value {
+    impl Tree for Cause {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::radioNetwork(value) => json::alternative("radioNetwork", value.to_json()),
-                Self::transport(value) => json::alternative("transport", value.to_json()),
-                Self::nas(value) => json::alternative("nas", value.to_json()),
-                Self::protocol(value) => json::alternative("protocol", value.to_json()),
-                Self::misc(value) => json::alternative("misc", value.to_json()),
+                Self::radioNetwork(value) => json::alternative("radioNetwork", value.to_tree()),
+                Self::transport(value) => json::alternative("transport", value.to_tree()),
+                Self::nas(value) => json::alternative("nas", value.to_tree()),
+                Self::protocol(value) => json::alternative("protocol", value.to_tree()),
+                Self::misc(value) => json::alternative("misc", value.to_tree()),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &["radioNetwork", "transport", "nas", "protocol", "misc"],
@@ -4884,19 +5062,21 @@ pub mod s1_ap_ies {
                 0 => Self::radioNetwork(reading.within(
                     "radioNetwork",
                     value,
-                    CauseRadioNetwork::from_json,
+                    CauseRadioNetwork::from_tree,
                 )?),
                 1 => Self::transport(reading.within(
                     "transport",
                     value,
-                    CauseTransport::from_json,
+                    CauseTransport::from_tree,
                 )?),
-                2 => Self::nas(reading.within("nas", value, CauseNas::from_json)?),
-                3 => Self::protocol(reading.within("protocol", value, CauseProtocol::from_json)?),
-                _ => Self::misc(reading.within("misc", value, CauseMisc::from_json)?),
+                2 => Self::nas(reading.within("nas", value, CauseNas::from_tree)?),
+                3 => Self::protocol(reading.within("protocol", value, CauseProtocol::from_tree)?),
+                _ => Self::misc(reading.within("misc", value, CauseMisc::from_tree)?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Cause);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CauseMisc {
@@ -4950,14 +5130,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CauseMisc {
-        fn to_json(&self) -> Value {
+    impl Tree for CauseMisc {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CauseMisc);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CauseNas {
@@ -5014,14 +5197,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CauseNas {
-        fn to_json(&self) -> Value {
+    impl Tree for CauseNas {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CauseNas);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CauseProtocol {
@@ -5078,14 +5264,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CauseProtocol {
-        fn to_json(&self) -> Value {
+    impl Tree for CauseProtocol {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CauseProtocol);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CauseRadioNetwork {
@@ -5256,14 +5445,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CauseRadioNetwork {
-        fn to_json(&self) -> Value {
+    impl Tree for CauseRadioNetwork {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CauseRadioNetwork);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CauseTransport {
@@ -5301,14 +5493,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CauseTransport {
-        fn to_json(&self) -> Value {
+    impl Tree for CauseTransport {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CauseTransport);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum Cdma2000HORequiredIndication {
@@ -5343,14 +5538,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Cdma2000HORequiredIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for Cdma2000HORequiredIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Cdma2000HORequiredIndication);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum Cdma2000HOStatus {
@@ -5386,14 +5584,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Cdma2000HOStatus {
-        fn to_json(&self) -> Value {
+    impl Tree for Cdma2000HOStatus {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Cdma2000HOStatus);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXMEID<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for Cdma2000OneXMEID<'a> {
@@ -5442,14 +5643,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Cdma2000OneXMEID<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for Cdma2000OneXMEID<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Cdma2000OneXMEID<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXMSI<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for Cdma2000OneXMSI<'a> {
@@ -5498,14 +5702,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Cdma2000OneXMSI<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for Cdma2000OneXMSI<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Cdma2000OneXMSI<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXPilot<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for Cdma2000OneXPilot<'a> {
@@ -5554,14 +5761,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Cdma2000OneXPilot<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for Cdma2000OneXPilot<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Cdma2000OneXPilot<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXRAND<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for Cdma2000OneXRAND<'a> {
@@ -5610,14 +5820,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Cdma2000OneXRAND<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for Cdma2000OneXRAND<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Cdma2000OneXRAND<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXSRVCCInfo<'a> {
         pub cdma2000_one_xmeid: Cdma2000OneXMEID<'a>,
@@ -5713,19 +5926,20 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Cdma2000OneXSRVCCInfo<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for Cdma2000OneXSRVCCInfo<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("cdma2000OneXMEID", self.cdma2000_one_xmeid.to_json());
-            members.put("cdma2000OneXMSI", self.cdma2000_one_xmsi.to_json());
-            members.put("cdma2000OneXPilot", self.cdma2000_one_x_pilot.to_json());
+            members.put("cdma2000OneXMEID", self.cdma2000_one_xmeid.to_tree());
+            members.put("cdma2000OneXMSI", self.cdma2000_one_xmsi.to_tree());
+            members.put("cdma2000OneXPilot", self.cdma2000_one_x_pilot.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -5735,11 +5949,11 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let cdma2000_one_xmeid = reading.member(&members, 0, Cdma2000OneXMEID::from_json)?;
-            let cdma2000_one_xmsi = reading.member(&members, 1, Cdma2000OneXMSI::from_json)?;
-            let cdma2000_one_x_pilot = reading.member(&members, 2, Cdma2000OneXPilot::from_json)?;
+            let cdma2000_one_xmeid = reading.member(&members, 0, Cdma2000OneXMEID::from_tree)?;
+            let cdma2000_one_xmsi = reading.member(&members, 1, Cdma2000OneXMSI::from_tree)?;
+            let cdma2000_one_x_pilot = reading.member(&members, 2, Cdma2000OneXPilot::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 cdma2000_one_xmeid,
                 cdma2000_one_xmsi,
@@ -5748,6 +5962,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Cdma2000OneXSRVCCInfo<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000PDU<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for Cdma2000PDU<'a> {
@@ -5796,14 +6012,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Cdma2000PDU<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for Cdma2000PDU<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Cdma2000PDU<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum Cdma2000RATType {
@@ -5839,14 +6058,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Cdma2000RATType {
-        fn to_json(&self) -> Value {
+    impl Tree for Cdma2000RATType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Cdma2000RATType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000SectorID<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for Cdma2000SectorID<'a> {
@@ -5895,14 +6117,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Cdma2000SectorID<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for Cdma2000SectorID<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Cdma2000SectorID<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CellSize {
@@ -5941,14 +6166,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellSize {
-        fn to_json(&self) -> Value {
+    impl Tree for CellSize {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellSize);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CellAccessMode {
@@ -5983,14 +6211,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellAccessMode {
-        fn to_json(&self) -> Value {
+    impl Tree for CellAccessMode {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellAccessMode);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellBasedMDT {
         pub cell_id_listfor_mdt: CellIdListforMDT,
@@ -6054,27 +6285,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellBasedMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for CellBasedMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("cellIdListforMDT", self.cell_id_listfor_mdt.to_json());
+            members.put("cellIdListforMDT", self.cell_id_listfor_mdt.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["cellIdListforMDT", "iE-Extensions"])?;
-            let cell_id_listfor_mdt = reading.member(&members, 0, CellIdListforMDT::from_json)?;
+            let cell_id_listfor_mdt = reading.member(&members, 0, CellIdListforMDT::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 cell_id_listfor_mdt,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellBasedMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellBasedQMC {
         pub cell_id_listfor_qmc: CellIdListforQMC,
@@ -6138,27 +6372,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellBasedQMC {
-        fn to_json(&self) -> Value {
+    impl Tree for CellBasedQMC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("cellIdListforQMC", self.cell_id_listfor_qmc.to_json());
+            members.put("cellIdListforQMC", self.cell_id_listfor_qmc.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["cellIdListforQMC", "iE-Extensions"])?;
-            let cell_id_listfor_qmc = reading.member(&members, 0, CellIdListforQMC::from_json)?;
+            let cell_id_listfor_qmc = reading.member(&members, 0, CellIdListforQMC::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 cell_id_listfor_qmc,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellBasedQMC);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIDBroadcast(pub Vec<CellIDBroadcastItem>);
     impl crate::message::__Field<Vec<CellIDBroadcastItem>> for CellIDBroadcast {
@@ -6197,16 +6434,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIDBroadcast {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for CellIDBroadcast {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                CellIDBroadcastItem::from_json(value, reading)
+                CellIDBroadcastItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellIDBroadcast);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIDBroadcastItem {
         pub ecgi: EUTRANCGI,
@@ -6270,27 +6510,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIDBroadcastItem {
-        fn to_json(&self) -> Value {
+    impl Tree for CellIDBroadcastItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_json());
+            members.put("eCGI", self.ecgi.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["eCGI", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_json)?;
+            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ecgi,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellIDBroadcastItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIDCancelled(pub Vec<CellIDCancelledItem>);
     impl crate::message::__Field<Vec<CellIDCancelledItem>> for CellIDCancelled {
@@ -6329,16 +6572,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIDCancelled {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for CellIDCancelled {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                CellIDCancelledItem::from_json(value, reading)
+                CellIDCancelledItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellIDCancelled);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIDCancelledItem {
         pub ecgi: EUTRANCGI,
@@ -6413,25 +6659,26 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIDCancelledItem {
-        fn to_json(&self) -> Value {
+    impl Tree for CellIDCancelledItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_json());
-            members.put("numberOfBroadcasts", self.number_of_broadcasts.to_json());
+            members.put("eCGI", self.ecgi.to_tree());
+            members.put("numberOfBroadcasts", self.number_of_broadcasts.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["eCGI", "numberOfBroadcasts", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_json)?;
+            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
             let number_of_broadcasts =
-                reading.member(&members, 1, NumberOfBroadcasts::from_json)?;
+                reading.member(&members, 1, NumberOfBroadcasts::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ecgi,
                 number_of_broadcasts,
@@ -6439,6 +6686,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellIDCancelledItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIdListforMDT(pub Vec<EUTRANCGI>);
     impl crate::message::__Field<Vec<EUTRANCGI>> for CellIdListforMDT {
@@ -6477,16 +6726,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIdListforMDT {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for CellIdListforMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_json(value, reading)
+                EUTRANCGI::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellIdListforMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIdListforQMC(pub Vec<EUTRANCGI>);
     impl crate::message::__Field<Vec<EUTRANCGI>> for CellIdListforQMC {
@@ -6525,16 +6777,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIdListforQMC {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for CellIdListforQMC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_json(value, reading)
+                EUTRANCGI::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellIdListforQMC);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIdentifierAndCELevelForCECapableUEs<'a> {
         pub global_cell_id: EUTRANCGI,
@@ -6618,24 +6873,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIdentifierAndCELevelForCECapableUEs<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for CellIdentifierAndCELevelForCECapableUEs<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("global-Cell-ID", self.global_cell_id.to_json());
-            members.put("cELevel", self.ce_level.to_json());
+            members.put("global-Cell-ID", self.global_cell_id.to_tree());
+            members.put("cELevel", self.ce_level.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["global-Cell-ID", "cELevel", "iE-Extensions"])?;
-            let global_cell_id = reading.member(&members, 0, EUTRANCGI::from_json)?;
-            let ce_level = reading.member(&members, 1, CELevel::from_json)?;
+            let global_cell_id = reading.member(&members, 0, EUTRANCGI::from_tree)?;
+            let ce_level = reading.member(&members, 1, CELevel::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 global_cell_id,
                 ce_level,
@@ -6643,6 +6899,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellIdentifierAndCELevelForCECapableUEs<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct CellIdentity(pub Bits);
     impl crate::message::__Field<Bits> for CellIdentity {
@@ -6683,14 +6941,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellIdentity {
-        fn to_json(&self) -> Value {
+    impl Tree for CellIdentity {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 28, 28)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 28, 28)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 28, 28)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellIdentity);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellType {
         pub cell_size: CellSize,
@@ -6754,27 +7015,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellType {
-        fn to_json(&self) -> Value {
+    impl Tree for CellType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("cell-Size", self.cell_size.to_json());
+            members.put("cell-Size", self.cell_size.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["cell-Size", "iE-Extensions"])?;
-            let cell_size = reading.member(&members, 0, CellSize::from_json)?;
+            let cell_size = reading.member(&members, 0, CellSize::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 cell_size,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CoarseUELocation<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for CoarseUELocation<'a> {
@@ -6823,14 +7087,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CoarseUELocation<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for CoarseUELocation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CoarseUELocation<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CoarseUELocationRequested {
@@ -6865,14 +7132,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CoarseUELocationRequested {
-        fn to_json(&self) -> Value {
+    impl Tree for CoarseUELocationRequested {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CoarseUELocationRequested);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CompletedCellinEAI(pub Vec<CompletedCellinEAIItem>);
     impl crate::message::__Field<Vec<CompletedCellinEAIItem>> for CompletedCellinEAI {
@@ -6911,16 +7181,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CompletedCellinEAI {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for CompletedCellinEAI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                CompletedCellinEAIItem::from_json(value, reading)
+                CompletedCellinEAIItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CompletedCellinEAI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CompletedCellinEAIItem {
         pub ecgi: EUTRANCGI,
@@ -6984,27 +7257,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CompletedCellinEAIItem {
-        fn to_json(&self) -> Value {
+    impl Tree for CompletedCellinEAIItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_json());
+            members.put("eCGI", self.ecgi.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["eCGI", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_json)?;
+            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ecgi,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CompletedCellinEAIItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CompletedCellinTAI(pub Vec<CompletedCellinTAIItem>);
     impl crate::message::__Field<Vec<CompletedCellinTAIItem>> for CompletedCellinTAI {
@@ -7043,16 +7319,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CompletedCellinTAI {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for CompletedCellinTAI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                CompletedCellinTAIItem::from_json(value, reading)
+                CompletedCellinTAIItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CompletedCellinTAI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CompletedCellinTAIItem {
         pub ecgi: EUTRANCGI,
@@ -7116,27 +7395,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CompletedCellinTAIItem {
-        fn to_json(&self) -> Value {
+    impl Tree for CompletedCellinTAIItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_json());
+            members.put("eCGI", self.ecgi.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["eCGI", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_json)?;
+            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ecgi,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CompletedCellinTAIItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum ConcurrentWarningMessageIndicator {
         R_true = 0,
@@ -7170,14 +7452,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ConcurrentWarningMessageIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for ConcurrentWarningMessageIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ConcurrentWarningMessageIndicator);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ConnectedengNBItem<'a> {
         pub en_gnb_id: EnGNBID<'a>,
@@ -7261,24 +7546,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ConnectedengNBItem<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ConnectedengNBItem<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("en-gNB-ID", self.en_gnb_id.to_json());
-            members.put("supportedTAs", self.supported_tas.to_json());
+            members.put("en-gNB-ID", self.en_gnb_id.to_tree());
+            members.put("supportedTAs", self.supported_tas.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["en-gNB-ID", "supportedTAs", "iE-Extensions"])?;
-            let en_gnb_id = reading.member(&members, 0, EnGNBID::from_json)?;
-            let supported_tas = reading.member(&members, 1, SupportedTAs::from_json)?;
+            let en_gnb_id = reading.member(&members, 0, EnGNBID::from_tree)?;
+            let supported_tas = reading.member(&members, 1, SupportedTAs::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 en_gnb_id,
                 supported_tas,
@@ -7286,6 +7572,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ConnectedengNBItem<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ConnectedengNBList<'a>(pub Vec<ConnectedengNBItem<'a>>);
     impl<'a> crate::message::__Field<Vec<ConnectedengNBItem<'a>>> for ConnectedengNBList<'a> {
@@ -7331,16 +7619,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ConnectedengNBList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ConnectedengNBList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ConnectedengNBItem::from_json(value, reading)
+                ConnectedengNBItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ConnectedengNBList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ContextatSource {
         pub source_ng_ran_node_id: GlobalRANNODEID,
@@ -7415,26 +7706,27 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ContextatSource {
-        fn to_json(&self) -> Value {
+    impl Tree for ContextatSource {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("sourceNG-RAN-node-ID", self.source_ng_ran_node_id.to_json());
-            members.put("rAN-UE-NGAP-ID", self.ran_ue_ngap_id.to_json());
+            members.put("sourceNG-RAN-node-ID", self.source_ng_ran_node_id.to_tree());
+            members.put("rAN-UE-NGAP-ID", self.ran_ue_ngap_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["sourceNG-RAN-node-ID", "rAN-UE-NGAP-ID", "iE-Extensions"],
             )?;
-            let source_ng_ran_node_id = reading.member(&members, 0, GlobalRANNODEID::from_json)?;
-            let ran_ue_ngap_id = reading.member(&members, 1, RANUENGAPID::from_json)?;
+            let source_ng_ran_node_id = reading.member(&members, 0, GlobalRANNODEID::from_tree)?;
+            let ran_ue_ngap_id = reading.member(&members, 1, RANUENGAPID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 source_ng_ran_node_id,
                 ran_ue_ngap_id,
@@ -7442,6 +7734,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ContextatSource);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for CorrelationID {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -7485,14 +7779,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CorrelationID {
-        fn to_json(&self) -> Value {
+    impl Tree for CorrelationID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<4>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CorrelationID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum CoverageLevel {
@@ -7527,14 +7824,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CoverageLevel {
-        fn to_json(&self) -> Value {
+    impl Tree for CoverageLevel {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CoverageLevel);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CriticalityDiagnostics {
         pub procedure_code: Option<ProcedureCode>,
@@ -7659,38 +7959,39 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CriticalityDiagnostics {
-        fn to_json(&self) -> Value {
+    impl Tree for CriticalityDiagnostics {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "procedureCode",
-                self.procedure_code.as_ref().map(|value| value.to_json()),
+                self.procedure_code.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "triggeringMessage",
                 self.triggering_message
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "procedureCriticality",
                 self.procedure_criticality
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iEsCriticalityDiagnostics",
                 self.ies_criticality_diagnostics
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -7701,13 +8002,13 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let procedure_code = reading.optional(&members, 0, ProcedureCode::from_json)?;
-            let triggering_message = reading.optional(&members, 1, TriggeringMessage::from_json)?;
-            let procedure_criticality = reading.optional(&members, 2, Criticality::from_json)?;
+            let procedure_code = reading.optional(&members, 0, ProcedureCode::from_tree)?;
+            let triggering_message = reading.optional(&members, 1, TriggeringMessage::from_tree)?;
+            let procedure_criticality = reading.optional(&members, 2, Criticality::from_tree)?;
             let ies_criticality_diagnostics =
-                reading.optional(&members, 3, CriticalityDiagnosticsIEList::from_json)?;
+                reading.optional(&members, 3, CriticalityDiagnosticsIEList::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 procedure_code,
                 triggering_message,
@@ -7717,6 +8018,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CriticalityDiagnostics);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CriticalityDiagnosticsIEItem {
         pub ie_criticality: Criticality,
@@ -7802,28 +8105,29 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CriticalityDiagnosticsIEItem {
-        fn to_json(&self) -> Value {
+    impl Tree for CriticalityDiagnosticsIEItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("iECriticality", self.ie_criticality.to_json());
-            members.put("iE-ID", self.ie_id.to_json());
-            members.put("typeOfError", self.type_of_error.to_json());
+            members.put("iECriticality", self.ie_criticality.to_tree());
+            members.put("iE-ID", self.ie_id.to_tree());
+            members.put("typeOfError", self.type_of_error.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["iECriticality", "iE-ID", "typeOfError", "iE-Extensions"],
             )?;
-            let ie_criticality = reading.member(&members, 0, Criticality::from_json)?;
-            let ie_id = reading.member(&members, 1, ProtocolIEID::from_json)?;
-            let type_of_error = reading.member(&members, 2, TypeOfError::from_json)?;
+            let ie_criticality = reading.member(&members, 0, Criticality::from_tree)?;
+            let ie_id = reading.member(&members, 1, ProtocolIEID::from_tree)?;
+            let type_of_error = reading.member(&members, 2, TypeOfError::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ie_criticality,
                 ie_id,
@@ -7832,6 +8136,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CriticalityDiagnosticsIEItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CriticalityDiagnosticsIEList(pub Vec<CriticalityDiagnosticsIEItem>);
     impl crate::message::__Field<Vec<CriticalityDiagnosticsIEItem>> for CriticalityDiagnosticsIEList {
@@ -7870,16 +8176,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CriticalityDiagnosticsIEList {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for CriticalityDiagnosticsIEList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                CriticalityDiagnosticsIEItem::from_json(value, reading)
+                CriticalityDiagnosticsIEItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CriticalityDiagnosticsIEList);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -7915,14 +8224,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DAPSRequestInfoDAPSIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for DAPSRequestInfoDAPSIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DAPSRequestInfoDAPSIndicator);
     #[doc = " D"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DAPSRequestInfo {
@@ -7987,28 +8299,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DAPSRequestInfo {
-        fn to_json(&self) -> Value {
+    impl Tree for DAPSRequestInfo {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("dAPSIndicator", self.daps_indicator.to_json());
+            members.put("dAPSIndicator", self.daps_indicator.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["dAPSIndicator", "iE-Extensions"])?;
             let daps_indicator =
-                reading.member(&members, 0, DAPSRequestInfoDAPSIndicator::from_json)?;
+                reading.member(&members, 0, DAPSRequestInfoDAPSIndicator::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 daps_indicator,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DAPSRequestInfo);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -8045,14 +8360,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DAPSResponseInfoDapsresponseindicator {
-        fn to_json(&self) -> Value {
+    impl Tree for DAPSResponseInfoDapsresponseindicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DAPSResponseInfoDapsresponseindicator);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DAPSResponseInfo {
         pub dapsresponseindicator: DAPSResponseInfoDapsresponseindicator,
@@ -8117,34 +8435,37 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DAPSResponseInfo {
-        fn to_json(&self) -> Value {
+    impl Tree for DAPSResponseInfo {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "dapsresponseindicator",
-                self.dapsresponseindicator.to_json(),
+                self.dapsresponseindicator.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["dapsresponseindicator", "iE-Extensions"])?;
             let dapsresponseindicator = reading.member(
                 &members,
                 0,
-                DAPSResponseInfoDapsresponseindicator::from_json,
+                DAPSResponseInfoDapsresponseindicator::from_tree,
             )?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 dapsresponseindicator,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DAPSResponseInfo);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DAPSResponseInfoItem {
         pub e_rab_id: ERABID,
@@ -8219,24 +8540,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DAPSResponseInfoItem {
-        fn to_json(&self) -> Value {
+    impl Tree for DAPSResponseInfoItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
-            members.put("dAPSResponseInfo", self.daps_response_info.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
+            members.put("dAPSResponseInfo", self.daps_response_info.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["e-RAB-ID", "dAPSResponseInfo", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
-            let daps_response_info = reading.member(&members, 1, DAPSResponseInfo::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
+            let daps_response_info = reading.member(&members, 1, DAPSResponseInfo::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 daps_response_info,
@@ -8244,6 +8566,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DAPSResponseInfoItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DAPSResponseInfoList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for DAPSResponseInfoList<'a> {
@@ -8289,16 +8613,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DAPSResponseInfoList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for DAPSResponseInfoList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DAPSResponseInfoList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct DCNID(pub u16);
     impl crate::message::__Field<u16> for DCNID {
@@ -8329,11 +8656,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DCNID {
-        fn to_json(&self) -> Value {
+    impl Tree for DCNID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 65535)
@@ -8341,6 +8669,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DCNID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DLCPSecurityInformation {
         pub dl_nas_mac: DLNASMAC,
@@ -8404,27 +8734,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DLCPSecurityInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for DLCPSecurityInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("dl-NAS-MAC", self.dl_nas_mac.to_json());
+            members.put("dl-NAS-MAC", self.dl_nas_mac.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["dl-NAS-MAC", "iE-Extensions"])?;
-            let dl_nas_mac = reading.member(&members, 0, DLNASMAC::from_json)?;
+            let dl_nas_mac = reading.member(&members, 0, DLNASMAC::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 dl_nas_mac,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DLCPSecurityInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum DLForwarding {
@@ -8459,14 +8792,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DLForwarding {
-        fn to_json(&self) -> Value {
+    impl Tree for DLForwarding {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DLForwarding);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct DLNASMAC(pub Bits);
     impl crate::message::__Field<Bits> for DLNASMAC {
@@ -8507,14 +8843,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DLNASMAC {
-        fn to_json(&self) -> Value {
+    impl Tree for DLNASMAC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 16, 16)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 16, 16)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 16, 16)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DLNASMAC);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum DLCOUNTPDCPSNlength {
@@ -8569,21 +8908,22 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DLCOUNTPDCPSNlength {
-        fn to_json(&self) -> Value {
+    impl Tree for DLCOUNTPDCPSNlength {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::dLCOUNTValuePDCP_SNlength12(value) => {
-                    json::alternative("dLCOUNTValuePDCP-SNlength12", value.to_json())
+                    json::alternative("dLCOUNTValuePDCP-SNlength12", value.to_tree())
                 }
                 Self::dLCOUNTValuePDCP_SNlength15(value) => {
-                    json::alternative("dLCOUNTValuePDCP-SNlength15", value.to_json())
+                    json::alternative("dLCOUNTValuePDCP-SNlength15", value.to_tree())
                 }
                 Self::dLCOUNTValuePDCP_SNlength18(value) => {
-                    json::alternative("dLCOUNTValuePDCP-SNlength18", value.to_json())
+                    json::alternative("dLCOUNTValuePDCP-SNlength18", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &[
@@ -8596,21 +8936,23 @@ pub mod s1_ap_ies {
                 0 => Self::dLCOUNTValuePDCP_SNlength12(reading.within(
                     "dLCOUNTValuePDCP-SNlength12",
                     value,
-                    COUNTvalue::from_json,
+                    COUNTvalue::from_tree,
                 )?),
                 1 => Self::dLCOUNTValuePDCP_SNlength15(reading.within(
                     "dLCOUNTValuePDCP-SNlength15",
                     value,
-                    COUNTValueExtended::from_json,
+                    COUNTValueExtended::from_tree,
                 )?),
                 _ => Self::dLCOUNTValuePDCP_SNlength18(reading.within(
                     "dLCOUNTValuePDCP-SNlength18",
                     value,
-                    COUNTvaluePDCPSNlength18::from_json,
+                    COUNTvaluePDCPSNlength18::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DLCOUNTPDCPSNlength);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum DLDiscarding {
@@ -8667,21 +9009,22 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DLDiscarding {
-        fn to_json(&self) -> Value {
+    impl Tree for DLDiscarding {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::discardDLCOUNTValuePDCP_SNlength12(value) => {
-                    json::alternative("discardDLCOUNTValuePDCP-SNlength12", value.to_json())
+                    json::alternative("discardDLCOUNTValuePDCP-SNlength12", value.to_tree())
                 }
                 Self::discardDLCOUNTValuePDCP_SNlength15(value) => {
-                    json::alternative("discardDLCOUNTValuePDCP-SNlength15", value.to_json())
+                    json::alternative("discardDLCOUNTValuePDCP-SNlength15", value.to_tree())
                 }
                 Self::discardDLCOUNTValuePDCP_SNlength18(value) => {
-                    json::alternative("discardDLCOUNTValuePDCP-SNlength18", value.to_json())
+                    json::alternative("discardDLCOUNTValuePDCP-SNlength18", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &[
@@ -8694,21 +9037,23 @@ pub mod s1_ap_ies {
                 0 => Self::discardDLCOUNTValuePDCP_SNlength12(reading.within(
                     "discardDLCOUNTValuePDCP-SNlength12",
                     value,
-                    COUNTvalue::from_json,
+                    COUNTvalue::from_tree,
                 )?),
                 1 => Self::discardDLCOUNTValuePDCP_SNlength15(reading.within(
                     "discardDLCOUNTValuePDCP-SNlength15",
                     value,
-                    COUNTValueExtended::from_json,
+                    COUNTValueExtended::from_tree,
                 )?),
                 _ => Self::discardDLCOUNTValuePDCP_SNlength18(reading.within(
                     "discardDLCOUNTValuePDCP-SNlength18",
                     value,
-                    COUNTvaluePDCPSNlength18::from_json,
+                    COUNTvaluePDCPSNlength18::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DLDiscarding);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum DLNASPDUDeliveryAckRequest {
@@ -8743,14 +9088,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DLNASPDUDeliveryAckRequest {
-        fn to_json(&self) -> Value {
+    impl Tree for DLNASPDUDeliveryAckRequest {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DLNASPDUDeliveryAckRequest);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum DataForwardingNotPossible {
@@ -8785,14 +9133,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DataForwardingNotPossible {
-        fn to_json(&self) -> Value {
+    impl Tree for DataForwardingNotPossible {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DataForwardingNotPossible);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct DataCodingScheme(pub Bits);
     impl crate::message::__Field<Bits> for DataCodingScheme {
@@ -8833,14 +9184,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DataCodingScheme {
-        fn to_json(&self) -> Value {
+    impl Tree for DataCodingScheme {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 8, 8)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 8, 8)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 8, 8)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DataCodingScheme);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct DataSize(pub u64);
     impl crate::message::__Field<u64> for DataSize {
@@ -8871,14 +9225,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DataSize {
-        fn to_json(&self) -> Value {
+    impl Tree for DataSize {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DataSize);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum DirectForwardingPathAvailability {
@@ -8913,14 +9270,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DirectForwardingPathAvailability {
-        fn to_json(&self) -> Value {
+    impl Tree for DirectForwardingPathAvailability {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DirectForwardingPathAvailability);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ERABID(pub u64);
     impl crate::message::__Field<u64> for ERABID {
@@ -8951,14 +9311,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABID {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABInformationList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABInformationList<'a> {
@@ -9004,16 +9367,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABInformationList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABInformationList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABInformationList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABInformationListItem {
         pub e_rab_id: ERABID,
@@ -9095,27 +9461,28 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABInformationListItem {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABInformationListItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put_optional(
                 "dL-Forwarding",
-                self.dl_forwarding.as_ref().map(|value| value.to_json()),
+                self.dl_forwarding.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["e-RAB-ID", "dL-Forwarding", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
-            let dl_forwarding = reading.optional(&members, 1, DLForwarding::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
+            let dl_forwarding = reading.optional(&members, 1, DLForwarding::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 dl_forwarding,
@@ -9123,6 +9490,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABInformationListItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABItem {
         pub e_rab_id: ERABID,
@@ -9197,23 +9566,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABItem {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
-            members.put("cause", self.cause.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
+            members.put("cause", self.cause.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "cause", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
-            let cause = reading.member(&members, 1, Cause::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
+            let cause = reading.member(&members, 1, Cause::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 cause,
@@ -9221,6 +9591,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABLevelQoSParameters {
         pub qci: QCI,
@@ -9314,27 +9686,28 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABLevelQoSParameters {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABLevelQoSParameters {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("qCI", self.qci.to_json());
+            members.put("qCI", self.qci.to_tree());
             members.put(
                 "allocationRetentionPriority",
-                self.allocation_retention_priority.to_json(),
+                self.allocation_retention_priority.to_tree(),
             );
             members.put_optional(
                 "gbrQosInformation",
                 self.gbr_qos_information
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -9344,13 +9717,13 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let qci = reading.member(&members, 0, QCI::from_json)?;
+            let qci = reading.member(&members, 0, QCI::from_tree)?;
             let allocation_retention_priority =
-                reading.member(&members, 1, AllocationAndRetentionPriority::from_json)?;
+                reading.member(&members, 1, AllocationAndRetentionPriority::from_tree)?;
             let gbr_qos_information =
-                reading.optional(&members, 2, GBRQosInformation::from_json)?;
+                reading.optional(&members, 2, GBRQosInformation::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 qci,
                 allocation_retention_priority,
@@ -9359,6 +9732,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABLevelQoSParameters);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABList<'a> {
@@ -9404,16 +9779,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSecurityResultItem {
         pub e_rab_id: ERABID,
@@ -9488,24 +9866,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABSecurityResultItem {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABSecurityResultItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
-            members.put("securityResult", self.security_result.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
+            members.put("securityResult", self.security_result.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["e-RAB-ID", "securityResult", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
-            let security_result = reading.member(&members, 1, SecurityResult::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
+            let security_result = reading.member(&members, 1, SecurityResult::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 security_result,
@@ -9513,6 +9892,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABSecurityResultItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSecurityResultList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABSecurityResultList<'a> {
@@ -9558,16 +9939,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABSecurityResultList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABSecurityResultList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABSecurityResultList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABUsageReportItem {
         pub start_timestamp: [u8; 4],
@@ -9660,8 +10044,9 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABUsageReportItem {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABUsageReportItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put("startTimestamp", json::octets(&self.start_timestamp));
             members.put("endTimestamp", json::octets(&self.end_timestamp));
@@ -9669,11 +10054,11 @@ pub mod s1_ap_ies {
             members.put("usageCountDL", json::unsigned(self.usage_count_dl));
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -9697,7 +10082,7 @@ pub mod s1_ap_ies {
                 reading.unsigned(value, 0, 18446744073709551615)
             })?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 start_timestamp,
                 end_timestamp,
@@ -9707,6 +10092,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABUsageReportItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABUsageReportList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABUsageReportList<'a> {
@@ -9752,16 +10139,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABUsageReportList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABUsageReportList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABUsageReportList<'a>);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for EUTRANTraceID {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -9805,14 +10195,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EUTRANTraceID {
-        fn to_json(&self) -> Value {
+    impl Tree for EUTRANTraceID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<8>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EUTRANTraceID);
     #[doc = " E"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct EARFCN(pub u64);
@@ -9844,14 +10237,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EARFCN {
-        fn to_json(&self) -> Value {
+    impl Tree for EARFCN {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EARFCN);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ECGI_List(pub Vec<EUTRANCGI>);
     impl crate::message::__Field<Vec<EUTRANCGI>> for ECGI_List {
@@ -9890,16 +10286,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ECGI_List {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ECGI_List {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_json(value, reading)
+                EUTRANCGI::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ECGI_List);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ECGIList(pub Vec<EUTRANCGI>);
     impl crate::message::__Field<Vec<EUTRANCGI>> for ECGIList {
@@ -9938,16 +10337,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ECGIList {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ECGIList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_json(value, reading)
+                EUTRANCGI::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ECGIList);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ECGIListForRestart(pub Vec<EUTRANCGI>);
     impl crate::message::__Field<Vec<EUTRANCGI>> for ECGIListForRestart {
@@ -9986,16 +10388,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ECGIListForRestart {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ECGIListForRestart {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_json(value, reading)
+                EUTRANCGI::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ECGIListForRestart);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum EDTSession {
@@ -10030,14 +10435,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EDTSession {
-        fn to_json(&self) -> Value {
+    impl Tree for EDTSession {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EDTSession);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENDCSONConfigurationTransfer<'a> {
         pub transfertype: ENDCSONTransferType<'a>,
@@ -10140,24 +10548,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENDCSONConfigurationTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENDCSONConfigurationTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("transfertype", self.transfertype.to_json());
-            members.put("sONInformation", self.son_information.to_json());
+            members.put("transfertype", self.transfertype.to_tree());
+            members.put("sONInformation", self.son_information.to_tree());
             members.put_optional(
                 "x2TNLConfigInfo",
                 self.x2_tnl_config_info
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -10167,12 +10576,12 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let transfertype = reading.member(&members, 0, ENDCSONTransferType::from_json)?;
-            let son_information = reading.member(&members, 1, SONInformation::from_json)?;
+            let transfertype = reading.member(&members, 0, ENDCSONTransferType::from_tree)?;
+            let son_information = reading.member(&members, 1, SONInformation::from_tree)?;
             let x2_tnl_config_info =
-                reading.optional(&members, 2, X2TNLConfigurationInfo::from_json)?;
+                reading.optional(&members, 2, X2TNLConfigurationInfo::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 transfertype,
                 son_information,
@@ -10181,6 +10590,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENDCSONConfigurationTransfer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum ENDCSONTransferType<'a> {
@@ -10234,27 +10645,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENDCSONTransferType<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENDCSONTransferType<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::request(value) => json::alternative("request", value.to_json()),
-                Self::reply(value) => json::alternative("reply", value.to_json()),
+                Self::request(value) => json::alternative("request", value.to_tree()),
+                Self::reply(value) => json::alternative("reply", value.to_tree()),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(value, &["request", "reply"])?;
             Ok(match position {
                 0 => Self::request(reading.within(
                     "request",
                     value,
-                    ENDCTransferTypeRequest::from_json,
+                    ENDCTransferTypeRequest::from_tree,
                 )?),
                 _ => {
-                    Self::reply(reading.within("reply", value, ENDCTransferTypeReply::from_json)?)
+                    Self::reply(reading.within("reply", value, ENDCTransferTypeReply::from_tree)?)
                 }
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENDCSONTransferType<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENDCSONeNBIdentification {
         pub global_enb_id: GlobalENBID,
@@ -10329,24 +10743,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENDCSONeNBIdentification {
-        fn to_json(&self) -> Value {
+    impl Tree for ENDCSONeNBIdentification {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("globaleNBID", self.global_enb_id.to_json());
-            members.put("selectedTAI", self.selected_tai.to_json());
+            members.put("globaleNBID", self.global_enb_id.to_tree());
+            members.put("selectedTAI", self.selected_tai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["globaleNBID", "selectedTAI", "iE-Extensions"])?;
-            let global_enb_id = reading.member(&members, 0, GlobalENBID::from_json)?;
-            let selected_tai = reading.member(&members, 1, TAI::from_json)?;
+            let global_enb_id = reading.member(&members, 0, GlobalENBID::from_tree)?;
+            let selected_tai = reading.member(&members, 1, TAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 global_enb_id,
                 selected_tai,
@@ -10354,6 +10769,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENDCSONeNBIdentification);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENDCSONengNBIdentification<'a> {
         pub globalen_gnb_id: GlobalEnGNBID<'a>,
@@ -10437,24 +10854,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENDCSONengNBIdentification<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENDCSONengNBIdentification<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("globalengNBID", self.globalen_gnb_id.to_json());
-            members.put("selectedTAI", self.selected_tai.to_json());
+            members.put("globalengNBID", self.globalen_gnb_id.to_tree());
+            members.put("selectedTAI", self.selected_tai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["globalengNBID", "selectedTAI", "iE-Extensions"])?;
-            let globalen_gnb_id = reading.member(&members, 0, GlobalEnGNBID::from_json)?;
-            let selected_tai = reading.member(&members, 1, TAI::from_json)?;
+            let globalen_gnb_id = reading.member(&members, 0, GlobalEnGNBID::from_tree)?;
+            let selected_tai = reading.member(&members, 1, TAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 globalen_gnb_id,
                 selected_tai,
@@ -10462,6 +10880,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENDCSONengNBIdentification<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENDCTransferTypeReply<'a> {
         pub source_en_gnb: ENDCSONengNBIdentification<'a>,
@@ -10545,24 +10965,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENDCTransferTypeReply<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENDCTransferTypeReply<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("sourceengNB", self.source_en_gnb.to_json());
-            members.put("targeteNB", self.target_enb.to_json());
+            members.put("sourceengNB", self.source_en_gnb.to_tree());
+            members.put("targeteNB", self.target_enb.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["sourceengNB", "targeteNB", "iE-Extensions"])?;
             let source_en_gnb =
-                reading.member(&members, 0, ENDCSONengNBIdentification::from_json)?;
-            let target_enb = reading.member(&members, 1, ENDCSONeNBIdentification::from_json)?;
+                reading.member(&members, 0, ENDCSONengNBIdentification::from_tree)?;
+            let target_enb = reading.member(&members, 1, ENDCSONeNBIdentification::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 source_en_gnb,
                 target_enb,
@@ -10570,6 +10991,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENDCTransferTypeReply<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENDCTransferTypeRequest<'a> {
         pub source_enb: ENDCSONeNBIdentification,
@@ -10710,30 +11133,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENDCTransferTypeRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENDCTransferTypeRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("sourceeNB", self.source_enb.to_json());
-            members.put("targetengNB", self.target_en_gnb.to_json());
+            members.put("sourceeNB", self.source_enb.to_tree());
+            members.put("targetengNB", self.target_en_gnb.to_tree());
             members.put_optional(
                 "targeteNB",
-                self.target_enb.as_ref().map(|value| value.to_json()),
+                self.target_enb.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "associatedTAI",
-                self.associated_tai.as_ref().map(|value| value.to_json()),
+                self.associated_tai.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "broadcast5GSTAI",
-                self.broadcast_5gs_tai.as_ref().map(|value| value.to_json()),
+                self.broadcast_5gs_tai.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -10745,14 +11169,14 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let source_enb = reading.member(&members, 0, ENDCSONeNBIdentification::from_json)?;
+            let source_enb = reading.member(&members, 0, ENDCSONeNBIdentification::from_tree)?;
             let target_en_gnb =
-                reading.member(&members, 1, ENDCSONengNBIdentification::from_json)?;
-            let target_enb = reading.optional(&members, 2, ENDCSONeNBIdentification::from_json)?;
-            let associated_tai = reading.optional(&members, 3, TAI::from_json)?;
-            let broadcast_5gs_tai = reading.optional(&members, 4, FiveGSTAI::from_json)?;
+                reading.member(&members, 1, ENDCSONengNBIdentification::from_tree)?;
+            let target_enb = reading.optional(&members, 2, ENDCSONeNBIdentification::from_tree)?;
+            let associated_tai = reading.optional(&members, 3, TAI::from_tree)?;
+            let broadcast_5gs_tai = reading.optional(&members, 4, FiveGSTAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 source_enb,
                 target_en_gnb,
@@ -10763,6 +11187,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENDCTransferTypeRequest<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBEarlyStatusTransferTransparentContainer<'a> {
         pub bearers_subject_to_early_status_transfer_list:
@@ -10845,20 +11271,21 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBEarlyStatusTransferTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBEarlyStatusTransferTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "bearers-SubjectToEarlyStatusTransferList",
-                self.bearers_subject_to_early_status_transfer_list.to_json(),
+                self.bearers_subject_to_early_status_transfer_list.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["bearers-SubjectToEarlyStatusTransferList", "iE-Extensions"],
@@ -10866,16 +11293,18 @@ pub mod s1_ap_ies {
             let bearers_subject_to_early_status_transfer_list = reading.member(
                 &members,
                 0,
-                BearersSubjectToEarlyStatusTransferList::from_json,
+                BearersSubjectToEarlyStatusTransferList::from_tree,
             )?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 bearers_subject_to_early_status_transfer_list,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBEarlyStatusTransferTransparentContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum ENBID {
@@ -10935,8 +11364,9 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBID {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::macroENB_ID(value) => {
                     json::alternative("macroENB-ID", json::bits(*value, 20, 20))
@@ -10952,7 +11382,7 @@ pub mod s1_ap_ies {
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &[
@@ -10965,25 +11395,27 @@ pub mod s1_ap_ies {
             Ok(match position {
                 0 => {
                     Self::macroENB_ID(reading.within("macroENB-ID", value, |value, reading| {
-                        reading.bits(value, 20, 20)
+                        json::read_bits(reading, value, 20, 20)
                     })?)
                 }
                 1 => Self::homeENB_ID(reading.within("homeENB-ID", value, |value, reading| {
-                    reading.bits(value, 28, 28)
+                    json::read_bits(reading, value, 28, 28)
                 })?),
                 2 => Self::short_macroENB_ID(reading.within(
                     "short-macroENB-ID",
                     value,
-                    |value, reading| reading.bits(value, 18, 18),
+                    |value, reading| json::read_bits(reading, value, 18, 18),
                 )?),
                 _ => Self::long_macroENB_ID(reading.within(
                     "long-macroENB-ID",
                     value,
-                    |value, reading| reading.bits(value, 21, 21),
+                    |value, reading| json::read_bits(reading, value, 21, 21),
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBStatusTransferTransparentContainer<'a> {
         pub bearers_subject_to_status_transfer_list: BearersSubjectToStatusTransferList<'a>,
@@ -11060,34 +11492,37 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBStatusTransferTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBStatusTransferTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "bearers-SubjectToStatusTransferList",
-                self.bearers_subject_to_status_transfer_list.to_json(),
+                self.bearers_subject_to_status_transfer_list.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["bearers-SubjectToStatusTransferList", "iE-Extensions"],
             )?;
             let bearers_subject_to_status_transfer_list =
-                reading.member(&members, 0, BearersSubjectToStatusTransferList::from_json)?;
+                reading.member(&members, 0, BearersSubjectToStatusTransferList::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 bearers_subject_to_status_transfer_list,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBStatusTransferTransparentContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ENBUES1APID(pub u32);
     impl crate::message::__Field<u32> for ENBUES1APID {
@@ -11118,11 +11553,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBUES1APID {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBUES1APID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 16777215)
@@ -11130,6 +11566,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBUES1APID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBIndirectX2TransportLayerAddresses<'a>(pub Vec<TransportLayerAddress<'a>>);
     impl<'a> crate::message::__Field<Vec<TransportLayerAddress<'a>>>
@@ -11179,16 +11617,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBIndirectX2TransportLayerAddresses<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ENBIndirectX2TransportLayerAddresses<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TransportLayerAddress::from_json(value, reading)
+                TransportLayerAddress::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBIndirectX2TransportLayerAddresses<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2ExtTLA<'a> {
         pub ipsec_tla: Option<TransportLayerAddress<'a>>,
@@ -11286,29 +11727,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBX2ExtTLA<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBX2ExtTLA<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "iPsecTLA",
-                self.ipsec_tla.as_ref().map(|value| value.to_json()),
+                self.ipsec_tla.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "gTPTLAa",
-                self.gtp_tlaa.as_ref().map(|value| value.to_json()),
+                self.gtp_tlaa.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["iPsecTLA", "gTPTLAa", "iE-Extensions"])?;
-            let ipsec_tla = reading.optional(&members, 0, TransportLayerAddress::from_json)?;
-            let gtp_tlaa = reading.optional(&members, 1, ENBX2GTPTLAs::from_json)?;
+            let ipsec_tla = reading.optional(&members, 0, TransportLayerAddress::from_tree)?;
+            let gtp_tlaa = reading.optional(&members, 1, ENBX2GTPTLAs::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ipsec_tla,
                 gtp_tlaa,
@@ -11316,6 +11758,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBX2ExtTLA<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2ExtTLAs<'a>(pub Vec<ENBX2ExtTLA<'a>>);
     impl<'a> crate::message::__Field<Vec<ENBX2ExtTLA<'a>>> for ENBX2ExtTLAs<'a> {
@@ -11361,16 +11805,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBX2ExtTLAs<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ENBX2ExtTLAs<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ENBX2ExtTLA::from_json(value, reading)
+                ENBX2ExtTLA::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBX2ExtTLAs<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2GTPTLAs<'a>(pub Vec<TransportLayerAddress<'a>>);
     impl<'a> crate::message::__Field<Vec<TransportLayerAddress<'a>>> for ENBX2GTPTLAs<'a> {
@@ -11416,16 +11863,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBX2GTPTLAs<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ENBX2GTPTLAs<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TransportLayerAddress::from_json(value, reading)
+                TransportLayerAddress::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBX2GTPTLAs<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2TLAs<'a>(pub Vec<TransportLayerAddress<'a>>);
     impl<'a> crate::message::__Field<Vec<TransportLayerAddress<'a>>> for ENBX2TLAs<'a> {
@@ -11471,16 +11921,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBX2TLAs<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ENBX2TLAs<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TransportLayerAddress::from_json(value, reading)
+                TransportLayerAddress::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBX2TLAs<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBname<'a>(pub Cow<'a, str>);
     impl<'a> crate::message::__Field<Cow<'a, str>> for ENBname<'a> {
@@ -11529,14 +11982,21 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBname<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBname<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.printable_string(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_text(
+                reading,
+                value,
+                json::Characters::Printable,
+            )?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBname<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EPLMNs(pub Vec<PLMNidentity>);
     impl crate::message::__Field<Vec<PLMNidentity>> for EPLMNs {
@@ -11575,16 +12035,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EPLMNs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for EPLMNs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                PLMNidentity::from_json(value, reading)
+                PLMNidentity::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EPLMNs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EUTRANCGI {
         pub plmn_identity: PLMNidentity,
@@ -11659,23 +12122,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EUTRANCGI {
-        fn to_json(&self) -> Value {
+    impl Tree for EUTRANCGI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_json());
-            members.put("cell-ID", self.cell_id.to_json());
+            members.put("pLMNidentity", self.plmn_identity.to_tree());
+            members.put("cell-ID", self.cell_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMNidentity", "cell-ID", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let cell_id = reading.member(&members, 1, CellIdentity::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let cell_id = reading.member(&members, 1, CellIdentity::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 cell_id,
@@ -11683,6 +12147,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EUTRANCGI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct EUTRANRoundTripDelayEstimationInfo(pub u16);
     impl crate::message::__Field<u16> for EUTRANRoundTripDelayEstimationInfo {
@@ -11713,11 +12179,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EUTRANRoundTripDelayEstimationInfo {
-        fn to_json(&self) -> Value {
+    impl Tree for EUTRANRoundTripDelayEstimationInfo {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 2047)
@@ -11725,6 +12192,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EUTRANRoundTripDelayEstimationInfo);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for EmergencyAreaID {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -11768,14 +12237,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyAreaID {
-        fn to_json(&self) -> Value {
+    impl Tree for EmergencyAreaID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<3>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EmergencyAreaID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDBroadcast(pub Vec<EmergencyAreaIDBroadcastItem>);
     impl crate::message::__Field<Vec<EmergencyAreaIDBroadcastItem>> for EmergencyAreaIDBroadcast {
@@ -11814,16 +12286,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyAreaIDBroadcast {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for EmergencyAreaIDBroadcast {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                EmergencyAreaIDBroadcastItem::from_json(value, reading)
+                EmergencyAreaIDBroadcastItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EmergencyAreaIDBroadcast);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDBroadcastItem {
         pub emergency_area_id: EmergencyAreaID,
@@ -11898,27 +12373,28 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyAreaIDBroadcastItem {
-        fn to_json(&self) -> Value {
+    impl Tree for EmergencyAreaIDBroadcastItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("emergencyAreaID", self.emergency_area_id.to_json());
-            members.put("completedCellinEAI", self.completed_cellin_eai.to_json());
+            members.put("emergencyAreaID", self.emergency_area_id.to_tree());
+            members.put("completedCellinEAI", self.completed_cellin_eai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["emergencyAreaID", "completedCellinEAI", "iE-Extensions"],
             )?;
-            let emergency_area_id = reading.member(&members, 0, EmergencyAreaID::from_json)?;
+            let emergency_area_id = reading.member(&members, 0, EmergencyAreaID::from_tree)?;
             let completed_cellin_eai =
-                reading.member(&members, 1, CompletedCellinEAI::from_json)?;
+                reading.member(&members, 1, CompletedCellinEAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 emergency_area_id,
                 completed_cellin_eai,
@@ -11926,6 +12402,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EmergencyAreaIDBroadcastItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDCancelled(pub Vec<EmergencyAreaIDCancelledItem>);
     impl crate::message::__Field<Vec<EmergencyAreaIDCancelledItem>> for EmergencyAreaIDCancelled {
@@ -11964,16 +12442,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyAreaIDCancelled {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for EmergencyAreaIDCancelled {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                EmergencyAreaIDCancelledItem::from_json(value, reading)
+                EmergencyAreaIDCancelledItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EmergencyAreaIDCancelled);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDCancelledItem {
         pub emergency_area_id: EmergencyAreaID,
@@ -12048,27 +12529,28 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyAreaIDCancelledItem {
-        fn to_json(&self) -> Value {
+    impl Tree for EmergencyAreaIDCancelledItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("emergencyAreaID", self.emergency_area_id.to_json());
-            members.put("cancelledCellinEAI", self.cancelled_cellin_eai.to_json());
+            members.put("emergencyAreaID", self.emergency_area_id.to_tree());
+            members.put("cancelledCellinEAI", self.cancelled_cellin_eai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["emergencyAreaID", "cancelledCellinEAI", "iE-Extensions"],
             )?;
-            let emergency_area_id = reading.member(&members, 0, EmergencyAreaID::from_json)?;
+            let emergency_area_id = reading.member(&members, 0, EmergencyAreaID::from_tree)?;
             let cancelled_cellin_eai =
-                reading.member(&members, 1, CancelledCellinEAI::from_json)?;
+                reading.member(&members, 1, CancelledCellinEAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 emergency_area_id,
                 cancelled_cellin_eai,
@@ -12076,6 +12558,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EmergencyAreaIDCancelledItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDList(pub Vec<EmergencyAreaID>);
     impl crate::message::__Field<Vec<EmergencyAreaID>> for EmergencyAreaIDList {
@@ -12114,16 +12598,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyAreaIDList {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for EmergencyAreaIDList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                EmergencyAreaID::from_json(value, reading)
+                EmergencyAreaID::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EmergencyAreaIDList);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDListForRestart(pub Vec<EmergencyAreaID>);
     impl crate::message::__Field<Vec<EmergencyAreaID>> for EmergencyAreaIDListForRestart {
@@ -12162,16 +12649,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyAreaIDListForRestart {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for EmergencyAreaIDListForRestart {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                EmergencyAreaID::from_json(value, reading)
+                EmergencyAreaID::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EmergencyAreaIDListForRestart);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum EmergencyIndicator {
@@ -12206,14 +12696,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EmergencyIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for EmergencyIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EmergencyIndicator);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EnGNBID<'a>(pub BitString<'a>);
     impl<'a> crate::message::__Field<BitString<'a>> for EnGNBID<'a> {
@@ -12252,14 +12745,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EnGNBID<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for EnGNBID<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bit_string(&self.0, 22, 32, true)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bit_string(value, 22, 32, true)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bit_string(reading, value, 22, 32, true)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EnGNBID<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EncryptionAlgorithms<'a>(pub BitString<'a>);
     impl<'a> crate::message::__Field<BitString<'a>> for EncryptionAlgorithms<'a> {
@@ -12298,14 +12794,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EncryptionAlgorithms<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for EncryptionAlgorithms<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bit_string(&self.0, 16, 16, true)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bit_string(value, 16, 16, true)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bit_string(reading, value, 16, 16, true)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EncryptionAlgorithms<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum EndIndication {
@@ -12341,14 +12840,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EndIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for EndIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EndIndication);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum EnhancedCoverageRestricted {
@@ -12383,14 +12885,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EnhancedCoverageRestricted {
-        fn to_json(&self) -> Value {
+    impl Tree for EnhancedCoverageRestricted {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EnhancedCoverageRestricted);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum EthernetType {
@@ -12425,14 +12930,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EthernetType {
-        fn to_json(&self) -> Value {
+    impl Tree for EthernetType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EthernetType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EventL1LoggedMDTConfig {
         pub l1_threshold: MeasurementThresholdL1LoggedMDT,
@@ -12518,19 +13026,20 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EventL1LoggedMDTConfig {
-        fn to_json(&self) -> Value {
+    impl Tree for EventL1LoggedMDTConfig {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("l1Threshold", self.l1_threshold.to_json());
-            members.put("hysteresis", self.hysteresis.to_json());
-            members.put("timeToTrigger", self.time_to_trigger.to_json());
+            members.put("l1Threshold", self.l1_threshold.to_tree());
+            members.put("hysteresis", self.hysteresis.to_tree());
+            members.put("timeToTrigger", self.time_to_trigger.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -12541,11 +13050,11 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let l1_threshold =
-                reading.member(&members, 0, MeasurementThresholdL1LoggedMDT::from_json)?;
-            let hysteresis = reading.member(&members, 1, Hysteresis::from_json)?;
-            let time_to_trigger = reading.member(&members, 2, TimeToTrigger::from_json)?;
+                reading.member(&members, 0, MeasurementThresholdL1LoggedMDT::from_tree)?;
+            let hysteresis = reading.member(&members, 1, Hysteresis::from_tree)?;
+            let time_to_trigger = reading.member(&members, 2, TimeToTrigger::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 l1_threshold,
                 hysteresis,
@@ -12554,6 +13063,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EventL1LoggedMDTConfig);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -12589,14 +13100,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EventTriggerOutOfCoverage {
-        fn to_json(&self) -> Value {
+    impl Tree for EventTriggerOutOfCoverage {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EventTriggerOutOfCoverage);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum EventTrigger {
         outOfCoverage(EventTriggerOutOfCoverage),
@@ -12650,19 +13164,20 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EventTrigger {
-        fn to_json(&self) -> Value {
+    impl Tree for EventTrigger {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::outOfCoverage(value) => json::alternative("outOfCoverage", value.to_json()),
+                Self::outOfCoverage(value) => json::alternative("outOfCoverage", value.to_tree()),
                 Self::eventL1LoggedMDTConfig(value) => {
-                    json::alternative("eventL1LoggedMDTConfig", value.to_json())
+                    json::alternative("eventL1LoggedMDTConfig", value.to_tree())
                 }
                 Self::choice_Extensions(value) => {
-                    json::alternative("choice-Extensions", value.to_json())
+                    json::alternative("choice-Extensions", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &[
@@ -12675,21 +13190,23 @@ pub mod s1_ap_ies {
                 0 => Self::outOfCoverage(reading.within(
                     "outOfCoverage",
                     value,
-                    EventTriggerOutOfCoverage::from_json,
+                    EventTriggerOutOfCoverage::from_tree,
                 )?),
                 1 => Self::eventL1LoggedMDTConfig(reading.within(
                     "eventL1LoggedMDTConfig",
                     value,
-                    EventL1LoggedMDTConfig::from_json,
+                    EventL1LoggedMDTConfig::from_tree,
                 )?),
                 _ => Self::choice_Extensions(reading.within(
                     "choice-Extensions",
                     value,
-                    ProtocolIEField::from_json,
+                    ProtocolIEField::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EventTrigger);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum EventType {
@@ -12734,14 +13251,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for EventType {
-        fn to_json(&self) -> Value {
+    impl Tree for EventType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(EventType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExpectedActivityPeriod(pub u64);
     impl crate::message::__Field<u64> for ExpectedActivityPeriod {
@@ -12772,14 +13292,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ExpectedActivityPeriod {
-        fn to_json(&self) -> Value {
+    impl Tree for ExpectedActivityPeriod {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ExpectedActivityPeriod);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum ExpectedHOInterval {
@@ -12836,14 +13359,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ExpectedHOInterval {
-        fn to_json(&self) -> Value {
+    impl Tree for ExpectedHOInterval {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ExpectedHOInterval);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExpectedIdlePeriod(pub u64);
     impl crate::message::__Field<u64> for ExpectedIdlePeriod {
@@ -12874,14 +13400,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ExpectedIdlePeriod {
-        fn to_json(&self) -> Value {
+    impl Tree for ExpectedIdlePeriod {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ExpectedIdlePeriod);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ExpectedUEActivityBehaviour {
         pub expected_activity_period: Option<ExpectedActivityPeriod>,
@@ -12995,34 +13524,35 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ExpectedUEActivityBehaviour {
-        fn to_json(&self) -> Value {
+    impl Tree for ExpectedUEActivityBehaviour {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "expectedActivityPeriod",
                 self.expected_activity_period
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "expectedIdlePeriod",
                 self.expected_idle_period
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "sourceofUEActivityBehaviourInformation",
                 self.sourceof_ue_activity_behaviour_information
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -13033,16 +13563,16 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let expected_activity_period =
-                reading.optional(&members, 0, ExpectedActivityPeriod::from_json)?;
+                reading.optional(&members, 0, ExpectedActivityPeriod::from_tree)?;
             let expected_idle_period =
-                reading.optional(&members, 1, ExpectedIdlePeriod::from_json)?;
+                reading.optional(&members, 1, ExpectedIdlePeriod::from_tree)?;
             let sourceof_ue_activity_behaviour_information = reading.optional(
                 &members,
                 2,
-                SourceOfUEActivityBehaviourInformation::from_json,
+                SourceOfUEActivityBehaviourInformation::from_tree,
             )?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 expected_activity_period,
                 expected_idle_period,
@@ -13051,6 +13581,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ExpectedUEActivityBehaviour);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ExpectedUEBehaviour {
         pub expected_activity: Option<ExpectedUEActivityBehaviour>,
@@ -13139,36 +13671,37 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ExpectedUEBehaviour {
-        fn to_json(&self) -> Value {
+    impl Tree for ExpectedUEBehaviour {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "expectedActivity",
-                self.expected_activity.as_ref().map(|value| value.to_json()),
+                self.expected_activity.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "expectedHOInterval",
                 self.expected_ho_interval
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["expectedActivity", "expectedHOInterval", "iE-Extensions"],
             )?;
             let expected_activity =
-                reading.optional(&members, 0, ExpectedUEActivityBehaviour::from_json)?;
+                reading.optional(&members, 0, ExpectedUEActivityBehaviour::from_tree)?;
             let expected_ho_interval =
-                reading.optional(&members, 1, ExpectedHOInterval::from_json)?;
+                reading.optional(&members, 1, ExpectedHOInterval::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 expected_activity,
                 expected_ho_interval,
@@ -13176,6 +13709,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ExpectedUEBehaviour);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExtendedUEIdentityIndexValue(pub Bits);
     impl crate::message::__Field<Bits> for ExtendedUEIdentityIndexValue {
@@ -13216,14 +13751,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ExtendedUEIdentityIndexValue {
-        fn to_json(&self) -> Value {
+    impl Tree for ExtendedUEIdentityIndexValue {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 14, 14)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 14, 14)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 14, 14)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ExtendedUEIdentityIndexValue);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExtendedBitRate(pub u64);
     impl crate::message::__Field<u64> for ExtendedBitRate {
@@ -13256,14 +13794,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ExtendedBitRate {
-        fn to_json(&self) -> Value {
+    impl Tree for ExtendedBitRate {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ExtendedBitRate);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExtendedRNCID(pub u16);
     impl crate::message::__Field<u16> for ExtendedRNCID {
@@ -13294,11 +13835,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ExtendedRNCID {
-        fn to_json(&self) -> Value {
+    impl Tree for ExtendedRNCID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 4096, 65535)
@@ -13306,6 +13848,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ExtendedRNCID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExtendedRepetitionPeriod(pub u32);
     impl crate::message::__Field<u32> for ExtendedRepetitionPeriod {
@@ -13336,11 +13880,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ExtendedRepetitionPeriod {
-        fn to_json(&self) -> Value {
+    impl Tree for ExtendedRepetitionPeriod {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 4096, 131071)
@@ -13348,6 +13893,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ExtendedRepetitionPeriod);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for FiveGSTAC {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -13392,14 +13939,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for FiveGSTAC {
-        fn to_json(&self) -> Value {
+    impl Tree for FiveGSTAC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<3>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(FiveGSTAC);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct FiveGSTAI {
         pub plmn_identity: PLMNidentity,
@@ -13474,24 +14024,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for FiveGSTAI {
-        fn to_json(&self) -> Value {
+    impl Tree for FiveGSTAI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_json());
-            members.put("fiveGSTAC", self.five_gs_tac.to_json());
+            members.put("pLMNidentity", self.plmn_identity.to_tree());
+            members.put("fiveGSTAC", self.five_gs_tac.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pLMNidentity", "fiveGSTAC", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let five_gs_tac = reading.member(&members, 1, FiveGSTAC::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let five_gs_tac = reading.member(&members, 1, FiveGSTAC::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 five_gs_tac,
@@ -13499,6 +14050,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(FiveGSTAI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct FiveQI(pub u64);
     impl crate::message::__Field<u64> for FiveQI {
@@ -13529,14 +14082,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for FiveQI {
-        fn to_json(&self) -> Value {
+    impl Tree for FiveQI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(FiveQI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum ForbiddenInterRATs {
@@ -13590,14 +14146,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ForbiddenInterRATs {
-        fn to_json(&self) -> Value {
+    impl Tree for ForbiddenInterRATs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ForbiddenInterRATs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenLACs(pub Vec<LAC>);
     impl crate::message::__Field<Vec<LAC>> for ForbiddenLACs {
@@ -13636,16 +14195,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ForbiddenLACs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ForbiddenLACs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                LAC::from_json(value, reading)
+                LAC::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ForbiddenLACs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenLAs(pub Vec<ForbiddenLAsItem>);
     impl crate::message::__Field<Vec<ForbiddenLAsItem>> for ForbiddenLAs {
@@ -13684,16 +14246,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ForbiddenLAs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ForbiddenLAs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ForbiddenLAsItem::from_json(value, reading)
+                ForbiddenLAsItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ForbiddenLAs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenLAsItem {
         pub plmn_identity: PLMNidentity,
@@ -13768,24 +14333,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ForbiddenLAsItem {
-        fn to_json(&self) -> Value {
+    impl Tree for ForbiddenLAsItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMN-Identity", self.plmn_identity.to_json());
-            members.put("forbiddenLACs", self.forbidden_lacs.to_json());
+            members.put("pLMN-Identity", self.plmn_identity.to_tree());
+            members.put("forbiddenLACs", self.forbidden_lacs.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pLMN-Identity", "forbiddenLACs", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let forbidden_lacs = reading.member(&members, 1, ForbiddenLACs::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let forbidden_lacs = reading.member(&members, 1, ForbiddenLACs::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 forbidden_lacs,
@@ -13793,6 +14359,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ForbiddenLAsItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenTACs(pub Vec<TAC>);
     impl crate::message::__Field<Vec<TAC>> for ForbiddenTACs {
@@ -13831,16 +14399,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ForbiddenTACs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ForbiddenTACs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TAC::from_json(value, reading)
+                TAC::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ForbiddenTACs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenTAs(pub Vec<ForbiddenTAsItem>);
     impl crate::message::__Field<Vec<ForbiddenTAsItem>> for ForbiddenTAs {
@@ -13879,16 +14450,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ForbiddenTAs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ForbiddenTAs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ForbiddenTAsItem::from_json(value, reading)
+                ForbiddenTAsItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ForbiddenTAs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenTAsItem {
         pub plmn_identity: PLMNidentity,
@@ -13963,24 +14537,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ForbiddenTAsItem {
-        fn to_json(&self) -> Value {
+    impl Tree for ForbiddenTAsItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMN-Identity", self.plmn_identity.to_json());
-            members.put("forbiddenTACs", self.forbidden_tacs.to_json());
+            members.put("pLMN-Identity", self.plmn_identity.to_tree());
+            members.put("forbiddenTACs", self.forbidden_tacs.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pLMN-Identity", "forbiddenTACs", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let forbidden_tacs = reading.member(&members, 1, ForbiddenTACs::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let forbidden_tacs = reading.member(&members, 1, ForbiddenTACs::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 forbidden_tacs,
@@ -13988,6 +14563,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ForbiddenTAsItem);
     #[doc = " G"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GBRQosInformation {
@@ -14085,32 +14662,33 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GBRQosInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for GBRQosInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "e-RAB-MaximumBitrateDL",
-                self.e_rab_maximum_bitrate_dl.to_json(),
+                self.e_rab_maximum_bitrate_dl.to_tree(),
             );
             members.put(
                 "e-RAB-MaximumBitrateUL",
-                self.e_rab_maximum_bitrate_ul.to_json(),
+                self.e_rab_maximum_bitrate_ul.to_tree(),
             );
             members.put(
                 "e-RAB-GuaranteedBitrateDL",
-                self.e_rab_guaranteed_bitrate_dl.to_json(),
+                self.e_rab_guaranteed_bitrate_dl.to_tree(),
             );
             members.put(
                 "e-RAB-GuaranteedBitrateUL",
-                self.e_rab_guaranteed_bitrate_ul.to_json(),
+                self.e_rab_guaranteed_bitrate_ul.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -14121,12 +14699,12 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_maximum_bitrate_dl = reading.member(&members, 0, BitRate::from_json)?;
-            let e_rab_maximum_bitrate_ul = reading.member(&members, 1, BitRate::from_json)?;
-            let e_rab_guaranteed_bitrate_dl = reading.member(&members, 2, BitRate::from_json)?;
-            let e_rab_guaranteed_bitrate_ul = reading.member(&members, 3, BitRate::from_json)?;
+            let e_rab_maximum_bitrate_dl = reading.member(&members, 0, BitRate::from_tree)?;
+            let e_rab_maximum_bitrate_ul = reading.member(&members, 1, BitRate::from_tree)?;
+            let e_rab_guaranteed_bitrate_dl = reading.member(&members, 2, BitRate::from_tree)?;
+            let e_rab_guaranteed_bitrate_ul = reading.member(&members, 3, BitRate::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_maximum_bitrate_dl,
                 e_rab_maximum_bitrate_ul,
@@ -14136,6 +14714,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GBRQosInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GERANCellID {
         pub lai: LAI,
@@ -14221,25 +14801,26 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GERANCellID {
-        fn to_json(&self) -> Value {
+    impl Tree for GERANCellID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("lAI", self.lai.to_json());
-            members.put("rAC", self.rac.to_json());
-            members.put("cI", self.ci.to_json());
+            members.put("lAI", self.lai.to_tree());
+            members.put("rAC", self.rac.to_tree());
+            members.put("cI", self.ci.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["lAI", "rAC", "cI", "iE-Extensions"])?;
-            let lai = reading.member(&members, 0, LAI::from_json)?;
-            let rac = reading.member(&members, 1, RAC::from_json)?;
-            let ci = reading.member(&members, 2, CI::from_json)?;
+            let lai = reading.member(&members, 0, LAI::from_tree)?;
+            let rac = reading.member(&members, 1, RAC::from_tree)?;
+            let ci = reading.member(&members, 2, CI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 lai,
                 rac,
@@ -14248,6 +14829,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GERANCellID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GNB {
         pub global_gnb_id: GlobalGNBID,
@@ -14311,27 +14894,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GNB {
-        fn to_json(&self) -> Value {
+    impl Tree for GNB {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("global-gNB-ID", self.global_gnb_id.to_json());
+            members.put("global-gNB-ID", self.global_gnb_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["global-gNB-ID", "iE-Extensions"])?;
-            let global_gnb_id = reading.member(&members, 0, GlobalGNBID::from_json)?;
+            let global_gnb_id = reading.member(&members, 0, GlobalGNBID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 global_gnb_id,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GNB);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct GNBID(pub Bits);
     impl crate::message::__Field<Bits> for GNBID {
@@ -14362,14 +14948,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GNBID {
-        fn to_json(&self) -> Value {
+    impl Tree for GNBID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 22, 32)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 22, 32)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 22, 32)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GNBID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum GNBIdentity {
@@ -14405,20 +14994,23 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GNBIdentity {
-        fn to_json(&self) -> Value {
+    impl Tree for GNBIdentity {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::gNB_ID(value) => json::alternative("gNB-ID", value.to_json()),
+                Self::gNB_ID(value) => json::alternative("gNB-ID", value.to_tree()),
             }
         }
         #[allow(clippy::match_single_binding)]
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(value, &["gNB-ID"])?;
             Ok(match position {
-                _ => Self::gNB_ID(reading.within("gNB-ID", value, GNBID::from_json)?),
+                _ => Self::gNB_ID(reading.within("gNB-ID", value, GNBID::from_tree)?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GNBIdentity);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for GTPTEID {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -14462,14 +15054,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GTPTEID {
-        fn to_json(&self) -> Value {
+    impl Tree for GTPTEID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<4>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GTPTEID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GUMMEI {
         pub plmn_identity: PLMNidentity,
@@ -14555,28 +15150,29 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GUMMEI {
-        fn to_json(&self) -> Value {
+    impl Tree for GUMMEI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMN-Identity", self.plmn_identity.to_json());
-            members.put("mME-Group-ID", self.mme_group_id.to_json());
-            members.put("mME-Code", self.mme_code.to_json());
+            members.put("pLMN-Identity", self.plmn_identity.to_tree());
+            members.put("mME-Group-ID", self.mme_group_id.to_tree());
+            members.put("mME-Code", self.mme_code.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["pLMN-Identity", "mME-Group-ID", "mME-Code", "iE-Extensions"],
             )?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let mme_group_id = reading.member(&members, 1, MMEGroupID::from_json)?;
-            let mme_code = reading.member(&members, 2, MMECode::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let mme_group_id = reading.member(&members, 1, MMEGroupID::from_tree)?;
+            let mme_code = reading.member(&members, 2, MMECode::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 mme_group_id,
@@ -14585,6 +15181,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GUMMEI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GUMMEIList(pub Vec<GUMMEI>);
     impl crate::message::__Field<Vec<GUMMEI>> for GUMMEIList {
@@ -14623,16 +15221,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GUMMEIList {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for GUMMEIList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                GUMMEI::from_json(value, reading)
+                GUMMEI::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GUMMEIList);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum GUMMEIType {
@@ -14669,14 +15270,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GUMMEIType {
-        fn to_json(&self) -> Value {
+    impl Tree for GUMMEIType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GUMMEIType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum GWContextReleaseIndication {
@@ -14711,14 +15315,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GWContextReleaseIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for GWContextReleaseIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GWContextReleaseIndication);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GlobalENBID {
         pub plmn_identity: PLMNidentity,
@@ -14793,23 +15400,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GlobalENBID {
-        fn to_json(&self) -> Value {
+    impl Tree for GlobalENBID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_json());
-            members.put("eNB-ID", self.enb_id.to_json());
+            members.put("pLMNidentity", self.plmn_identity.to_tree());
+            members.put("eNB-ID", self.enb_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMNidentity", "eNB-ID", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let enb_id = reading.member(&members, 1, ENBID::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let enb_id = reading.member(&members, 1, ENBID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 enb_id,
@@ -14817,6 +15425,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GlobalENBID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GlobalGNBID {
         pub plmn_identity: PLMNidentity,
@@ -14891,23 +15501,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GlobalGNBID {
-        fn to_json(&self) -> Value {
+    impl Tree for GlobalGNBID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMN-Identity", self.plmn_identity.to_json());
-            members.put("gNB-ID", self.gnb_id.to_json());
+            members.put("pLMN-Identity", self.plmn_identity.to_tree());
+            members.put("gNB-ID", self.gnb_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMN-Identity", "gNB-ID", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let gnb_id = reading.member(&members, 1, GNBIdentity::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let gnb_id = reading.member(&members, 1, GNBIdentity::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 gnb_id,
@@ -14915,6 +15526,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GlobalGNBID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum GlobalRANNODEID {
@@ -14958,21 +15571,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GlobalRANNODEID {
-        fn to_json(&self) -> Value {
+    impl Tree for GlobalRANNODEID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::gNB(value) => json::alternative("gNB", value.to_json()),
-                Self::ng_eNB(value) => json::alternative("ng-eNB", value.to_json()),
+                Self::gNB(value) => json::alternative("gNB", value.to_tree()),
+                Self::ng_eNB(value) => json::alternative("ng-eNB", value.to_tree()),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(value, &["gNB", "ng-eNB"])?;
             Ok(match position {
-                0 => Self::gNB(reading.within("gNB", value, GNB::from_json)?),
-                _ => Self::ng_eNB(reading.within("ng-eNB", value, NGENB::from_json)?),
+                0 => Self::gNB(reading.within("gNB", value, GNB::from_tree)?),
+                _ => Self::ng_eNB(reading.within("ng-eNB", value, NGENB::from_tree)?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GlobalRANNODEID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GlobalEnGNBID<'a> {
         pub plmn_identity: PLMNidentity,
@@ -15056,24 +15672,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for GlobalEnGNBID<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for GlobalEnGNBID<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_json());
-            members.put("en-gNB-ID", self.en_gnb_id.to_json());
+            members.put("pLMNidentity", self.plmn_identity.to_tree());
+            members.put("en-gNB-ID", self.en_gnb_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pLMNidentity", "en-gNB-ID", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let en_gnb_id = reading.member(&members, 1, EnGNBID::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let en_gnb_id = reading.member(&members, 1, EnGNBID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 en_gnb_id,
@@ -15081,6 +15698,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(GlobalEnGNBID<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HFN(pub u32);
     impl crate::message::__Field<u32> for HFN {
@@ -15111,11 +15730,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HFN {
-        fn to_json(&self) -> Value {
+    impl Tree for HFN {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 1048575)
@@ -15123,6 +15743,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HFN);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HFNModified(pub u32);
     impl crate::message::__Field<u32> for HFNModified {
@@ -15153,11 +15775,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HFNModified {
-        fn to_json(&self) -> Value {
+    impl Tree for HFNModified {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 131071)
@@ -15165,6 +15788,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HFNModified);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HFNforPDCPSNlength18(pub u16);
     impl crate::message::__Field<u16> for HFNforPDCPSNlength18 {
@@ -15195,11 +15820,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HFNforPDCPSNlength18 {
-        fn to_json(&self) -> Value {
+    impl Tree for HFNforPDCPSNlength18 {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 16383)
@@ -15207,6 +15833,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HFNforPDCPSNlength18);
     #[doc = " H"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -15242,14 +15870,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverFlag {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverFlag {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverFlag);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct HandoverRestrictionList {
         pub serving_plmn: PLMNidentity,
@@ -15385,35 +16016,36 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverRestrictionList {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverRestrictionList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("servingPLMN", self.serving_plmn.to_json());
+            members.put("servingPLMN", self.serving_plmn.to_tree());
             members.put_optional(
                 "equivalentPLMNs",
-                self.equivalent_plmns.as_ref().map(|value| value.to_json()),
+                self.equivalent_plmns.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "forbiddenTAs",
-                self.forbidden_tas.as_ref().map(|value| value.to_json()),
+                self.forbidden_tas.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "forbiddenLAs",
-                self.forbidden_las.as_ref().map(|value| value.to_json()),
+                self.forbidden_las.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "forbiddenInterRATs",
                 self.forbidden_inter_rats
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -15425,14 +16057,14 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let serving_plmn = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let equivalent_plmns = reading.optional(&members, 1, EPLMNs::from_json)?;
-            let forbidden_tas = reading.optional(&members, 2, ForbiddenTAs::from_json)?;
-            let forbidden_las = reading.optional(&members, 3, ForbiddenLAs::from_json)?;
+            let serving_plmn = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let equivalent_plmns = reading.optional(&members, 1, EPLMNs::from_tree)?;
+            let forbidden_tas = reading.optional(&members, 2, ForbiddenTAs::from_tree)?;
+            let forbidden_las = reading.optional(&members, 3, ForbiddenLAs::from_tree)?;
             let forbidden_inter_rats =
-                reading.optional(&members, 4, ForbiddenInterRATs::from_json)?;
+                reading.optional(&members, 4, ForbiddenInterRATs::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 serving_plmn,
                 equivalent_plmns,
@@ -15443,6 +16075,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverRestrictionList);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum HandoverType {
@@ -15499,14 +16133,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverType {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HandoverWindowDuration(pub u16);
     impl crate::message::__Field<u16> for HandoverWindowDuration {
@@ -15537,11 +16174,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverWindowDuration {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverWindowDuration {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 1, 6000)
@@ -15549,6 +16187,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverWindowDuration);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HandoverWindowStart(pub u32);
     impl crate::message::__Field<u32> for HandoverWindowStart {
@@ -15579,11 +16219,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverWindowStart {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverWindowStart {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 1048575)
@@ -15591,6 +16232,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverWindowStart);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct Hysteresis(pub u8);
     impl crate::message::__Field<u8> for Hysteresis {
@@ -15621,16 +16264,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Hysteresis {
-        fn to_json(&self) -> Value {
+    impl Tree for Hysteresis {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading.unsigned(value, 0, 30).map(|number| number as u8)?,
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Hysteresis);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum IABAuthorized {
@@ -15666,14 +16312,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for IABAuthorized {
-        fn to_json(&self) -> Value {
+    impl Tree for IABAuthorized {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(IABAuthorized);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum IABNodeIndication {
@@ -15708,14 +16357,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for IABNodeIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for IABNodeIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(IABNodeIndication);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum IABSupported {
@@ -15750,14 +16402,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for IABSupported {
-        fn to_json(&self) -> Value {
+    impl Tree for IABSupported {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(IABSupported);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IMSI<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for IMSI<'a> {
@@ -15806,14 +16461,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for IMSI<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for IMSI<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(IMSI<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum IMSvoiceEPSfallbackfrom5G {
@@ -15848,14 +16506,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for IMSvoiceEPSfallbackfrom5G {
-        fn to_json(&self) -> Value {
+    impl Tree for IMSvoiceEPSfallbackfrom5G {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(IMSvoiceEPSfallbackfrom5G);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ImmediateMDT {
         pub measurements_to_activate: MeasurementsToActivate,
@@ -15966,33 +16627,34 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ImmediateMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for ImmediateMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "measurementsToActivate",
-                self.measurements_to_activate.to_json(),
+                self.measurements_to_activate.to_tree(),
             );
-            members.put("m1reportingTrigger", self.m1_reporting_trigger.to_json());
+            members.put("m1reportingTrigger", self.m1_reporting_trigger.to_tree());
             members.put_optional(
                 "m1thresholdeventA2",
                 self.m1_thresholdevent_a2
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "m1periodicReporting",
                 self.m1_periodic_reporting
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -16004,15 +16666,15 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let measurements_to_activate =
-                reading.member(&members, 0, MeasurementsToActivate::from_json)?;
+                reading.member(&members, 0, MeasurementsToActivate::from_tree)?;
             let m1_reporting_trigger =
-                reading.member(&members, 1, M1ReportingTrigger::from_json)?;
+                reading.member(&members, 1, M1ReportingTrigger::from_tree)?;
             let m1_thresholdevent_a2 =
-                reading.optional(&members, 2, M1ThresholdEventA2::from_json)?;
+                reading.optional(&members, 2, M1ThresholdEventA2::from_tree)?;
             let m1_periodic_reporting =
-                reading.optional(&members, 3, M1PeriodicReporting::from_json)?;
+                reading.optional(&members, 3, M1PeriodicReporting::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 measurements_to_activate,
                 m1_reporting_trigger,
@@ -16022,6 +16684,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ImmediateMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct InformationOnRecommendedCellsAndENBsForPaging<'a> {
         pub recommended_cells_for_paging: RecommendedCellsForPaging<'a>,
@@ -16105,24 +16769,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InformationOnRecommendedCellsAndENBsForPaging<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for InformationOnRecommendedCellsAndENBsForPaging<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "recommendedCellsForPaging",
-                self.recommended_cells_for_paging.to_json(),
+                self.recommended_cells_for_paging.to_tree(),
             );
             members.put(
                 "recommendENBsForPaging",
-                self.recommend_enbs_for_paging.to_json(),
+                self.recommend_enbs_for_paging.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -16132,11 +16797,11 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let recommended_cells_for_paging =
-                reading.member(&members, 0, RecommendedCellsForPaging::from_json)?;
+                reading.member(&members, 0, RecommendedCellsForPaging::from_tree)?;
             let recommend_enbs_for_paging =
-                reading.member(&members, 1, RecommendedENBsForPaging::from_json)?;
+                reading.member(&members, 1, RecommendedENBsForPaging::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 recommended_cells_for_paging,
                 recommend_enbs_for_paging,
@@ -16144,6 +16809,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InformationOnRecommendedCellsAndENBsForPaging<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IntegrityProtectionAlgorithms<'a>(pub BitString<'a>);
     impl<'a> crate::message::__Field<BitString<'a>> for IntegrityProtectionAlgorithms<'a> {
@@ -16182,14 +16849,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for IntegrityProtectionAlgorithms<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for IntegrityProtectionAlgorithms<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bit_string(&self.0, 16, 16, true)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bit_string(value, 16, 16, true)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bit_string(reading, value, 16, 16, true)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(IntegrityProtectionAlgorithms<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum IntegrityProtectionIndication {
@@ -16226,14 +16896,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for IntegrityProtectionIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for IntegrityProtectionIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(IntegrityProtectionIndication);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum IntegrityProtectionResult {
@@ -16269,14 +16942,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for IntegrityProtectionResult {
-        fn to_json(&self) -> Value {
+    impl Tree for IntegrityProtectionResult {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(IntegrityProtectionResult);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct IntendedNumberOfPagingAttempts(pub u64);
     impl crate::message::__Field<u64> for IntendedNumberOfPagingAttempts {
@@ -16307,14 +16983,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for IntendedNumberOfPagingAttempts {
-        fn to_json(&self) -> Value {
+    impl Tree for IntendedNumberOfPagingAttempts {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(IntendedNumberOfPagingAttempts);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -16366,14 +17045,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InterSystemMeasurementItemSubcarrierSpacingSSB {
-        fn to_json(&self) -> Value {
+    impl Tree for InterSystemMeasurementItemSubcarrierSpacingSSB {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InterSystemMeasurementItemSubcarrierSpacingSSB);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct InterSystemMeasurementItem<'a> {
         pub freq_band_indicator_nr: u16,
@@ -16600,8 +17282,9 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InterSystemMeasurementItem<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for InterSystemMeasurementItem<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "freqBandIndicatorNR",
@@ -16613,7 +17296,7 @@ pub mod s1_ap_ies {
             );
             members.put(
                 "subcarrierSpacingSSB",
-                self.subcarrier_spacing_ssb.to_json(),
+                self.subcarrier_spacing_ssb.to_tree(),
             );
             members.put_optional(
                 "maxRSIndexCellQual",
@@ -16654,11 +17337,11 @@ pub mod s1_ap_ies {
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -16686,24 +17369,32 @@ pub mod s1_ap_ies {
             let subcarrier_spacing_ssb = reading.member(
                 &members,
                 2,
-                InterSystemMeasurementItemSubcarrierSpacingSSB::from_json,
+                InterSystemMeasurementItemSubcarrierSpacingSSB::from_tree,
             )?;
             let max_rs_index_cell_qual = reading.optional(&members, 3, |value, reading| {
                 reading.unsigned(value, 1, 16).map(|number| number as u8)
             })?;
-            let smtc = reading.optional(&members, 4, |value, reading| reading.octets(value))?;
-            let thresh_rs_index_r15 =
-                reading.optional(&members, 5, |value, reading| reading.octets(value))?;
-            let ssb_to_measure =
-                reading.optional(&members, 6, |value, reading| reading.octets(value))?;
-            let ss_rssi_measurement =
-                reading.optional(&members, 7, |value, reading| reading.octets(value))?;
-            let quantity_config_nr_r15 =
-                reading.optional(&members, 8, |value, reading| reading.octets(value))?;
+            let smtc = reading.optional(&members, 4, |value, reading| {
+                json::read_octets(reading, value)
+            })?;
+            let thresh_rs_index_r15 = reading.optional(&members, 5, |value, reading| {
+                json::read_octets(reading, value)
+            })?;
+            let ssb_to_measure = reading.optional(&members, 6, |value, reading| {
+                json::read_octets(reading, value)
+            })?;
+            let ss_rssi_measurement = reading.optional(&members, 7, |value, reading| {
+                json::read_octets(reading, value)
+            })?;
+            let quantity_config_nr_r15 = reading.optional(&members, 8, |value, reading| {
+                json::read_octets(reading, value)
+            })?;
             let excluded_cells_to_add_mod_list =
-                reading.optional(&members, 9, |value, reading| reading.octets(value))?;
+                reading.optional(&members, 9, |value, reading| {
+                    json::read_octets(reading, value)
+                })?;
             let ie_extensions =
-                reading.optional(&members, 10, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 10, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 freq_band_indicator_nr,
                 ssb_frequencies,
@@ -16719,6 +17410,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InterSystemMeasurementItem<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct InterSystemMeasurementList<'a>(pub Vec<InterSystemMeasurementItem<'a>>);
     impl<'a> crate::message::__Field<Vec<InterSystemMeasurementItem<'a>>>
@@ -16766,16 +17459,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InterSystemMeasurementList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for InterSystemMeasurementList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                InterSystemMeasurementItem::from_json(value, reading)
+                InterSystemMeasurementItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InterSystemMeasurementList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct InterSystemMeasurementParameters<'a> {
         pub measurement_duration: u8,
@@ -16868,8 +17564,9 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InterSystemMeasurementParameters<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for InterSystemMeasurementParameters<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "measurementDuration",
@@ -16879,15 +17576,15 @@ pub mod s1_ap_ies {
                 "interSystemMeasurementList",
                 self.inter_system_measurement_list
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -16900,9 +17597,9 @@ pub mod s1_ap_ies {
                 reading.unsigned(value, 1, 100).map(|number| number as u8)
             })?;
             let inter_system_measurement_list =
-                reading.optional(&members, 1, InterSystemMeasurementList::from_json)?;
+                reading.optional(&members, 1, InterSystemMeasurementList::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 measurement_duration,
                 inter_system_measurement_list,
@@ -16910,6 +17607,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InterSystemMeasurementParameters<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct InterfacesToTrace(pub Bits);
     impl crate::message::__Field<Bits> for InterfacesToTrace {
@@ -16950,14 +17649,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InterfacesToTrace {
-        fn to_json(&self) -> Value {
+    impl Tree for InterfacesToTrace {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 8, 8)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 8, 8)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 8, 8)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InterfacesToTrace);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IntersystemMeasurementConfiguration<'a> {
         pub rsrp: Option<u8>,
@@ -17089,8 +17791,9 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for IntersystemMeasurementConfiguration<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for IntersystemMeasurementConfiguration<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "rSRP",
@@ -17112,15 +17815,15 @@ pub mod s1_ap_ies {
             );
             members.put(
                 "interSystemMeasurementParameters",
-                self.inter_system_measurement_parameters.to_json(),
+                self.inter_system_measurement_parameters.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -17141,9 +17844,9 @@ pub mod s1_ap_ies {
                 reading.unsigned(value, 0, 127).map(|number| number as u8)
             })?;
             let inter_system_measurement_parameters =
-                reading.member(&members, 3, InterSystemMeasurementParameters::from_json)?;
+                reading.member(&members, 3, InterSystemMeasurementParameters::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 rsrp,
                 rsrq,
@@ -17153,6 +17856,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(IntersystemMeasurementConfiguration<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IntersystemSONConfigurationTransfer<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for IntersystemSONConfigurationTransfer<'a> {
@@ -17201,14 +17906,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for IntersystemSONConfigurationTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for IntersystemSONConfigurationTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(IntersystemSONConfigurationTransfer<'a>);
     #[doc = " J"]
     #[doc = " K"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
@@ -17244,14 +17952,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for KillAllWarningMessages {
-        fn to_json(&self) -> Value {
+    impl Tree for KillAllWarningMessages {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(KillAllWarningMessages);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct L3Information<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for L3Information<'a> {
@@ -17300,14 +18011,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for L3Information<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for L3Information<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(L3Information<'a>);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for LAC {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -17352,14 +18066,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LAC {
-        fn to_json(&self) -> Value {
+    impl Tree for LAC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<2>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LAC);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LAI {
         pub plmn_identity: PLMNidentity,
@@ -17434,23 +18151,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LAI {
-        fn to_json(&self) -> Value {
+    impl Tree for LAI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_json());
-            members.put("lAC", self.lac.to_json());
+            members.put("pLMNidentity", self.plmn_identity.to_tree());
+            members.put("lAC", self.lac.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMNidentity", "lAC", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let lac = reading.member(&members, 1, LAC::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let lac = reading.member(&members, 1, LAC::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 lac,
@@ -17458,6 +18176,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LAI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LHNID<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for LHNID<'a> {
@@ -17506,14 +18226,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LHNID<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for LHNID<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LHNID<'a>);
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LPPaPDU<'a>(pub Octets<'a>);
@@ -17563,14 +18286,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LPPaPDU<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for LPPaPDU<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LPPaPDU<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum LTEMIndication {
@@ -17605,14 +18331,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LTEMIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for LTEMIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LTEMIndication);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LTENTNTAIInformation {
         pub serving_plmn: PLMNidentity,
@@ -17705,24 +18434,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LTENTNTAIInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for LTENTNTAIInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("servingPLMN", self.serving_plmn.to_json());
-            members.put("tACList-In-LTE-NTN", self.tac_list_in_lte_ntn.to_json());
+            members.put("servingPLMN", self.serving_plmn.to_tree());
+            members.put("tACList-In-LTE-NTN", self.tac_list_in_lte_ntn.to_tree());
             members.put_optional(
                 "uE-Location-Derived-TAC",
                 self.ue_location_derived_tac
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -17732,11 +18462,11 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let serving_plmn = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let tac_list_in_lte_ntn = reading.member(&members, 1, TACListInLTENTN::from_json)?;
-            let ue_location_derived_tac = reading.optional(&members, 2, TAC::from_json)?;
+            let serving_plmn = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let tac_list_in_lte_ntn = reading.member(&members, 1, TACListInLTENTN::from_tree)?;
+            let ue_location_derived_tac = reading.optional(&members, 2, TAC::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 serving_plmn,
                 tac_list_in_lte_ntn,
@@ -17745,6 +18475,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LTENTNTAIInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum LastVisitedCellItem<'a> {
@@ -17837,16 +18569,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LastVisitedCellItem<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for LastVisitedCellItem<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::e_UTRAN_Cell(value) => json::alternative("e-UTRAN-Cell", value.to_json()),
-                Self::uTRAN_Cell(value) => json::alternative("uTRAN-Cell", value.to_json()),
-                Self::gERAN_Cell(value) => json::alternative("gERAN-Cell", value.to_json()),
-                Self::nG_RAN_Cell(value) => json::alternative("nG-RAN-Cell", value.to_json()),
+                Self::e_UTRAN_Cell(value) => json::alternative("e-UTRAN-Cell", value.to_tree()),
+                Self::uTRAN_Cell(value) => json::alternative("uTRAN-Cell", value.to_tree()),
+                Self::gERAN_Cell(value) => json::alternative("gERAN-Cell", value.to_tree()),
+                Self::nG_RAN_Cell(value) => json::alternative("nG-RAN-Cell", value.to_tree()),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &["e-UTRAN-Cell", "uTRAN-Cell", "gERAN-Cell", "nG-RAN-Cell"],
@@ -17855,26 +18588,28 @@ pub mod s1_ap_ies {
                 0 => Self::e_UTRAN_Cell(reading.within(
                     "e-UTRAN-Cell",
                     value,
-                    LastVisitedEUTRANCellInformation::from_json,
+                    LastVisitedEUTRANCellInformation::from_tree,
                 )?),
                 1 => Self::uTRAN_Cell(reading.within(
                     "uTRAN-Cell",
                     value,
-                    LastVisitedUTRANCellInformation::from_json,
+                    LastVisitedUTRANCellInformation::from_tree,
                 )?),
                 2 => Self::gERAN_Cell(reading.within(
                     "gERAN-Cell",
                     value,
-                    LastVisitedGERANCellInformation::from_json,
+                    LastVisitedGERANCellInformation::from_tree,
                 )?),
                 _ => Self::nG_RAN_Cell(reading.within(
                     "nG-RAN-Cell",
                     value,
-                    LastVisitedNGRANCellInformation::from_json,
+                    LastVisitedNGRANCellInformation::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LastVisitedCellItem<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedEUTRANCellInformation {
         pub global_cell_id: EUTRANCGI,
@@ -17960,22 +18695,23 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LastVisitedEUTRANCellInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for LastVisitedEUTRANCellInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("global-Cell-ID", self.global_cell_id.to_json());
-            members.put("cellType", self.cell_type.to_json());
+            members.put("global-Cell-ID", self.global_cell_id.to_tree());
+            members.put("cellType", self.cell_type.to_tree());
             members.put(
                 "time-UE-StayedInCell",
-                self.time_ue_stayed_in_cell.to_json(),
+                self.time_ue_stayed_in_cell.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -17985,12 +18721,12 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let global_cell_id = reading.member(&members, 0, EUTRANCGI::from_json)?;
-            let cell_type = reading.member(&members, 1, CellType::from_json)?;
+            let global_cell_id = reading.member(&members, 0, EUTRANCGI::from_tree)?;
+            let cell_type = reading.member(&members, 1, CellType::from_tree)?;
             let time_ue_stayed_in_cell =
-                reading.member(&members, 2, TimeUEStayedInCell::from_json)?;
+                reading.member(&members, 2, TimeUEStayedInCell::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 global_cell_id,
                 cell_type,
@@ -17999,6 +18735,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LastVisitedEUTRANCellInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum LastVisitedGERANCellInformation {
@@ -18033,14 +18771,15 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LastVisitedGERANCellInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for LastVisitedGERANCellInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::undefined(value) => json::alternative("undefined", Value::Null),
             }
         }
         #[allow(clippy::match_single_binding)]
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(value, &["undefined"])?;
             Ok(match position {
                 _ => Self::undefined(
@@ -18049,6 +18788,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LastVisitedGERANCellInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedNGRANCellInformation<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for LastVisitedNGRANCellInformation<'a> {
@@ -18097,14 +18838,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LastVisitedNGRANCellInformation<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for LastVisitedNGRANCellInformation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LastVisitedNGRANCellInformation<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedPSCellInformation {
         pub ps_cell_id: Option<PSCellInformation>,
@@ -18186,30 +18930,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LastVisitedPSCellInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for LastVisitedPSCellInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "pSCellID",
-                self.ps_cell_id.as_ref().map(|value| value.to_json()),
+                self.ps_cell_id.as_ref().map(|value| value.to_tree()),
             );
             members.put("timeStay", json::unsigned(u64::from(self.time_stay)));
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pSCellID", "timeStay", "iE-Extensions"])?;
-            let ps_cell_id = reading.optional(&members, 0, PSCellInformation::from_json)?;
+            let ps_cell_id = reading.optional(&members, 0, PSCellInformation::from_tree)?;
             let time_stay = reading.member(&members, 1, |value, reading| {
                 reading
                     .unsigned(value, 0, 40950)
                     .map(|number| number as u16)
             })?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ps_cell_id,
                 time_stay,
@@ -18217,6 +18962,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LastVisitedPSCellInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedPSCellList(pub Vec<LastVisitedPSCellInformation>);
     impl crate::message::__Field<Vec<LastVisitedPSCellInformation>> for LastVisitedPSCellList {
@@ -18255,16 +19002,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LastVisitedPSCellList {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for LastVisitedPSCellList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                LastVisitedPSCellInformation::from_json(value, reading)
+                LastVisitedPSCellInformation::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LastVisitedPSCellList);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedUTRANCellInformation<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for LastVisitedUTRANCellInformation<'a> {
@@ -18313,14 +19063,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LastVisitedUTRANCellInformation<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for LastVisitedUTRANCellInformation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LastVisitedUTRANCellInformation<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum LinksToLog {
@@ -18359,14 +19112,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LinksToLog {
-        fn to_json(&self) -> Value {
+    impl Tree for LinksToLog {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LinksToLog);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -18406,14 +19162,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ListeningSubframePatternPatternPeriod {
-        fn to_json(&self) -> Value {
+    impl Tree for ListeningSubframePatternPatternPeriod {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ListeningSubframePatternPatternPeriod);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ListeningSubframePattern {
         pub pattern_period: ListeningSubframePatternPatternPeriod,
@@ -18488,18 +19247,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ListeningSubframePattern {
-        fn to_json(&self) -> Value {
+    impl Tree for ListeningSubframePattern {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pattern-period", self.pattern_period.to_json());
+            members.put("pattern-period", self.pattern_period.to_tree());
             members.put("pattern-offset", json::unsigned(self.pattern_offset));
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["pattern-period", "pattern-offset", "iE-Extensions"],
@@ -18507,13 +19267,13 @@ pub mod s1_ap_ies {
             let pattern_period = reading.member(
                 &members,
                 0,
-                ListeningSubframePatternPatternPeriod::from_json,
+                ListeningSubframePatternPatternPeriod::from_tree,
             )?;
             let pattern_offset = reading.member(&members, 1, |value, reading| {
                 reading.unsigned(value, u64::MIN, u64::MAX)
             })?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 pattern_period,
                 pattern_offset,
@@ -18521,6 +19281,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ListeningSubframePattern);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LoggedMBSFNMDT {
         pub logging_interval: LoggingInterval,
@@ -18613,24 +19375,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LoggedMBSFNMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for LoggedMBSFNMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("loggingInterval", self.logging_interval.to_json());
-            members.put("loggingDuration", self.logging_duration.to_json());
+            members.put("loggingInterval", self.logging_interval.to_tree());
+            members.put("loggingDuration", self.logging_duration.to_tree());
             members.put_optional(
                 "mBSFN-ResultToLog",
                 self.mbsfn_result_to_log
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -18640,11 +19403,11 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let logging_interval = reading.member(&members, 0, LoggingInterval::from_json)?;
-            let logging_duration = reading.member(&members, 1, LoggingDuration::from_json)?;
-            let mbsfn_result_to_log = reading.optional(&members, 2, MBSFNResultToLog::from_json)?;
+            let logging_interval = reading.member(&members, 0, LoggingInterval::from_tree)?;
+            let logging_duration = reading.member(&members, 1, LoggingDuration::from_tree)?;
+            let mbsfn_result_to_log = reading.optional(&members, 2, MBSFNResultToLog::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 logging_interval,
                 logging_duration,
@@ -18653,6 +19416,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LoggedMBSFNMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LoggedMDT {
         pub logging_interval: LoggingInterval,
@@ -18727,26 +19492,27 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LoggedMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for LoggedMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("loggingInterval", self.logging_interval.to_json());
-            members.put("loggingDuration", self.logging_duration.to_json());
+            members.put("loggingInterval", self.logging_interval.to_tree());
+            members.put("loggingDuration", self.logging_duration.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["loggingInterval", "loggingDuration", "iE-Extensions"],
             )?;
-            let logging_interval = reading.member(&members, 0, LoggingInterval::from_json)?;
-            let logging_duration = reading.member(&members, 1, LoggingDuration::from_json)?;
+            let logging_interval = reading.member(&members, 0, LoggingInterval::from_tree)?;
+            let logging_duration = reading.member(&members, 1, LoggingDuration::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 logging_interval,
                 logging_duration,
@@ -18754,6 +19520,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LoggedMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum LoggedMDTTrigger {
@@ -18796,14 +19564,15 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LoggedMDTTrigger {
-        fn to_json(&self) -> Value {
+    impl Tree for LoggedMDTTrigger {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::periodical(value) => json::alternative("periodical", Value::Null),
-                Self::eventTrigger(value) => json::alternative("eventTrigger", value.to_json()),
+                Self::eventTrigger(value) => json::alternative("eventTrigger", value.to_tree()),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(value, &["periodical", "eventTrigger"])?;
             Ok(match position {
                 0 => Self::periodical(
@@ -18812,11 +19581,13 @@ pub mod s1_ap_ies {
                 _ => Self::eventTrigger(reading.within(
                     "eventTrigger",
                     value,
-                    EventTrigger::from_json,
+                    EventTrigger::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LoggedMDTTrigger);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum LoggingDuration {
         m10 = 0,
@@ -18862,14 +19633,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LoggingDuration {
-        fn to_json(&self) -> Value {
+    impl Tree for LoggingDuration {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LoggingDuration);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum LoggingInterval {
         ms1280 = 0,
@@ -18921,14 +19695,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LoggingInterval {
-        fn to_json(&self) -> Value {
+    impl Tree for LoggingInterval {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LoggingInterval);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for MTMSI {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -18972,14 +19749,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MTMSI {
-        fn to_json(&self) -> Value {
+    impl Tree for MTMSI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<4>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MTMSI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct M1PeriodicReporting {
         pub report_interval: ReportIntervalMDT,
@@ -19054,24 +19834,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M1PeriodicReporting {
-        fn to_json(&self) -> Value {
+    impl Tree for M1PeriodicReporting {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("reportInterval", self.report_interval.to_json());
-            members.put("reportAmount", self.report_amount.to_json());
+            members.put("reportInterval", self.report_interval.to_tree());
+            members.put("reportAmount", self.report_amount.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["reportInterval", "reportAmount", "iE-Extensions"])?;
-            let report_interval = reading.member(&members, 0, ReportIntervalMDT::from_json)?;
-            let report_amount = reading.member(&members, 1, ReportAmountMDT::from_json)?;
+            let report_interval = reading.member(&members, 0, ReportIntervalMDT::from_tree)?;
+            let report_amount = reading.member(&members, 1, ReportAmountMDT::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 report_interval,
                 report_amount,
@@ -19079,6 +19860,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M1PeriodicReporting);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum M1ReportingTrigger {
@@ -19120,14 +19903,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M1ReportingTrigger {
-        fn to_json(&self) -> Value {
+    impl Tree for M1ReportingTrigger {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M1ReportingTrigger);
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct M1ThresholdEventA2 {
@@ -19192,28 +19978,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M1ThresholdEventA2 {
-        fn to_json(&self) -> Value {
+    impl Tree for M1ThresholdEventA2 {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("measurementThreshold", self.measurement_threshold.to_json());
+            members.put("measurementThreshold", self.measurement_threshold.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["measurementThreshold", "iE-Extensions"])?;
             let measurement_threshold =
-                reading.member(&members, 0, MeasurementThresholdA2::from_json)?;
+                reading.member(&members, 0, MeasurementThresholdA2::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 measurement_threshold,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M1ThresholdEventA2);
     #[doc = " M"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct M3Configuration {
@@ -19278,27 +20067,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M3Configuration {
-        fn to_json(&self) -> Value {
+    impl Tree for M3Configuration {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("m3period", self.m3_period.to_json());
+            members.put("m3period", self.m3_period.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["m3period", "iE-Extensions"])?;
-            let m3_period = reading.member(&members, 0, M3period::from_json)?;
+            let m3_period = reading.member(&members, 0, M3period::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 m3_period,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M3Configuration);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum M3period {
@@ -19356,14 +20148,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M3period {
-        fn to_json(&self) -> Value {
+    impl Tree for M3period {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M3period);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct M4Configuration {
         pub m4_period: M4period,
@@ -19438,24 +20233,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M4Configuration {
-        fn to_json(&self) -> Value {
+    impl Tree for M4Configuration {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("m4period", self.m4_period.to_json());
-            members.put("m4-links-to-log", self.m4_links_to_log.to_json());
+            members.put("m4period", self.m4_period.to_tree());
+            members.put("m4-links-to-log", self.m4_links_to_log.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["m4period", "m4-links-to-log", "iE-Extensions"])?;
-            let m4_period = reading.member(&members, 0, M4period::from_json)?;
-            let m4_links_to_log = reading.member(&members, 1, LinksToLog::from_json)?;
+            let m4_period = reading.member(&members, 0, M4period::from_tree)?;
+            let m4_links_to_log = reading.member(&members, 1, LinksToLog::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 m4_period,
                 m4_links_to_log,
@@ -19463,6 +20259,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M4Configuration);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum M4ReportAmountMDT {
@@ -19514,14 +20312,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M4ReportAmountMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for M4ReportAmountMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M4ReportAmountMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum M4period {
@@ -19567,14 +20368,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M4period {
-        fn to_json(&self) -> Value {
+    impl Tree for M4period {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M4period);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct M5Configuration {
         pub m5_period: M5period,
@@ -19649,24 +20453,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M5Configuration {
-        fn to_json(&self) -> Value {
+    impl Tree for M5Configuration {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("m5period", self.m5_period.to_json());
-            members.put("m5-links-to-log", self.m5_links_to_log.to_json());
+            members.put("m5period", self.m5_period.to_tree());
+            members.put("m5-links-to-log", self.m5_links_to_log.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["m5period", "m5-links-to-log", "iE-Extensions"])?;
-            let m5_period = reading.member(&members, 0, M5period::from_json)?;
-            let m5_links_to_log = reading.member(&members, 1, LinksToLog::from_json)?;
+            let m5_period = reading.member(&members, 0, M5period::from_tree)?;
+            let m5_links_to_log = reading.member(&members, 1, LinksToLog::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 m5_period,
                 m5_links_to_log,
@@ -19674,6 +20479,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M5Configuration);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum M5ReportAmountMDT {
@@ -19725,14 +20532,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M5ReportAmountMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for M5ReportAmountMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M5ReportAmountMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum M5period {
@@ -19778,14 +20588,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M5period {
-        fn to_json(&self) -> Value {
+    impl Tree for M5period {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M5period);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct M6Configuration {
         pub m6_report_interval: M6reportInterval,
@@ -19878,24 +20691,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M6Configuration {
-        fn to_json(&self) -> Value {
+    impl Tree for M6Configuration {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("m6report-Interval", self.m6_report_interval.to_json());
+            members.put("m6report-Interval", self.m6_report_interval.to_tree());
             members.put_optional(
                 "m6delay-threshold",
                 self.m6_delay_threshold
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
-            members.put("m6-links-to-log", self.m6_links_to_log.to_json());
+            members.put("m6-links-to-log", self.m6_links_to_log.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -19905,11 +20719,11 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let m6_report_interval = reading.member(&members, 0, M6reportInterval::from_json)?;
-            let m6_delay_threshold = reading.optional(&members, 1, M6delayThreshold::from_json)?;
-            let m6_links_to_log = reading.member(&members, 2, LinksToLog::from_json)?;
+            let m6_report_interval = reading.member(&members, 0, M6reportInterval::from_tree)?;
+            let m6_delay_threshold = reading.optional(&members, 1, M6delayThreshold::from_tree)?;
+            let m6_links_to_log = reading.member(&members, 2, LinksToLog::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 m6_report_interval,
                 m6_delay_threshold,
@@ -19918,6 +20732,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M6Configuration);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum M6ReportAmountMDT {
@@ -19969,14 +20785,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M6ReportAmountMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for M6ReportAmountMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M6ReportAmountMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum M6delayThreshold {
@@ -20038,14 +20857,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M6delayThreshold {
-        fn to_json(&self) -> Value {
+    impl Tree for M6delayThreshold {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M6delayThreshold);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum M6reportInterval {
@@ -20084,14 +20906,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M6reportInterval {
-        fn to_json(&self) -> Value {
+    impl Tree for M6reportInterval {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M6reportInterval);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct M7Configuration {
         pub m7_period: M7period,
@@ -20166,24 +20991,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M7Configuration {
-        fn to_json(&self) -> Value {
+    impl Tree for M7Configuration {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("m7period", self.m7_period.to_json());
-            members.put("m7-links-to-log", self.m7_links_to_log.to_json());
+            members.put("m7period", self.m7_period.to_tree());
+            members.put("m7-links-to-log", self.m7_links_to_log.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["m7period", "m7-links-to-log", "iE-Extensions"])?;
-            let m7_period = reading.member(&members, 0, M7period::from_json)?;
-            let m7_links_to_log = reading.member(&members, 1, LinksToLog::from_json)?;
+            let m7_period = reading.member(&members, 0, M7period::from_tree)?;
+            let m7_links_to_log = reading.member(&members, 1, LinksToLog::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 m7_period,
                 m7_links_to_log,
@@ -20191,6 +21017,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M7Configuration);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum M7ReportAmountMDT {
@@ -20242,14 +21070,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M7ReportAmountMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for M7ReportAmountMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M7ReportAmountMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct M7period(pub u64);
     impl crate::message::__Field<u64> for M7period {
@@ -20280,14 +21111,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for M7period {
-        fn to_json(&self) -> Value {
+    impl Tree for M7period {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(M7period);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MBSFNResultToLog(pub Vec<MBSFNResultToLogInfo>);
     impl crate::message::__Field<Vec<MBSFNResultToLogInfo>> for MBSFNResultToLog {
@@ -20326,16 +21160,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MBSFNResultToLog {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for MBSFNResultToLog {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                MBSFNResultToLogInfo::from_json(value, reading)
+                MBSFNResultToLogInfo::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MBSFNResultToLog);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MBSFNResultToLogInfo {
         pub mbsfn_area_id: Option<u8>,
@@ -20417,8 +21254,9 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MBSFNResultToLogInfo {
-        fn to_json(&self) -> Value {
+    impl Tree for MBSFNResultToLogInfo {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "mBSFN-AreaId",
@@ -20426,22 +21264,22 @@ pub mod s1_ap_ies {
                     .as_ref()
                     .map(|value| json::unsigned(u64::from(*value))),
             );
-            members.put("carrierFreq", self.carrier_freq.to_json());
+            members.put("carrierFreq", self.carrier_freq.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["mBSFN-AreaId", "carrierFreq", "iE-Extensions"])?;
             let mbsfn_area_id = reading.optional(&members, 0, |value, reading| {
                 reading.unsigned(value, 0, 255).map(|number| number as u8)
             })?;
-            let carrier_freq = reading.member(&members, 1, EARFCN::from_json)?;
+            let carrier_freq = reading.member(&members, 1, EARFCN::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 mbsfn_area_id,
                 carrier_freq,
@@ -20449,6 +21287,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MBSFNResultToLogInfo);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum MDTActivation {
@@ -20496,14 +21336,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MDTActivation {
-        fn to_json(&self) -> Value {
+    impl Tree for MDTActivation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MDTActivation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MDTConfiguration<'a> {
         pub mdt_activation: MDTActivation,
@@ -20599,19 +21442,20 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MDTConfiguration<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MDTConfiguration<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("mdt-Activation", self.mdt_activation.to_json());
-            members.put("areaScopeOfMDT", self.area_scope_of_mdt.to_json());
-            members.put("mDTMode", self.mdt_mode.to_json());
+            members.put("mdt-Activation", self.mdt_activation.to_tree());
+            members.put("areaScopeOfMDT", self.area_scope_of_mdt.to_tree());
+            members.put("mDTMode", self.mdt_mode.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -20621,11 +21465,11 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let mdt_activation = reading.member(&members, 0, MDTActivation::from_json)?;
-            let area_scope_of_mdt = reading.member(&members, 1, AreaScopeOfMDT::from_json)?;
-            let mdt_mode = reading.member(&members, 2, MDTMode::from_json)?;
+            let mdt_activation = reading.member(&members, 0, MDTActivation::from_tree)?;
+            let area_scope_of_mdt = reading.member(&members, 1, AreaScopeOfMDT::from_tree)?;
+            let mdt_mode = reading.member(&members, 2, MDTMode::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 mdt_activation,
                 area_scope_of_mdt,
@@ -20634,6 +21478,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MDTConfiguration<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MDTConfigurationNR<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for MDTConfigurationNR<'a> {
@@ -20682,14 +21528,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MDTConfigurationNR<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MDTConfigurationNR<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MDTConfigurationNR<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MDTLocationInfo(pub Bits);
     impl crate::message::__Field<Bits> for MDTLocationInfo {
@@ -20730,14 +21579,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MDTLocationInfo {
-        fn to_json(&self) -> Value {
+    impl Tree for MDTLocationInfo {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 8, 8)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 8, 8)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 8, 8)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MDTLocationInfo);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum MDTMode<'a> {
@@ -20818,34 +21670,37 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MDTMode<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MDTMode<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::immediateMDT(value) => json::alternative("immediateMDT", value.to_json()),
-                Self::loggedMDT(value) => json::alternative("loggedMDT", value.to_json()),
+                Self::immediateMDT(value) => json::alternative("immediateMDT", value.to_tree()),
+                Self::loggedMDT(value) => json::alternative("loggedMDT", value.to_tree()),
                 Self::mDTMode_Extension(value) => {
-                    json::alternative("mDTMode-Extension", value.to_json())
+                    json::alternative("mDTMode-Extension", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) =
                 reading.alternative(value, &["immediateMDT", "loggedMDT", "mDTMode-Extension"])?;
             Ok(match position {
                 0 => Self::immediateMDT(reading.within(
                     "immediateMDT",
                     value,
-                    ImmediateMDT::from_json,
+                    ImmediateMDT::from_tree,
                 )?),
-                1 => Self::loggedMDT(reading.within("loggedMDT", value, LoggedMDT::from_json)?),
+                1 => Self::loggedMDT(reading.within("loggedMDT", value, LoggedMDT::from_tree)?),
                 _ => Self::mDTMode_Extension(reading.within(
                     "mDTMode-Extension",
                     value,
-                    ProtocolIEField::from_json,
+                    ProtocolIEField::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MDTMode<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MDTPLMNList(pub Vec<PLMNidentity>);
     impl crate::message::__Field<Vec<PLMNidentity>> for MDTPLMNList {
@@ -20884,16 +21739,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MDTPLMNList {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for MDTPLMNList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                PLMNidentity::from_json(value, reading)
+                PLMNidentity::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MDTPLMNList);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for MMECode {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -20937,14 +21795,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMECode {
-        fn to_json(&self) -> Value {
+    impl Tree for MMECode {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<1>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMECode);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for MMEGroupID {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -20988,14 +21849,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEGroupID {
-        fn to_json(&self) -> Value {
+    impl Tree for MMEGroupID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<2>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMEGroupID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MMEUES1APID(pub u32);
     impl crate::message::__Field<u32> for MMEUES1APID {
@@ -21026,11 +21890,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEUES1APID {
-        fn to_json(&self) -> Value {
+    impl Tree for MMEUES1APID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 4294967295)
@@ -21038,6 +21903,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMEUES1APID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum MMEPagingTarget {
@@ -21081,25 +21948,28 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEPagingTarget {
-        fn to_json(&self) -> Value {
+    impl Tree for MMEPagingTarget {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::global_ENB_ID(value) => json::alternative("global-ENB-ID", value.to_json()),
-                Self::tAI(value) => json::alternative("tAI", value.to_json()),
+                Self::global_ENB_ID(value) => json::alternative("global-ENB-ID", value.to_tree()),
+                Self::tAI(value) => json::alternative("tAI", value.to_tree()),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(value, &["global-ENB-ID", "tAI"])?;
             Ok(match position {
                 0 => Self::global_ENB_ID(reading.within(
                     "global-ENB-ID",
                     value,
-                    GlobalENBID::from_json,
+                    GlobalENBID::from_tree,
                 )?),
-                _ => Self::tAI(reading.within("tAI", value, TAI::from_json)?),
+                _ => Self::tAI(reading.within("tAI", value, TAI::from_tree)?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMEPagingTarget);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum MMERelaySupportIndicator {
@@ -21134,14 +22004,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMERelaySupportIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for MMERelaySupportIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMERelaySupportIndicator);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MMEname<'a>(pub Cow<'a, str>);
     impl<'a> crate::message::__Field<Cow<'a, str>> for MMEname<'a> {
@@ -21190,14 +22063,21 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEname<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MMEname<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.printable_string(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_text(
+                reading,
+                value,
+                json::Characters::Printable,
+            )?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMEname<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MSClassmark2<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for MSClassmark2<'a> {
@@ -21246,14 +22126,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MSClassmark2<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MSClassmark2<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MSClassmark2<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MSClassmark3<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for MSClassmark3<'a> {
@@ -21302,14 +22185,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MSClassmark3<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MSClassmark3<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MSClassmark3<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum ManagementBasedMDTAllowed {
@@ -21344,14 +22230,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ManagementBasedMDTAllowed {
-        fn to_json(&self) -> Value {
+    impl Tree for ManagementBasedMDTAllowed {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ManagementBasedMDTAllowed);
     #[doc = " I"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MaskedIMEISV(pub Bits);
@@ -21393,14 +22282,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MaskedIMEISV {
-        fn to_json(&self) -> Value {
+    impl Tree for MaskedIMEISV {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 64, 64)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 64, 64)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 64, 64)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MaskedIMEISV);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum MeasurementThresholdA2 {
@@ -21446,30 +22338,33 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MeasurementThresholdA2 {
-        fn to_json(&self) -> Value {
+    impl Tree for MeasurementThresholdA2 {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::threshold_RSRP(value) => json::alternative("threshold-RSRP", value.to_json()),
-                Self::threshold_RSRQ(value) => json::alternative("threshold-RSRQ", value.to_json()),
+                Self::threshold_RSRP(value) => json::alternative("threshold-RSRP", value.to_tree()),
+                Self::threshold_RSRQ(value) => json::alternative("threshold-RSRQ", value.to_tree()),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) =
                 reading.alternative(value, &["threshold-RSRP", "threshold-RSRQ"])?;
             Ok(match position {
                 0 => Self::threshold_RSRP(reading.within(
                     "threshold-RSRP",
                     value,
-                    ThresholdRSRP::from_json,
+                    ThresholdRSRP::from_tree,
                 )?),
                 _ => Self::threshold_RSRQ(reading.within(
                     "threshold-RSRQ",
                     value,
-                    ThresholdRSRQ::from_json,
+                    ThresholdRSRQ::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MeasurementThresholdA2);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum MeasurementThresholdL1LoggedMDT {
         threshold_RSRP(ThresholdRSRP),
@@ -21525,17 +22420,18 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MeasurementThresholdL1LoggedMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for MeasurementThresholdL1LoggedMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::threshold_RSRP(value) => json::alternative("threshold-RSRP", value.to_json()),
-                Self::threshold_RSRQ(value) => json::alternative("threshold-RSRQ", value.to_json()),
+                Self::threshold_RSRP(value) => json::alternative("threshold-RSRP", value.to_tree()),
+                Self::threshold_RSRQ(value) => json::alternative("threshold-RSRQ", value.to_tree()),
                 Self::choice_Extensions(value) => {
-                    json::alternative("choice-Extensions", value.to_json())
+                    json::alternative("choice-Extensions", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &["threshold-RSRP", "threshold-RSRQ", "choice-Extensions"],
@@ -21544,21 +22440,23 @@ pub mod s1_ap_ies {
                 0 => Self::threshold_RSRP(reading.within(
                     "threshold-RSRP",
                     value,
-                    ThresholdRSRP::from_json,
+                    ThresholdRSRP::from_tree,
                 )?),
                 1 => Self::threshold_RSRQ(reading.within(
                     "threshold-RSRQ",
                     value,
-                    ThresholdRSRQ::from_json,
+                    ThresholdRSRQ::from_tree,
                 )?),
                 _ => Self::choice_Extensions(reading.within(
                     "choice-Extensions",
                     value,
-                    ProtocolIEField::from_json,
+                    ProtocolIEField::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MeasurementThresholdL1LoggedMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MeasurementsToActivate(pub Bits);
     impl crate::message::__Field<Bits> for MeasurementsToActivate {
@@ -21599,14 +22497,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MeasurementsToActivate {
-        fn to_json(&self) -> Value {
+    impl Tree for MeasurementsToActivate {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 8, 8)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 8, 8)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 8, 8)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MeasurementsToActivate);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MessageIdentifier(pub Bits);
     impl crate::message::__Field<Bits> for MessageIdentifier {
@@ -21647,14 +22548,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MessageIdentifier {
-        fn to_json(&self) -> Value {
+    impl Tree for MessageIdentifier {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 16, 16)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 16, 16)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 16, 16)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MessageIdentifier);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MobilityInformation(pub Bits);
     impl crate::message::__Field<Bits> for MobilityInformation {
@@ -21695,14 +22599,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MobilityInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for MobilityInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 32, 32)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 32, 32)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 32, 32)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MobilityInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum MutingAvailabilityIndication {
@@ -21738,14 +22645,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MutingAvailabilityIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for MutingAvailabilityIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MutingAvailabilityIndication);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -21792,14 +22702,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MutingPatternInformationMutingPatternPeriod {
-        fn to_json(&self) -> Value {
+    impl Tree for MutingPatternInformationMutingPatternPeriod {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MutingPatternInformationMutingPatternPeriod);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MutingPatternInformation {
         pub muting_pattern_period: MutingPatternInformationMutingPatternPeriod,
@@ -21882,12 +22795,13 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MutingPatternInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for MutingPatternInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "muting-pattern-period",
-                self.muting_pattern_period.to_json(),
+                self.muting_pattern_period.to_tree(),
             );
             members.put_optional(
                 "muting-pattern-offset",
@@ -21897,11 +22811,11 @@ pub mod s1_ap_ies {
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -21913,13 +22827,13 @@ pub mod s1_ap_ies {
             let muting_pattern_period = reading.member(
                 &members,
                 0,
-                MutingPatternInformationMutingPatternPeriod::from_json,
+                MutingPatternInformationMutingPatternPeriod::from_tree,
             )?;
             let muting_pattern_offset = reading.optional(&members, 1, |value, reading| {
                 reading.unsigned(value, u64::MIN, u64::MAX)
             })?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 muting_pattern_period,
                 muting_pattern_offset,
@@ -21927,6 +22841,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MutingPatternInformation);
     #[doc = " N"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASPDU<'a>(pub Octets<'a>);
@@ -21976,14 +22892,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NASPDU<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for NASPDU<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NASPDU<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASSecurityParametersfromEUTRAN<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for NASSecurityParametersfromEUTRAN<'a> {
@@ -22032,14 +22951,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NASSecurityParametersfromEUTRAN<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for NASSecurityParametersfromEUTRAN<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NASSecurityParametersfromEUTRAN<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASSecurityParameterstoEUTRAN<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for NASSecurityParameterstoEUTRAN<'a> {
@@ -22088,14 +23010,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NASSecurityParameterstoEUTRAN<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for NASSecurityParameterstoEUTRAN<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NASSecurityParameterstoEUTRAN<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum NBIoTDefaultPagingDRX {
@@ -22133,14 +23058,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NBIoTDefaultPagingDRX {
-        fn to_json(&self) -> Value {
+    impl Tree for NBIoTDefaultPagingDRX {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NBIoTDefaultPagingDRX);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum NBIoTPagingEDRXCycle {
@@ -22206,14 +23134,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NBIoTPagingEDRXCycle {
-        fn to_json(&self) -> Value {
+    impl Tree for NBIoTPagingEDRXCycle {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NBIoTPagingEDRXCycle);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NBIoTPagingEDRXInformation {
         pub nb_iot_paging_edrx_cycle: NBIoTPagingEDRXCycle,
@@ -22295,26 +23226,27 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NBIoTPagingEDRXInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for NBIoTPagingEDRXInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "nB-IoT-paging-eDRX-Cycle",
-                self.nb_iot_paging_edrx_cycle.to_json(),
+                self.nb_iot_paging_edrx_cycle.to_tree(),
             );
             members.put_optional(
                 "nB-IoT-pagingTimeWindow",
                 self.nb_iot_paging_time_window
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -22324,11 +23256,11 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let nb_iot_paging_edrx_cycle =
-                reading.member(&members, 0, NBIoTPagingEDRXCycle::from_json)?;
+                reading.member(&members, 0, NBIoTPagingEDRXCycle::from_tree)?;
             let nb_iot_paging_time_window =
-                reading.optional(&members, 1, NBIoTPagingTimeWindow::from_json)?;
+                reading.optional(&members, 1, NBIoTPagingTimeWindow::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 nb_iot_paging_edrx_cycle,
                 nb_iot_paging_time_window,
@@ -22336,6 +23268,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NBIoTPagingEDRXInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum NBIoTPagingDRX {
@@ -22382,14 +23316,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NBIoTPagingDRX {
-        fn to_json(&self) -> Value {
+    impl Tree for NBIoTPagingDRX {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NBIoTPagingDRX);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum NBIoTPagingTimeWindow {
@@ -22459,14 +23396,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NBIoTPagingTimeWindow {
-        fn to_json(&self) -> Value {
+    impl Tree for NBIoTPagingTimeWindow {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NBIoTPagingTimeWindow);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NBIoTRLFReportContainer<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for NBIoTRLFReportContainer<'a> {
@@ -22515,14 +23455,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NBIoTRLFReportContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for NBIoTRLFReportContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NBIoTRLFReportContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct NBIoTUEIdentityIndexValue(pub Bits);
     impl crate::message::__Field<Bits> for NBIoTUEIdentityIndexValue {
@@ -22563,14 +23506,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NBIoTUEIdentityIndexValue {
-        fn to_json(&self) -> Value {
+    impl Tree for NBIoTUEIdentityIndexValue {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 12, 12)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 12, 12)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 12, 12)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NBIoTUEIdentityIndexValue);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NGENB {
         pub global_ng_enb_id: GlobalENBID,
@@ -22634,27 +23580,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NGENB {
-        fn to_json(&self) -> Value {
+    impl Tree for NGENB {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("global-ng-eNB-ID", self.global_ng_enb_id.to_json());
+            members.put("global-ng-eNB-ID", self.global_ng_enb_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["global-ng-eNB-ID", "iE-Extensions"])?;
-            let global_ng_enb_id = reading.member(&members, 0, GlobalENBID::from_json)?;
+            let global_ng_enb_id = reading.member(&members, 0, GlobalENBID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 global_ng_enb_id,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NGENB);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRCGI {
         pub plmn_identity: PLMNidentity,
@@ -22729,24 +23678,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRCGI {
-        fn to_json(&self) -> Value {
+    impl Tree for NRCGI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMNIdentity", self.plmn_identity.to_json());
-            members.put("nRCellIdentity", self.nr_cell_identity.to_json());
+            members.put("pLMNIdentity", self.plmn_identity.to_tree());
+            members.put("nRCellIdentity", self.nr_cell_identity.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pLMNIdentity", "nRCellIdentity", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let nr_cell_identity = reading.member(&members, 1, NRCellIdentity::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let nr_cell_identity = reading.member(&members, 1, NRCellIdentity::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 nr_cell_identity,
@@ -22754,6 +23704,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NRCGI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct NRCellIdentity(pub Bits);
     impl crate::message::__Field<Bits> for NRCellIdentity {
@@ -22794,14 +23746,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRCellIdentity {
-        fn to_json(&self) -> Value {
+    impl Tree for NRCellIdentity {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 36, 36)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 36, 36)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 36, 36)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NRCellIdentity);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRUESecurityCapabilities<'a> {
         pub nr_encryption_algorithms: NRencryptionAlgorithms<'a>,
@@ -22888,24 +23843,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRUESecurityCapabilities<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for NRUESecurityCapabilities<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "nRencryptionAlgorithms",
-                self.nr_encryption_algorithms.to_json(),
+                self.nr_encryption_algorithms.to_tree(),
             );
             members.put(
                 "nRintegrityProtectionAlgorithms",
-                self.nr_integrity_protection_algorithms.to_json(),
+                self.nr_integrity_protection_algorithms.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -22915,11 +23871,11 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let nr_encryption_algorithms =
-                reading.member(&members, 0, NRencryptionAlgorithms::from_json)?;
+                reading.member(&members, 0, NRencryptionAlgorithms::from_tree)?;
             let nr_integrity_protection_algorithms =
-                reading.member(&members, 1, NRintegrityProtectionAlgorithms::from_json)?;
+                reading.member(&members, 1, NRintegrityProtectionAlgorithms::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 nr_encryption_algorithms,
                 nr_integrity_protection_algorithms,
@@ -22927,6 +23883,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NRUESecurityCapabilities<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRUESidelinkAggregateMaximumBitrate {
         pub ue_aggregate_maximum_bit_rate: BitRate,
@@ -22990,31 +23948,34 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRUESidelinkAggregateMaximumBitrate {
-        fn to_json(&self) -> Value {
+    impl Tree for NRUESidelinkAggregateMaximumBitrate {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "uEaggregateMaximumBitRate",
-                self.ue_aggregate_maximum_bit_rate.to_json(),
+                self.ue_aggregate_maximum_bit_rate.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["uEaggregateMaximumBitRate", "iE-Extensions"])?;
-            let ue_aggregate_maximum_bit_rate = reading.member(&members, 0, BitRate::from_json)?;
+            let ue_aggregate_maximum_bit_rate = reading.member(&members, 0, BitRate::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ue_aggregate_maximum_bit_rate,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NRUESidelinkAggregateMaximumBitrate);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRV2XServicesAuthorized {
         pub vehicle_ue: Option<VehicleUE>,
@@ -23103,30 +24064,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRV2XServicesAuthorized {
-        fn to_json(&self) -> Value {
+    impl Tree for NRV2XServicesAuthorized {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "vehicleUE",
-                self.vehicle_ue.as_ref().map(|value| value.to_json()),
+                self.vehicle_ue.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "pedestrianUE",
-                self.pedestrian_ue.as_ref().map(|value| value.to_json()),
+                self.pedestrian_ue.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["vehicleUE", "pedestrianUE", "iE-Extensions"])?;
-            let vehicle_ue = reading.optional(&members, 0, VehicleUE::from_json)?;
-            let pedestrian_ue = reading.optional(&members, 1, PedestrianUE::from_json)?;
+            let vehicle_ue = reading.optional(&members, 0, VehicleUE::from_tree)?;
+            let pedestrian_ue = reading.optional(&members, 1, PedestrianUE::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 vehicle_ue,
                 pedestrian_ue,
@@ -23134,6 +24096,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NRV2XServicesAuthorized);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRencryptionAlgorithms<'a>(pub BitString<'a>);
     impl<'a> crate::message::__Field<BitString<'a>> for NRencryptionAlgorithms<'a> {
@@ -23172,14 +24136,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRencryptionAlgorithms<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for NRencryptionAlgorithms<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bit_string(&self.0, 16, 16, true)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bit_string(value, 16, 16, true)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bit_string(reading, value, 16, 16, true)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NRencryptionAlgorithms<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRintegrityProtectionAlgorithms<'a>(pub BitString<'a>);
     impl<'a> crate::message::__Field<BitString<'a>> for NRintegrityProtectionAlgorithms<'a> {
@@ -23218,14 +24185,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRintegrityProtectionAlgorithms<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for NRintegrityProtectionAlgorithms<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bit_string(&self.0, 16, 16, true)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bit_string(value, 16, 16, true)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bit_string(reading, value, 16, 16, true)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NRintegrityProtectionAlgorithms<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum NRrestrictionin5GS {
@@ -23260,14 +24230,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRrestrictionin5GS {
-        fn to_json(&self) -> Value {
+    impl Tree for NRrestrictionin5GS {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NRrestrictionin5GS);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum NRrestrictioninEPSasSecondaryRAT {
@@ -23302,14 +24275,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NRrestrictioninEPSasSecondaryRAT {
-        fn to_json(&self) -> Value {
+    impl Tree for NRrestrictioninEPSasSecondaryRAT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NRrestrictioninEPSasSecondaryRAT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum NextPagingAreaScope {
@@ -23345,14 +24321,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NextPagingAreaScope {
-        fn to_json(&self) -> Value {
+    impl Tree for NextPagingAreaScope {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NextPagingAreaScope);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum NotifySourceeNB {
@@ -23387,14 +24366,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NotifySourceeNB {
-        fn to_json(&self) -> Value {
+    impl Tree for NotifySourceeNB {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NotifySourceeNB);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct NumberOfBroadcasts(pub u16);
     impl crate::message::__Field<u16> for NumberOfBroadcasts {
@@ -23425,11 +24407,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NumberOfBroadcasts {
-        fn to_json(&self) -> Value {
+    impl Tree for NumberOfBroadcasts {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 65535)
@@ -23437,6 +24420,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NumberOfBroadcasts);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct NumberofBroadcastRequest(pub u16);
     impl crate::message::__Field<u16> for NumberofBroadcastRequest {
@@ -23467,11 +24452,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NumberofBroadcastRequest {
-        fn to_json(&self) -> Value {
+    impl Tree for NumberofBroadcastRequest {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 65535)
@@ -23479,6 +24465,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NumberofBroadcastRequest);
     #[doc = " O"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct OldBSSToNewBSSInformation<'a>(pub Octets<'a>);
@@ -23528,14 +24516,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for OldBSSToNewBSSInformation<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for OldBSSToNewBSSInformation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(OldBSSToNewBSSInformation<'a>);
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -23586,14 +24577,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for OverloadAction {
-        fn to_json(&self) -> Value {
+    impl Tree for OverloadAction {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(OverloadAction);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum OverloadResponse {
@@ -23629,24 +24623,27 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for OverloadResponse {
-        fn to_json(&self) -> Value {
+    impl Tree for OverloadResponse {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::overloadAction(value) => json::alternative("overloadAction", value.to_json()),
+                Self::overloadAction(value) => json::alternative("overloadAction", value.to_tree()),
             }
         }
         #[allow(clippy::match_single_binding)]
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(value, &["overloadAction"])?;
             Ok(match position {
                 _ => Self::overloadAction(reading.within(
                     "overloadAction",
                     value,
-                    OverloadAction::from_json,
+                    OverloadAction::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(OverloadResponse);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PC5FlowBitRates {
         pub guaranteed_flow_bit_rate: BitRate,
@@ -23721,21 +24718,22 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PC5FlowBitRates {
-        fn to_json(&self) -> Value {
+    impl Tree for PC5FlowBitRates {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "guaranteedFlowBitRate",
-                self.guaranteed_flow_bit_rate.to_json(),
+                self.guaranteed_flow_bit_rate.to_tree(),
             );
-            members.put("maximumFlowBitRate", self.maximum_flow_bit_rate.to_json());
+            members.put("maximumFlowBitRate", self.maximum_flow_bit_rate.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -23744,10 +24742,10 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let guaranteed_flow_bit_rate = reading.member(&members, 0, BitRate::from_json)?;
-            let maximum_flow_bit_rate = reading.member(&members, 1, BitRate::from_json)?;
+            let guaranteed_flow_bit_rate = reading.member(&members, 0, BitRate::from_tree)?;
+            let maximum_flow_bit_rate = reading.member(&members, 1, BitRate::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 guaranteed_flow_bit_rate,
                 maximum_flow_bit_rate,
@@ -23755,6 +24753,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PC5FlowBitRates);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PC5QoSFlowItem {
         pub pqi: FiveQI,
@@ -23854,31 +24854,32 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PC5QoSFlowItem {
-        fn to_json(&self) -> Value {
+    impl Tree for PC5QoSFlowItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pQI", self.pqi.to_json());
+            members.put("pQI", self.pqi.to_tree());
             members.put_optional(
                 "pc5FlowBitRates",
                 self.pc5_flow_bit_rates
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
-            members.put_optional("range", self.range.as_ref().map(|value| value.to_json()));
+            members.put_optional("range", self.range.as_ref().map(|value| value.to_tree()));
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pQI", "pc5FlowBitRates", "range", "iE-Extensions"])?;
-            let pqi = reading.member(&members, 0, FiveQI::from_json)?;
-            let pc5_flow_bit_rates = reading.optional(&members, 1, PC5FlowBitRates::from_json)?;
-            let range = reading.optional(&members, 2, Range::from_json)?;
+            let pqi = reading.member(&members, 0, FiveQI::from_tree)?;
+            let pc5_flow_bit_rates = reading.optional(&members, 1, PC5FlowBitRates::from_tree)?;
+            let range = reading.optional(&members, 2, Range::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 pqi,
                 pc5_flow_bit_rates,
@@ -23887,6 +24888,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PC5QoSFlowItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PC5QoSFlowList(pub Vec<PC5QoSFlowItem>);
     impl crate::message::__Field<Vec<PC5QoSFlowItem>> for PC5QoSFlowList {
@@ -23925,16 +24928,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PC5QoSFlowList {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for PC5QoSFlowList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                PC5QoSFlowItem::from_json(value, reading)
+                PC5QoSFlowItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PC5QoSFlowList);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PC5QoSParameters {
         pub pc5_qos_flow_list: PC5QoSFlowList,
@@ -24016,23 +25022,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PC5QoSParameters {
-        fn to_json(&self) -> Value {
+    impl Tree for PC5QoSParameters {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pc5QoSFlowList", self.pc5_qos_flow_list.to_json());
+            members.put("pc5QoSFlowList", self.pc5_qos_flow_list.to_tree());
             members.put_optional(
                 "pc5LinkAggregatedBitRates",
                 self.pc5_link_aggregated_bit_rates
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -24041,11 +25048,11 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let pc5_qos_flow_list = reading.member(&members, 0, PC5QoSFlowList::from_json)?;
+            let pc5_qos_flow_list = reading.member(&members, 0, PC5QoSFlowList::from_tree)?;
             let pc5_link_aggregated_bit_rates =
-                reading.optional(&members, 1, BitRate::from_json)?;
+                reading.optional(&members, 1, BitRate::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 pc5_qos_flow_list,
                 pc5_link_aggregated_bit_rates,
@@ -24053,6 +25060,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PC5QoSParameters);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PDCPSN(pub u16);
     impl crate::message::__Field<u16> for PDCPSN {
@@ -24083,11 +25092,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PDCPSN {
-        fn to_json(&self) -> Value {
+    impl Tree for PDCPSN {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 4095)
@@ -24095,6 +25105,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PDCPSN);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PDCPSNExtended(pub u16);
     impl crate::message::__Field<u16> for PDCPSNExtended {
@@ -24125,11 +25137,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PDCPSNExtended {
-        fn to_json(&self) -> Value {
+    impl Tree for PDCPSNExtended {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 32767)
@@ -24137,6 +25150,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PDCPSNExtended);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PDCPSNlength18(pub u32);
     impl crate::message::__Field<u32> for PDCPSNlength18 {
@@ -24167,11 +25182,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PDCPSNlength18 {
-        fn to_json(&self) -> Value {
+    impl Tree for PDCPSNlength18 {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 262143)
@@ -24179,6 +25195,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PDCPSNlength18);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PLMNAreaBasedQMC {
         pub plmn_listfor_qmc: PLMNListforQMC,
@@ -24242,27 +25260,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PLMNAreaBasedQMC {
-        fn to_json(&self) -> Value {
+    impl Tree for PLMNAreaBasedQMC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("plmnListforQMC", self.plmn_listfor_qmc.to_json());
+            members.put("plmnListforQMC", self.plmn_listfor_qmc.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["plmnListforQMC", "iE-Extensions"])?;
-            let plmn_listfor_qmc = reading.member(&members, 0, PLMNListforQMC::from_json)?;
+            let plmn_listfor_qmc = reading.member(&members, 0, PLMNListforQMC::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_listfor_qmc,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PLMNAreaBasedQMC);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PLMNListforQMC(pub Vec<PLMNidentity>);
     impl crate::message::__Field<Vec<PLMNidentity>> for PLMNListforQMC {
@@ -24301,16 +25322,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PLMNListforQMC {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for PLMNListforQMC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                PLMNidentity::from_json(value, reading)
+                PLMNidentity::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PLMNListforQMC);
     /// The MCC and the MNC, as `208-93`. Octets that are no PLMN identity print in hexadecimal.
     impl core::fmt::Display for PLMNidentity {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -24372,14 +25396,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PLMNidentity {
-        fn to_json(&self) -> Value {
-            self.0.to_json()
+    impl Tree for PLMNidentity {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            self.0.to_tree()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(TBCDSTRING::from_json(value, reading)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(TBCDSTRING::from_tree(value, reading)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PLMNidentity);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum PSServiceNotAvailable {
@@ -24414,14 +25441,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PSServiceNotAvailable {
-        fn to_json(&self) -> Value {
+    impl Tree for PSServiceNotAvailable {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PSServiceNotAvailable);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PSCellInformation {
         pub ncgi: NRCGI,
@@ -24485,27 +25515,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PSCellInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for PSCellInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("nCGI", self.ncgi.to_json());
+            members.put("nCGI", self.ncgi.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["nCGI", "iE-Extensions"])?;
-            let ncgi = reading.member(&members, 0, NRCGI::from_json)?;
+            let ncgi = reading.member(&members, 0, NRCGI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ncgi,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PSCellInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PWSfailedECGIList(pub Vec<EUTRANCGI>);
     impl crate::message::__Field<Vec<EUTRANCGI>> for PWSfailedECGIList {
@@ -24544,16 +25577,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PWSfailedECGIList {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for PWSfailedECGIList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_json(value, reading)
+                EUTRANCGI::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PWSfailedECGIList);
     #[doc = " P"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PacketLossRate(pub u16);
@@ -24585,11 +25621,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PacketLossRate {
-        fn to_json(&self) -> Value {
+    impl Tree for PacketLossRate {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 1000)
@@ -24597,6 +25634,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PacketLossRate);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum PagingEDRXCycle {
@@ -24662,14 +25701,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PagingEDRXCycle {
-        fn to_json(&self) -> Value {
+    impl Tree for PagingEDRXCycle {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PagingEDRXCycle);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PagingEDRXInformation {
         pub paging_edrx_cycle: PagingEDRXCycle,
@@ -24751,31 +25793,32 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PagingEDRXInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for PagingEDRXInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("paging-eDRX-Cycle", self.paging_edrx_cycle.to_json());
+            members.put("paging-eDRX-Cycle", self.paging_edrx_cycle.to_tree());
             members.put_optional(
                 "pagingTimeWindow",
                 self.paging_time_window
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["paging-eDRX-Cycle", "pagingTimeWindow", "iE-Extensions"],
             )?;
-            let paging_edrx_cycle = reading.member(&members, 0, PagingEDRXCycle::from_json)?;
-            let paging_time_window = reading.optional(&members, 1, PagingTimeWindow::from_json)?;
+            let paging_edrx_cycle = reading.member(&members, 0, PagingEDRXCycle::from_tree)?;
+            let paging_time_window = reading.optional(&members, 1, PagingTimeWindow::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 paging_edrx_cycle,
                 paging_time_window,
@@ -24783,6 +25826,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PagingEDRXInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PagingAttemptCount(pub u64);
     impl crate::message::__Field<u64> for PagingAttemptCount {
@@ -24813,14 +25858,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PagingAttemptCount {
-        fn to_json(&self) -> Value {
+    impl Tree for PagingAttemptCount {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PagingAttemptCount);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PagingAttemptInformation {
         pub paging_attempt_count: PagingAttemptCount,
@@ -24914,27 +25962,28 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PagingAttemptInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for PagingAttemptInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pagingAttemptCount", self.paging_attempt_count.to_json());
+            members.put("pagingAttemptCount", self.paging_attempt_count.to_tree());
             members.put(
                 "intendedNumberOfPagingAttempts",
-                self.intended_number_of_paging_attempts.to_json(),
+                self.intended_number_of_paging_attempts.to_tree(),
             );
             members.put_optional(
                 "nextPagingAreaScope",
                 self.next_paging_area_scope
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -24945,13 +25994,13 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let paging_attempt_count =
-                reading.member(&members, 0, PagingAttemptCount::from_json)?;
+                reading.member(&members, 0, PagingAttemptCount::from_tree)?;
             let intended_number_of_paging_attempts =
-                reading.member(&members, 1, IntendedNumberOfPagingAttempts::from_json)?;
+                reading.member(&members, 1, IntendedNumberOfPagingAttempts::from_tree)?;
             let next_paging_area_scope =
-                reading.optional(&members, 2, NextPagingAreaScope::from_json)?;
+                reading.optional(&members, 2, NextPagingAreaScope::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 paging_attempt_count,
                 intended_number_of_paging_attempts,
@@ -24960,6 +26009,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PagingAttemptInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum PagingCause {
@@ -24994,14 +26045,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PagingCause {
-        fn to_json(&self) -> Value {
+    impl Tree for PagingCause {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PagingCause);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum PagingDRX {
@@ -25039,14 +26093,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PagingDRX {
-        fn to_json(&self) -> Value {
+    impl Tree for PagingDRX {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PagingDRX);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum PagingPriority {
@@ -25106,14 +26163,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PagingPriority {
-        fn to_json(&self) -> Value {
+    impl Tree for PagingPriority {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PagingPriority);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum PagingProbabilityInformation {
@@ -25193,14 +26253,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PagingProbabilityInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for PagingProbabilityInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PagingProbabilityInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum PagingTimeWindow {
@@ -25270,14 +26333,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PagingTimeWindow {
-        fn to_json(&self) -> Value {
+    impl Tree for PagingTimeWindow {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PagingTimeWindow);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum PedestrianUE {
@@ -25313,14 +26379,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PedestrianUE {
-        fn to_json(&self) -> Value {
+    impl Tree for PedestrianUE {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PedestrianUE);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum PendingDataIndication {
@@ -25355,14 +26424,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PendingDataIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for PendingDataIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PendingDataIndication);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for PortNumber {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -25406,14 +26478,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PortNumber {
-        fn to_json(&self) -> Value {
+    impl Tree for PortNumber {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<2>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PortNumber);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum PreEmptionCapability {
         shall_not_trigger_pre_emption = 0,
@@ -25452,14 +26527,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PreEmptionCapability {
-        fn to_json(&self) -> Value {
+    impl Tree for PreEmptionCapability {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PreEmptionCapability);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum PreEmptionVulnerability {
         not_pre_emptable = 0,
@@ -25494,14 +26572,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PreEmptionVulnerability {
-        fn to_json(&self) -> Value {
+    impl Tree for PreEmptionVulnerability {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PreEmptionVulnerability);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PriorityLevel(pub u8);
     impl crate::message::__Field<u8> for PriorityLevel {
@@ -25532,16 +26613,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PriorityLevel {
-        fn to_json(&self) -> Value {
+    impl Tree for PriorityLevel {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading.unsigned(value, 0, 15).map(|number| number as u8)?,
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PriorityLevel);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum PrivacyIndicator {
@@ -25577,14 +26661,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PrivacyIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for PrivacyIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PrivacyIndicator);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ProSeAuthorized {
         pub prose_direct_discovery: Option<ProSeDirectDiscovery>,
@@ -25673,28 +26760,29 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProSeAuthorized {
-        fn to_json(&self) -> Value {
+    impl Tree for ProSeAuthorized {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "proSeDirectDiscovery",
                 self.prose_direct_discovery
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "proSeDirectCommunication",
                 self.prose_direct_communication
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -25704,11 +26792,11 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let prose_direct_discovery =
-                reading.optional(&members, 0, ProSeDirectDiscovery::from_json)?;
+                reading.optional(&members, 0, ProSeDirectDiscovery::from_tree)?;
             let prose_direct_communication =
-                reading.optional(&members, 1, ProSeDirectCommunication::from_json)?;
+                reading.optional(&members, 1, ProSeDirectCommunication::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 prose_direct_discovery,
                 prose_direct_communication,
@@ -25716,6 +26804,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ProSeAuthorized);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum ProSeDirectCommunication {
@@ -25751,14 +26841,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProSeDirectCommunication {
-        fn to_json(&self) -> Value {
+    impl Tree for ProSeDirectCommunication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ProSeDirectCommunication);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum ProSeDirectDiscovery {
@@ -25794,14 +26887,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProSeDirectDiscovery {
-        fn to_json(&self) -> Value {
+    impl Tree for ProSeDirectDiscovery {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ProSeDirectDiscovery);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum ProSeUEtoNetworkRelaying {
@@ -25837,14 +26933,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ProSeUEtoNetworkRelaying {
-        fn to_json(&self) -> Value {
+    impl Tree for ProSeUEtoNetworkRelaying {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ProSeUEtoNetworkRelaying);
     #[doc = " Q"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct QCI(pub u8);
@@ -25876,16 +26975,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for QCI {
-        fn to_json(&self) -> Value {
+    impl Tree for QCI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading.unsigned(value, 0, 255).map(|number| number as u8)?,
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(QCI);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for RAC {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -25929,14 +27031,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RAC {
-        fn to_json(&self) -> Value {
+    impl Tree for RAC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<1>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RAC);
     #[doc = " R"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -25972,14 +27077,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RACSIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for RACSIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RACSIndication);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RANUENGAPID(pub u32);
     impl crate::message::__Field<u32> for RANUENGAPID {
@@ -26010,11 +27118,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RANUENGAPID {
-        fn to_json(&self) -> Value {
+    impl Tree for RANUENGAPID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 4294967295)
@@ -26022,6 +27131,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RANUENGAPID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RATRestrictions<'a>(pub Vec<RATRestrictionsItem<'a>>);
     impl<'a> crate::message::__Field<Vec<RATRestrictionsItem<'a>>> for RATRestrictions<'a> {
@@ -26067,16 +27178,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RATRestrictions<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for RATRestrictions<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                RATRestrictionsItem::from_json(value, reading)
+                RATRestrictionsItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RATRestrictions<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RATRestrictionsItem<'a> {
         pub plmn_identity: PLMNidentity,
@@ -26162,21 +27276,22 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RATRestrictionsItem<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for RATRestrictionsItem<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_json());
+            members.put("pLMNidentity", self.plmn_identity.to_tree());
             members.put(
                 "rAT-RestrictionInformation",
                 json::bit_string(&self.rat_restriction_information, 8, 8, true),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -26185,12 +27300,12 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
             let rat_restriction_information = reading.member(&members, 1, |value, reading| {
-                reading.bit_string(value, 8, 8, true)
+                json::read_bit_string(reading, value, 8, 8, true)
             })?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 rat_restriction_information,
@@ -26198,6 +27313,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RATRestrictionsItem<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum RATType {
@@ -26260,14 +27377,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RATType {
-        fn to_json(&self) -> Value {
+    impl Tree for RATType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RATType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RIMInformation<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for RIMInformation<'a> {
@@ -26316,14 +27436,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RIMInformation<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for RIMInformation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RIMInformation<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum RIMRoutingAddress {
@@ -26390,29 +27513,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RIMRoutingAddress {
-        fn to_json(&self) -> Value {
+    impl Tree for RIMRoutingAddress {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::gERAN_Cell_ID(value) => json::alternative("gERAN-Cell-ID", value.to_json()),
-                Self::targetRNC_ID(value) => json::alternative("targetRNC-ID", value.to_json()),
+                Self::gERAN_Cell_ID(value) => json::alternative("gERAN-Cell-ID", value.to_tree()),
+                Self::targetRNC_ID(value) => json::alternative("targetRNC-ID", value.to_tree()),
                 Self::eHRPD_Sector_ID(value) => {
                     json::alternative("eHRPD-Sector-ID", json::octets(value))
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading
                 .alternative(value, &["gERAN-Cell-ID", "targetRNC-ID", "eHRPD-Sector-ID"])?;
             Ok(match position {
                 0 => Self::gERAN_Cell_ID(reading.within(
                     "gERAN-Cell-ID",
                     value,
-                    GERANCellID::from_json,
+                    GERANCellID::from_tree,
                 )?),
                 1 => Self::targetRNC_ID(reading.within(
                     "targetRNC-ID",
                     value,
-                    TargetRNCID::from_json,
+                    TargetRNCID::from_tree,
                 )?),
                 _ => Self::eHRPD_Sector_ID(reading.within(
                     "eHRPD-Sector-ID",
@@ -26422,6 +27546,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RIMRoutingAddress);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RIMTransfer<'a> {
         pub rim_information: RIMInformation<'a>,
@@ -26512,32 +27638,33 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RIMTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for RIMTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("rIMInformation", self.rim_information.to_json());
+            members.put("rIMInformation", self.rim_information.to_tree());
             members.put_optional(
                 "rIMRoutingAddress",
                 self.rim_routing_address
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["rIMInformation", "rIMRoutingAddress", "iE-Extensions"],
             )?;
-            let rim_information = reading.member(&members, 0, RIMInformation::from_json)?;
+            let rim_information = reading.member(&members, 0, RIMInformation::from_tree)?;
             let rim_routing_address =
-                reading.optional(&members, 1, RIMRoutingAddress::from_json)?;
+                reading.optional(&members, 1, RIMRoutingAddress::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 rim_information,
                 rim_routing_address,
@@ -26545,6 +27672,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RIMTransfer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RLFReportInformation<'a> {
         pub ue_rlf_report_container: UERLFReportContainer<'a>,
@@ -26642,26 +27771,27 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RLFReportInformation<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for RLFReportInformation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "uE-RLF-Report-Container",
-                self.ue_rlf_report_container.to_json(),
+                self.ue_rlf_report_container.to_tree(),
             );
             members.put_optional(
                 "uE-RLF-Report-Container-for-extended-bands",
                 self.ue_rlf_report_container_for_extended_bands
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -26671,11 +27801,11 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let ue_rlf_report_container =
-                reading.member(&members, 0, UERLFReportContainer::from_json)?;
+                reading.member(&members, 0, UERLFReportContainer::from_tree)?;
             let ue_rlf_report_container_for_extended_bands =
-                reading.optional(&members, 1, UERLFReportContainerForExtendedBands::from_json)?;
+                reading.optional(&members, 1, UERLFReportContainerForExtendedBands::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ue_rlf_report_container,
                 ue_rlf_report_container_for_extended_bands,
@@ -26683,6 +27813,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RLFReportInformation<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RNCID(pub u16);
     impl crate::message::__Field<u16> for RNCID {
@@ -26713,11 +27845,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RNCID {
-        fn to_json(&self) -> Value {
+    impl Tree for RNCID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 4095)
@@ -26725,6 +27858,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RNCID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RRCContainer<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for RRCContainer<'a> {
@@ -26773,14 +27908,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RRCContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for RRCContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RRCContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum RRCEstablishmentCause {
@@ -26840,14 +27978,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RRCEstablishmentCause {
-        fn to_json(&self) -> Value {
+    impl Tree for RRCEstablishmentCause {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RRCEstablishmentCause);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum Range {
@@ -26902,14 +28043,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Range {
-        fn to_json(&self) -> Value {
+    impl Tree for Range {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Range);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ReceiveStatusOfULPDCPSDUsExtended<'a>(pub BitString<'a>);
     impl<'a> crate::message::__Field<BitString<'a>> for ReceiveStatusOfULPDCPSDUsExtended<'a> {
@@ -26948,14 +28092,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ReceiveStatusOfULPDCPSDUsExtended<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ReceiveStatusOfULPDCPSDUsExtended<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bit_string(&self.0, 1, 16384, false)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bit_string(value, 1, 16384, false)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bit_string(
+                reading, value, 1, 16384, false,
+            )?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ReceiveStatusOfULPDCPSDUsExtended<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a>(pub BitString<'a>);
     impl<'a> crate::message::__Field<BitString<'a>> for ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a> {
@@ -26994,14 +28143,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bit_string(&self.0, 1, 131072, false)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bit_string(value, 1, 131072, false)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bit_string(
+                reading, value, 1, 131072, false,
+            )?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ReceiveStatusofULPDCPSDUs<'a>(pub BitString<'a>);
     impl<'a> crate::message::__Field<BitString<'a>> for ReceiveStatusofULPDCPSDUs<'a> {
@@ -27045,14 +28199,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ReceiveStatusofULPDCPSDUs<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ReceiveStatusofULPDCPSDUs<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bit_string(&self.0, 4096, 4096, false)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bit_string(value, 4096, 4096, false)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bit_string(
+                reading, value, 4096, 4096, false,
+            )?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ReceiveStatusofULPDCPSDUs<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedCellItem {
         pub eutran_cgi: EUTRANCGI,
@@ -27134,10 +28293,11 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RecommendedCellItem {
-        fn to_json(&self) -> Value {
+    impl Tree for RecommendedCellItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("eUTRAN-CGI", self.eutran_cgi.to_json());
+            members.put("eUTRAN-CGI", self.eutran_cgi.to_tree());
             members.put_optional(
                 "timeStayedInCell",
                 self.time_stayed_in_cell
@@ -27146,19 +28306,19 @@ pub mod s1_ap_ies {
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["eUTRAN-CGI", "timeStayedInCell", "iE-Extensions"])?;
-            let eutran_cgi = reading.member(&members, 0, EUTRANCGI::from_json)?;
+            let eutran_cgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
             let time_stayed_in_cell = reading.optional(&members, 1, |value, reading| {
                 reading.unsigned(value, 0, 4095).map(|number| number as u16)
             })?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 eutran_cgi,
                 time_stayed_in_cell,
@@ -27166,6 +28326,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RecommendedCellItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedCellList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for RecommendedCellList<'a> {
@@ -27211,16 +28373,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RecommendedCellList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for RecommendedCellList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RecommendedCellList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedCellsForPaging<'a> {
         pub recommended_cell_list: RecommendedCellList<'a>,
@@ -27292,28 +28457,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RecommendedCellsForPaging<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for RecommendedCellsForPaging<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("recommendedCellList", self.recommended_cell_list.to_json());
+            members.put("recommendedCellList", self.recommended_cell_list.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["recommendedCellList", "iE-Extensions"])?;
             let recommended_cell_list =
-                reading.member(&members, 0, RecommendedCellList::from_json)?;
+                reading.member(&members, 0, RecommendedCellList::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 recommended_cell_list,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RecommendedCellsForPaging<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedENBItem {
         pub mme_paging_target: MMEPagingTarget,
@@ -27377,27 +28545,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RecommendedENBItem {
-        fn to_json(&self) -> Value {
+    impl Tree for RecommendedENBItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("mMEPagingTarget", self.mme_paging_target.to_json());
+            members.put("mMEPagingTarget", self.mme_paging_target.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["mMEPagingTarget", "iE-Extensions"])?;
-            let mme_paging_target = reading.member(&members, 0, MMEPagingTarget::from_json)?;
+            let mme_paging_target = reading.member(&members, 0, MMEPagingTarget::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 mme_paging_target,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RecommendedENBItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedENBList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for RecommendedENBList<'a> {
@@ -27443,16 +28614,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RecommendedENBList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for RecommendedENBList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RecommendedENBList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedENBsForPaging<'a> {
         pub recommended_enb_list: RecommendedENBList<'a>,
@@ -27524,28 +28698,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RecommendedENBsForPaging<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for RecommendedENBsForPaging<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("recommendedENBList", self.recommended_enb_list.to_json());
+            members.put("recommendedENBList", self.recommended_enb_list.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["recommendedENBList", "iE-Extensions"])?;
             let recommended_enb_list =
-                reading.member(&members, 0, RecommendedENBList::from_json)?;
+                reading.member(&members, 0, RecommendedENBList::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 recommended_enb_list,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RecommendedENBsForPaging<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RelativeMMECapacity(pub u8);
     impl crate::message::__Field<u8> for RelativeMMECapacity {
@@ -27576,16 +28753,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RelativeMMECapacity {
-        fn to_json(&self) -> Value {
+    impl Tree for RelativeMMECapacity {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading.unsigned(value, 0, 255).map(|number| number as u8)?,
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RelativeMMECapacity);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum RelayNodeIndicator {
@@ -27620,14 +28800,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RelayNodeIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for RelayNodeIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RelayNodeIndicator);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RepetitionPeriod(pub u16);
     impl crate::message::__Field<u16> for RepetitionPeriod {
@@ -27658,11 +28841,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RepetitionPeriod {
-        fn to_json(&self) -> Value {
+    impl Tree for RepetitionPeriod {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 4095)
@@ -27670,6 +28854,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RepetitionPeriod);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum ReportAmountMDT {
         r1 = 0,
@@ -27720,14 +28906,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ReportAmountMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for ReportAmountMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ReportAmountMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum ReportArea {
@@ -27762,14 +28951,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ReportArea {
-        fn to_json(&self) -> Value {
+    impl Tree for ReportArea {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ReportArea);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum ReportIntervalMDT {
         ms120 = 0,
@@ -27832,14 +29024,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ReportIntervalMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for ReportIntervalMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ReportIntervalMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RequestType {
         pub event_type: EventType,
@@ -27914,23 +29109,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RequestType {
-        fn to_json(&self) -> Value {
+    impl Tree for RequestType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("eventType", self.event_type.to_json());
-            members.put("reportArea", self.report_area.to_json());
+            members.put("eventType", self.event_type.to_tree());
+            members.put("reportArea", self.report_area.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["eventType", "reportArea", "iE-Extensions"])?;
-            let event_type = reading.member(&members, 0, EventType::from_json)?;
-            let report_area = reading.member(&members, 1, ReportArea::from_json)?;
+            let event_type = reading.member(&members, 0, EventType::from_tree)?;
+            let report_area = reading.member(&members, 1, ReportArea::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 event_type,
                 report_area,
@@ -27938,6 +29134,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RequestType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum RequestTypeAdditionalInfo {
@@ -27972,14 +29170,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RequestTypeAdditionalInfo {
-        fn to_json(&self) -> Value {
+    impl Tree for RequestTypeAdditionalInfo {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RequestTypeAdditionalInfo);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RequestedTNLInfo {
         pub plmn_identity: PLMNidentity,
@@ -28043,27 +29244,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RequestedTNLInfo {
-        fn to_json(&self) -> Value {
+    impl Tree for RequestedTNLInfo {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_json());
+            members.put("pLMNidentity", self.plmn_identity.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMNidentity", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RequestedTNLInfo);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RoutingID(pub u8);
     impl crate::message::__Field<u8> for RoutingID {
@@ -28094,16 +29298,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RoutingID {
-        fn to_json(&self) -> Value {
+    impl Tree for RoutingID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading.unsigned(value, 0, 255).map(|number| number as u8)?,
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RoutingID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct STMSI {
         pub mmec: MMECode,
@@ -28178,23 +29385,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for STMSI {
-        fn to_json(&self) -> Value {
+    impl Tree for STMSI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("mMEC", self.mmec.to_json());
-            members.put("m-TMSI", self.m_tmsi.to_json());
+            members.put("mMEC", self.mmec.to_tree());
+            members.put("m-TMSI", self.m_tmsi.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["mMEC", "m-TMSI", "iE-Extensions"])?;
-            let mmec = reading.member(&members, 0, MMECode::from_json)?;
-            let m_tmsi = reading.member(&members, 1, MTMSI::from_json)?;
+            let mmec = reading.member(&members, 0, MMECode::from_tree)?;
+            let m_tmsi = reading.member(&members, 1, MTMSI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 mmec,
                 m_tmsi,
@@ -28202,6 +29410,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(STMSI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SONConfigurationTransfer<'a> {
         pub target_enb_id: TargeteNBID,
@@ -28297,19 +29507,20 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SONConfigurationTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SONConfigurationTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("targeteNB-ID", self.target_enb_id.to_json());
-            members.put("sourceeNB-ID", self.source_enb_id.to_json());
-            members.put("sONInformation", self.son_information.to_json());
+            members.put("targeteNB-ID", self.target_enb_id.to_tree());
+            members.put("sourceeNB-ID", self.source_enb_id.to_tree());
+            members.put("sONInformation", self.son_information.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -28319,11 +29530,11 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let target_enb_id = reading.member(&members, 0, TargeteNBID::from_json)?;
-            let source_enb_id = reading.member(&members, 1, SourceeNBID::from_json)?;
-            let son_information = reading.member(&members, 2, SONInformation::from_json)?;
+            let target_enb_id = reading.member(&members, 0, TargeteNBID::from_tree)?;
+            let source_enb_id = reading.member(&members, 1, SourceeNBID::from_tree)?;
+            let son_information = reading.member(&members, 2, SONInformation::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 target_enb_id,
                 source_enb_id,
@@ -28332,6 +29543,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SONConfigurationTransfer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum SONInformation<'a> {
@@ -28416,21 +29629,22 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SONInformation<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SONInformation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::sONInformationRequest(value) => {
-                    json::alternative("sONInformationRequest", value.to_json())
+                    json::alternative("sONInformationRequest", value.to_tree())
                 }
                 Self::sONInformationReply(value) => {
-                    json::alternative("sONInformationReply", value.to_json())
+                    json::alternative("sONInformationReply", value.to_tree())
                 }
                 Self::sONInformation_Extension(value) => {
-                    json::alternative("sONInformation-Extension", value.to_json())
+                    json::alternative("sONInformation-Extension", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &[
@@ -28443,21 +29657,23 @@ pub mod s1_ap_ies {
                 0 => Self::sONInformationRequest(reading.within(
                     "sONInformationRequest",
                     value,
-                    SONInformationRequest::from_json,
+                    SONInformationRequest::from_tree,
                 )?),
                 1 => Self::sONInformationReply(reading.within(
                     "sONInformationReply",
                     value,
-                    SONInformationReply::from_json,
+                    SONInformationReply::from_tree,
                 )?),
                 _ => Self::sONInformation_Extension(reading.within(
                     "sONInformation-Extension",
                     value,
-                    ProtocolIEField::from_json,
+                    ProtocolIEField::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SONInformation<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SONInformationReply<'a> {
         pub x2_tnl_configuration_info: Option<X2TNLConfigurationInfo<'a>>,
@@ -28538,33 +29754,36 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SONInformationReply<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SONInformationReply<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "x2TNLConfigurationInfo",
                 self.x2_tnl_configuration_info
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["x2TNLConfigurationInfo", "iE-Extensions"])?;
             let x2_tnl_configuration_info =
-                reading.optional(&members, 0, X2TNLConfigurationInfo::from_json)?;
+                reading.optional(&members, 0, X2TNLConfigurationInfo::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 x2_tnl_configuration_info,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SONInformationReply<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum SONInformationReport<'a> {
@@ -28609,26 +29828,29 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SONInformationReport<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SONInformationReport<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::rLFReportInformation(value) => {
-                    json::alternative("rLFReportInformation", value.to_json())
+                    json::alternative("rLFReportInformation", value.to_tree())
                 }
             }
         }
         #[allow(clippy::match_single_binding)]
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(value, &["rLFReportInformation"])?;
             Ok(match position {
                 _ => Self::rLFReportInformation(reading.within(
                     "rLFReportInformation",
                     value,
-                    RLFReportInformation::from_json,
+                    RLFReportInformation::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SONInformationReport<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum SONInformationRequest {
@@ -28676,14 +29898,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SONInformationRequest {
-        fn to_json(&self) -> Value {
+    impl Tree for SONInformationRequest {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SONInformationRequest);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum SRVCCHOIndication {
@@ -28719,14 +29944,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SRVCCHOIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for SRVCCHOIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SRVCCHOIndication);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum SRVCCOperationNotPossible {
@@ -28761,14 +29989,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SRVCCOperationNotPossible {
-        fn to_json(&self) -> Value {
+    impl Tree for SRVCCOperationNotPossible {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SRVCCOperationNotPossible);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum SRVCCOperationPossible {
@@ -28803,14 +30034,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SRVCCOperationPossible {
-        fn to_json(&self) -> Value {
+    impl Tree for SRVCCOperationPossible {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SRVCCOperationPossible);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ScheduledCommunicationTime {
         pub dayof_week: Option<Bits>,
@@ -28917,8 +30151,9 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ScheduledCommunicationTime {
-        fn to_json(&self) -> Value {
+    impl Tree for ScheduledCommunicationTime {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "dayofWeek",
@@ -28940,11 +30175,11 @@ pub mod s1_ap_ies {
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -28954,8 +30189,9 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let dayof_week =
-                reading.optional(&members, 0, |value, reading| reading.bits(value, 7, 7))?;
+            let dayof_week = reading.optional(&members, 0, |value, reading| {
+                json::read_bits(reading, value, 7, 7)
+            })?;
             let timeof_day_start = reading.optional(&members, 1, |value, reading| {
                 reading.unsigned(value, u64::MIN, u64::MAX)
             })?;
@@ -28963,7 +30199,7 @@ pub mod s1_ap_ies {
                 reading.unsigned(value, u64::MIN, u64::MAX)
             })?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 dayof_week,
                 timeof_day_start,
@@ -28972,6 +30208,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ScheduledCommunicationTime);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecondaryRATDataUsageReportItem<'a> {
         pub e_rab_id: ERABID,
@@ -29067,22 +30305,23 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SecondaryRATDataUsageReportItem<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SecondaryRATDataUsageReportItem<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
-            members.put("secondaryRATType", self.secondary_rat_type.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
+            members.put("secondaryRATType", self.secondary_rat_type.to_tree());
             members.put(
                 "e-RABUsageReportList",
-                self.e_rab_usage_report_list.to_json(),
+                self.e_rab_usage_report_list.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -29092,12 +30331,12 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
-            let secondary_rat_type = reading.member(&members, 1, SecondaryRATType::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
+            let secondary_rat_type = reading.member(&members, 1, SecondaryRATType::from_tree)?;
             let e_rab_usage_report_list =
-                reading.member(&members, 2, ERABUsageReportList::from_json)?;
+                reading.member(&members, 2, ERABUsageReportList::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 secondary_rat_type,
@@ -29106,6 +30345,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SecondaryRATDataUsageReportItem<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecondaryRATDataUsageReportList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for SecondaryRATDataUsageReportList<'a> {
@@ -29153,16 +30394,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SecondaryRATDataUsageReportList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for SecondaryRATDataUsageReportList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SecondaryRATDataUsageReportList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum SecondaryRATDataUsageRequest {
@@ -29197,14 +30441,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SecondaryRATDataUsageRequest {
-        fn to_json(&self) -> Value {
+    impl Tree for SecondaryRATDataUsageRequest {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SecondaryRATDataUsageRequest);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum SecondaryRATType {
@@ -29240,14 +30487,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SecondaryRATType {
-        fn to_json(&self) -> Value {
+    impl Tree for SecondaryRATType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SecondaryRATType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecurityContext<'a> {
         pub next_hop_chaining_count: u8,
@@ -29331,21 +30581,22 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SecurityContext<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SecurityContext<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "nextHopChainingCount",
                 json::unsigned(u64::from(self.next_hop_chaining_count)),
             );
-            members.put("nextHopParameter", self.next_hop_parameter.to_json());
+            members.put("nextHopParameter", self.next_hop_parameter.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["nextHopChainingCount", "nextHopParameter", "iE-Extensions"],
@@ -29353,9 +30604,9 @@ pub mod s1_ap_ies {
             let next_hop_chaining_count = reading.member(&members, 0, |value, reading| {
                 reading.unsigned(value, 0, 7).map(|number| number as u8)
             })?;
-            let next_hop_parameter = reading.member(&members, 1, SecurityKey::from_json)?;
+            let next_hop_parameter = reading.member(&members, 1, SecurityKey::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 next_hop_chaining_count,
                 next_hop_parameter,
@@ -29363,6 +30614,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SecurityContext<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecurityIndication {
         pub integrity_protection_indication: IntegrityProtectionIndication,
@@ -29427,32 +30680,35 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SecurityIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for SecurityIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "integrityProtectionIndication",
-                self.integrity_protection_indication.to_json(),
+                self.integrity_protection_indication.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["integrityProtectionIndication", "iE-Extensions"])?;
             let integrity_protection_indication =
-                reading.member(&members, 0, IntegrityProtectionIndication::from_json)?;
+                reading.member(&members, 0, IntegrityProtectionIndication::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 integrity_protection_indication,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SecurityIndication);
     impl core::fmt::Debug for SecurityKey<'_> {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             write!(formatter, "SecurityKey({} bits)", self.0.len())
@@ -29502,14 +30758,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SecurityKey<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SecurityKey<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bit_string(&self.0, 256, 256, false)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bit_string(value, 256, 256, false)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bit_string(
+                reading, value, 256, 256, false,
+            )?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SecurityKey<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecurityResult {
         pub integrity_protection_result: IntegrityProtectionResult,
@@ -29573,32 +30834,35 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SecurityResult {
-        fn to_json(&self) -> Value {
+    impl Tree for SecurityResult {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "integrityProtectionResult",
-                self.integrity_protection_result.to_json(),
+                self.integrity_protection_result.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["integrityProtectionResult", "iE-Extensions"])?;
             let integrity_protection_result =
-                reading.member(&members, 0, IntegrityProtectionResult::from_json)?;
+                reading.member(&members, 0, IntegrityProtectionResult::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 integrity_protection_result,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SecurityResult);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum SensorMeasConfig {
@@ -29633,14 +30897,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SensorMeasConfig {
-        fn to_json(&self) -> Value {
+    impl Tree for SensorMeasConfig {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SensorMeasConfig);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SensorMeasConfigNameItem {
         pub sensor_name_config: SensorNameConfig,
@@ -29704,27 +30971,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SensorMeasConfigNameItem {
-        fn to_json(&self) -> Value {
+    impl Tree for SensorMeasConfigNameItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("sensorNameConfig", self.sensor_name_config.to_json());
+            members.put("sensorNameConfig", self.sensor_name_config.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["sensorNameConfig", "iE-Extensions"])?;
-            let sensor_name_config = reading.member(&members, 0, SensorNameConfig::from_json)?;
+            let sensor_name_config = reading.member(&members, 0, SensorNameConfig::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 sensor_name_config,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SensorMeasConfigNameItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SensorMeasConfigNameList(pub Vec<SensorMeasConfigNameItem>);
     impl crate::message::__Field<Vec<SensorMeasConfigNameItem>> for SensorMeasConfigNameList {
@@ -29763,16 +31033,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SensorMeasConfigNameList {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for SensorMeasConfigNameList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                SensorMeasConfigNameItem::from_json(value, reading)
+                SensorMeasConfigNameItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SensorMeasConfigNameList);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SensorMeasurementConfiguration {
         pub sensor_meas_config: SensorMeasConfig,
@@ -29854,23 +31127,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SensorMeasurementConfiguration {
-        fn to_json(&self) -> Value {
+    impl Tree for SensorMeasurementConfiguration {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("sensorMeasConfig", self.sensor_meas_config.to_json());
+            members.put("sensorMeasConfig", self.sensor_meas_config.to_tree());
             members.put_optional(
                 "sensorMeasConfigNameList",
                 self.sensor_meas_config_name_list
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -29879,11 +31153,11 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let sensor_meas_config = reading.member(&members, 0, SensorMeasConfig::from_json)?;
+            let sensor_meas_config = reading.member(&members, 0, SensorMeasConfig::from_tree)?;
             let sensor_meas_config_name_list =
-                reading.optional(&members, 1, SensorMeasConfigNameList::from_json)?;
+                reading.optional(&members, 1, SensorMeasConfigNameList::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 sensor_meas_config,
                 sensor_meas_config_name_list,
@@ -29891,6 +31165,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SensorMeasurementConfiguration);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -29926,14 +31202,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SensorNameConfigUncompensatedBarometricConfig {
-        fn to_json(&self) -> Value {
+    impl Tree for SensorNameConfigUncompensatedBarometricConfig {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SensorNameConfigUncompensatedBarometricConfig);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum SensorNameConfig {
         uncompensatedBarometricConfig(SensorNameConfigUncompensatedBarometricConfig),
@@ -29980,18 +31259,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SensorNameConfig {
-        fn to_json(&self) -> Value {
+    impl Tree for SensorNameConfig {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::uncompensatedBarometricConfig(value) => {
-                    json::alternative("uncompensatedBarometricConfig", value.to_json())
+                    json::alternative("uncompensatedBarometricConfig", value.to_tree())
                 }
                 Self::choice_Extensions(value) => {
-                    json::alternative("choice-Extensions", value.to_json())
+                    json::alternative("choice-Extensions", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &["uncompensatedBarometricConfig", "choice-Extensions"],
@@ -30000,16 +31280,18 @@ pub mod s1_ap_ies {
                 0 => Self::uncompensatedBarometricConfig(reading.within(
                     "uncompensatedBarometricConfig",
                     value,
-                    SensorNameConfigUncompensatedBarometricConfig::from_json,
+                    SensorNameConfigUncompensatedBarometricConfig::from_tree,
                 )?),
                 _ => Self::choice_Extensions(reading.within(
                     "choice-Extensions",
                     value,
-                    ProtocolIEField::from_json,
+                    ProtocolIEField::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SensorNameConfig);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct SerialNumber(pub Bits);
     impl crate::message::__Field<Bits> for SerialNumber {
@@ -30050,14 +31332,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SerialNumber {
-        fn to_json(&self) -> Value {
+    impl Tree for SerialNumber {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 16, 16)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 16, 16)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 16, 16)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SerialNumber);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedDCNs(pub Vec<ServedDCNsItem>);
     impl crate::message::__Field<Vec<ServedDCNsItem>> for ServedDCNs {
@@ -30096,16 +31381,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServedDCNs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ServedDCNs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ServedDCNsItem::from_json(value, reading)
+                ServedDCNsItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ServedDCNs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedDCNsItem {
         pub dcn_id: DCNID,
@@ -30180,25 +31468,26 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServedDCNsItem {
-        fn to_json(&self) -> Value {
+    impl Tree for ServedDCNsItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("dCN-ID", self.dcn_id.to_json());
-            members.put("relativeDCNCapacity", self.relative_dcn_capacity.to_json());
+            members.put("dCN-ID", self.dcn_id.to_tree());
+            members.put("relativeDCNCapacity", self.relative_dcn_capacity.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["dCN-ID", "relativeDCNCapacity", "iE-Extensions"])?;
-            let dcn_id = reading.member(&members, 0, DCNID::from_json)?;
+            let dcn_id = reading.member(&members, 0, DCNID::from_tree)?;
             let relative_dcn_capacity =
-                reading.member(&members, 1, RelativeMMECapacity::from_json)?;
+                reading.member(&members, 1, RelativeMMECapacity::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 dcn_id,
                 relative_dcn_capacity,
@@ -30206,6 +31495,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ServedDCNsItem);
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedGUMMEIs(pub Vec<ServedGUMMEIsItem>);
@@ -30245,16 +31536,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServedGUMMEIs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ServedGUMMEIs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ServedGUMMEIsItem::from_json(value, reading)
+                ServedGUMMEIsItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ServedGUMMEIs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedGUMMEIsItem {
         pub served_plmns: ServedPLMNs,
@@ -30340,19 +31634,20 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServedGUMMEIsItem {
-        fn to_json(&self) -> Value {
+    impl Tree for ServedGUMMEIsItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("servedPLMNs", self.served_plmns.to_json());
-            members.put("servedGroupIDs", self.served_group_ids.to_json());
-            members.put("servedMMECs", self.served_mmecs.to_json());
+            members.put("servedPLMNs", self.served_plmns.to_tree());
+            members.put("servedGroupIDs", self.served_group_ids.to_tree());
+            members.put("servedMMECs", self.served_mmecs.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -30362,11 +31657,11 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let served_plmns = reading.member(&members, 0, ServedPLMNs::from_json)?;
-            let served_group_ids = reading.member(&members, 1, ServedGroupIDs::from_json)?;
-            let served_mmecs = reading.member(&members, 2, ServedMMECs::from_json)?;
+            let served_plmns = reading.member(&members, 0, ServedPLMNs::from_tree)?;
+            let served_group_ids = reading.member(&members, 1, ServedGroupIDs::from_tree)?;
+            let served_mmecs = reading.member(&members, 2, ServedMMECs::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 served_plmns,
                 served_group_ids,
@@ -30375,6 +31670,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ServedGUMMEIsItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedGroupIDs(pub Vec<MMEGroupID>);
     impl crate::message::__Field<Vec<MMEGroupID>> for ServedGroupIDs {
@@ -30413,16 +31710,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServedGroupIDs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ServedGroupIDs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                MMEGroupID::from_json(value, reading)
+                MMEGroupID::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ServedGroupIDs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedMMECs(pub Vec<MMECode>);
     impl crate::message::__Field<Vec<MMECode>> for ServedMMECs {
@@ -30461,16 +31761,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServedMMECs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ServedMMECs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                MMECode::from_json(value, reading)
+                MMECode::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ServedMMECs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedPLMNs(pub Vec<PLMNidentity>);
     impl crate::message::__Field<Vec<PLMNidentity>> for ServedPLMNs {
@@ -30509,16 +31812,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServedPLMNs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ServedPLMNs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                PLMNidentity::from_json(value, reading)
+                PLMNidentity::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ServedPLMNs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum ServiceType {
@@ -30556,14 +31862,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ServiceType {
-        fn to_json(&self) -> Value {
+    impl Tree for ServiceType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ServiceType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceToTargetTransparentContainer<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for SourceToTargetTransparentContainer<'a> {
@@ -30612,14 +31921,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SourceToTargetTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SourceToTargetTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SourceToTargetTransparentContainer<'a>);
     #[doc = " This IE includes a transparent container from the source RAN node to the target RAN node."]
     #[doc = " The octets of the OCTET STRING are encoded according to the specifications of the target system."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -30670,14 +31982,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SourceBSSToTargetBSSTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SourceBSSToTargetBSSTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SourceBSSToTargetBSSTransparentContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceNgRanNodeID {
         pub global_ran_node_id: GlobalRANNODEID,
@@ -30752,26 +32067,27 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SourceNgRanNodeID {
-        fn to_json(&self) -> Value {
+    impl Tree for SourceNgRanNodeID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("global-RAN-NODE-ID", self.global_ran_node_id.to_json());
-            members.put("selected-TAI", self.selected_tai.to_json());
+            members.put("global-RAN-NODE-ID", self.global_ran_node_id.to_tree());
+            members.put("selected-TAI", self.selected_tai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["global-RAN-NODE-ID", "selected-TAI", "iE-Extensions"],
             )?;
-            let global_ran_node_id = reading.member(&members, 0, GlobalRANNODEID::from_json)?;
-            let selected_tai = reading.member(&members, 1, FiveGSTAI::from_json)?;
+            let global_ran_node_id = reading.member(&members, 0, GlobalRANNODEID::from_tree)?;
+            let selected_tai = reading.member(&members, 1, FiveGSTAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 global_ran_node_id,
                 selected_tai,
@@ -30779,6 +32095,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SourceNgRanNodeID);
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'a>(pub Octets<'a>);
@@ -30830,14 +32148,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum SourceNodeID<'a> {
         sourceNgRanNode_ID(SourceNgRanNodeID),
@@ -30892,34 +32213,37 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SourceNodeID<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SourceNodeID<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::sourceNgRanNode_ID(value) => {
-                    json::alternative("sourceNgRanNode-ID", value.to_json())
+                    json::alternative("sourceNgRanNode-ID", value.to_tree())
                 }
                 Self::sourceNodeID_Extension(value) => {
-                    json::alternative("sourceNodeID-Extension", value.to_json())
+                    json::alternative("sourceNodeID-Extension", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) =
                 reading.alternative(value, &["sourceNgRanNode-ID", "sourceNodeID-Extension"])?;
             Ok(match position {
                 0 => Self::sourceNgRanNode_ID(reading.within(
                     "sourceNgRanNode-ID",
                     value,
-                    SourceNgRanNodeID::from_json,
+                    SourceNgRanNodeID::from_tree,
                 )?),
                 _ => Self::sourceNodeID_Extension(reading.within(
                     "sourceNodeID-Extension",
                     value,
-                    ProtocolIEField::from_json,
+                    ProtocolIEField::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SourceNodeID<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum SourceOfUEActivityBehaviourInformation {
@@ -30955,14 +32279,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SourceOfUEActivityBehaviourInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for SourceOfUEActivityBehaviourInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SourceOfUEActivityBehaviourInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceRNCToTargetRNCTransparentContainer<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for SourceRNCToTargetRNCTransparentContainer<'a> {
@@ -31011,14 +32338,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SourceRNCToTargetRNCTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SourceRNCToTargetRNCTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SourceRNCToTargetRNCTransparentContainer<'a>);
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceeNBID {
@@ -31089,24 +32419,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SourceeNBID {
-        fn to_json(&self) -> Value {
+    impl Tree for SourceeNBID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("global-ENB-ID", self.global_enb_id.to_json());
-            members.put("selected-TAI", self.selected_tai.to_json());
+            members.put("global-ENB-ID", self.global_enb_id.to_tree());
+            members.put("selected-TAI", self.selected_tai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["global-ENB-ID", "selected-TAI", "iE-Extensions"])?;
-            let global_enb_id = reading.member(&members, 0, GlobalENBID::from_json)?;
-            let selected_tai = reading.member(&members, 1, TAI::from_json)?;
+            let global_enb_id = reading.member(&members, 0, GlobalENBID::from_tree)?;
+            let selected_tai = reading.member(&members, 1, TAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 global_enb_id,
                 selected_tai,
@@ -31114,6 +32445,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SourceeNBID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceeNBToTargeteNBTransparentContainer<'a> {
         pub rrc_container: RRCContainer<'a>,
@@ -31247,34 +32580,35 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SourceeNBToTargeteNBTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SourceeNBToTargeteNBTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("rRC-Container", self.rrc_container.to_json());
+            members.put("rRC-Container", self.rrc_container.to_tree());
             members.put_optional(
                 "e-RABInformationList",
                 self.e_rab_information_list
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
-            members.put("targetCell-ID", self.target_cell_id.to_json());
+            members.put("targetCell-ID", self.target_cell_id.to_tree());
             members.put_optional(
                 "subscriberProfileIDforRFP",
                 self.subscriber_profile_id_for_rfp
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put(
                 "uE-HistoryInformation",
-                self.ue_history_information.to_json(),
+                self.ue_history_information.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -31286,16 +32620,16 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let rrc_container = reading.member(&members, 0, RRCContainer::from_json)?;
+            let rrc_container = reading.member(&members, 0, RRCContainer::from_tree)?;
             let e_rab_information_list =
-                reading.optional(&members, 1, ERABInformationList::from_json)?;
-            let target_cell_id = reading.member(&members, 2, EUTRANCGI::from_json)?;
+                reading.optional(&members, 1, ERABInformationList::from_tree)?;
+            let target_cell_id = reading.member(&members, 2, EUTRANCGI::from_tree)?;
             let subscriber_profile_id_for_rfp =
-                reading.optional(&members, 3, SubscriberProfileIDforRFP::from_json)?;
+                reading.optional(&members, 3, SubscriberProfileIDforRFP::from_tree)?;
             let ue_history_information =
-                reading.member(&members, 4, UEHistoryInformation::from_json)?;
+                reading.member(&members, 4, UEHistoryInformation::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 rrc_container,
                 e_rab_information_list,
@@ -31306,6 +32640,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SourceeNBToTargeteNBTransparentContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct StratumLevel(pub u64);
     impl crate::message::__Field<u64> for StratumLevel {
@@ -31336,14 +32672,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for StratumLevel {
-        fn to_json(&self) -> Value {
+    impl Tree for StratumLevel {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(StratumLevel);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct SubscriberProfileIDforRFP(pub u16);
     impl crate::message::__Field<u16> for SubscriberProfileIDforRFP {
@@ -31374,11 +32713,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SubscriberProfileIDforRFP {
-        fn to_json(&self) -> Value {
+    impl Tree for SubscriberProfileIDforRFP {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 1, 256)
@@ -31386,6 +32726,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SubscriberProfileIDforRFP);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -31423,14 +32765,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(
+        SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator
+    );
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -31467,14 +32814,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SubscriptionBasedUEDifferentiationInfoStationaryIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for SubscriptionBasedUEDifferentiationInfoStationaryIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SubscriptionBasedUEDifferentiationInfoStationaryIndication);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -31517,14 +32867,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SubscriptionBasedUEDifferentiationInfoTrafficProfile {
-        fn to_json(&self) -> Value {
+    impl Tree for SubscriptionBasedUEDifferentiationInfoTrafficProfile {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SubscriptionBasedUEDifferentiationInfoTrafficProfile);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -31570,14 +32923,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SubscriptionBasedUEDifferentiationInfoBatteryIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for SubscriptionBasedUEDifferentiationInfoBatteryIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SubscriptionBasedUEDifferentiationInfoBatteryIndication);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SubscriptionBasedUEDifferentiationInfo {
         pub periodic_communication_indicator:
@@ -31748,14 +33104,15 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SubscriptionBasedUEDifferentiationInfo {
-        fn to_json(&self) -> Value {
+    impl Tree for SubscriptionBasedUEDifferentiationInfo {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "periodicCommunicationIndicator",
                 self.periodic_communication_indicator
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "periodicTime",
@@ -31767,31 +33124,31 @@ pub mod s1_ap_ies {
                 "scheduledCommunicationTime",
                 self.scheduled_communication_time
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "stationaryIndication",
                 self.stationary_indication
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "trafficProfile",
-                self.traffic_profile.as_ref().map(|value| value.to_json()),
+                self.traffic_profile.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "batteryIndication",
                 self.battery_indication
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -31807,30 +33164,30 @@ pub mod s1_ap_ies {
             let periodic_communication_indicator = reading.optional(
                 &members,
                 0,
-                SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator::from_json,
+                SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator::from_tree,
             )?;
             let periodic_time = reading.optional(&members, 1, |value, reading| {
                 reading.unsigned(value, u64::MIN, u64::MAX)
             })?;
             let scheduled_communication_time =
-                reading.optional(&members, 2, ScheduledCommunicationTime::from_json)?;
+                reading.optional(&members, 2, ScheduledCommunicationTime::from_tree)?;
             let stationary_indication = reading.optional(
                 &members,
                 3,
-                SubscriptionBasedUEDifferentiationInfoStationaryIndication::from_json,
+                SubscriptionBasedUEDifferentiationInfoStationaryIndication::from_tree,
             )?;
             let traffic_profile = reading.optional(
                 &members,
                 4,
-                SubscriptionBasedUEDifferentiationInfoTrafficProfile::from_json,
+                SubscriptionBasedUEDifferentiationInfoTrafficProfile::from_tree,
             )?;
             let battery_indication = reading.optional(
                 &members,
                 5,
-                SubscriptionBasedUEDifferentiationInfoBatteryIndication::from_json,
+                SubscriptionBasedUEDifferentiationInfoBatteryIndication::from_tree,
             )?;
             let ie_extensions =
-                reading.optional(&members, 6, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 6, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 periodic_communication_indicator,
                 periodic_time,
@@ -31842,6 +33199,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SubscriptionBasedUEDifferentiationInfo);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SupportedTAs(pub Vec<SupportedTAsItem>);
     impl crate::message::__Field<Vec<SupportedTAsItem>> for SupportedTAs {
@@ -31880,16 +33239,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SupportedTAs {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for SupportedTAs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                SupportedTAsItem::from_json(value, reading)
+                SupportedTAsItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SupportedTAs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SupportedTAsItem {
         pub tac: TAC,
@@ -31964,23 +33326,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SupportedTAsItem {
-        fn to_json(&self) -> Value {
+    impl Tree for SupportedTAsItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("tAC", self.tac.to_json());
-            members.put("broadcastPLMNs", self.broadcast_plmns.to_json());
+            members.put("tAC", self.tac.to_tree());
+            members.put("broadcastPLMNs", self.broadcast_plmns.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAC", "broadcastPLMNs", "iE-Extensions"])?;
-            let tac = reading.member(&members, 0, TAC::from_json)?;
-            let broadcast_plmns = reading.member(&members, 1, BPLMNs::from_json)?;
+            let tac = reading.member(&members, 0, TAC::from_tree)?;
+            let broadcast_plmns = reading.member(&members, 1, BPLMNs::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 tac,
                 broadcast_plmns,
@@ -31988,6 +33351,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SupportedTAsItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SynchronisationInformation {
         pub source_stratum_level: Option<StratumLevel>,
@@ -32094,34 +33459,35 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SynchronisationInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for SynchronisationInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "sourceStratumLevel",
                 self.source_stratum_level
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "listeningSubframePattern",
                 self.listening_subframe_pattern
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "aggressoreCGI-List",
                 self.aggressor_ecgi_list
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -32131,12 +33497,12 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let source_stratum_level = reading.optional(&members, 0, StratumLevel::from_json)?;
+            let source_stratum_level = reading.optional(&members, 0, StratumLevel::from_tree)?;
             let listening_subframe_pattern =
-                reading.optional(&members, 1, ListeningSubframePattern::from_json)?;
-            let aggressor_ecgi_list = reading.optional(&members, 2, ECGI_List::from_json)?;
+                reading.optional(&members, 1, ListeningSubframePattern::from_tree)?;
+            let aggressor_ecgi_list = reading.optional(&members, 2, ECGI_List::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 source_stratum_level,
                 listening_subframe_pattern,
@@ -32145,6 +33511,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SynchronisationInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum SynchronisationStatus {
@@ -32180,14 +33548,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SynchronisationStatus {
-        fn to_json(&self) -> Value {
+    impl Tree for SynchronisationStatus {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SynchronisationStatus);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TABasedMDT {
         pub ta_listfor_mdt: TAListforMDT,
@@ -32251,27 +33622,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TABasedMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for TABasedMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("tAListforMDT", self.ta_listfor_mdt.to_json());
+            members.put("tAListforMDT", self.ta_listfor_mdt.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAListforMDT", "iE-Extensions"])?;
-            let ta_listfor_mdt = reading.member(&members, 0, TAListforMDT::from_json)?;
+            let ta_listfor_mdt = reading.member(&members, 0, TAListforMDT::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ta_listfor_mdt,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TABasedMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TABasedQMC {
         pub ta_listfor_qmc: TAListforQMC,
@@ -32335,27 +33709,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TABasedQMC {
-        fn to_json(&self) -> Value {
+    impl Tree for TABasedQMC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("tAListforQMC", self.ta_listfor_qmc.to_json());
+            members.put("tAListforQMC", self.ta_listfor_qmc.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAListforQMC", "iE-Extensions"])?;
-            let ta_listfor_qmc = reading.member(&members, 0, TAListforQMC::from_json)?;
+            let ta_listfor_qmc = reading.member(&members, 0, TAListforQMC::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ta_listfor_qmc,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TABasedQMC);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for TAC {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -32400,14 +33777,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAC {
-        fn to_json(&self) -> Value {
+    impl Tree for TAC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<2>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAC);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TACListInLTENTN(pub Vec<TAC>);
     impl crate::message::__Field<Vec<TAC>> for TACListInLTENTN {
@@ -32446,16 +33826,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TACListInLTENTN {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for TACListInLTENTN {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TAC::from_json(value, reading)
+                TAC::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TACListInLTENTN);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAI {
         pub plmn_identity: PLMNidentity,
@@ -32530,23 +33913,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAI {
-        fn to_json(&self) -> Value {
+    impl Tree for TAI {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_json());
-            members.put("tAC", self.tac.to_json());
+            members.put("pLMNidentity", self.plmn_identity.to_tree());
+            members.put("tAC", self.tac.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMNidentity", "tAC", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_json)?;
-            let tac = reading.member(&members, 1, TAC::from_json)?;
+            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
+            let tac = reading.member(&members, 1, TAC::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 plmn_identity,
                 tac,
@@ -32554,6 +33938,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAI);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIBroadcast(pub Vec<TAIBroadcastItem>);
     impl crate::message::__Field<Vec<TAIBroadcastItem>> for TAIBroadcast {
@@ -32592,16 +33978,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIBroadcast {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for TAIBroadcast {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TAIBroadcastItem::from_json(value, reading)
+                TAIBroadcastItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAIBroadcast);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIBroadcastItem {
         pub tai: TAI,
@@ -32676,25 +34065,26 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIBroadcastItem {
-        fn to_json(&self) -> Value {
+    impl Tree for TAIBroadcastItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("tAI", self.tai.to_json());
-            members.put("completedCellinTAI", self.completed_cellin_tai.to_json());
+            members.put("tAI", self.tai.to_tree());
+            members.put("completedCellinTAI", self.completed_cellin_tai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["tAI", "completedCellinTAI", "iE-Extensions"])?;
-            let tai = reading.member(&members, 0, TAI::from_json)?;
+            let tai = reading.member(&members, 0, TAI::from_tree)?;
             let completed_cellin_tai =
-                reading.member(&members, 1, CompletedCellinTAI::from_json)?;
+                reading.member(&members, 1, CompletedCellinTAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 tai,
                 completed_cellin_tai,
@@ -32702,6 +34092,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAIBroadcastItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAICancelled(pub Vec<TAICancelledItem>);
     impl crate::message::__Field<Vec<TAICancelledItem>> for TAICancelled {
@@ -32740,16 +34132,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAICancelled {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for TAICancelled {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TAICancelledItem::from_json(value, reading)
+                TAICancelledItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAICancelled);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAICancelledItem {
         pub tai: TAI,
@@ -32824,25 +34219,26 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAICancelledItem {
-        fn to_json(&self) -> Value {
+    impl Tree for TAICancelledItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("tAI", self.tai.to_json());
-            members.put("cancelledCellinTAI", self.cancelled_cellin_tai.to_json());
+            members.put("tAI", self.tai.to_tree());
+            members.put("cancelledCellinTAI", self.cancelled_cellin_tai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["tAI", "cancelledCellinTAI", "iE-Extensions"])?;
-            let tai = reading.member(&members, 0, TAI::from_json)?;
+            let tai = reading.member(&members, 0, TAI::from_tree)?;
             let cancelled_cellin_tai =
-                reading.member(&members, 1, CancelledCellinTAI::from_json)?;
+                reading.member(&members, 1, CancelledCellinTAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 tai,
                 cancelled_cellin_tai,
@@ -32850,6 +34246,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAICancelledItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIBasedMDT {
         pub tai_listfor_mdt: TAIListforMDT,
@@ -32913,27 +34311,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIBasedMDT {
-        fn to_json(&self) -> Value {
+    impl Tree for TAIBasedMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("tAIListforMDT", self.tai_listfor_mdt.to_json());
+            members.put("tAIListforMDT", self.tai_listfor_mdt.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAIListforMDT", "iE-Extensions"])?;
-            let tai_listfor_mdt = reading.member(&members, 0, TAIListforMDT::from_json)?;
+            let tai_listfor_mdt = reading.member(&members, 0, TAIListforMDT::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 tai_listfor_mdt,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAIBasedMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIBasedQMC {
         pub tai_listfor_qmc: TAIListforQMC,
@@ -32997,27 +34398,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIBasedQMC {
-        fn to_json(&self) -> Value {
+    impl Tree for TAIBasedQMC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("tAIListforQMC", self.tai_listfor_qmc.to_json());
+            members.put("tAIListforQMC", self.tai_listfor_qmc.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAIListforQMC", "iE-Extensions"])?;
-            let tai_listfor_qmc = reading.member(&members, 0, TAIListforQMC::from_json)?;
+            let tai_listfor_qmc = reading.member(&members, 0, TAIListforQMC::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 tai_listfor_qmc,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAIBasedQMC);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListForRestart(pub Vec<TAI>);
     impl crate::message::__Field<Vec<TAI>> for TAIListForRestart {
@@ -33056,16 +34460,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIListForRestart {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for TAIListForRestart {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TAI::from_json(value, reading)
+                TAI::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAIListForRestart);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListforMDT(pub Vec<TAI>);
     impl crate::message::__Field<Vec<TAI>> for TAIListforMDT {
@@ -33104,16 +34511,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIListforMDT {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for TAIListforMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TAI::from_json(value, reading)
+                TAI::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAIListforMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListforQMC(pub Vec<TAI>);
     impl crate::message::__Field<Vec<TAI>> for TAIListforQMC {
@@ -33152,16 +34562,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIListforQMC {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for TAIListforQMC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TAI::from_json(value, reading)
+                TAI::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAIListforQMC);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListforWarning(pub Vec<TAI>);
     impl crate::message::__Field<Vec<TAI>> for TAIListforWarning {
@@ -33200,16 +34613,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIListforWarning {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for TAIListforWarning {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TAI::from_json(value, reading)
+                TAI::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAIListforWarning);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAListforMDT(pub Vec<TAC>);
     impl crate::message::__Field<Vec<TAC>> for TAListforMDT {
@@ -33248,16 +34664,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAListforMDT {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for TAListforMDT {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TAC::from_json(value, reading)
+                TAC::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAListforMDT);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAListforQMC(pub Vec<TAC>);
     impl crate::message::__Field<Vec<TAC>> for TAListforQMC {
@@ -33296,16 +34715,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAListforQMC {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for TAListforQMC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                TAC::from_json(value, reading)
+                TAC::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAListforQMC);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for TBCDSTRING {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -33349,14 +34771,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TBCDSTRING {
-        fn to_json(&self) -> Value {
+    impl Tree for TBCDSTRING {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<3>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TBCDSTRING);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetToSourceTransparentContainer<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for TargetToSourceTransparentContainer<'a> {
@@ -33405,14 +34830,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargetToSourceTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for TargetToSourceTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TargetToSourceTransparentContainer<'a>);
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetBSSToSourceBSSTransparentContainer<'a>(pub Octets<'a>);
@@ -33462,14 +34890,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargetBSSToSourceBSSTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for TargetBSSToSourceBSSTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TargetBSSToSourceBSSTransparentContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum TargetID {
@@ -33541,18 +34972,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargetID {
-        fn to_json(&self) -> Value {
+    impl Tree for TargetID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::targeteNB_ID(value) => json::alternative("targeteNB-ID", value.to_json()),
-                Self::targetRNC_ID(value) => json::alternative("targetRNC-ID", value.to_json()),
-                Self::cGI(value) => json::alternative("cGI", value.to_json()),
+                Self::targeteNB_ID(value) => json::alternative("targeteNB-ID", value.to_tree()),
+                Self::targetRNC_ID(value) => json::alternative("targetRNC-ID", value.to_tree()),
+                Self::cGI(value) => json::alternative("cGI", value.to_tree()),
                 Self::targetgNgRanNode_ID(value) => {
-                    json::alternative("targetgNgRanNode-ID", value.to_json())
+                    json::alternative("targetgNgRanNode-ID", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &["targeteNB-ID", "targetRNC-ID", "cGI", "targetgNgRanNode-ID"],
@@ -33561,22 +34993,24 @@ pub mod s1_ap_ies {
                 0 => Self::targeteNB_ID(reading.within(
                     "targeteNB-ID",
                     value,
-                    TargeteNBID::from_json,
+                    TargeteNBID::from_tree,
                 )?),
                 1 => Self::targetRNC_ID(reading.within(
                     "targetRNC-ID",
                     value,
-                    TargetRNCID::from_json,
+                    TargetRNCID::from_tree,
                 )?),
-                2 => Self::cGI(reading.within("cGI", value, CGI::from_json)?),
+                2 => Self::cGI(reading.within("cGI", value, CGI::from_tree)?),
                 _ => Self::targetgNgRanNode_ID(reading.within(
                     "targetgNgRanNode-ID",
                     value,
-                    TargetNgRanNodeID::from_json,
+                    TargetNgRanNodeID::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TargetID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetNgRanNodeID {
         pub global_ran_node_id: GlobalRANNODEID,
@@ -33651,26 +35085,27 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargetNgRanNodeID {
-        fn to_json(&self) -> Value {
+    impl Tree for TargetNgRanNodeID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("global-RAN-NODE-ID", self.global_ran_node_id.to_json());
-            members.put("selected-TAI", self.selected_tai.to_json());
+            members.put("global-RAN-NODE-ID", self.global_ran_node_id.to_tree());
+            members.put("selected-TAI", self.selected_tai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["global-RAN-NODE-ID", "selected-TAI", "iE-Extensions"],
             )?;
-            let global_ran_node_id = reading.member(&members, 0, GlobalRANNODEID::from_json)?;
-            let selected_tai = reading.member(&members, 1, FiveGSTAI::from_json)?;
+            let global_ran_node_id = reading.member(&members, 0, GlobalRANNODEID::from_tree)?;
+            let selected_tai = reading.member(&members, 1, FiveGSTAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 global_ran_node_id,
                 selected_tai,
@@ -33678,6 +35113,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TargetNgRanNodeID);
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'a>(pub Octets<'a>);
@@ -33729,14 +35166,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetRNCID {
         pub lai: LAI,
@@ -33847,33 +35287,34 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargetRNCID {
-        fn to_json(&self) -> Value {
+    impl Tree for TargetRNCID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("lAI", self.lai.to_json());
-            members.put_optional("rAC", self.rac.as_ref().map(|value| value.to_json()));
-            members.put("rNC-ID", self.rnc_id.to_json());
+            members.put("lAI", self.lai.to_tree());
+            members.put_optional("rAC", self.rac.as_ref().map(|value| value.to_tree()));
+            members.put("rNC-ID", self.rnc_id.to_tree());
             members.put_optional(
                 "extendedRNC-ID",
-                self.extended_rnc_id.as_ref().map(|value| value.to_json()),
+                self.extended_rnc_id.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["lAI", "rAC", "rNC-ID", "extendedRNC-ID", "iE-Extensions"],
             )?;
-            let lai = reading.member(&members, 0, LAI::from_json)?;
-            let rac = reading.optional(&members, 1, RAC::from_json)?;
-            let rnc_id = reading.member(&members, 2, RNCID::from_json)?;
-            let extended_rnc_id = reading.optional(&members, 3, ExtendedRNCID::from_json)?;
+            let lai = reading.member(&members, 0, LAI::from_tree)?;
+            let rac = reading.optional(&members, 1, RAC::from_tree)?;
+            let rnc_id = reading.member(&members, 2, RNCID::from_tree)?;
+            let extended_rnc_id = reading.optional(&members, 3, ExtendedRNCID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 lai,
                 rac,
@@ -33883,6 +35324,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TargetRNCID);
     #[doc = " This IE includes a transparent container from the target RAN node to the source RAN node."]
     #[doc = " The octets of the OCTET STRING are coded according to the specifications of the target system."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -33933,14 +35376,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargetRNCToSourceRNCTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for TargetRNCToSourceRNCTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TargetRNCToSourceRNCTransparentContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargeteNBID {
         pub global_enb_id: GlobalENBID,
@@ -34015,24 +35461,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargeteNBID {
-        fn to_json(&self) -> Value {
+    impl Tree for TargeteNBID {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("global-ENB-ID", self.global_enb_id.to_json());
-            members.put("selected-TAI", self.selected_tai.to_json());
+            members.put("global-ENB-ID", self.global_enb_id.to_tree());
+            members.put("selected-TAI", self.selected_tai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["global-ENB-ID", "selected-TAI", "iE-Extensions"])?;
-            let global_enb_id = reading.member(&members, 0, GlobalENBID::from_json)?;
-            let selected_tai = reading.member(&members, 1, TAI::from_json)?;
+            let global_enb_id = reading.member(&members, 0, GlobalENBID::from_tree)?;
+            let selected_tai = reading.member(&members, 1, TAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 global_enb_id,
                 selected_tai,
@@ -34040,6 +35487,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TargeteNBID);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargeteNBToSourceeNBTransparentContainer<'a> {
         pub rrc_container: RRCContainer<'a>,
@@ -34111,27 +35560,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TargeteNBToSourceeNBTransparentContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for TargeteNBToSourceeNBTransparentContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("rRC-Container", self.rrc_container.to_json());
+            members.put("rRC-Container", self.rrc_container.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["rRC-Container", "iE-Extensions"])?;
-            let rrc_container = reading.member(&members, 0, RRCContainer::from_json)?;
+            let rrc_container = reading.member(&members, 0, RRCContainer::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 rrc_container,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TargeteNBToSourceeNBTransparentContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ThresholdRSRP(pub u8);
     impl crate::message::__Field<u8> for ThresholdRSRP {
@@ -34162,16 +35614,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ThresholdRSRP {
-        fn to_json(&self) -> Value {
+    impl Tree for ThresholdRSRP {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading.unsigned(value, 0, 97).map(|number| number as u8)?,
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ThresholdRSRP);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ThresholdRSRQ(pub u8);
     impl crate::message::__Field<u8> for ThresholdRSRQ {
@@ -34202,16 +35657,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ThresholdRSRQ {
-        fn to_json(&self) -> Value {
+    impl Tree for ThresholdRSRQ {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading.unsigned(value, 0, 34).map(|number| number as u8)?,
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ThresholdRSRQ);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TimeUEStayedInCell(pub u16);
     impl crate::message::__Field<u16> for TimeUEStayedInCell {
@@ -34242,11 +35700,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TimeUEStayedInCell {
-        fn to_json(&self) -> Value {
+    impl Tree for TimeUEStayedInCell {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 4095)
@@ -34254,6 +35713,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TimeUEStayedInCell);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TimeUEStayedInCellEnhancedGranularity(pub u16);
     impl crate::message::__Field<u16> for TimeUEStayedInCellEnhancedGranularity {
@@ -34284,11 +35745,12 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TimeUEStayedInCellEnhancedGranularity {
-        fn to_json(&self) -> Value {
+    impl Tree for TimeUEStayedInCellEnhancedGranularity {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading
                     .unsigned(value, 0, 40950)
@@ -34296,6 +35758,8 @@ pub mod s1_ap_ies {
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TimeUEStayedInCellEnhancedGranularity);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TimeBasedHandoverInformation {
         pub ho_window_start: HandoverWindowStart,
@@ -34370,27 +35834,28 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TimeBasedHandoverInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for TimeBasedHandoverInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("hOWindowStart", self.ho_window_start.to_json());
-            members.put("hOWindowDuration", self.ho_window_duration.to_json());
+            members.put("hOWindowStart", self.ho_window_start.to_tree());
+            members.put("hOWindowDuration", self.ho_window_duration.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["hOWindowStart", "hOWindowDuration", "iE-Extensions"],
             )?;
-            let ho_window_start = reading.member(&members, 0, HandoverWindowStart::from_json)?;
+            let ho_window_start = reading.member(&members, 0, HandoverWindowStart::from_tree)?;
             let ho_window_duration =
-                reading.member(&members, 1, HandoverWindowDuration::from_json)?;
+                reading.member(&members, 1, HandoverWindowDuration::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ho_window_start,
                 ho_window_duration,
@@ -34398,6 +35863,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TimeBasedHandoverInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum TimeRefDistribution {
@@ -34432,14 +35899,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TimeRefDistribution {
-        fn to_json(&self) -> Value {
+    impl Tree for TimeRefDistribution {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TimeRefDistribution);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for TimeSinceSecondaryNodeRelease {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -34483,14 +35953,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TimeSinceSecondaryNodeRelease {
-        fn to_json(&self) -> Value {
+    impl Tree for TimeSinceSecondaryNodeRelease {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<4>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TimeSinceSecondaryNodeRelease);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TimeSynchronisationInfo {
         pub stratum_level: StratumLevel,
@@ -34565,30 +36038,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TimeSynchronisationInfo {
-        fn to_json(&self) -> Value {
+    impl Tree for TimeSynchronisationInfo {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("stratumLevel", self.stratum_level.to_json());
+            members.put("stratumLevel", self.stratum_level.to_tree());
             members.put(
                 "synchronisationStatus",
-                self.synchronisation_status.to_json(),
+                self.synchronisation_status.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["stratumLevel", "synchronisationStatus", "iE-Extensions"],
             )?;
-            let stratum_level = reading.member(&members, 0, StratumLevel::from_json)?;
+            let stratum_level = reading.member(&members, 0, StratumLevel::from_tree)?;
             let synchronisation_status =
-                reading.member(&members, 1, SynchronisationStatus::from_json)?;
+                reading.member(&members, 1, SynchronisationStatus::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 stratum_level,
                 synchronisation_status,
@@ -34596,6 +36070,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TimeSynchronisationInfo);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum TimeToTrigger {
         ms0 = 0,
@@ -34664,14 +36140,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TimeToTrigger {
-        fn to_json(&self) -> Value {
+    impl Tree for TimeToTrigger {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TimeToTrigger);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum TimeToWait {
@@ -34718,14 +36197,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TimeToWait {
-        fn to_json(&self) -> Value {
+    impl Tree for TimeToWait {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TimeToWait);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TraceActivation<'a> {
         pub e_utran_trace_id: EUTRANTraceID,
@@ -34835,23 +36317,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TraceActivation<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for TraceActivation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-UTRAN-Trace-ID", self.e_utran_trace_id.to_json());
-            members.put("interfacesToTrace", self.interfaces_to_trace.to_json());
-            members.put("traceDepth", self.trace_depth.to_json());
+            members.put("e-UTRAN-Trace-ID", self.e_utran_trace_id.to_tree());
+            members.put("interfacesToTrace", self.interfaces_to_trace.to_tree());
+            members.put("traceDepth", self.trace_depth.to_tree());
             members.put(
                 "traceCollectionEntityIPAddress",
-                self.trace_collection_entity_ip_address.to_json(),
+                self.trace_collection_entity_ip_address.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -34862,13 +36345,13 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let e_utran_trace_id = reading.member(&members, 0, EUTRANTraceID::from_json)?;
-            let interfaces_to_trace = reading.member(&members, 1, InterfacesToTrace::from_json)?;
-            let trace_depth = reading.member(&members, 2, TraceDepth::from_json)?;
+            let e_utran_trace_id = reading.member(&members, 0, EUTRANTraceID::from_tree)?;
+            let interfaces_to_trace = reading.member(&members, 1, InterfacesToTrace::from_tree)?;
+            let trace_depth = reading.member(&members, 2, TraceDepth::from_tree)?;
             let trace_collection_entity_ip_address =
-                reading.member(&members, 3, TransportLayerAddress::from_json)?;
+                reading.member(&members, 3, TransportLayerAddress::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_utran_trace_id,
                 interfaces_to_trace,
@@ -34878,6 +36361,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TraceActivation<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum TraceDepth {
@@ -34931,14 +36416,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TraceDepth {
-        fn to_json(&self) -> Value {
+    impl Tree for TraceDepth {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TraceDepth);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TrafficLoadReductionIndication(pub u8);
     impl crate::message::__Field<u8> for TrafficLoadReductionIndication {
@@ -34969,16 +36457,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TrafficLoadReductionIndication {
-        fn to_json(&self) -> Value {
+    impl Tree for TrafficLoadReductionIndication {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading.unsigned(value, 1, 99).map(|number| number as u8)?,
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TrafficLoadReductionIndication);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TransportInformation<'a> {
         pub transport_layer_address: TransportLayerAddress<'a>,
@@ -35039,27 +36530,30 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TransportInformation<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for TransportInformation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
-            members.put("uL-GTP-TEID", self.ul_gtp_teid.to_json());
+            members.put("uL-GTP-TEID", self.ul_gtp_teid.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["transportLayerAddress", "uL-GTP-TEID"])?;
             let transport_layer_address =
-                reading.member(&members, 0, TransportLayerAddress::from_json)?;
-            let ul_gtp_teid = reading.member(&members, 1, GTPTEID::from_json)?;
+                reading.member(&members, 0, TransportLayerAddress::from_tree)?;
+            let ul_gtp_teid = reading.member(&members, 1, GTPTEID::from_tree)?;
             Ok(Self {
                 transport_layer_address,
                 ul_gtp_teid,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TransportInformation<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TransportLayerAddress<'a>(pub BitString<'a>);
     impl<'a> crate::message::__Field<BitString<'a>> for TransportLayerAddress<'a> {
@@ -35098,14 +36592,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TransportLayerAddress<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for TransportLayerAddress<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bit_string(&self.0, 1, 160, true)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bit_string(value, 1, 160, true)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bit_string(reading, value, 1, 160, true)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TransportLayerAddress<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TunnelInformation<'a> {
         pub transport_layer_address: TransportLayerAddress<'a>,
@@ -35196,33 +36693,34 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TunnelInformation<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for TunnelInformation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
             members.put_optional(
                 "uDP-Port-Number",
-                self.udp_port_number.as_ref().map(|value| value.to_json()),
+                self.udp_port_number.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["transportLayerAddress", "uDP-Port-Number", "iE-Extensions"],
             )?;
             let transport_layer_address =
-                reading.member(&members, 0, TransportLayerAddress::from_json)?;
-            let udp_port_number = reading.optional(&members, 1, PortNumber::from_json)?;
+                reading.member(&members, 0, TransportLayerAddress::from_tree)?;
+            let udp_port_number = reading.optional(&members, 1, PortNumber::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 transport_layer_address,
                 udp_port_number,
@@ -35230,6 +36728,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TunnelInformation<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum TypeOfError {
@@ -35265,14 +36765,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TypeOfError {
-        fn to_json(&self) -> Value {
+    impl Tree for TypeOfError {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TypeOfError);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct UEApplicationLayerMeasurementCapability(pub Bits);
     impl crate::message::__Field<Bits> for UEApplicationLayerMeasurementCapability {
@@ -35313,14 +36816,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEApplicationLayerMeasurementCapability {
-        fn to_json(&self) -> Value {
+    impl Tree for UEApplicationLayerMeasurementCapability {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 8, 8)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 8, 8)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 8, 8)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEApplicationLayerMeasurementCapability);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEHistoryInformation<'a>(pub Vec<LastVisitedCellItem<'a>>);
     impl<'a> crate::message::__Field<Vec<LastVisitedCellItem<'a>>> for UEHistoryInformation<'a> {
@@ -35366,16 +36872,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEHistoryInformation<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for UEHistoryInformation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                LastVisitedCellItem::from_json(value, reading)
+                LastVisitedCellItem::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEHistoryInformation<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEHistoryInformationFromTheUE<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for UEHistoryInformationFromTheUE<'a> {
@@ -35424,14 +36933,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEHistoryInformationFromTheUE<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEHistoryInformationFromTheUE<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEHistoryInformationFromTheUE<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERLFReportContainer<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for UERLFReportContainer<'a> {
@@ -35480,14 +36992,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UERLFReportContainer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UERLFReportContainer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UERLFReportContainer<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERLFReportContainerForExtendedBands<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for UERLFReportContainerForExtendedBands<'a> {
@@ -35536,14 +37051,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UERLFReportContainerForExtendedBands<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UERLFReportContainerForExtendedBands<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UERLFReportContainerForExtendedBands<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum UERetentionInformation {
@@ -35578,14 +37096,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UERetentionInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for UERetentionInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UERetentionInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UES1APIDPair {
         pub mme_ue_s1ap_id: MMEUES1APID,
@@ -35660,26 +37181,27 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UES1APIDPair {
-        fn to_json(&self) -> Value {
+    impl Tree for UES1APIDPair {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("mME-UE-S1AP-ID", self.mme_ue_s1ap_id.to_json());
-            members.put("eNB-UE-S1AP-ID", self.enb_ue_s1ap_id.to_json());
+            members.put("mME-UE-S1AP-ID", self.mme_ue_s1ap_id.to_tree());
+            members.put("eNB-UE-S1AP-ID", self.enb_ue_s1ap_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["mME-UE-S1AP-ID", "eNB-UE-S1AP-ID", "iE-Extensions"],
             )?;
-            let mme_ue_s1ap_id = reading.member(&members, 0, MMEUES1APID::from_json)?;
-            let enb_ue_s1ap_id = reading.member(&members, 1, ENBUES1APID::from_json)?;
+            let mme_ue_s1ap_id = reading.member(&members, 0, MMEUES1APID::from_tree)?;
+            let enb_ue_s1ap_id = reading.member(&members, 1, ENBUES1APID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 mme_ue_s1ap_id,
                 enb_ue_s1ap_id,
@@ -35687,6 +37209,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UES1APIDPair);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum UES1APIDs {
@@ -35730,32 +37254,35 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UES1APIDs {
-        fn to_json(&self) -> Value {
+    impl Tree for UES1APIDs {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::uE_S1AP_ID_pair(value) => {
-                    json::alternative("uE-S1AP-ID-pair", value.to_json())
+                    json::alternative("uE-S1AP-ID-pair", value.to_tree())
                 }
-                Self::mME_UE_S1AP_ID(value) => json::alternative("mME-UE-S1AP-ID", value.to_json()),
+                Self::mME_UE_S1AP_ID(value) => json::alternative("mME-UE-S1AP-ID", value.to_tree()),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) =
                 reading.alternative(value, &["uE-S1AP-ID-pair", "mME-UE-S1AP-ID"])?;
             Ok(match position {
                 0 => Self::uE_S1AP_ID_pair(reading.within(
                     "uE-S1AP-ID-pair",
                     value,
-                    UES1APIDPair::from_json,
+                    UES1APIDPair::from_tree,
                 )?),
                 _ => Self::mME_UE_S1AP_ID(reading.within(
                     "mME-UE-S1AP-ID",
                     value,
-                    MMEUES1APID::from_json,
+                    MMEUES1APID::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UES1APIDs);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct UEUsageType(pub u8);
     impl crate::message::__Field<u8> for UEUsageType {
@@ -35786,16 +37313,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEUsageType {
-        fn to_json(&self) -> Value {
+    impl Tree for UEUsageType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::unsigned(u64::from(self.0))
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(
                 reading.unsigned(value, 0, 255).map(|number| number as u8)?,
             ))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEUsageType);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEAssociatedLogicalS1ConnectionItem {
         pub mme_ue_s1ap_id: Option<MMEUES1APID>,
@@ -35884,32 +37414,33 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEAssociatedLogicalS1ConnectionItem {
-        fn to_json(&self) -> Value {
+    impl Tree for UEAssociatedLogicalS1ConnectionItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "mME-UE-S1AP-ID",
-                self.mme_ue_s1ap_id.as_ref().map(|value| value.to_json()),
+                self.mme_ue_s1ap_id.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "eNB-UE-S1AP-ID",
-                self.enb_ue_s1ap_id.as_ref().map(|value| value.to_json()),
+                self.enb_ue_s1ap_id.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["mME-UE-S1AP-ID", "eNB-UE-S1AP-ID", "iE-Extensions"],
             )?;
-            let mme_ue_s1ap_id = reading.optional(&members, 0, MMEUES1APID::from_json)?;
-            let enb_ue_s1ap_id = reading.optional(&members, 1, ENBUES1APID::from_json)?;
+            let mme_ue_s1ap_id = reading.optional(&members, 0, MMEUES1APID::from_tree)?;
+            let enb_ue_s1ap_id = reading.optional(&members, 1, ENBUES1APID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 mme_ue_s1ap_id,
                 enb_ue_s1ap_id,
@@ -35917,6 +37448,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEAssociatedLogicalS1ConnectionItem);
     #[doc = " U"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEAggregateMaximumBitrate {
@@ -35992,24 +37525,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEAggregateMaximumBitrate {
-        fn to_json(&self) -> Value {
+    impl Tree for UEAggregateMaximumBitrate {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "uEaggregateMaximumBitRateDL",
-                self.ue_aggregate_maximum_bit_rate_dl.to_json(),
+                self.ue_aggregate_maximum_bit_rate_dl.to_tree(),
             );
             members.put(
                 "uEaggregateMaximumBitRateUL",
-                self.ue_aggregate_maximum_bit_rate_ul.to_json(),
+                self.ue_aggregate_maximum_bit_rate_ul.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -36019,11 +37553,11 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let ue_aggregate_maximum_bit_rate_dl =
-                reading.member(&members, 0, BitRate::from_json)?;
+                reading.member(&members, 0, BitRate::from_tree)?;
             let ue_aggregate_maximum_bit_rate_ul =
-                reading.member(&members, 1, BitRate::from_json)?;
+                reading.member(&members, 1, BitRate::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ue_aggregate_maximum_bit_rate_dl,
                 ue_aggregate_maximum_bit_rate_ul,
@@ -36031,6 +37565,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEAggregateMaximumBitrate);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEAppLayerMeasConfig<'a> {
         pub container_for_app_layer_meas_config: Octets<'a>,
@@ -36118,21 +37654,22 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEAppLayerMeasConfig<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEAppLayerMeasConfig<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "containerForAppLayerMeasConfig",
                 json::octets(&self.container_for_app_layer_meas_config),
             );
-            members.put("areaScopeOfQMC", self.area_scope_of_qmc.to_json());
+            members.put("areaScopeOfQMC", self.area_scope_of_qmc.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -36142,10 +37679,12 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let container_for_app_layer_meas_config =
-                reading.member(&members, 0, |value, reading| reading.octets(value))?;
-            let area_scope_of_qmc = reading.member(&members, 1, AreaScopeOfQMC::from_json)?;
+                reading.member(&members, 0, |value, reading| {
+                    json::read_octets(reading, value)
+                })?;
+            let area_scope_of_qmc = reading.member(&members, 1, AreaScopeOfQMC::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 container_for_app_layer_meas_config,
                 area_scope_of_qmc,
@@ -36153,6 +37692,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEAppLayerMeasConfig<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum UECapabilityInfoRequest {
@@ -36187,14 +37728,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UECapabilityInfoRequest {
-        fn to_json(&self) -> Value {
+    impl Tree for UECapabilityInfoRequest {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UECapabilityInfoRequest);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct UEIdentityIndexValue(pub Bits);
     impl crate::message::__Field<Bits> for UEIdentityIndexValue {
@@ -36235,14 +37779,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEIdentityIndexValue {
-        fn to_json(&self) -> Value {
+    impl Tree for UEIdentityIndexValue {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 10, 10)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 10, 10)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 10, 10)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEIdentityIndexValue);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum UEPagingID<'a> {
@@ -36296,21 +37843,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEPagingID<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEPagingID<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::s_TMSI(value) => json::alternative("s-TMSI", value.to_json()),
-                Self::iMSI(value) => json::alternative("iMSI", value.to_json()),
+                Self::s_TMSI(value) => json::alternative("s-TMSI", value.to_tree()),
+                Self::iMSI(value) => json::alternative("iMSI", value.to_tree()),
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(value, &["s-TMSI", "iMSI"])?;
             Ok(match position {
-                0 => Self::s_TMSI(reading.within("s-TMSI", value, STMSI::from_json)?),
-                _ => Self::iMSI(reading.within("iMSI", value, IMSI::from_json)?),
+                0 => Self::s_TMSI(reading.within("s-TMSI", value, STMSI::from_tree)?),
+                _ => Self::iMSI(reading.within("iMSI", value, IMSI::from_tree)?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEPagingID<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapability<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for UERadioCapability<'a> {
@@ -36359,14 +37909,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UERadioCapability<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UERadioCapability<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UERadioCapability<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapabilityForPaging<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for UERadioCapabilityForPaging<'a> {
@@ -36415,14 +37968,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UERadioCapabilityForPaging<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UERadioCapabilityForPaging<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UERadioCapabilityForPaging<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapabilityID<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for UERadioCapabilityID<'a> {
@@ -36471,14 +38027,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UERadioCapabilityID<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UERadioCapabilityID<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UERadioCapabilityID<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UESecurityCapabilities<'a> {
         pub encryption_algorithms: EncryptionAlgorithms<'a>,
@@ -36563,21 +38122,22 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UESecurityCapabilities<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UESecurityCapabilities<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("encryptionAlgorithms", self.encryption_algorithms.to_json());
+            members.put("encryptionAlgorithms", self.encryption_algorithms.to_tree());
             members.put(
                 "integrityProtectionAlgorithms",
-                self.integrity_protection_algorithms.to_json(),
+                self.integrity_protection_algorithms.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -36587,11 +38147,11 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let encryption_algorithms =
-                reading.member(&members, 0, EncryptionAlgorithms::from_json)?;
+                reading.member(&members, 0, EncryptionAlgorithms::from_tree)?;
             let integrity_protection_algorithms =
-                reading.member(&members, 1, IntegrityProtectionAlgorithms::from_json)?;
+                reading.member(&members, 1, IntegrityProtectionAlgorithms::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 encryption_algorithms,
                 integrity_protection_algorithms,
@@ -36599,6 +38159,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UESecurityCapabilities<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UESidelinkAggregateMaximumBitrate {
         pub ue_sidelink_aggregate_maximum_bit_rate: BitRate,
@@ -36662,34 +38224,37 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UESidelinkAggregateMaximumBitrate {
-        fn to_json(&self) -> Value {
+    impl Tree for UESidelinkAggregateMaximumBitrate {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "uESidelinkAggregateMaximumBitRate",
-                self.ue_sidelink_aggregate_maximum_bit_rate.to_json(),
+                self.ue_sidelink_aggregate_maximum_bit_rate.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &["uESidelinkAggregateMaximumBitRate", "iE-Extensions"],
             )?;
             let ue_sidelink_aggregate_maximum_bit_rate =
-                reading.member(&members, 0, BitRate::from_json)?;
+                reading.member(&members, 0, BitRate::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ue_sidelink_aggregate_maximum_bit_rate,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UESidelinkAggregateMaximumBitrate);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum UEUserPlaneCIoTSupportIndicator {
@@ -36724,14 +38289,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEUserPlaneCIoTSupportIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for UEUserPlaneCIoTSupportIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEUserPlaneCIoTSupportIndicator);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ULCPSecurityInformation {
         pub ul_nas_mac: ULNASMAC,
@@ -36806,24 +38374,25 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ULCPSecurityInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for ULCPSecurityInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("ul-NAS-MAC", self.ul_nas_mac.to_json());
-            members.put("ul-NAS-Count", self.ul_nas_count.to_json());
+            members.put("ul-NAS-MAC", self.ul_nas_mac.to_tree());
+            members.put("ul-NAS-Count", self.ul_nas_count.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["ul-NAS-MAC", "ul-NAS-Count", "iE-Extensions"])?;
-            let ul_nas_mac = reading.member(&members, 0, ULNASMAC::from_json)?;
-            let ul_nas_count = reading.member(&members, 1, ULNASCount::from_json)?;
+            let ul_nas_mac = reading.member(&members, 0, ULNASMAC::from_tree)?;
+            let ul_nas_count = reading.member(&members, 1, ULNASCount::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 ul_nas_mac,
                 ul_nas_count,
@@ -36831,6 +38400,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ULCPSecurityInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ULNASCount(pub Bits);
     impl crate::message::__Field<Bits> for ULNASCount {
@@ -36871,14 +38442,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ULNASCount {
-        fn to_json(&self) -> Value {
+    impl Tree for ULNASCount {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 5, 5)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 5, 5)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 5, 5)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ULNASCount);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ULNASMAC(pub Bits);
     impl crate::message::__Field<Bits> for ULNASMAC {
@@ -36919,14 +38493,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ULNASMAC {
-        fn to_json(&self) -> Value {
+    impl Tree for ULNASMAC {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::bits(self.0, 16, 16)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.bits(value, 16, 16)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_bits(reading, value, 16, 16)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ULNASMAC);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct URIAddress<'a>(pub Cow<'a, str>);
     impl<'a> crate::message::__Field<Cow<'a, str>> for URIAddress<'a> {
@@ -36975,14 +38552,21 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for URIAddress<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for URIAddress<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.visible_string(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_text(
+                reading,
+                value,
+                json::Characters::Visible,
+            )?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(URIAddress<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum UnlicensedSpectrumRestriction {
@@ -37017,14 +38601,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UnlicensedSpectrumRestriction {
-        fn to_json(&self) -> Value {
+    impl Tree for UnlicensedSpectrumRestriction {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UnlicensedSpectrumRestriction);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UserLocationInformation {
         pub eutran_cgi: EUTRANCGI,
@@ -37099,23 +38686,24 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UserLocationInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for UserLocationInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("eutran-cgi", self.eutran_cgi.to_json());
-            members.put("tai", self.tai.to_json());
+            members.put("eutran-cgi", self.eutran_cgi.to_tree());
+            members.put("tai", self.tai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["eutran-cgi", "tai", "iE-Extensions"])?;
-            let eutran_cgi = reading.member(&members, 0, EUTRANCGI::from_json)?;
-            let tai = reading.member(&members, 1, TAI::from_json)?;
+            let eutran_cgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
+            let tai = reading.member(&members, 1, TAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 eutran_cgi,
                 tai,
@@ -37123,6 +38711,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UserLocationInformation);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct V2XServicesAuthorized {
         pub vehicle_ue: Option<VehicleUE>,
@@ -37211,30 +38801,31 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for V2XServicesAuthorized {
-        fn to_json(&self) -> Value {
+    impl Tree for V2XServicesAuthorized {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put_optional(
                 "vehicleUE",
-                self.vehicle_ue.as_ref().map(|value| value.to_json()),
+                self.vehicle_ue.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "pedestrianUE",
-                self.pedestrian_ue.as_ref().map(|value| value.to_json()),
+                self.pedestrian_ue.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["vehicleUE", "pedestrianUE", "iE-Extensions"])?;
-            let vehicle_ue = reading.optional(&members, 0, VehicleUE::from_json)?;
-            let pedestrian_ue = reading.optional(&members, 1, PedestrianUE::from_json)?;
+            let vehicle_ue = reading.optional(&members, 0, VehicleUE::from_tree)?;
+            let pedestrian_ue = reading.optional(&members, 1, PedestrianUE::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 vehicle_ue,
                 pedestrian_ue,
@@ -37242,6 +38833,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(V2XServicesAuthorized);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum VehicleUE {
@@ -37277,14 +38870,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for VehicleUE {
-        fn to_json(&self) -> Value {
+    impl Tree for VehicleUE {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(VehicleUE);
     #[doc = " First bit: QoE Measurement for streaming service"]
     #[doc = " Second bit: QoE Measurement for MTSI service"]
     #[doc = " Note that undefined bits are considered as a spare bit and spare bits shall be set to 0 by the transmitter and shall be ignored by the receiver."]
@@ -37324,14 +38920,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for VoiceSupportMatchIndicator {
-        fn to_json(&self) -> Value {
+    impl Tree for VoiceSupportMatchIndicator {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(VoiceSupportMatchIndicator);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum WLANMeasConfig {
@@ -37366,14 +38965,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WLANMeasConfig {
-        fn to_json(&self) -> Value {
+    impl Tree for WLANMeasConfig {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WLANMeasConfig);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WLANMeasConfigNameList<'a>(pub Vec<WLANName<'a>>);
     impl<'a> crate::message::__Field<Vec<WLANName<'a>>> for WLANMeasConfigNameList<'a> {
@@ -37419,16 +39021,19 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WLANMeasConfigNameList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for WLANMeasConfigNameList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                WLANName::from_json(value, reading)
+                WLANName::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WLANMeasConfigNameList<'a>);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -37464,14 +39069,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WLANMeasurementConfigurationWlanRssi {
-        fn to_json(&self) -> Value {
+    impl Tree for WLANMeasurementConfigurationWlanRssi {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WLANMeasurementConfigurationWlanRssi);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -37507,14 +39115,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WLANMeasurementConfigurationWlanRtt {
-        fn to_json(&self) -> Value {
+    impl Tree for WLANMeasurementConfigurationWlanRtt {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WLANMeasurementConfigurationWlanRtt);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WLANMeasurementConfiguration<'a> {
         pub wlan_meas_config: WLANMeasConfig,
@@ -37645,31 +39256,32 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WLANMeasurementConfiguration<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for WLANMeasurementConfiguration<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("wlanMeasConfig", self.wlan_meas_config.to_json());
+            members.put("wlanMeasConfig", self.wlan_meas_config.to_tree());
             members.put_optional(
                 "wlanMeasConfigNameList",
                 self.wlan_meas_config_name_list
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "wlan-rssi",
-                self.wlan_rssi.as_ref().map(|value| value.to_json()),
+                self.wlan_rssi.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "wlan-rtt",
-                self.wlan_rtt.as_ref().map(|value| value.to_json()),
+                self.wlan_rtt.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -37680,15 +39292,15 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let wlan_meas_config = reading.member(&members, 0, WLANMeasConfig::from_json)?;
+            let wlan_meas_config = reading.member(&members, 0, WLANMeasConfig::from_tree)?;
             let wlan_meas_config_name_list =
-                reading.optional(&members, 1, WLANMeasConfigNameList::from_json)?;
+                reading.optional(&members, 1, WLANMeasConfigNameList::from_tree)?;
             let wlan_rssi =
-                reading.optional(&members, 2, WLANMeasurementConfigurationWlanRssi::from_json)?;
+                reading.optional(&members, 2, WLANMeasurementConfigurationWlanRssi::from_tree)?;
             let wlan_rtt =
-                reading.optional(&members, 3, WLANMeasurementConfigurationWlanRtt::from_json)?;
+                reading.optional(&members, 3, WLANMeasurementConfigurationWlanRtt::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 wlan_meas_config,
                 wlan_meas_config_name_list,
@@ -37698,6 +39310,8 @@ pub mod s1_ap_ies {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WLANMeasurementConfiguration<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WLANName<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for WLANName<'a> {
@@ -37746,14 +39360,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WLANName<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for WLANName<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WLANName<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WUSAssistanceInformation {
         pub paging_probability_information: PagingProbabilityInformation,
@@ -37818,32 +39435,35 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WUSAssistanceInformation {
-        fn to_json(&self) -> Value {
+    impl Tree for WUSAssistanceInformation {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "pagingProbabilityInformation",
-                self.paging_probability_information.to_json(),
+                self.paging_probability_information.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pagingProbabilityInformation", "iE-Extensions"])?;
             let paging_probability_information =
-                reading.member(&members, 0, PagingProbabilityInformation::from_json)?;
+                reading.member(&members, 0, PagingProbabilityInformation::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 paging_probability_information,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WUSAssistanceInformation);
     #[doc = " W"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WarningAreaCoordinates<'a>(pub Octets<'a>);
@@ -37893,14 +39513,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WarningAreaCoordinates<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for WarningAreaCoordinates<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WarningAreaCoordinates<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum WarningAreaList {
@@ -37955,19 +39578,20 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WarningAreaList {
-        fn to_json(&self) -> Value {
+    impl Tree for WarningAreaList {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::cellIDList(value) => json::alternative("cellIDList", value.to_json()),
+                Self::cellIDList(value) => json::alternative("cellIDList", value.to_tree()),
                 Self::trackingAreaListforWarning(value) => {
-                    json::alternative("trackingAreaListforWarning", value.to_json())
+                    json::alternative("trackingAreaListforWarning", value.to_tree())
                 }
                 Self::emergencyAreaIDList(value) => {
-                    json::alternative("emergencyAreaIDList", value.to_json())
+                    json::alternative("emergencyAreaIDList", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &[
@@ -37977,20 +39601,22 @@ pub mod s1_ap_ies {
                 ],
             )?;
             Ok(match position {
-                0 => Self::cellIDList(reading.within("cellIDList", value, ECGIList::from_json)?),
+                0 => Self::cellIDList(reading.within("cellIDList", value, ECGIList::from_tree)?),
                 1 => Self::trackingAreaListforWarning(reading.within(
                     "trackingAreaListforWarning",
                     value,
-                    TAIListforWarning::from_json,
+                    TAIListforWarning::from_tree,
                 )?),
                 _ => Self::emergencyAreaIDList(reading.within(
                     "emergencyAreaIDList",
                     value,
-                    EmergencyAreaIDList::from_json,
+                    EmergencyAreaIDList::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WarningAreaList);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WarningMessageContents<'a>(pub Octets<'a>);
     impl<'a> crate::message::__Field<Octets<'a>> for WarningMessageContents<'a> {
@@ -38039,14 +39665,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WarningMessageContents<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for WarningMessageContents<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octets(value)?))
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self(json::read_octets(reading, value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WarningMessageContents<'a>);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for WarningSecurityInfo {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -38090,14 +39719,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WarningSecurityInfo {
-        fn to_json(&self) -> Value {
+    impl Tree for WarningSecurityInfo {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<50>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WarningSecurityInfo);
     /// The octets, in hexadecimal.
     impl core::fmt::Display for WarningType {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -38141,14 +39773,17 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WarningType {
-        fn to_json(&self) -> Value {
+    impl Tree for WarningType {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::octets(&self.0)
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.octet_array::<2>(value)?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WarningType);
     #[doc = " X"]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct X2TNLConfigurationInfo<'a> {
@@ -38223,32 +39858,35 @@ pub mod s1_ap_ies {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for X2TNLConfigurationInfo<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for X2TNLConfigurationInfo<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
             members.put(
                 "eNBX2TransportLayerAddresses",
-                self.enb_x2_transport_layer_addresses.to_json(),
+                self.enb_x2_transport_layer_addresses.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["eNBX2TransportLayerAddresses", "iE-Extensions"])?;
             let enb_x2_transport_layer_addresses =
-                reading.member(&members, 0, ENBX2TLAs::from_json)?;
+                reading.member(&members, 0, ENBX2TLAs::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 enb_x2_transport_layer_addresses,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(X2TNLConfigurationInfo<'a>);
 }
 #[allow(
     non_camel_case_types,
@@ -38263,7 +39901,7 @@ pub mod s1_ap_pdu_contents {
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
     #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Json, Reading, Refused};
+    use oxirush_aper::json::{self, Reading, Refused, Tree};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer,
@@ -38380,26 +40018,27 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CSGMembershipInfo {
-        fn to_json(&self) -> Value {
+    impl Tree for CSGMembershipInfo {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("cSGMembershipStatus", self.csg_membership_status.to_json());
-            members.put("cSG-Id", self.csg_id.to_json());
+            members.put("cSGMembershipStatus", self.csg_membership_status.to_tree());
+            members.put("cSG-Id", self.csg_id.to_tree());
             members.put_optional(
                 "cellAccessMode",
-                self.cell_access_mode.as_ref().map(|value| value.to_json()),
+                self.cell_access_mode.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "pLMNidentity",
-                self.plmn_identity.as_ref().map(|value| value.to_json()),
+                self.plmn_identity.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -38411,12 +40050,12 @@ pub mod s1_ap_pdu_contents {
                 ],
             )?;
             let csg_membership_status =
-                reading.member(&members, 0, CSGMembershipStatus::from_json)?;
-            let csg_id = reading.member(&members, 1, CSGId::from_json)?;
-            let cell_access_mode = reading.optional(&members, 2, CellAccessMode::from_json)?;
-            let plmn_identity = reading.optional(&members, 3, PLMNidentity::from_json)?;
+                reading.member(&members, 0, CSGMembershipStatus::from_tree)?;
+            let csg_id = reading.member(&members, 1, CSGId::from_tree)?;
+            let cell_access_mode = reading.optional(&members, 2, CellAccessMode::from_tree)?;
+            let plmn_identity = reading.optional(&members, 3, PLMNidentity::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 csg_membership_status,
                 csg_id,
@@ -38426,6 +40065,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CSGMembershipInfo);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " CELL TRAFFIC TRACE ELEMENTARY PROCEDURE"]
@@ -38478,18 +40119,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for CellTrafficTrace<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for CellTrafficTrace<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(CellTrafficTrace<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Connection Establishment Indication"]
@@ -38537,18 +40181,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ConnectionEstablishmentIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ConnectionEstablishmentIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ConnectionEstablishmentIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " DEACTIVATE TRACE ELEMENTARY PROCEDURE"]
@@ -38601,18 +40248,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DeactivateTrace<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for DeactivateTrace<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DeactivateTrace<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " NAS TRANSPORT ELEMENTARY PROCEDURES"]
@@ -38665,18 +40315,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DownlinkNASTransport<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for DownlinkNASTransport<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DownlinkNASTransport<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " DOWNLINK NON UE ASSOCIATED LPPA TRANSPORT"]
@@ -38724,18 +40377,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DownlinkNonUEAssociatedLPPaTransport<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for DownlinkNonUEAssociatedLPPaTransport<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DownlinkNonUEAssociatedLPPaTransport<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " DOWNLINK S1 CDMA2000 TUNNELLING ELEMENTARY PROCEDURE"]
@@ -38788,18 +40444,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DownlinkS1cdma2000tunnelling<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for DownlinkS1cdma2000tunnelling<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DownlinkS1cdma2000tunnelling<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " LPPA TRANSPORT ELEMENTARY PROCEDURES"]
@@ -38852,18 +40511,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for DownlinkUEAssociatedLPPaTransport<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for DownlinkUEAssociatedLPPaTransport<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(DownlinkUEAssociatedLPPaTransport<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABAdmittedItem<'a> {
         pub e_rab_id: ERABID,
@@ -39039,42 +40701,43 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABAdmittedItem<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABAdmittedItem<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
-            members.put("gTP-TEID", self.gtp_teid.to_json());
+            members.put("gTP-TEID", self.gtp_teid.to_tree());
             members.put_optional(
                 "dL-transportLayerAddress",
                 self.dl_transport_layer_address
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "dL-gTP-TEID",
-                self.dl_gtp_teid.as_ref().map(|value| value.to_json()),
+                self.dl_gtp_teid.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "uL-TransportLayerAddress",
                 self.ul_transport_layer_address
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "uL-GTP-TEID",
-                self.ul_gtp_teid.as_ref().map(|value| value.to_json()),
+                self.ul_gtp_teid.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -39088,18 +40751,18 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_json)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_json)?;
+                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
+            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
             let dl_transport_layer_address =
-                reading.optional(&members, 3, TransportLayerAddress::from_json)?;
-            let dl_gtp_teid = reading.optional(&members, 4, GTPTEID::from_json)?;
+                reading.optional(&members, 3, TransportLayerAddress::from_tree)?;
+            let dl_gtp_teid = reading.optional(&members, 4, GTPTEID::from_tree)?;
             let ul_transport_layer_address =
-                reading.optional(&members, 5, TransportLayerAddress::from_json)?;
-            let ul_gtp_teid = reading.optional(&members, 6, GTPTEID::from_json)?;
+                reading.optional(&members, 5, TransportLayerAddress::from_tree)?;
+            let ul_gtp_teid = reading.optional(&members, 6, GTPTEID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 7, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 7, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -39112,6 +40775,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABAdmittedItem<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABAdmittedList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABAdmittedList<'a> {
@@ -39157,16 +40822,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABAdmittedList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABAdmittedList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABAdmittedList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABDataForwardingItem<'a> {
         pub e_rab_id: ERABID,
@@ -39318,37 +40986,38 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABDataForwardingItem<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABDataForwardingItem<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put_optional(
                 "dL-transportLayerAddress",
                 self.dl_transport_layer_address
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "dL-gTP-TEID",
-                self.dl_gtp_teid.as_ref().map(|value| value.to_json()),
+                self.dl_gtp_teid.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "uL-TransportLayerAddress",
                 self.ul_transport_layer_address
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "uL-GTP-TEID",
-                self.ul_gtp_teid.as_ref().map(|value| value.to_json()),
+                self.ul_gtp_teid.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -39360,15 +41029,15 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let dl_transport_layer_address =
-                reading.optional(&members, 1, TransportLayerAddress::from_json)?;
-            let dl_gtp_teid = reading.optional(&members, 2, GTPTEID::from_json)?;
+                reading.optional(&members, 1, TransportLayerAddress::from_tree)?;
+            let dl_gtp_teid = reading.optional(&members, 2, GTPTEID::from_tree)?;
             let ul_transport_layer_address =
-                reading.optional(&members, 3, TransportLayerAddress::from_json)?;
-            let ul_gtp_teid = reading.optional(&members, 4, GTPTEID::from_json)?;
+                reading.optional(&members, 3, TransportLayerAddress::from_tree)?;
+            let ul_gtp_teid = reading.optional(&members, 4, GTPTEID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 dl_transport_layer_address,
@@ -39379,6 +41048,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABDataForwardingItem<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToResumeItemResumeReq {
         pub e_rab_id: ERABID,
@@ -39453,23 +41124,24 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABFailedToResumeItemResumeReq {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABFailedToResumeItemResumeReq {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
-            members.put("cause", self.cause.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
+            members.put("cause", self.cause.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "cause", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
-            let cause = reading.member(&members, 1, Cause::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
+            let cause = reading.member(&members, 1, Cause::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 cause,
@@ -39477,6 +41149,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABFailedToResumeItemResumeReq);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToResumeItemResumeRes {
         pub e_rab_id: ERABID,
@@ -39551,23 +41225,24 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABFailedToResumeItemResumeRes {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABFailedToResumeItemResumeRes {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
-            members.put("cause", self.cause.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
+            members.put("cause", self.cause.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "cause", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
-            let cause = reading.member(&members, 1, Cause::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
+            let cause = reading.member(&members, 1, Cause::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 cause,
@@ -39575,6 +41250,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABFailedToResumeItemResumeRes);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToResumeListResumeReq<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABFailedToResumeListResumeReq<'a> {
@@ -39622,16 +41299,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABFailedToResumeListResumeReq<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABFailedToResumeListResumeReq<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABFailedToResumeListResumeReq<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToResumeListResumeRes<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABFailedToResumeListResumeRes<'a> {
@@ -39679,16 +41359,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABFailedToResumeListResumeRes<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABFailedToResumeListResumeRes<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABFailedToResumeListResumeRes<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToSetupItemHOReqAck {
         pub e_rab_id: ERABID,
@@ -39763,23 +41446,24 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABFailedToSetupItemHOReqAck {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABFailedToSetupItemHOReqAck {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
-            members.put("cause", self.cause.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
+            members.put("cause", self.cause.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "cause", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
-            let cause = reading.member(&members, 1, Cause::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
+            let cause = reading.member(&members, 1, Cause::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 cause,
@@ -39787,6 +41471,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABFailedToSetupItemHOReqAck);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedtoSetupListHOReqAck<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABFailedtoSetupListHOReqAck<'a> {
@@ -39834,16 +41520,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABFailedtoSetupListHOReqAck<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABFailedtoSetupListHOReqAck<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABFailedtoSetupListHOReqAck<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB Modification Confirm"]
@@ -39891,18 +41580,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABModificationConfirm<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABModificationConfirm<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABModificationConfirm<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB MODIFICATION INDICATION ELEMENTARY PROCEDURE"]
@@ -39955,18 +41647,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABModificationIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABModificationIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABModificationIndication<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyItemBearerModConf {
         pub e_rab_id: ERABID,
@@ -40030,27 +41725,30 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABModifyItemBearerModConf {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABModifyItemBearerModConf {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABModifyItemBearerModConf);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyItemBearerModRes {
         pub e_rab_id: ERABID,
@@ -40114,27 +41812,30 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABModifyItemBearerModRes {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABModifyItemBearerModRes {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABModifyItemBearerModRes);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyListBearerModConf<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABModifyListBearerModConf<'a> {
@@ -40180,16 +41881,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABModifyListBearerModConf<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABModifyListBearerModConf<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABModifyListBearerModConf<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyListBearerModRes<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABModifyListBearerModRes<'a> {
@@ -40235,16 +41939,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABModifyListBearerModRes<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABModifyListBearerModRes<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABModifyListBearerModRes<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB MODIFY ELEMENTARY PROCEDURE"]
@@ -40297,18 +42004,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABModifyRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABModifyRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABModifyRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB Modify Response"]
@@ -40356,18 +42066,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABModifyResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABModifyResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABModifyResponse<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABNotToBeModifiedItemBearerModInd<'a> {
         pub e_rab_id: ERABID,
@@ -40463,22 +42176,23 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABNotToBeModifiedItemBearerModInd<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABNotToBeModifiedItemBearerModInd<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
-            members.put("dL-GTP-TEID", self.dl_gtp_teid.to_json());
+            members.put("dL-GTP-TEID", self.dl_gtp_teid.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -40488,12 +42202,12 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_json)?;
-            let dl_gtp_teid = reading.member(&members, 2, GTPTEID::from_json)?;
+                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
+            let dl_gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -40502,6 +42216,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABNotToBeModifiedItemBearerModInd<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABNotToBeModifiedListBearerModInd<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>>
@@ -40551,16 +42267,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABNotToBeModifiedListBearerModInd<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABNotToBeModifiedListBearerModInd<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABNotToBeModifiedListBearerModInd<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB RELEASE ELEMENTARY PROCEDURE"]
@@ -40613,18 +42332,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABReleaseCommand<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABReleaseCommand<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABReleaseCommand<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB RELEASE INDICATION ELEMENTARY PROCEDURE"]
@@ -40677,18 +42399,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABReleaseIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABReleaseIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABReleaseIndication<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABReleaseItemBearerRelComp {
         pub e_rab_id: ERABID,
@@ -40752,27 +42477,30 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABReleaseItemBearerRelComp {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABReleaseItemBearerRelComp {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 ie_extensions,
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABReleaseItemBearerRelComp);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABReleaseListBearerRelComp<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABReleaseListBearerRelComp<'a> {
@@ -40818,16 +42546,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABReleaseListBearerRelComp<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABReleaseListBearerRelComp<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABReleaseListBearerRelComp<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB Release Response"]
@@ -40875,18 +42606,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABReleaseResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABReleaseResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABReleaseResponse<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupItemBearerSURes<'a> {
         pub e_rab_id: ERABID,
@@ -40982,22 +42716,23 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABSetupItemBearerSURes<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABSetupItemBearerSURes<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
-            members.put("gTP-TEID", self.gtp_teid.to_json());
+            members.put("gTP-TEID", self.gtp_teid.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -41007,12 +42742,12 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_json)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_json)?;
+                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
+            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -41021,6 +42756,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABSetupItemBearerSURes<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupItemCtxtSURes<'a> {
         pub e_rab_id: ERABID,
@@ -41116,22 +42853,23 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABSetupItemCtxtSURes<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABSetupItemCtxtSURes<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
-            members.put("gTP-TEID", self.gtp_teid.to_json());
+            members.put("gTP-TEID", self.gtp_teid.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -41141,12 +42879,12 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_json)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_json)?;
+                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
+            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -41155,6 +42893,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABSetupItemCtxtSURes<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupListBearerSURes<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABSetupListBearerSURes<'a> {
@@ -41200,16 +42940,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABSetupListBearerSURes<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABSetupListBearerSURes<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABSetupListBearerSURes<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupListCtxtSURes<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABSetupListCtxtSURes<'a> {
@@ -41255,16 +42998,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABSetupListCtxtSURes<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABSetupListCtxtSURes<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABSetupListCtxtSURes<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB SETUP ELEMENTARY PROCEDURE"]
@@ -41317,18 +43063,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABSetupRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABSetupRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABSetupRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " E-RAB Setup Response"]
@@ -41376,18 +43125,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABSetupResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABSetupResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABSetupResponse<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSubjecttoDataForwardingList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABSubjecttoDataForwardingList<'a> {
@@ -41435,16 +43187,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABSubjecttoDataForwardingList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABSubjecttoDataForwardingList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABSubjecttoDataForwardingList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeModifiedItemBearerModInd<'a> {
         pub e_rab_id: ERABID,
@@ -41540,22 +43295,23 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeModifiedItemBearerModInd<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABToBeModifiedItemBearerModInd<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
-            members.put("dL-GTP-TEID", self.dl_gtp_teid.to_json());
+            members.put("dL-GTP-TEID", self.dl_gtp_teid.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -41565,12 +43321,12 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_json)?;
-            let dl_gtp_teid = reading.member(&members, 2, GTPTEID::from_json)?;
+                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
+            let dl_gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -41579,6 +43335,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeModifiedItemBearerModInd<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeModifiedItemBearerModReq<'a> {
         pub e_rab_id: ERABID,
@@ -41674,22 +43432,23 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeModifiedItemBearerModReq<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABToBeModifiedItemBearerModReq<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "e-RABLevelQoSParameters",
-                self.e_rab_level_qos_parameters.to_json(),
+                self.e_rab_level_qos_parameters.to_tree(),
             );
-            members.put("nAS-PDU", self.nas_pdu.to_json());
+            members.put("nAS-PDU", self.nas_pdu.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -41699,12 +43458,12 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let e_rab_level_qos_parameters =
-                reading.member(&members, 1, ERABLevelQoSParameters::from_json)?;
-            let nas_pdu = reading.member(&members, 2, NASPDU::from_json)?;
+                reading.member(&members, 1, ERABLevelQoSParameters::from_tree)?;
+            let nas_pdu = reading.member(&members, 2, NASPDU::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 e_rab_level_qos_parameters,
@@ -41713,6 +43472,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeModifiedItemBearerModReq<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeModifiedListBearerModInd<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>>
@@ -41762,16 +43523,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeModifiedListBearerModInd<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABToBeModifiedListBearerModInd<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeModifiedListBearerModInd<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeModifiedListBearerModReq<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>>
@@ -41821,16 +43585,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeModifiedListBearerModReq<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABToBeModifiedListBearerModReq<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeModifiedListBearerModReq<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupItemBearerSUReq<'a> {
         pub e_rab_id: ERABID,
@@ -41950,27 +43717,28 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeSetupItemBearerSUReq<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABToBeSetupItemBearerSUReq<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "e-RABlevelQoSParameters",
-                self.e_rab_level_qos_parameters.to_json(),
+                self.e_rab_level_qos_parameters.to_tree(),
             );
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
-            members.put("gTP-TEID", self.gtp_teid.to_json());
-            members.put("nAS-PDU", self.nas_pdu.to_json());
+            members.put("gTP-TEID", self.gtp_teid.to_tree());
+            members.put("nAS-PDU", self.nas_pdu.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -41982,15 +43750,15 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let e_rab_level_qos_parameters =
-                reading.member(&members, 1, ERABLevelQoSParameters::from_json)?;
+                reading.member(&members, 1, ERABLevelQoSParameters::from_tree)?;
             let transport_layer_address =
-                reading.member(&members, 2, TransportLayerAddress::from_json)?;
-            let gtp_teid = reading.member(&members, 3, GTPTEID::from_json)?;
-            let nas_pdu = reading.member(&members, 4, NASPDU::from_json)?;
+                reading.member(&members, 2, TransportLayerAddress::from_tree)?;
+            let gtp_teid = reading.member(&members, 3, GTPTEID::from_tree)?;
+            let nas_pdu = reading.member(&members, 4, NASPDU::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 e_rab_level_qos_parameters,
@@ -42001,6 +43769,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeSetupItemBearerSUReq<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupItemCtxtSUReq<'a> {
         pub e_rab_id: ERABID,
@@ -42127,30 +43897,31 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeSetupItemCtxtSUReq<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABToBeSetupItemCtxtSUReq<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "e-RABlevelQoSParameters",
-                self.e_rab_level_qos_parameters.to_json(),
+                self.e_rab_level_qos_parameters.to_tree(),
             );
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
-            members.put("gTP-TEID", self.gtp_teid.to_json());
+            members.put("gTP-TEID", self.gtp_teid.to_tree());
             members.put_optional(
                 "nAS-PDU",
-                self.nas_pdu.as_ref().map(|value| value.to_json()),
+                self.nas_pdu.as_ref().map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -42162,15 +43933,15 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let e_rab_level_qos_parameters =
-                reading.member(&members, 1, ERABLevelQoSParameters::from_json)?;
+                reading.member(&members, 1, ERABLevelQoSParameters::from_tree)?;
             let transport_layer_address =
-                reading.member(&members, 2, TransportLayerAddress::from_json)?;
-            let gtp_teid = reading.member(&members, 3, GTPTEID::from_json)?;
-            let nas_pdu = reading.optional(&members, 4, NASPDU::from_json)?;
+                reading.member(&members, 2, TransportLayerAddress::from_tree)?;
+            let gtp_teid = reading.member(&members, 3, GTPTEID::from_tree)?;
+            let nas_pdu = reading.optional(&members, 4, NASPDU::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 e_rab_level_qos_parameters,
@@ -42181,6 +43952,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeSetupItemCtxtSUReq<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupItemHOReq<'a> {
         pub e_rab_id: ERABID,
@@ -42288,26 +44061,27 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeSetupItemHOReq<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABToBeSetupItemHOReq<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
-            members.put("gTP-TEID", self.gtp_teid.to_json());
+            members.put("gTP-TEID", self.gtp_teid.to_tree());
             members.put(
                 "e-RABlevelQosParameters",
-                self.e_rab_level_qos_parameters.to_json(),
+                self.e_rab_level_qos_parameters.to_tree(),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -42318,14 +44092,14 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_json)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_json)?;
+                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
+            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
             let e_rab_level_qos_parameters =
-                reading.member(&members, 3, ERABLevelQoSParameters::from_json)?;
+                reading.member(&members, 3, ERABLevelQoSParameters::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -42335,6 +44109,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeSetupItemHOReq<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupListBearerSUReq<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABToBeSetupListBearerSUReq<'a> {
@@ -42380,16 +44156,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeSetupListBearerSUReq<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABToBeSetupListBearerSUReq<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeSetupListBearerSUReq<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupListCtxtSUReq<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABToBeSetupListCtxtSUReq<'a> {
@@ -42435,16 +44214,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeSetupListCtxtSUReq<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABToBeSetupListCtxtSUReq<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeSetupListCtxtSUReq<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupListHOReq<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABToBeSetupListHOReq<'a> {
@@ -42490,16 +44272,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeSetupListHOReq<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABToBeSetupListHOReq<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeSetupListHOReq<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSwitchedDLItem<'a> {
         pub e_rab_id: ERABID,
@@ -42595,22 +44380,23 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeSwitchedDLItem<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABToBeSwitchedDLItem<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
-            members.put("gTP-TEID", self.gtp_teid.to_json());
+            members.put("gTP-TEID", self.gtp_teid.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -42620,12 +44406,12 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_json)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_json)?;
+                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
+            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -42634,6 +44420,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeSwitchedDLItem<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSwitchedDLList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABToBeSwitchedDLList<'a> {
@@ -42679,16 +44467,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeSwitchedDLList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABToBeSwitchedDLList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeSwitchedDLList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSwitchedULItem<'a> {
         pub e_rab_id: ERABID,
@@ -42784,22 +44575,23 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeSwitchedULItem<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABToBeSwitchedULItem<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put(
                 "transportLayerAddress",
-                self.transport_layer_address.to_json(),
+                self.transport_layer_address.to_tree(),
             );
-            members.put("gTP-TEID", self.gtp_teid.to_json());
+            members.put("gTP-TEID", self.gtp_teid.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(
                 value,
                 &[
@@ -42809,12 +44601,12 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_json)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_json)?;
+                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
+            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -42823,6 +44615,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeSwitchedULItem<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSwitchedULList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABToBeSwitchedULList<'a> {
@@ -42868,16 +44662,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeSwitchedULList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABToBeSwitchedULList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeSwitchedULList<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeUpdatedItem {
         pub e_rab_id: ERABID,
@@ -42959,30 +44756,31 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeUpdatedItem {
-        fn to_json(&self) -> Value {
+    impl Tree for ERABToBeUpdatedItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_json());
+            members.put("e-RAB-ID", self.e_rab_id.to_tree());
             members.put_optional(
                 "securityIndication",
                 self.security_indication
                     .as_ref()
-                    .map(|value| value.to_json()),
+                    .map(|value| value.to_tree()),
             );
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["e-RAB-ID", "securityIndication", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_json)?;
+            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
             let security_indication =
-                reading.optional(&members, 1, SecurityIndication::from_json)?;
+                reading.optional(&members, 1, SecurityIndication::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
             Ok(Self {
                 e_rab_id,
                 security_indication,
@@ -42990,6 +44788,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeUpdatedItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeUpdatedList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for ERABToBeUpdatedList<'a> {
@@ -43035,16 +44835,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ERABToBeUpdatedList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for ERABToBeUpdatedList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ERABToBeUpdatedList<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB CP Relocation Indication"]
@@ -43092,18 +44895,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBCPRelocationIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBCPRelocationIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBCPRelocationIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB CONFIGURATION TRANSFER ELEMENTARY PROCEDURE"]
@@ -43156,18 +44962,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBConfigurationTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBConfigurationTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBConfigurationTransfer<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " ENB CONFIGURATION UPDATE ELEMENTARY PROCEDURE"]
@@ -43220,18 +45029,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBConfigurationUpdate<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBConfigurationUpdate<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBConfigurationUpdate<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB Configuration Update Acknowledge"]
@@ -43279,18 +45091,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBConfigurationUpdateAcknowledge<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBConfigurationUpdateAcknowledge<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBConfigurationUpdateAcknowledge<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB Configuration Update Failure"]
@@ -43338,18 +45153,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBConfigurationUpdateFailure<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBConfigurationUpdateFailure<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBConfigurationUpdateFailure<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB DIRECT INFORMATION TRANSFER ELEMENTARY PROCEDURE"]
@@ -43402,18 +45220,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBDirectInformationTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBDirectInformationTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBDirectInformationTransfer<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB EARLY STATUS TRANSFER ELEMENTARY PROCEDURE"]
@@ -43466,18 +45287,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBEarlyStatusTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBEarlyStatusTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBEarlyStatusTransfer<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " eNB STATUS TRANSFER ELEMENTARY PROCEDURE"]
@@ -43530,18 +45354,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ENBStatusTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ENBStatusTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ENBStatusTransfer<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " ERROR INDICATION ELEMENTARY PROCEDURE"]
@@ -43594,18 +45421,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ErrorIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ErrorIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ErrorIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " HANDOVER CANCEL ELEMENTARY PROCEDURE"]
@@ -43658,18 +45488,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverCancel<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverCancel<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverCancel<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Handover Cancel Request Acknowledge"]
@@ -43717,18 +45550,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverCancelAcknowledge<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverCancelAcknowledge<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverCancelAcknowledge<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Handover Command"]
@@ -43776,18 +45612,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverCommand<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverCommand<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverCommand<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Handover Failure"]
@@ -43835,18 +45674,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverFailure<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverFailure<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverFailure<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " HANDOVER NOTIFICATION ELEMENTARY PROCEDURE"]
@@ -43899,18 +45741,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverNotify<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverNotify<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverNotify<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Handover Preparation Failure"]
@@ -43958,18 +45803,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverPreparationFailure<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverPreparationFailure<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverPreparationFailure<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " HANDOVER RESOURCE ALLOCATION ELEMENTARY PROCEDURE"]
@@ -44022,18 +45870,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Handover Request Acknowledge"]
@@ -44081,18 +45932,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverRequestAcknowledge<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverRequestAcknowledge<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverRequestAcknowledge<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " HANDOVER PREPARATION ELEMENTARY PROCEDURE"]
@@ -44145,18 +45999,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverRequired<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverRequired<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverRequired<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " HANDOVER SUCCESS ELEMENTARY PROCEDURE"]
@@ -44209,18 +46066,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for HandoverSuccess<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for HandoverSuccess<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(HandoverSuccess<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Initial Context Setup Failure"]
@@ -44268,18 +46128,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InitialContextSetupFailure<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for InitialContextSetupFailure<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InitialContextSetupFailure<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " INITIAL CONTEXT SETUP ELEMENTARY PROCEDURE"]
@@ -44332,18 +46195,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InitialContextSetupRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for InitialContextSetupRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InitialContextSetupRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Initial Context Setup Response"]
@@ -44391,18 +46257,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InitialContextSetupResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for InitialContextSetupResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InitialContextSetupResponse<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " INITIAL UE MESSAGE"]
@@ -44450,18 +46319,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InitialUEMessage<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for InitialUEMessage<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InitialUEMessage<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum InterSystemInformationTransferType<'a> {
@@ -44506,24 +46378,27 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InterSystemInformationTransferType<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for InterSystemInformationTransferType<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::rIMTransfer(value) => json::alternative("rIMTransfer", value.to_json()),
+                Self::rIMTransfer(value) => json::alternative("rIMTransfer", value.to_tree()),
             }
         }
         #[allow(clippy::match_single_binding)]
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(value, &["rIMTransfer"])?;
             Ok(match position {
                 _ => Self::rIMTransfer(reading.within(
                     "rIMTransfer",
                     value,
-                    RIMTransfer::from_json,
+                    RIMTransfer::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InterSystemInformationTransferType<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " KILL PROCEDURE"]
@@ -44576,18 +46451,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for KillRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for KillRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(KillRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Kill Response"]
@@ -44635,18 +46513,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for KillResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for KillResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(KillResponse<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Location Report"]
@@ -44694,18 +46575,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LocationReport<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for LocationReport<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LocationReport<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " LOCATION ELEMENTARY PROCEDURES"]
@@ -44758,18 +46642,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LocationReportingControl<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for LocationReportingControl<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LocationReportingControl<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Location Report Failure Indication"]
@@ -44817,18 +46704,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for LocationReportingFailureIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for LocationReportingFailureIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(LocationReportingFailureIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME CP Relocation Indication"]
@@ -44876,18 +46766,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMECPRelocationIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MMECPRelocationIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMECPRelocationIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME CONFIGURATION TRANSFER ELEMENTARY PROCEDURE"]
@@ -44940,18 +46833,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEConfigurationTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MMEConfigurationTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMEConfigurationTransfer<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME CONFIGURATION UPDATE ELEMENTARY PROCEDURE"]
@@ -45004,18 +46900,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEConfigurationUpdate<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MMEConfigurationUpdate<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMEConfigurationUpdate<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME Configuration Update Acknowledge"]
@@ -45063,18 +46962,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEConfigurationUpdateAcknowledge<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MMEConfigurationUpdateAcknowledge<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMEConfigurationUpdateAcknowledge<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME Configuration Update Failure"]
@@ -45122,18 +47024,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEConfigurationUpdateFailure<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MMEConfigurationUpdateFailure<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMEConfigurationUpdateFailure<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME DIRECT INFORMATION TRANSFER ELEMENTARY PROCEDURE"]
@@ -45186,18 +47091,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEDirectInformationTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MMEDirectInformationTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMEDirectInformationTransfer<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME EARLY STATUS TRANSFER ELEMENTARY PROCEDURE"]
@@ -45250,18 +47158,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEEarlyStatusTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MMEEarlyStatusTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMEEarlyStatusTransfer<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " MME STATUS TRANSFER ELEMENTARY PROCEDURE"]
@@ -45314,18 +47225,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for MMEStatusTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for MMEStatusTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(MMEStatusTransfer<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " NAS DELIVERY INDICATION"]
@@ -45373,18 +47287,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NASDeliveryIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for NASDeliveryIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NASDeliveryIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " NAS NON DELIVERY INDICATION"]
@@ -45432,18 +47349,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for NASNonDeliveryIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for NASNonDeliveryIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(NASNonDeliveryIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " OVERLOAD ELEMENTARY PROCEDURES"]
@@ -45496,18 +47416,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for OverloadStart<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for OverloadStart<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(OverloadStart<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Overload Stop"]
@@ -45555,18 +47478,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for OverloadStop<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for OverloadStop<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(OverloadStop<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " PWS Failure Indication"]
@@ -45614,18 +47540,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PWSFailureIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for PWSFailureIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PWSFailureIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " PWS RESTART INDICATION PROCEDURE"]
@@ -45678,18 +47607,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PWSRestartIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for PWSRestartIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PWSRestartIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " PAGING ELEMENTARY PROCEDURE"]
@@ -45742,18 +47674,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Paging<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for Paging<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Paging<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " PATH SWITCH REQUEST ELEMENTARY PROCEDURE"]
@@ -45806,18 +47741,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PathSwitchRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for PathSwitchRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PathSwitchRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Path Switch Request Acknowledge"]
@@ -45865,18 +47803,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PathSwitchRequestAcknowledge<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for PathSwitchRequestAcknowledge<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PathSwitchRequestAcknowledge<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Path Switch Request Failure"]
@@ -45924,18 +47865,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PathSwitchRequestFailure<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for PathSwitchRequestFailure<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PathSwitchRequestFailure<'a>);
     #[doc = " Anonymous SEQUENCE OF member "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct AnonymousPrivateMessagePrivateIEs<'a> {
@@ -45998,19 +47942,22 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for AnonymousPrivateMessagePrivateIEs<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for AnonymousPrivateMessagePrivateIEs<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("id", self.id.to_json());
-            members.put("criticality", self.criticality.to_json());
+            members.put("id", self.id.to_tree());
+            members.put("criticality", self.criticality.to_tree());
             members.put("value", json::octets(&self.value));
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["id", "criticality", "value"])?;
-            let id = reading.member(&members, 0, PrivateIEID::from_json)?;
-            let criticality = reading.member(&members, 1, Criticality::from_json)?;
-            let value = reading.member(&members, 2, |value, reading| reading.octets(value))?;
+            let id = reading.member(&members, 0, PrivateIEID::from_tree)?;
+            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
+            let value = reading.member(&members, 2, |value, reading| {
+                json::read_octets(reading, value)
+            })?;
             Ok(Self {
                 id,
                 criticality,
@@ -46018,6 +47965,8 @@ pub mod s1_ap_pdu_contents {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(AnonymousPrivateMessagePrivateIEs<'a>);
     #[doc = " Inner type "]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PrivateMessagePrivateIEs<'a>(pub Vec<AnonymousPrivateMessagePrivateIEs<'a>>);
@@ -46066,16 +48015,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PrivateMessagePrivateIEs<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for PrivateMessagePrivateIEs<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                AnonymousPrivateMessagePrivateIEs::from_json(value, reading)
+                AnonymousPrivateMessagePrivateIEs::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PrivateMessagePrivateIEs<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " PRIVATE MESSAGE ELEMENTARY PROCEDURE"]
@@ -46128,18 +48080,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for PrivateMessage<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for PrivateMessage<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("privateIEs", self.private_ies.to_json());
+            members.put("privateIEs", self.private_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["privateIEs"])?;
-            let private_ies = reading.member(&members, 0, PrivateMessagePrivateIEs::from_json)?;
+            let private_ies = reading.member(&members, 0, PrivateMessagePrivateIEs::from_tree)?;
             Ok(Self { private_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(PrivateMessage<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " REROUTE NAS REQUEST"]
@@ -46187,18 +48142,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RerouteNASRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for RerouteNASRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RerouteNASRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " RESET ELEMENTARY PROCEDURE"]
@@ -46251,18 +48209,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for Reset<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for Reset<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(Reset<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Reset Acknowledge"]
@@ -46310,18 +48271,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ResetAcknowledge<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ResetAcknowledge<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ResetAcknowledge<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
     pub enum ResetAll {
@@ -46356,14 +48320,17 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ResetAll {
-        fn to_json(&self) -> Value {
+    impl Tree for ResetAll {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             json::text(Self::NAMES[self.index() as usize])
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.enumerated(value, &Self::NAMES)?])
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ResetAll);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum ResetType<'a> {
@@ -46421,32 +48388,35 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for ResetType<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for ResetType<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
-                Self::s1_Interface(value) => json::alternative("s1-Interface", value.to_json()),
+                Self::s1_Interface(value) => json::alternative("s1-Interface", value.to_tree()),
                 Self::partOfS1_Interface(value) => {
-                    json::alternative("partOfS1-Interface", value.to_json())
+                    json::alternative("partOfS1-Interface", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) =
                 reading.alternative(value, &["s1-Interface", "partOfS1-Interface"])?;
             Ok(match position {
                 0 => Self::s1_Interface(reading.within(
                     "s1-Interface",
                     value,
-                    ResetAll::from_json,
+                    ResetAll::from_tree,
                 )?),
                 _ => Self::partOfS1_Interface(reading.within(
                     "partOfS1-Interface",
                     value,
-                    UEAssociatedLogicalS1ConnectionListRes::from_json,
+                    UEAssociatedLogicalS1ConnectionListRes::from_tree,
                 )?),
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(ResetType<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Retrieve UE Information"]
@@ -46494,18 +48464,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for RetrieveUEInformation<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for RetrieveUEInformation<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(RetrieveUEInformation<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 Removal Failure"]
@@ -46553,18 +48526,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for S1RemovalFailure<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for S1RemovalFailure<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(S1RemovalFailure<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 REMOVAL ELEMENTARY PROCEDURE"]
@@ -46617,18 +48593,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for S1RemovalRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for S1RemovalRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(S1RemovalRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 Removal Response"]
@@ -46676,18 +48655,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for S1RemovalResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for S1RemovalResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(S1RemovalResponse<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 Setup Failure"]
@@ -46735,18 +48717,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for S1SetupFailure<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for S1SetupFailure<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(S1SetupFailure<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 SETUP ELEMENTARY PROCEDURE"]
@@ -46799,18 +48784,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for S1SetupRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for S1SetupRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(S1SetupRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " S1 Setup Response"]
@@ -46858,18 +48846,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for S1SetupResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for S1SetupResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(S1SetupResponse<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Secondary RAT Data Usage Report"]
@@ -46917,18 +48908,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SecondaryRATDataUsageReport<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SecondaryRATDataUsageReport<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SecondaryRATDataUsageReport<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIItem {
         pub tai: TAI,
@@ -46983,24 +48977,27 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIItem {
-        fn to_json(&self) -> Value {
+    impl Tree for TAIItem {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("tAI", self.tai.to_json());
+            members.put("tAI", self.tai.to_tree());
             members.put_optional(
                 "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_json()),
+                self.ie_extensions.as_ref().map(|value| value.to_tree()),
             );
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAI", "iE-Extensions"])?;
-            let tai = reading.member(&members, 0, TAI::from_json)?;
+            let tai = reading.member(&members, 0, TAI::from_tree)?;
             let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_json)?;
+                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
             Ok(Self { tai, ie_extensions })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAIItem);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIList<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>> for TAIList<'a> {
@@ -47046,16 +49043,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TAIList<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for TAIList<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TAIList<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Trace Failure Indication"]
@@ -47103,18 +49103,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TraceFailureIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for TraceFailureIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TraceFailureIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " TRACE ELEMENTARY PROCEDURES"]
@@ -47167,18 +49170,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for TraceStart<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for TraceStart<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(TraceStart<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEAssociatedLogicalS1ConnectionListRes<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>>
@@ -47228,16 +49234,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEAssociatedLogicalS1ConnectionListRes<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for UEAssociatedLogicalS1ConnectionListRes<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEAssociatedLogicalS1ConnectionListRes<'a>);
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEAssociatedLogicalS1ConnectionListResAck<'a>(pub Vec<ProtocolIEField<'a>>);
     impl<'a> crate::message::__Field<Vec<ProtocolIEField<'a>>>
@@ -47287,16 +49296,19 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEAssociatedLogicalS1ConnectionListResAck<'_> {
-        fn to_json(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_json()).collect())
+    impl Tree for UEAssociatedLogicalS1ConnectionListResAck<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
+            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_json(value, reading)
+                ProtocolIEField::from_tree(value, reading)
             })?))
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEAssociatedLogicalS1ConnectionListResAck<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CAPABILITY INFO INDICATION ELEMENTARY PROCEDURE"]
@@ -47349,18 +49361,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UECapabilityInfoIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UECapabilityInfoIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UECapabilityInfoIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Modification Confirm"]
@@ -47408,18 +49423,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextModificationConfirm<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextModificationConfirm<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextModificationConfirm<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Modification Failure"]
@@ -47467,18 +49485,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextModificationFailure<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextModificationFailure<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextModificationFailure<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CONTEXT MODIFICATION INDICATION ELEMENTARY PROCEDURE"]
@@ -47531,18 +49552,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextModificationIndication<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextModificationIndication<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextModificationIndication<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CONTEXT MODIFICATION ELEMENTARY PROCEDURE"]
@@ -47595,18 +49619,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextModificationRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextModificationRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextModificationRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Modification Response"]
@@ -47654,18 +49681,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextModificationResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextModificationResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextModificationResponse<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Release Command"]
@@ -47713,18 +49743,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextReleaseCommand<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextReleaseCommand<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextReleaseCommand<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Release Complete"]
@@ -47772,18 +49805,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextReleaseComplete<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextReleaseComplete<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextReleaseComplete<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CONTEXT RELEASE ELEMENTARY PROCEDURE"]
@@ -47836,18 +49872,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextReleaseRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextReleaseRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextReleaseRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Resume Failure"]
@@ -47895,18 +49934,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextResumeFailure<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextResumeFailure<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextResumeFailure<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CONTEXT RESUME ELEMENTARY PROCEDURE"]
@@ -47959,18 +50001,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextResumeRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextResumeRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextResumeRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Resume Response"]
@@ -48018,18 +50063,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextResumeResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextResumeResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextResumeResponse<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE CONTEXT SUSPEND ELEMENTARY PROCEDURE"]
@@ -48082,18 +50130,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextSuspendRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextSuspendRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextSuspendRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Context Suspend Response"]
@@ -48141,18 +50192,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEContextSuspendResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEContextSuspendResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEContextSuspendResponse<'a>);
     #[doc = " **************************************************************"]
     #[doc = " UE Information Transfer"]
     #[doc = ""]
@@ -48199,18 +50253,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UEInformationTransfer<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UEInformationTransfer<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UEInformationTransfer<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE RADIO CAPABILITY ID MAPPING PROCEDURE"]
@@ -48263,18 +50320,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UERadioCapabilityIDMappingRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UERadioCapabilityIDMappingRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UERadioCapabilityIDMappingRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Radio Capability ID Mapping Response"]
@@ -48322,18 +50382,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UERadioCapabilityIDMappingResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UERadioCapabilityIDMappingResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UERadioCapabilityIDMappingResponse<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE RADIO CAPABILITY MATCH ELEMENTARY PROCEDURE"]
@@ -48386,18 +50449,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UERadioCapabilityMatchRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UERadioCapabilityMatchRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UERadioCapabilityMatchRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UE Radio Capability Match Response"]
@@ -48445,18 +50511,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UERadioCapabilityMatchResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UERadioCapabilityMatchResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UERadioCapabilityMatchResponse<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UPLINK NAS TRANSPORT"]
@@ -48504,18 +50573,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UplinkNASTransport<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UplinkNASTransport<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UplinkNASTransport<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UPLINK NON UE ASSOCIATED LPPA TRANSPORT"]
@@ -48563,18 +50635,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UplinkNonUEAssociatedLPPaTransport<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UplinkNonUEAssociatedLPPaTransport<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UplinkNonUEAssociatedLPPaTransport<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UPLINK S1 CDMA2000 TUNNELLING ELEMENTARY PROCEDURE"]
@@ -48627,18 +50702,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UplinkS1cdma2000tunnelling<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UplinkS1cdma2000tunnelling<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UplinkS1cdma2000tunnelling<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " UPLINK UE ASSOCIATED LPPA TRANSPORT"]
@@ -48686,18 +50764,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UplinkUEAssociatedLPPaTransport<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UplinkUEAssociatedLPPaTransport<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UplinkUEAssociatedLPPaTransport<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " WRITE-REPLACE WARNING ELEMENTARY PROCEDURE"]
@@ -48750,18 +50831,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WriteReplaceWarningRequest<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for WriteReplaceWarningRequest<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WriteReplaceWarningRequest<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Write-Replace Warning Response"]
@@ -48809,18 +50893,21 @@ pub mod s1_ap_pdu_contents {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for WriteReplaceWarningResponse<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for WriteReplaceWarningResponse<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_json());
+            members.put("protocolIEs", self.protocol_ies.to_tree());
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_json)?;
+            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(WriteReplaceWarningResponse<'a>);
 }
 #[allow(
     non_camel_case_types,
@@ -48835,7 +50922,7 @@ pub mod s1_ap_pdu_descriptions {
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
     #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Json, Reading, Refused};
+    use oxirush_aper::json::{self, Reading, Refused, Tree};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer,
@@ -48923,19 +51010,22 @@ pub mod s1_ap_pdu_descriptions {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for InitiatingMessage<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for InitiatingMessage<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("procedureCode", self.procedure_code.to_json());
-            members.put("criticality", self.criticality.to_json());
+            members.put("procedureCode", self.procedure_code.to_tree());
+            members.put("criticality", self.criticality.to_tree());
             members.put("value", json::octets(&self.value));
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["procedureCode", "criticality", "value"])?;
-            let procedure_code = reading.member(&members, 0, ProcedureCode::from_json)?;
-            let criticality = reading.member(&members, 1, Criticality::from_json)?;
-            let value = reading.member(&members, 2, |value, reading| reading.octets(value))?;
+            let procedure_code = reading.member(&members, 0, ProcedureCode::from_tree)?;
+            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
+            let value = reading.member(&members, 2, |value, reading| {
+                json::read_octets(reading, value)
+            })?;
             Ok(Self {
                 procedure_code,
                 criticality,
@@ -48943,6 +51033,8 @@ pub mod s1_ap_pdu_descriptions {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(InitiatingMessage<'a>);
     #[doc = " **************************************************************"]
     #[doc = ""]
     #[doc = " Interface PDU Definition"]
@@ -49018,21 +51110,22 @@ pub mod s1_ap_pdu_descriptions {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for S1APPDU<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for S1APPDU<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             match self {
                 Self::initiatingMessage(value) => {
-                    json::alternative("initiatingMessage", value.to_json())
+                    json::alternative("initiatingMessage", value.to_tree())
                 }
                 Self::successfulOutcome(value) => {
-                    json::alternative("successfulOutcome", value.to_json())
+                    json::alternative("successfulOutcome", value.to_tree())
                 }
                 Self::unsuccessfulOutcome(value) => {
-                    json::alternative("unsuccessfulOutcome", value.to_json())
+                    json::alternative("unsuccessfulOutcome", value.to_tree())
                 }
             }
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let (position, value) = reading.alternative(
                 value,
                 &[
@@ -49045,17 +51138,17 @@ pub mod s1_ap_pdu_descriptions {
                 0 => Self::initiatingMessage(reading.within(
                     "initiatingMessage",
                     value,
-                    InitiatingMessage::from_json,
+                    InitiatingMessage::from_tree,
                 )?),
                 1 => Self::successfulOutcome(reading.within(
                     "successfulOutcome",
                     value,
-                    SuccessfulOutcome::from_json,
+                    SuccessfulOutcome::from_tree,
                 )?),
                 _ => Self::unsuccessfulOutcome(reading.within(
                     "unsuccessfulOutcome",
                     value,
-                    UnsuccessfulOutcome::from_json,
+                    UnsuccessfulOutcome::from_tree,
                 )?),
             })
         }
@@ -49141,19 +51234,22 @@ pub mod s1_ap_pdu_descriptions {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for SuccessfulOutcome<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for SuccessfulOutcome<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("procedureCode", self.procedure_code.to_json());
-            members.put("criticality", self.criticality.to_json());
+            members.put("procedureCode", self.procedure_code.to_tree());
+            members.put("criticality", self.criticality.to_tree());
             members.put("value", json::octets(&self.value));
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["procedureCode", "criticality", "value"])?;
-            let procedure_code = reading.member(&members, 0, ProcedureCode::from_json)?;
-            let criticality = reading.member(&members, 1, Criticality::from_json)?;
-            let value = reading.member(&members, 2, |value, reading| reading.octets(value))?;
+            let procedure_code = reading.member(&members, 0, ProcedureCode::from_tree)?;
+            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
+            let value = reading.member(&members, 2, |value, reading| {
+                json::read_octets(reading, value)
+            })?;
             Ok(Self {
                 procedure_code,
                 criticality,
@@ -49161,6 +51257,8 @@ pub mod s1_ap_pdu_descriptions {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(SuccessfulOutcome<'a>);
     impl core::fmt::Debug for UnsuccessfulOutcome<'_> {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             let holds_key = crate::pdu::holds_key("UnsuccessfulOutcome", self.procedure_code.0);
@@ -49242,19 +51340,22 @@ pub mod s1_ap_pdu_descriptions {
         }
     }
     #[cfg(feature = "inspect")]
-    impl Json for UnsuccessfulOutcome<'_> {
-        fn to_json(&self) -> Value {
+    impl Tree for UnsuccessfulOutcome<'_> {
+        const NAME: &'static str = <Self as AsnType>::NAME;
+        fn to_tree(&self) -> Value {
             let mut members = json::Members::new();
-            members.put("procedureCode", self.procedure_code.to_json());
-            members.put("criticality", self.criticality.to_json());
+            members.put("procedureCode", self.procedure_code.to_tree());
+            members.put("criticality", self.criticality.to_tree());
             members.put("value", json::octets(&self.value));
             members.finish()
         }
-        fn from_json(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
+        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["procedureCode", "criticality", "value"])?;
-            let procedure_code = reading.member(&members, 0, ProcedureCode::from_json)?;
-            let criticality = reading.member(&members, 1, Criticality::from_json)?;
-            let value = reading.member(&members, 2, |value, reading| reading.octets(value))?;
+            let procedure_code = reading.member(&members, 0, ProcedureCode::from_tree)?;
+            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
+            let value = reading.member(&members, 2, |value, reading| {
+                json::read_octets(reading, value)
+            })?;
             Ok(Self {
                 procedure_code,
                 criticality,
@@ -49262,6 +51363,8 @@ pub mod s1_ap_pdu_descriptions {
             })
         }
     }
+    #[cfg(feature = "serde")]
+    oxirush_utils::impl_serde!(UnsuccessfulOutcome<'a>);
 }
 
 // The names of the modules at the root, and the aliases.

@@ -446,7 +446,7 @@ fn block_16() {
     // What was not edited is the octets that were received
     let after = edited.to_view().unwrap();
     let octets = inspect::select(&after, "/s1ap/MME-UE-S1AP-ID/octets").unwrap();
-    assert_eq!(octets, [&json!("002A")]);
+    assert_eq!(octets, [&json!("002a")]);
 
     // A name that the type does not have is refused, and the view is as it was
     let wrong = inspect::set(&mut view, "/s1ap/Cause/radioNetwrok", json!("unspecified"));

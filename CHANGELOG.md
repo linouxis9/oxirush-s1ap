@@ -17,8 +17,8 @@ what each type became.
   is `plmn_identity`, `t_ac` is `tac`, `i_e_extensions` is `ie_extensions`,
   `e_nb_id` is `enb_id`, `m_me_code` is `mme_code`, `g_tp_teid` is `gtp_teid`. The README
   says the rule, and `build/fields.tsv` of the repository has each field with
-  its name in 0.2.0, for a replacement by name. The JSON forms are as
-  they were.
+  its name in 0.2.0, for a replacement by name. The JSON forms keep
+  the names that ASN.1 gives.
 - The crate no longer depends on `rasn`, and `oxirush_s1ap::rasn` is not
   there. The bindings implement `AsnType`, `Decode` and `Encode` of
   `oxirush-aper`, which the crate re-exports as `oxirush_s1ap::aper`, and no
@@ -229,6 +229,11 @@ what each type became.
   keeps the direction, the procedure code and the criticality of the PDU,
   and checks nothing. Both are an error of the kind `WrongMessage` for the
   private message, which has no container of protocol IEs.
+- The optional `serde` feature, which turns on `inspect`: `Serialize` and
+  `Deserialize` for every type of the bindings, through its tree, so that
+  every format of serde has the forms of the JSON: a PDU as its tree,
+  `{"message": NAME, "ies": [...]}`, which `to_tree` gives and `from_tree`
+  reads, and each other type as its value in the form of its ASN.1 type.
 - The optional `inspect` feature: `pdu.to_view()` gives a decoded PDU as its
   view, a `serde_json` value in the ASN.1 JSON encoding, which is edited and
   which `pdu.with_view(&view)` encodes again; `S1AP_PDU::from_view(&view)`
@@ -389,7 +394,12 @@ what each type became.
   /s1ap/...`; the empty path is the view itself, as the empty JSON pointer
   is the document; `paths` lists down to 64 levels, the most segments that a
   path has; and an edit is done in the place of the view, at each place that
-  its path selects or at none, without a copy of the view.
+  its path selects or at none, without a copy of the view. Octets are
+  written in hexadecimal in lower case, `"02f839"`, where they were in
+  upper case, and read in either. A value that is not of its type says what
+  is expected, the bounds of a number, the names of an `ENUMERATED` and the
+  members of a `SEQUENCE`, and where it is written last: `this is not a value
+  of Cause: "x" is none of its names: unspecified, …, at radioNetwork`.
 - A `SEQUENCE` is a struct without `#[non_exhaustive]`, which a literal
   builds: a member that a later version adds changes its `new` too, so the
   attribute kept no caller from breaking. An extensible `CHOICE` and
