@@ -203,7 +203,7 @@ pub use oxirush_aper as aper;
 /// the MNC.
 pub use oxirush_utils::identity;
 
-pub use check::Deviation;
+pub use check::{Deviation, S1ap};
 pub use message::Message;
 pub use oxirush_aper::{
     AsnType, BitString, Bits, Decode, Encode, Error, ErrorKind, Fault, Faults, Octets,
