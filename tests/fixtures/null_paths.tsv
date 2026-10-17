@@ -1,7 +1,10 @@
 # The paths of the alternatives of the type NULL in the vectors of vectors.tsv, which the
 # review of the move of the paths to oxirush-utils found that paths() no longer listed and
-# select() no longer selected: each is listed, with null, and selects null.
-# Vector	path
+# select() no longer selected: each is listed, with null, and selects null. Those with a
+# procedure code are of the vector read under that code, which the specification does not
+# have: the review of the release candidate found that paths() listed them there, and that
+# select() did not take them.
+# Vector	path	procedure code
 HandoverRequest/cover-12	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/areaScopeOfMDT/pLMNWide
 HandoverRequest/cover-14	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/areaScopeOfMDT/pLMNWide
 HandoverRequest/cover-2	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/areaScopeOfMDT/pLMNWide
@@ -10,3 +13,11 @@ InitialContextSetupRequest/cover-6	/s1ap/TraceActivation/value/iE-Extensions/0/e
 InitialContextSetupRequest/cover-8	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/mDTMode/loggedMDT/iE-Extensions/2/extensionValue/periodical
 InitialContextSetupRequest/cover-9	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/areaScopeOfMDT/pLMNWide
 TraceStart/cover-0	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/areaScopeOfMDT/pLMNWide
+InitialContextSetupRequest/cover-0	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/mDTMode/loggedMDT/iE-Extensions/2/extensionValue/periodical	254
+TraceStart/cover-0	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/areaScopeOfMDT/pLMNWide	254
+HandoverRequest/cover-2	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/areaScopeOfMDT/pLMNWide	254
+InitialContextSetupRequest/cover-6	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/mDTMode/loggedMDT/iE-Extensions/2/extensionValue/periodical	254
+InitialContextSetupRequest/cover-8	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/mDTMode/loggedMDT/iE-Extensions/2/extensionValue/periodical	254
+InitialContextSetupRequest/cover-9	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/areaScopeOfMDT/pLMNWide	254
+HandoverRequest/cover-12	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/areaScopeOfMDT/pLMNWide	254
+HandoverRequest/cover-14	/s1ap/TraceActivation/value/iE-Extensions/0/extensionValue/areaScopeOfMDT/pLMNWide	254

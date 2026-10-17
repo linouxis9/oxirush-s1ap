@@ -130,9 +130,9 @@ fn e_rab_container_lists_encode_their_size_constraint() -> Result<(), Error> {
 /// (X.691 (02/2021) §11.9.3.3, §11.5.7), as Wireshark decodes them.
 #[test]
 fn each_ecgi_list_encodes_its_own_size_constraint() -> Result<(), Error> {
-    use oxirush_s1ap::helpers::{eutran_cgi, plmn};
+    use oxirush_s1ap::helpers::{EnbKind, eutran_cgi, plmn};
 
-    let cell = eutran_cgi(plmn("208", "93")?, 0x12345, 1)?;
+    let cell = eutran_cgi(plmn("208", "93")?, EnbKind::Macro, 0x12345, 1)?;
     // The first bit of the sixteen.
     let identifier = Bits::from(0x8000u16);
     let request = build_s1ap!(InitiatingMessage, WriteReplaceWarning,

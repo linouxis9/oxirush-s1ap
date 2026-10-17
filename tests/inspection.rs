@@ -902,14 +902,31 @@ fn well_known_values_are_shown_and_taken_as_they_are_usually_written() {
         ie(&mut view, 59)["_raw_value"]
     );
 
-    // As JER writes them, which is what a view had before: the octets that TS 36.413
-    // clause 9.2.3.8 has for 001-01 and for 310-410.
+    // As JER writes them, which is what a view had before, after 0x where they are
+    // digits alone: the octets that TS 36.413 clause 9.2.3.8 has for 001-01 and for
+    // 310-410.
     let area = &mut ie(&mut view, 64)["value"][0];
-    area["tAC"] = tree!("0007");
-    area["broadcastPLMNs"] = tree!(["00f110", "134001"]);
+    area["tAC"] = tree!("0x0007");
+    area["broadcastPLMNs"] = tree!(["00f110", "0x134001"]);
     assert_eq!(
         S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
         edited.encode().unwrap()
+    );
+    // Digits alone are read in two ways, and refused with both.
+    let area = &mut ie(&mut view, 64)["value"][0];
+    area["tAC"] = tree!("0007");
+    let error = S1AP_PDU::from_view(&view).unwrap_err().to_string();
+    assert!(
+        error.contains("the number 0007") && error.contains("the number 7"),
+        "{error}"
+    );
+    let area = &mut ie(&mut view, 64)["value"][0];
+    area["tAC"] = tree!(7);
+    area["broadcastPLMNs"] = tree!(["00f110", "134001"]);
+    let error = S1AP_PDU::from_view(&view).unwrap_err().to_string();
+    assert!(
+        error.contains("134-001") && error.contains("310-410"),
+        "{error}"
     );
 
     // Neither form, and a number that the type has no room for.
@@ -1220,8 +1237,9 @@ fn the_entries_of_a_list_of_ies_go_by_name_too() {
     let view = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
     assert_eq!(inspect::select(&view, &by_position).unwrap(), [&tree!(5)]);
     // The IEs of a message that a view contains are selected in its place: no S1AP
-    // type has one, so this is a view of that shape.
-    let mut contained = tree!({"message": {"protocolIEs": [{"id": 2, "value": {"decoded":
+    // type has one, so this is a view of that shape, in an IE that the tables do not
+    // have (one that they have holds a value of its type).
+    let mut contained = tree!({"message": {"protocolIEs": [{"id": 60001, "value": {"decoded":
         {"protocolIEs": [{"id": 8, "value": 7}, {"id": 60000, "value": "00"}]}}}]}});
     let paths: Vec<_> = (inspect::paths(&contained).into_iter())
         .map(|(path, _)| path)
@@ -1229,14 +1247,14 @@ fn the_entries_of_a_list_of_ies_go_by_name_too() {
     assert_eq!(
         paths,
         [
-            "/s1ap/Cause/id",
-            "/s1ap/Cause/value/decoded/eNB-UE-S1AP-ID/id",
-            "/s1ap/Cause/value/decoded/eNB-UE-S1AP-ID/value",
-            "/s1ap/Cause/value/decoded/1/id",
-            "/s1ap/Cause/value/decoded/1/value",
+            "/s1ap/0/id",
+            "/s1ap/0/value/decoded/eNB-UE-S1AP-ID/id",
+            "/s1ap/0/value/decoded/eNB-UE-S1AP-ID/value",
+            "/s1ap/0/value/decoded/1/id",
+            "/s1ap/0/value/decoded/1/value",
         ]
     );
-    let inner = "/s1ap/Cause/value/decoded";
+    let inner = "/s1ap/0/value/decoded";
     for path in [
         "/eNB-UE-S1AP-ID",
         "/0",

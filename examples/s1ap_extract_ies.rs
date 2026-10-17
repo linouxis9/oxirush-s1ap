@@ -184,7 +184,7 @@ fn main() -> Result<(), Error> {
 
 fn target_enb() -> Result<TargetID, Error> {
     let network = plmn("208", "93")?;
-    let enb = global_enb_id(network, 0x12345)?;
+    let enb = global_enb_id(network, EnbKind::Macro, 0x12345)?;
     let area = tai(network, [0x00, 0x01]);
 
     Ok(TargetID::targeteNB_ID(TargeteNBID::new(enb, area, None)))

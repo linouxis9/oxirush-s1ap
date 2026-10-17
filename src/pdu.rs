@@ -296,8 +296,10 @@ impl<'a> S1APPDU<'a> {
         })
     }
 
-    /// The criticality of this PDU.
-    pub(crate) fn criticality(&self) -> Criticality {
+    /// The criticality of this PDU, which the specification assigns to its procedure
+    /// (`Message::CRITICALITY` of its message) in a PDU that is constructed as it has a
+    /// sender construct one.
+    pub fn criticality(&self) -> Criticality {
         match self {
             Self::initiatingMessage(message) => message.criticality,
             Self::successfulOutcome(message) => message.criticality,
@@ -447,27 +449,33 @@ impl<'a> S1APPDU<'a> {
         Ok(found)
     }
 
-    /// The Criticality Diagnostics IE with which the receiver of this PDU answers it for
-    /// `deviations`, which [`check`](Self::check) gave: the procedure code, the triggering
-    /// message and the procedure criticality of this PDU, as clause 10.3.4.1 of TS 36.413
+    /// The Criticality Diagnostics IE of the ERROR INDICATION with which the receiver of
+    /// this PDU answers it for `deviations`, which [`check`](Self::check) gave: the
+    /// procedure code, the triggering message and the procedure criticality of this PDU,
+    /// which TS 36.413 clause 9.2.1.21 has in an ERROR INDICATION alone, as clause 10.3.4.1
     /// has them for a procedure that the receiver does not comprehend, and the item of
     /// each deviation that has one, as clauses 10.3.4.2 and 10.3.5 have them for an IE,
-    /// 256 at most. No list of IEs where no deviation has an item.
+    /// 256 at most. No list of IEs where no deviation has an item. The response of the
+    /// procedure of this PDU has
+    /// [`criticality_diagnostics_for_response`](Self::criticality_diagnostics_for_response).
     ///
     /// ```
     /// use oxirush_s1ap::{build_s1ap, s1ap::*};
     ///
-    /// // An S1 SETUP REQUEST without its Global eNB ID, which is mandatory and of the
-    /// // criticality reject
-    /// let pdu = build_s1ap!(InitiatingMessage, S1Setup, REJECT, S1SetupRequest,
-    ///     IGNORE DefaultPagingDRX(PagingDRX::v128),
+    /// // A UE CONTEXT RELEASE REQUEST without its eNB UE S1AP ID, which is mandatory and
+    /// // of the criticality reject: the procedure has no response
+    /// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, IGNORE,
+    ///     UEContextReleaseRequest,
+    ///     REJECT MME_UE_S1AP_ID(42u32),
+    ///     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
     /// )?;
     /// let deviations = pdu.check()?;
     /// let diagnostics = pdu.criticality_diagnostics(&deviations);
-    /// assert_eq!(diagnostics.procedure_code, Some(ProcedureCode(17)));
+    /// assert_eq!(diagnostics.procedure_code, Some(ProcedureCode(18)));
     /// assert_eq!(diagnostics.triggering_message, Some(TriggeringMessage::initiating_message));
+    /// assert_eq!(diagnostics.procedure_criticality, Some(Criticality::ignore));
     /// let items = diagnostics.ies_criticality_diagnostics.unwrap();
-    /// assert_eq!(items.0[0].ie_id, ProtocolIEID(59));
+    /// assert_eq!(items.0[0].ie_id, ProtocolIEID(8));
     /// assert_eq!(items.0[0].type_of_error, TypeOfError::missing);
     /// # Ok::<(), oxirush_s1ap::Error>(())
     /// ```
@@ -478,5 +486,35 @@ impl<'a> S1APPDU<'a> {
             self.criticality(),
             deviations,
         )
+    }
+
+    /// The Criticality Diagnostics IE of the response of the procedure of this PDU, with
+    /// which its receiver answers it for `deviations`: the procedure criticality of this
+    /// PDU and the item of each deviation that has one, without the procedure code and the
+    /// triggering message, which TS 36.413 clause 9.2.1.21 keeps for an ERROR INDICATION.
+    ///
+    /// ```
+    /// use oxirush_s1ap::{build_s1ap, s1ap::*};
+    ///
+    /// // An S1 SETUP REQUEST without its Global eNB ID, which is mandatory and of
+    /// // the criticality reject: the S1 SETUP FAILURE says so
+    /// let pdu = build_s1ap!(InitiatingMessage, S1Setup, REJECT, S1SetupRequest,
+    ///     IGNORE DefaultPagingDRX(PagingDRX::v128),
+    /// )?;
+    /// let deviations = pdu.check()?;
+    /// let diagnostics = pdu.criticality_diagnostics_for_response(&deviations);
+    /// assert_eq!(diagnostics.procedure_code, None);
+    /// assert_eq!(diagnostics.triggering_message, None);
+    /// assert_eq!(diagnostics.procedure_criticality, Some(Criticality::reject));
+    /// let items = diagnostics.ies_criticality_diagnostics.unwrap();
+    /// assert_eq!(items.0[0].ie_id, ProtocolIEID(59));
+    /// assert_eq!(items.0[0].type_of_error, TypeOfError::missing);
+    /// # Ok::<(), oxirush_s1ap::Error>(())
+    /// ```
+    pub fn criticality_diagnostics_for_response(
+        &self,
+        deviations: &[Deviation],
+    ) -> CriticalityDiagnostics {
+        oxirush_aper::check::criticality_diagnostics_for_response(self.criticality(), deviations)
     }
 }

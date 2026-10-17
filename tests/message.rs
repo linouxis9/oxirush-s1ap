@@ -82,3 +82,63 @@ fn a_message_in_fragments_is_read_through_a_pdu_that_borrows() -> Result<(), Err
     assert_eq!(message, pdu.decode_value::<InitialUEMessage>()?);
     Ok(())
 }
+
+/// The review of the release candidate found that a caller had to look up every
+/// criticality by hand: `Message::CRITICALITY` is the one of its procedure, and the macros
+/// give a PDU and an IE whose criticality a call leaves out the one that the
+/// specification assigns.
+#[test]
+fn a_criticality_that_a_call_leaves_out_is_the_one_that_is_assigned() -> Result<(), Error> {
+    use oxirush_s1ap::{Message, build_s1ap, build_s1ap_ie};
+
+    assert_eq!(UEContextReleaseRequest::CRITICALITY, Criticality::ignore);
+    assert_eq!(S1SetupRequest::CRITICALITY, Criticality::reject);
+    let written = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, IGNORE,
+        UEContextReleaseRequest,
+        REJECT MME_UE_S1AP_ID(42u32),
+        REJECT eNB_UE_S1AP_ID(7u32),
+        IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+    )?;
+    let assigned = build_s1ap!(
+        InitiatingMessage,
+        UEContextReleaseRequest,
+        UEContextReleaseRequest,
+        MME_UE_S1AP_ID(42u32),
+        eNB_UE_S1AP_ID(7u32),
+        Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+    )?;
+    assert_eq!(assigned, written);
+    assert!(assigned.check()?.is_empty());
+    // Some written and some left out, in any order.
+    let mixed = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, IGNORE,
+        UEContextReleaseRequest,
+        MME_UE_S1AP_ID(42u32),
+        REJECT eNB_UE_S1AP_ID(7u32),
+        Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+    )?;
+    assert_eq!(mixed, written);
+    let message: UEContextReleaseRequest = assigned.decode_value()?;
+    let again = S1AP_PDU::of_message(&message, UEContextReleaseRequest::CRITICALITY)?;
+    assert_eq!(again, written);
+    // An IE that the object set of the message does not have is assigned none.
+    let error = build_s1ap!(
+        InitiatingMessage,
+        S1Setup,
+        S1SetupRequest,
+        MME_UE_S1AP_ID(1u32),
+    )
+    .unwrap_err();
+    assert_eq!(error.kind(), ErrorKind::Argument);
+    assert!(
+        error
+            .to_string()
+            .contains("no IE of the object set of S1SetupRequest"),
+        "{error}"
+    );
+    // One IE, of its message.
+    let ie = build_s1ap_ie!(S1SetupRequest, DefaultPagingDRX(PagingDRX::v128))?;
+    assert_eq!(ie.criticality, Criticality::ignore);
+    let error = build_s1ap_ie!(S1SetupRequest, MME_UE_S1AP_ID(1u32)).unwrap_err();
+    assert_eq!(error.kind(), ErrorKind::Argument);
+    Ok(())
+}

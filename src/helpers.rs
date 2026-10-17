@@ -95,18 +95,73 @@ pub fn tai(plmn_identity: PLMNidentity, tac: [u8; 2]) -> TAI {
     TAI::new(plmn_identity, TAC(tac), None)
 }
 
-/// Build an E-UTRAN Cell Global Identifier from a 20-bit macro eNB ID and 8-bit cell ID.
+/// The kinds of eNB ID of TS 36.413 clause 9.2.1.37, each of the bits that it has: the
+/// leftmost bits of the 28 of the Cell Identity of each cell that the eNB serves.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum EnbKind {
+    /// A macro eNB ID, of 20 bits, which leaves 8 bits for the cell.
+    Macro,
+    /// A home eNB ID, of 28 bits: the Cell Identity of its one cell.
+    Home,
+    /// A short macro eNB ID, of 18 bits, which leaves 10 bits for the cell.
+    ShortMacro,
+    /// A long macro eNB ID, of 21 bits, which leaves 7 bits for the cell.
+    LongMacro,
+}
+
+impl EnbKind {
+    /// The bits of an eNB ID of this kind.
+    pub const fn bits(self) -> u32 {
+        match self {
+            Self::Macro => 20,
+            Self::Home => 28,
+            Self::ShortMacro => 18,
+            Self::LongMacro => 21,
+        }
+    }
+
+    fn name(self) -> &'static str {
+        match self {
+            Self::Macro => "the macro eNB ID",
+            Self::Home => "the home eNB ID",
+            Self::ShortMacro => "the short macro eNB ID",
+            Self::LongMacro => "the long macro eNB ID",
+        }
+    }
+}
+
+/// Build the eNB ID of a kind.
 ///
-/// An error of the kind `Argument` for an eNB ID that does not fit in 20 bits, which
-/// the 8 bits of the cell follow in the 28 of a Cell Identity (TS 36.413 clause
-/// 9.2.1.38).
+/// An error of the kind `Argument` for an eNB ID that does not fit in the bits of its
+/// kind.
+pub fn enb_id(kind: EnbKind, enb_id: u32) -> Result<ENBID, Error> {
+    let bits = kind.bits();
+    let id = Bits::low(fits(kind.name(), enb_id.into(), bits)?, bits as usize);
+    Ok(match kind {
+        EnbKind::Macro => ENBID::macroENB_ID(id),
+        EnbKind::Home => ENBID::homeENB_ID(id),
+        EnbKind::ShortMacro => ENBID::short_macroENB_ID(id),
+        EnbKind::LongMacro => ENBID::long_macroENB_ID(id),
+    })
+}
+
+/// Build an E-UTRAN Cell Global Identifier from an eNB ID of a kind and the cell that
+/// the rest of the 28 bits of the Cell Identity hold: the eNB ID is its leftmost bits
+/// (TS 36.413 clauses 9.2.1.37 and 9.2.1.38), and a macro eNB ID leaves 8 bits for the
+/// cell, a home eNB ID none.
+///
+/// An error of the kind `Argument` for an eNB ID that does not fit in the bits of its
+/// kind, and for a cell that does not fit in the bits after it.
 pub fn eutran_cgi(
     plmn_identity: PLMNidentity,
+    kind: EnbKind,
     enb_id: u32,
-    cell_id: u8,
+    cell_id: u16,
 ) -> Result<EUTRANCGI, Error> {
-    let enb_id = fits("the macro eNB ID", enb_id.into(), 20)?;
-    let eci = (enb_id << 8) | u64::from(cell_id);
+    let bits = kind.bits();
+    let enb_id = fits(kind.name(), enb_id.into(), bits)?;
+    let cell_id = fits("the cell of the eNB", cell_id.into(), 28 - bits)?;
+    let eci = (enb_id << (28 - bits)) | cell_id;
     Ok(EUTRANCGI::new(
         plmn_identity,
         CellIdentity(Bits::low(eci, 28)),
@@ -114,15 +169,18 @@ pub fn eutran_cgi(
     ))
 }
 
-/// Build a `GlobalENBID` for a 20-bit macro eNB identifier.
+/// Build a `GlobalENBID` for an eNB ID of a kind (TS 36.413 clause 9.2.1.37).
 ///
-/// An error of the kind `Argument` for an eNB ID that does not fit in 20 bits
-/// (TS 36.413 clause 9.2.1.37).
-pub fn global_enb_id(plmn_identity: PLMNidentity, enb_id: u32) -> Result<GlobalENBID, Error> {
-    let enb_id = fits("the macro eNB ID", enb_id.into(), 20)?;
+/// An error of the kind `Argument` for an eNB ID that does not fit in the bits of its
+/// kind.
+pub fn global_enb_id(
+    plmn_identity: PLMNidentity,
+    kind: EnbKind,
+    enb_id: u32,
+) -> Result<GlobalENBID, Error> {
     Ok(GlobalENBID::new(
         plmn_identity,
-        ENBID::macroENB_ID(Bits::low(enb_id, 20)),
+        self::enb_id(kind, enb_id)?,
         None,
     ))
 }
@@ -210,6 +268,41 @@ mod tests {
         assert_eq!(plmn_octets([2, 0, 10], &[9, 3]), None);
     }
 
+    /// Each kind of eNB ID of TS 36.413 clause 9.2.1.37 has its bits, the leftmost of the
+    /// Cell Identity, and the cell the rest of the 28.
+    #[test]
+    fn each_kind_of_enb_id_has_its_bits_and_the_cell_the_rest() {
+        let network = plmn("208", "93").unwrap();
+        for (kind, bits) in [
+            (EnbKind::Macro, 20),
+            (EnbKind::Home, 28),
+            (EnbKind::ShortMacro, 18),
+            (EnbKind::LongMacro, 21),
+        ] {
+            assert_eq!(kind.bits(), bits);
+            let most = (1u32 << bits) - 1;
+            let id = match enb_id(kind, most).unwrap() {
+                ENBID::macroENB_ID(id) => (EnbKind::Macro, id),
+                ENBID::homeENB_ID(id) => (EnbKind::Home, id),
+                ENBID::short_macroENB_ID(id) => (EnbKind::ShortMacro, id),
+                ENBID::long_macroENB_ID(id) => (EnbKind::LongMacro, id),
+            };
+            assert_eq!(
+                (id.0, id.1.len(), id.1.value()),
+                (kind, bits as usize, u64::from(most))
+            );
+            assert!(enb_id(kind, most + 1).is_err());
+            let global = global_enb_id(network, kind, 1).unwrap();
+            assert_eq!(global.enb_id, enb_id(kind, 1).unwrap());
+            // The eNB ID, then the cell.
+            let cell = (1u16 << (28 - bits)) - 1;
+            let cgi = eutran_cgi(network, kind, 1, cell).unwrap();
+            assert_eq!(cgi.cell_id.0.value(), (1 << (28 - bits)) | u64::from(cell));
+            assert!(eutran_cgi(network, kind, 1, cell + 1).is_err());
+            assert!(eutran_cgi(network, kind, most + 1, 0).is_err());
+        }
+    }
+
     #[test]
     fn octets_that_are_no_plmn_identity_have_no_mcc_and_no_mnc() {
         // No digit at all, a filler in the MNC, a filler in the MCC, a filler before
@@ -231,13 +324,13 @@ mod tests {
         let plmn = plmn("208", "93").unwrap();
         // The 20-bit eNB ID and the 8-bit cell: a 28-bit cell identity,
         // octet-aligned after the PLMN (X.691 (02/2021) §16.10).
-        let cgi = eutran_cgi(plmn, 0x12345, 0x67).unwrap();
+        let cgi = eutran_cgi(plmn, EnbKind::Macro, 0x12345, 0x67).unwrap();
         assert_eq!(cgi.cell_id.0, Bits::new(0x123_4567, 28).unwrap());
         assert_eq!(
             oxirush_aper::encode(&cgi).unwrap(),
             [0x00, 0x02, 0xf8, 0x39, 0x12, 0x34, 0x56, 0x70]
         );
-        let enb = global_enb_id(plmn, 0x12345).unwrap();
+        let enb = global_enb_id(plmn, EnbKind::Macro, 0x12345).unwrap();
         let ENBID::macroENB_ID(bits) = enb.enb_id else {
             panic!("expected macro eNB ID");
         };
@@ -254,17 +347,20 @@ mod tests {
 
         // A macro eNB ID of 20 bits, alone and before the 8 bits of a cell: the last
         // value, and the one after it.
-        let ENBID::macroENB_ID(last) = global_enb_id(network(), 0xf_ffff).unwrap().enb_id else {
+        let ENBID::macroENB_ID(last) = global_enb_id(network(), EnbKind::Macro, 0xf_ffff)
+            .unwrap()
+            .enb_id
+        else {
             panic!("expected macro eNB ID");
         };
         assert_eq!((last.value(), last.len()), (0xf_ffff, 20));
         assert_eq!(
-            argument(global_enb_id(network(), 0x10_0000).unwrap_err()),
+            argument(global_enb_id(network(), EnbKind::Macro, 0x10_0000).unwrap_err()),
             "the macro eNB ID 1048576 does not fit in 20 bits"
         );
-        assert!(eutran_cgi(network(), 0xf_ffff, 0xff).is_ok());
+        assert!(eutran_cgi(network(), EnbKind::Macro, 0xf_ffff, 0xff).is_ok());
         assert_eq!(
-            argument(eutran_cgi(network(), 0x10_0000, 1).unwrap_err()),
+            argument(eutran_cgi(network(), EnbKind::Macro, 0x10_0000, 1).unwrap_err()),
             "the macro eNB ID 1048576 does not fit in 20 bits"
         );
     }

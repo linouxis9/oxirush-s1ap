@@ -460,8 +460,8 @@ fn an_argument_that_a_helper_does_not_take_is_an_error_and_no_panic() {
     // alone and before the 8 bits of a cell in a Cell Identity of 28 (clause 9.2.1.38),
     // and a number over the width of its bit string.
     let cut_short = [
-        global_enb_id(network(), 0x1f_ffff).unwrap_err(),
-        eutran_cgi(network(), 0x1f_ffff, 1).unwrap_err(),
+        global_enb_id(network(), EnbKind::Macro, 0x1f_ffff).unwrap_err(),
+        eutran_cgi(network(), EnbKind::Macro, 0x1f_ffff, 1).unwrap_err(),
         oxirush_s1ap::Bits::new(0x100, 8).unwrap_err(),
     ];
     for error in panicked.iter().chain(&cut_short) {
@@ -486,6 +486,47 @@ mod inspect_errors {
     use oxirush_s1ap::s1ap::*;
     use oxirush_s1ap::{Error, ErrorKind, inspect};
     use oxirush_s1ap::{tree, tree::Value};
+
+    /// The review of the release candidate found that a member of a tree written in two
+    /// spellings was read once: the IEs of `IES` were dropped. A member is read however
+    /// it is written, once, as in a value.
+    /// The review of the release candidate found no suggestion for a misspelled name:
+    /// the error says the nearest names of the protocol.
+    #[test]
+    fn a_misspelled_name_is_refused_with_the_nearest_names() {
+        let ie = "\"MME-UE-S1AP-IDD\" is not an IE of S1AP: the nearest names are MME-UE-S1AP-ID, MME-UE-S1AP-ID-2 and eNB-UE-S1AP-ID";
+        let tree = tree!({"message": "UEContextReleaseRequest", "ies": [{"MME-UE-S1AP-IDD": 1}]});
+        assert_eq!(S1AP_PDU::from_tree(&tree).unwrap_err().to_string(), ie);
+        let view = release_request().to_view().unwrap();
+        let error = inspect::select(&view, "/s1ap/MME-UE-S1AP-IDD").unwrap_err();
+        assert_eq!(error.to_string(), format!("{ie}, at /s1ap/MME-UE-S1AP-IDD"));
+        let tree = tree!({"message": "UEContextReleaseReq", "ies": []});
+        assert_eq!(
+            S1AP_PDU::from_tree(&tree).unwrap_err().to_string(),
+            "\"UEContextReleaseReq\" is not a message of S1AP: the nearest name is \
+             UEContextReleaseRequest"
+        );
+        // A name that is near none says none.
+        let tree = tree!({"message": "UEContextReleaseRequest", "ies": [{"TimeToTravel": 1}]});
+        let error = S1AP_PDU::from_tree(&tree).unwrap_err().to_string();
+        assert_eq!(error, "\"TimeToTravel\" is not an IE of S1AP");
+    }
+
+    #[test]
+    fn a_member_of_a_tree_written_twice_in_two_spellings_is_refused() {
+        let tree = tree!({
+            "message": "UEContextReleaseRequest",
+            "ies": [{"MME-UE-S1AP-ID": 1}],
+            "IES": [{"eNB-UE-S1AP-ID": 2}],
+        });
+        let error = S1AP_PDU::from_tree(&tree).unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "the member \"ies\" of a tree is written twice, as \"ies\" and as \"IES\""
+        );
+        let tree = tree!({"Message": "UEContextReleaseRequest", "message": "x", "ies": []});
+        assert!(S1AP_PDU::from_tree(&tree).is_err());
+    }
 
     /// The view of the UE CONTEXT RELEASE REQUEST.
     fn view() -> Value {
@@ -732,15 +773,13 @@ mod inspect_errors {
             "this is not a value of MME-UE-S1AP-ID: a number from 0 to 4294967295 is expected, and \
              \"forty-two\" is written"
         );
-        // The names that it has are listed, and where it is written after them.
+        // The first of the names that it has, with how many more, and where it is
+        // written after them.
         let name = name.to_string();
         let names = "this is not a value of Cause: \"no-such-cause\" is none of its names: \
                      unspecified, tx2relocoverall-expiry, successful-handover, ";
         assert!(name.starts_with(names), "{name}");
-        assert!(
-            name.ends_with(", release-due-to-discontinuous-coverage, at radioNetwork"),
-            "{name}"
-        );
+        assert!(name.ends_with(", and 37 more, at radioNetwork"), "{name}");
         assert_eq!(
             outside.to_string(),
             "this is not a value of MME-UE-S1AP-ID: a number from 0 to 4294967295 is expected, and \
@@ -772,15 +811,26 @@ mod inspect_errors {
              208-93, at pLMNidentity"
         );
         // Without a hyphen it is its three octets: what is neither says both forms.
-        for neither in ["20893", "2089", "208 93", "20893g"] {
+        for (neither, why) in [
+            ("20893", "a PLMN identity is MCC-MNC: write \"208-93\""),
+            (
+                "2089",
+                "a PLMN identity is MCC-MNC, as 208-93, or its three octets in hexadecimal",
+            ),
+            (
+                "208 93",
+                "a PLMN identity is MCC-MNC, as 208-93, or its three octets in hexadecimal",
+            ),
+            (
+                "20893g",
+                "a PLMN identity is MCC-MNC, as 208-93, or its three octets in hexadecimal",
+            ),
+        ] {
             let plmn = setup(tree!(neither), tree!({"macroENB-ID": "123450"})).unwrap_err();
             assert_eq!(plmn.kind(), ErrorKind::Value);
             assert_eq!(
                 plmn.to_string(),
-                format!(
-                    "this is not a value of Global-ENB-ID: {neither}: a PLMN identity is \
-                     MCC-MNC, as 208-93, or its three octets in hexadecimal, at pLMNidentity"
-                )
+                format!("this is not a value of Global-ENB-ID: {neither}: {why}, at pLMNidentity")
             );
         }
         assert!(setup(tree!("02f839"), tree!({"macroENB-ID": "123450"})).is_ok());

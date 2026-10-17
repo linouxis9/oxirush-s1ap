@@ -6,19 +6,23 @@ use std::cell::RefCell;
 
 thread_local!(static PRINTED: RefCell<String> = const { RefCell::new(String::new()) });
 
-// What a block prints is kept, to be compared with what the README shows.
+// What a block prints is kept, to be compared with what the README shows. The line
+// is written before it is kept, so that `?` in what is printed returns from the block.
+macro_rules! print {
+    ($($argument:tt)*) => {{
+        let text = format!($($argument)*);
+        PRINTED.with(|printed| printed.borrow_mut().push_str(&text))
+    }};
+}
+
 macro_rules! println {
     () => {
-        PRINTED.with(|printed| printed.borrow_mut().push('\n'))
+        print!("\n")
     };
-    ($($argument:tt)*) => {
-        PRINTED.with(|printed| {
-            let line = format!($($argument)*);
-            let mut printed = printed.borrow_mut();
-            printed.push_str(&line);
-            printed.push('\n');
-        })
-    };
+    ($($argument:tt)*) => {{
+        let line = format!($($argument)*);
+        print!("{line}\n")
+    }};
 }
 
 /// What `block` prints.
@@ -56,6 +60,7 @@ pub const BLOCKS: &[fn()] = &[
     block_25,
     block_26,
     block_27,
+    block_28,
 ];
 
 /// The Rust block 1 of README.md.
@@ -238,6 +243,34 @@ fn block_6() {
 
 /// The Rust block 7 of README.md.
 fn block_7() {
+    use oxirush_s1ap::{Message, build_s1ap, s1ap::*};
+
+    fn main() -> Result<(), oxirush_s1ap::Error> {
+        // The criticality of the procedure, and those of the object set of the message
+        let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+            eNB_UE_S1AP_ID(7u32),
+            NAS_PDU(vec![0x07, 0x41, 0x71]),
+        )?;
+        println!("{:?} {}", pdu.criticality(), hex::encode(pdu.encode()?));
+
+        // The PDU of a message that is at hand
+        let message: InitialUEMessage = pdu.decode_value()?;
+        let again = S1AP_PDU::of_message(&message, InitialUEMessage::CRITICALITY)?;
+        println!("{}", again == pdu);
+
+        // An IE that the object set of the message does not have is assigned none
+        let error = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+            TimeToWait(TimeToWait::v10s),
+        );
+        println!("{}", error.unwrap_err());
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 8 of README.md.
+fn block_8() {
     use oxirush_s1ap::{Error, extract_s1ap_ies, s1ap::*};
 
     fn handle(request: &UEContextReleaseRequest) -> Result<(), Error> {
@@ -252,8 +285,8 @@ fn block_7() {
     }
 }
 
-/// The Rust block 8 of README.md.
-fn block_8() {
+/// The Rust block 9 of README.md.
+fn block_9() {
     use oxirush_s1ap::{extract_s1ap_ies, s1ap::*};
 
     // The cause of a request, when it has one that is read
@@ -274,8 +307,8 @@ fn block_8() {
     }
 }
 
-/// The Rust block 9 of README.md.
-fn block_9() {
+/// The Rust block 10 of README.md.
+fn block_10() {
     use oxirush_s1ap::{build_s1ap_ie, s1ap::*, with_s1ap_ie_mut};
 
     // A message with one IE, which is built alone
@@ -290,8 +323,8 @@ fn block_9() {
     assert_eq!(updated, Ok(true));
 }
 
-/// The Rust block 10 of README.md.
-fn block_10() {
+/// The Rust block 11 of README.md.
+fn block_11() {
     use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
 
     fn main() -> Result<(), oxirush_s1ap::Error> {
@@ -319,8 +352,8 @@ fn block_10() {
     main().unwrap();
 }
 
-/// The Rust block 11 of README.md.
-fn block_11() {
+/// The Rust block 12 of README.md.
+fn block_12() {
     use oxirush_s1ap::{BitString, build_s1ap, build_s1ap_ie, extract_s1ap_ies, s1ap::*};
 
     fn main() -> Result<(), oxirush_s1ap::Error> {
@@ -368,8 +401,8 @@ fn block_11() {
     main().unwrap();
 }
 
-/// The Rust block 12 of README.md.
-fn block_12() {
+/// The Rust block 13 of README.md.
+fn block_13() {
     use oxirush_s1ap::{build_s1ap, s1ap::*};
 
     fn main() -> Result<(), oxirush_s1ap::Error> {
@@ -397,8 +430,8 @@ fn block_12() {
     main().unwrap();
 }
 
-/// The Rust block 13 of README.md.
-fn block_13() {
+/// The Rust block 14 of README.md.
+fn block_14() {
     use oxirush_s1ap::{Deviation, build_s1ap, s1ap::*};
 
     fn main() -> Result<(), oxirush_s1ap::Error> {
@@ -413,7 +446,7 @@ fn block_13() {
         let cause = deviations.iter().find_map(Deviation::cause).unwrap();
         let failure = build_s1ap!(UnsuccessfulOutcome, S1Setup, REJECT, S1SetupFailure,
             IGNORE Cause(Cause::protocol(cause)),
-            IGNORE CriticalityDiagnostics(received.criticality_diagnostics(&deviations)),
+            IGNORE CriticalityDiagnostics(received.criticality_diagnostics_for_response(&deviations)),
         )?;
         for deviation in &deviations {
             println!("{deviation}");
@@ -426,16 +459,17 @@ fn block_13() {
     main().unwrap();
 }
 
-/// The Rust block 14 of README.md.
-fn block_14() {
+/// The Rust block 15 of README.md.
+fn block_15() {
     use oxirush_s1ap::helpers::*;
 
     // A PLMN from its MCC and its MNC, and what is identified within it
     let network = plmn("208", "93").unwrap();
     let mme = gummei(network, 1, 1); // group, code
     let tracking_area = tai(network, [0x00, 0x01]); // TAC
-    let cell = eutran_cgi(network, 0x12345, 7).unwrap(); // macro eNB, cell
-    let enb = global_enb_id(network, 0x12345).unwrap();
+    let cell = eutran_cgi(network, EnbKind::Macro, 0x12345, 7).unwrap(); // eNB, cell
+    let enb = global_enb_id(network, EnbKind::Macro, 0x12345).unwrap();
+    let home = global_enb_id(network, EnbKind::Home, 0x123_4567).unwrap();
 
     // A bit string from octets, and the algorithms of a UE: the first octet
     // of its encryption bitmap, then of its integrity bitmap
@@ -444,11 +478,11 @@ fn block_14() {
 
     // What is no MCC, and a macro eNB ID that does not fit in its 20 bits
     println!("{}", plmn("20", "93").unwrap_err());
-    println!("{}", global_enb_id(network, 0x100000).unwrap_err());
+    println!("{}", global_enb_id(network, EnbKind::Macro, 0x100000).unwrap_err());
 }
 
-/// The Rust block 15 of README.md.
-fn block_15() {
+/// The Rust block 16 of README.md.
+fn block_16() {
     use oxirush_s1ap::{ErrorKind, s1ap::*};
 
     // A UE CONTEXT RELEASE REQUEST is not decoded as an S1 SETUP REQUEST
@@ -464,8 +498,8 @@ fn block_15() {
     println!("{short}");
 }
 
-/// The Rust block 16 of README.md.
-fn block_16() {
+/// The Rust block 17 of README.md.
+fn block_17() {
     use oxirush_s1ap::s1ap::S1AP_PDU;
 
     // UE CONTEXT RELEASE REQUEST
@@ -478,8 +512,8 @@ fn block_16() {
     println!("{}", view["message"]["protocolIEs"][2]);
 }
 
-/// The Rust block 17 of README.md.
-fn block_17() {
+/// The Rust block 18 of README.md.
+fn block_18() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use oxirush_s1ap::tree;
 
@@ -509,8 +543,8 @@ fn block_17() {
     }
 }
 
-/// The Rust block 18 of README.md.
-fn block_18() {
+/// The Rust block 19 of README.md.
+fn block_19() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use oxirush_s1ap::tree;
 
@@ -534,8 +568,8 @@ fn block_18() {
     println!("{}", wrong.unwrap_err());
 }
 
-/// The Rust block 19 of README.md.
-fn block_19() {
+/// The Rust block 20 of README.md.
+fn block_20() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use oxirush_s1ap::tree;
 
@@ -558,8 +592,8 @@ fn block_19() {
     println!("{}", edited.to_tree()["ies"]);
 }
 
-/// The Rust block 20 of README.md.
-fn block_20() {
+/// The Rust block 21 of README.md.
+fn block_21() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use oxirush_s1ap::tree;
 
@@ -584,8 +618,8 @@ fn block_20() {
     println!("{}", tree!(inspect::select(&view, "/s1ap/*/criticality").unwrap()));
 }
 
-/// The Rust block 21 of README.md.
-fn block_21() {
+/// The Rust block 22 of README.md.
+fn block_22() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use oxirush_s1ap::tree;
 
@@ -607,8 +641,8 @@ fn block_21() {
     println!("{}", edited.to_tree());
 }
 
-/// The Rust block 22 of README.md.
-fn block_22() {
+/// The Rust block 23 of README.md.
+fn block_23() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use oxirush_s1ap::tree;
 
@@ -639,8 +673,8 @@ fn block_22() {
     }
 }
 
-/// The Rust block 23 of README.md.
-fn block_23() {
+/// The Rust block 24 of README.md.
+fn block_24() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use oxirush_s1ap::{tree, tree::Value};
 
@@ -681,8 +715,8 @@ fn block_23() {
     println!("{}", edited.to_tree());
 }
 
-/// The Rust block 24 of README.md.
-fn block_24() {
+/// The Rust block 25 of README.md.
+fn block_25() {
     use oxirush_s1ap::inspect;
 
     // The names that the value at a path can have, as the specification spells them
@@ -694,8 +728,8 @@ fn block_24() {
     assert_eq!(choice, Ok(None));
 }
 
-/// The Rust block 25 of README.md.
-fn block_25() {
+/// The Rust block 26 of README.md.
+fn block_26() {
     use oxirush_s1ap::inspect;
 
     // Whether a path can select anything in a message of a name, without a view
@@ -709,8 +743,8 @@ fn block_25() {
     }
 }
 
-/// The Rust block 26 of README.md.
-fn block_26() {
+/// The Rust block 27 of README.md.
+fn block_27() {
     use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1AP_PDU};
     use oxirush_s1ap::tree;
 
@@ -751,8 +785,8 @@ fn block_26() {
     println!("{}", edited.to_tree()["ies"][2]);
 }
 
-/// The Rust block 27 of README.md.
-fn block_27() {
+/// The Rust block 28 of README.md.
+fn block_28() {
     use oxirush_s1ap::helpers::{plmn, tai};
     use oxirush_s1ap::s1ap::S1AP_PDU;
 

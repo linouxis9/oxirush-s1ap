@@ -80,8 +80,7 @@ assert_eq!(octets, "0012401500000300000002002a0008000200070002400202a0");
 {"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"radio-connection-with-ue-lost"}}]}
 ```
 
-This page describes 0.3.0, which is not released yet:
-[Installation](#installation) says how to build it.
+This page describes 0.3.0, which is not on crates.io yet.
 
 ## Installation
 
@@ -90,7 +89,15 @@ This page describes 0.3.0, which is not released yet:
 oxirush-s1ap = "0.3"
 # With the JSON forms:
 # oxirush-s1ap = { version = "0.3", features = ["inspect"] }
+# What the examples of this page write octets in hexadecimal and JSON as text with:
+# hex = "0.4"
+# serde_json = "1"
 ```
+
+| Feature | Adds |
+|---------|------|
+| `inspect` | A PDU as JSON, a `oxirush_s1ap::tree::Value`: its tree, its view and the paths of its values, with the members in the order of the specification |
+| `serde` | `Serialize` and `Deserialize` for every type of the bindings, through its tree. It turns on `inspect` |
 
 Until 0.3.0 is on crates.io, with `oxirush-aper` 0.1.0 and `oxirush-utils`
 0.1.0 that it takes, a program takes the crate from its repository and the two
@@ -101,22 +108,26 @@ others at the revisions that it is tested with:
 oxirush-s1ap = { git = "https://github.com/linouxis9/oxirush-s1ap", features = ["inspect"] }
 
 [patch.crates-io]
-oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "59832487ec3235247732ac38d02dc78789ae4485" }
-oxirush-utils = { git = "https://github.com/linouxis9/oxirush-utils", rev = "0617bcb831fec1e9a7a41f7c370a4f624868073e" }
+oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "cf9cf1ada0d74ac0a23f3ecd823d40acd5f96f24" }
+oxirush-utils = { git = "https://github.com/linouxis9/oxirush-utils", rev = "eb1c453cd08dc3d0b712f53d4273595793cb9106" }
 ```
 
-| Feature | Adds |
-|---------|------|
-| `inspect` | A PDU as JSON, a `oxirush_s1ap::tree::Value`: its tree, its view and the paths of its values, with the members in the order of the specification |
-| `serde` | `Serialize` and `Deserialize` for every type of the bindings, through its tree. It turns on `inspect` |
+In a clone of the repository, cargo takes them with `--config`, as CI does:
 
-The minimum supported Rust version is 1.88. The values of the bindings are
-types of `oxirush-aper`, as `Octets`, `Bits` and `Error`: a program names them
-through `oxirush_s1ap::aper`, so that it has one version of each.
+```bash
+cargo test --all-features \
+  --config 'patch.crates-io.oxirush-aper.git="https://github.com/linouxis9/oxirush-aper"' \
+  --config 'patch.crates-io.oxirush-aper.rev="cf9cf1ada0d74ac0a23f3ecd823d40acd5f96f24"' \
+  --config 'patch.crates-io.oxirush-utils.git="https://github.com/linouxis9/oxirush-utils"' \
+  --config 'patch.crates-io.oxirush-utils.rev="eb1c453cd08dc3d0b712f53d4273595793cb9106"'
+```
 
-## Typed API
+The minimum supported Rust version is 1.88. The crate depends on one version of
+`oxirush-aper` exactly, which is released with it, and the values of the
+bindings are its types, as `Octets`, `Bits` and `Error`: a program names them
+through `oxirush_s1ap::aper`.
 
-### Decode a PDU
+## Decode a PDU
 
 ```rust
 use oxirush_s1ap::{S1apPduKind, s1ap::*};
@@ -162,13 +173,7 @@ and `check` read the message, and what does not decode there is their error.
 | `protocol_ies()`, `set_protocol_ies(ies)` | The IEs of its message, whatever the message is |
 | `check()` | How it deviates from the object set of its message |
 
-The crate has no limit on the octets of a PDU, and each call takes time and
-memory in proportion to them, a view up to 94 octets for an octet
-([`to_view`]): a receiver bounds what a peer makes it spend by what it reads
-from SCTP. 256 KiB takes every message that the cores sent in the lab runs,
-197 octets at most, and every vector, 131,099 at most.
-
-### Keep a value after its PDU
+## Keep a value after its PDU
 
 A type that holds octets has a lifetime, as `NASPDU<'a>`: a value that is
 decoded borrows them from the PDU. A type that holds none, as `Cause`, `TAI`,
@@ -270,24 +275,50 @@ fn main() -> Result<(), Error> {
 a NAS-PDU of 3 octets
 ```
 
-### Build a PDU
+## Build a PDU
 
-The name of an IE is its ASN.1 identifier without `id-` and with `_` for `-`:
-`id-MME-UE-S1AP-ID` is `MME_UE_S1AP_ID`. The name of a type is the one that
-ASN.1 gives it without its hyphens, with a capital after each: the IE
-`NAS_PDU` has the type `NASPDU`, `E_RAB_ID` `ERABID` and `GTP_TEID`
-`GTPTEID`, and `Pre-emptionCapability` is `PreEmptionCapability`. A name that
-the crate does not have, a message that the procedure does not have in that
-direction and a missing criticality do not compile. `build_s1ap!` gives a
-`Result`: a value that does not encode, as an integer outside its constraint,
-is an error. `S1AP_PDU::of_message(&message, criticality)` is the PDU of a
-message that is at hand.
+An IE is named by its ASN.1 identifier without `id-` and with `_` for `-`
+(`MME_UE_S1AP_ID`), a type by the name that ASN.1 gives it without its hyphens
+(the IE `NAS_PDU` has the type `NASPDU`, `E_RAB_ID` `ERABID`), and a field by
+the words of its member in lower case (`pLMNidentity` is `plmn_identity`). The
+two identifiers of a UE are types of the names of their IEs too:
+`MME_UE_S1AP_ID` and `ENB_UE_S1AP_ID`, whose IE is `eNB_UE_S1AP_ID`. A
+criticality that a call leaves out is the one that TS 36.413 assigns, and a
+name that the crate does not have, or a message that the procedure does not
+have in that direction, does not compile.
 
-The macros write the criticalities that they are given. `check()` reports
-one that is not the one that TS 36.413 assigns, and [`from_tree()`] writes
-those that it assigns.
+```rust
+use oxirush_s1ap::{Message, build_s1ap, s1ap::*};
 
-### Read the IEs of a message
+fn main() -> Result<(), oxirush_s1ap::Error> {
+    // The criticality of the procedure, and those of the object set of the message
+    let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+        eNB_UE_S1AP_ID(7u32),
+        NAS_PDU(vec![0x07, 0x41, 0x71]),
+    )?;
+    println!("{:?} {}", pdu.criticality(), hex::encode(pdu.encode()?));
+
+    // The PDU of a message that is at hand
+    let message: InitialUEMessage = pdu.decode_value()?;
+    let again = S1AP_PDU::of_message(&message, InitialUEMessage::CRITICALITY)?;
+    println!("{}", again == pdu);
+
+    // An IE that the object set of the message does not have is assigned none
+    let error = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+        TimeToWait(TimeToWait::v10s),
+    );
+    println!("{}", error.unwrap_err());
+    Ok(())
+}
+```
+
+```text
+ignore 000c4011000002000800020007001a000403074171
+true
+TimeToWait is no IE of the object set of InitialUEMessage, which assigns it no criticality: write its criticality
+```
+
+## Read the IEs of a message
 
 ```rust
 use oxirush_s1ap::{Error, extract_s1ap_ies, s1ap::*};
@@ -346,7 +377,7 @@ Some(radioNetwork(user_inactivity))
 None
 ```
 
-### Change or build one IE
+## Change or build one IE
 
 ```rust
 use oxirush_s1ap::{build_s1ap_ie, s1ap::*, with_s1ap_ie_mut};
@@ -369,7 +400,7 @@ and its own, in a block that says whether it did: its documentation has an
 example. Where an IE is in a message twice, it and
 `extract_s1ap_ies!` take the last one.
 
-### The IEs of any message
+## The IEs of any message
 
 ```rust
 use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
@@ -406,7 +437,7 @@ S1Setup 4011000d00000200024001450041400120
 order, including those that the message cannot have or has twice, and
 `set_protocol_ies` writes any list without checking it.
 
-### A list of single containers, and a handover container, typed
+## A list of single containers, and a handover container, typed
 
 An item of a list of E-RABs is an IE alone in its container: `build_s1ap_ie!`
 builds it without the name of a message. The container of a handover holds
@@ -464,12 +495,10 @@ E-RAB 5 with QCI 9
 EUTRANCGI { plmn_identity: PLMNidentity(208-93), cell_id: CellIdentity(0x1234/28), ie_extensions: None }
 ```
 
-### Check a message against its object set
+## Check a message against its object set
 
-The ASN.1 gives each message an object set: the IEs that it can have, in
-their order, each with a criticality and a presence. `check()` reports what a
-message has otherwise, and refuses nothing: the macros build such a message
-and the codec encodes it, so that a test of a peer can send it.
+`check()` reports how a message deviates from the object set that the ASN.1
+gives it, and refuses nothing.
 
 ```rust
 use oxirush_s1ap::{build_s1ap, s1ap::*};
@@ -518,12 +547,13 @@ Cause (IE 2) is mandatory, and the message does not have it
 `check()` decodes the value of each IE, not the IEs that a value holds as
 octets, and does not judge a conditional IE: its condition is prose.
 
-### Answer a faulty message
+## Answer a faulty message
 
 Clause 10 of TS 36.413 has what the receiver of a message that deviates
 answers: `cause()` of a deviation is the protocol cause, and
-`criticality_diagnostics()` of the PDU the Criticality Diagnostics IE, with an
-item for each IE of the criticality `reject` or `notify`.
+`criticality_diagnostics_for_response()` of the PDU the Criticality Diagnostics
+IE of a response, with an item for each IE of the criticality `reject` or
+`notify` (`criticality_diagnostics()` is that of an ERROR INDICATION).
 
 ```rust
 use oxirush_s1ap::{Deviation, build_s1ap, s1ap::*};
@@ -540,7 +570,7 @@ fn main() -> Result<(), oxirush_s1ap::Error> {
     let cause = deviations.iter().find_map(Deviation::cause).unwrap();
     let failure = build_s1ap!(UnsuccessfulOutcome, S1Setup, REJECT, S1SetupFailure,
         IGNORE Cause(Cause::protocol(cause)),
-        IGNORE CriticalityDiagnostics(received.criticality_diagnostics(&deviations)),
+        IGNORE CriticalityDiagnostics(received.criticality_diagnostics_for_response(&deviations)),
     )?;
     for deviation in &deviations {
         println!("{deviation}");
@@ -554,10 +584,10 @@ fn main() -> Result<(), oxirush_s1ap::Error> {
 ```text
 Global-ENB-ID (IE 59) is mandatory, and the message does not have it
 SupportedTAs (IE 64) is mandatory, and the message does not have it
-401100170000020002400131003a400b7811000100003b40004040
+401100150000020002400131003a4009180100003b40004040
 ```
 
-### Identities and capabilities
+## Identities and capabilities
 
 ```rust
 use oxirush_s1ap::helpers::*;
@@ -566,8 +596,9 @@ use oxirush_s1ap::helpers::*;
 let network = plmn("208", "93").unwrap();
 let mme = gummei(network, 1, 1); // group, code
 let tracking_area = tai(network, [0x00, 0x01]); // TAC
-let cell = eutran_cgi(network, 0x12345, 7).unwrap(); // macro eNB, cell
-let enb = global_enb_id(network, 0x12345).unwrap();
+let cell = eutran_cgi(network, EnbKind::Macro, 0x12345, 7).unwrap(); // eNB, cell
+let enb = global_enb_id(network, EnbKind::Macro, 0x12345).unwrap();
+let home = global_enb_id(network, EnbKind::Home, 0x123_4567).unwrap();
 
 // A bit string from octets, and the algorithms of a UE: the first octet
 // of its encryption bitmap, then of its integrity bitmap
@@ -576,7 +607,7 @@ let capabilities = ue_security_capabilities(0xe0, 0xe0);
 
 // What is no MCC, and a macro eNB ID that does not fit in its 20 bits
 println!("{}", plmn("20", "93").unwrap_err());
-println!("{}", global_enb_id(network, 0x100000).unwrap_err());
+println!("{}", global_enb_id(network, EnbKind::Macro, 0x100000).unwrap_err());
 ```
 
 ```text
@@ -588,7 +619,7 @@ A PLMN identity has its digits in the order of TS 36.413 clause 9.2.3.8:
 `plmn("310", "410")` is the octets `13 40 01`, where a NAS message has
 `13 00 14`. `plmn_from` reads the MCC and the MNC of a PLMN identity.
 
-### Errors
+## Errors
 
 ```rust
 use oxirush_s1ap::{ErrorKind, s1ap::*};
@@ -615,24 +646,12 @@ Every call that can fail returns an `oxirush_s1ap::Error`. Its `kind()` is
 what a caller matches on, and the documentation of `ErrorKind` lists the
 kinds; `error.ie()` names the IE of an error of the macros.
 
-### The names of the fields
+## The tree and the view of a PDU
 
-A field has the words of the identifier that ASN.1 gives its member, in lower
-case with `_` between them: `pLMNidentity` is `plmn_identity`, `tAC` is
-`tac`, `iE-Extensions` is `ie_extensions`, `eNB-ID` is `enb_id`, `mME-Code`
-is `mme_code`, `gTP-TEID` is `gtp_teid`, as the documentation of the crate has
-the rules. A `SEQUENCE` is a struct that a literal builds, and its `new` takes
-the members in their order; an extensible `CHOICE` or `ENUMERATED` is
-`#[non_exhaustive]`.
-
-## JSON: trees, views and paths
-
-With the `inspect` feature a PDU is JSON, a `oxirush_s1ap::tree::Value`, in two
-forms: a tree, the name of its message and its IEs by name, in which a message
-is shown and written, and a view, which keeps what was received and is read
-and edited by paths with the functions of the [`inspect`] module. Every PDU
-that decodes has a tree, which is the same PDU again: an IE whose value has
-no place for what a later release added is its octets there.
+With the `inspect` feature a PDU is JSON in two forms: a tree, in which a
+message is shown and written, and a view, which keeps what was received and is
+read and edited by paths with the functions of the [`inspect`] module. Every
+PDU that decodes has a tree, which is the same PDU again.
 
 ```rust
 use oxirush_s1ap::s1ap::S1AP_PDU;
@@ -652,7 +671,7 @@ println!("{}", view["message"]["protocolIEs"][2]);
 {"id":2,"criticality":"ignore","value":{"radioNetwork":"user-inactivity"},"_raw_value":"0280","_original_id":2,"_ie_name":"Cause"}
 ```
 
-### Read an IE
+## Read an IE
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
@@ -699,7 +718,7 @@ for (path, value) in inspect::paths(&view) {
 /s1ap/Cause/value/radioNetwork = "user-inactivity"
 ```
 
-### Change a value
+## Change a value
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
@@ -730,7 +749,7 @@ println!("{}", wrong.unwrap_err());
 "radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
 ```
 
-### Add or remove an IE
+## Add or remove an IE
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
@@ -759,7 +778,7 @@ println!("{}", edited.to_tree()["ies"]);
 [{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"c0ffee"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"eNBname":"enb-1","criticality":"ignore"}]
 ```
 
-### Write a message from its name and its IEs
+## Write a message from its name and its IEs
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
@@ -792,7 +811,7 @@ println!("{}", tree!(inspect::select(&view, "/s1ap/*/criticality").unwrap()));
 ["reject","reject","ignore","ignore"]
 ```
 
-### Send octets as they are
+## Send octets as they are
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
@@ -822,7 +841,7 @@ println!("{}", edited.to_tree());
 {"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":255},{"65000":{"octets":"c0ffee"},"criticality":"reject"}]}
 ```
 
-### A repeated IE
+## A repeated IE
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
@@ -862,7 +881,7 @@ this IE is MME-UE-S1AP-ID, not eNB-UE-S1AP-ID: "eNB-UE-S1AP-ID" is not a member 
 /s1ap/2/value = 3
 ```
 
-### An item of a list
+## An item of a list
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
@@ -909,7 +928,7 @@ println!("{}", edited.to_tree());
 {"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}}},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
 ```
 
-### The names of an ENUMERATED
+## The names of an ENUMERATED
 
 ```rust
 use oxirush_s1ap::inspect;
@@ -930,7 +949,7 @@ assert_eq!(choice, Ok(None));
 A name is read in any case and with any separators, as `"Normal Release"`
 above, and shown as the specification spells it.
 
-### Check a path before use
+## Check a path before use
 
 ```rust
 use oxirush_s1ap::inspect;
@@ -956,7 +975,7 @@ The functions `message_ies`, `message_ie_criticalities`, `item_criticality`
 and the others of [`inspect`] give what the ASN.1 says of each message, which
 `check_path` reads.
 
-### The container of a handover
+## The container of a handover
 
 Two IEs carry octets that TS 36.413 gives by reference: between eNBs, a type
 of the specification, as `Source-ToTarget-TransparentContainer` carries a
@@ -1010,7 +1029,7 @@ println!("{}", edited.to_tree()["ies"][2]);
 {"Source-ToTarget-TransparentContainer":"000201020002f83900000070200100"}
 ```
 
-### Any format of serde
+## Any format of serde
 
 With the `serde` feature, a PDU is serialized as its tree and deserialized
 from one, in any format that serde has, and each other type of the bindings
@@ -1035,17 +1054,19 @@ println!("{}", serde_json::to_string(&area).unwrap());
 {"pLMNidentity":"208-93","tAC":1}
 ```
 
-### Values
+## Write values as they are usually written
 
 A tree, a view and a value alone show the values of some types as they are
-usually written, and take them so or in the form of their ASN.1 type.
+usually written, and take them so or in the form of their ASN.1 type. A string
+of decimal digits is never read as octets: octets whose hexadecimal has no
+letter are written after `0x`.
 
 | Type | Notation |
 |------|----------|
-| `PLMNidentity` | `"208-93"`, the MCC and the MNC |
+| `PLMNidentity` | `"208-93"`, the MCC and the MNC, or its octets: `"02f839"`, `"0x134001"`. `"310410"` is refused, as it is read as 310-410 and as the octets 0x310410 |
 | `TransportLayerAddress` | `"10.0.0.1"`, `"2001:db8::1"`, or the two with a comma |
 | `IMSI` | its digits |
-| `TAC`, `FiveGSTAC`, `LAC`, `RAC`, `CI`, `GTP-TEID`, `M-TMSI`, `MME-Group-ID`, `MME-Code`, `Port-Number`, `CellIdentity`, `NRCellIdentity`, `UL-NAS-Count` | a number, also read as a `"0x…"` string |
+| `TAC`, `FiveGSTAC`, `LAC`, `RAC`, `CI`, `GTP-TEID`, `M-TMSI`, `MME-Group-ID`, `MME-Code`, `Port-Number`, `CellIdentity`, `NRCellIdentity`, `UL-NAS-Count` | a number, also read in hexadecimal as `"0x…"`. A string of digits, as `"1234"`, is refused: it is the number 1234 and the octets 0x1234 |
 | `ENUMERATED` | the name of the value, read in any case |
 | `INTEGER` | a number, which 64 bits hold, as the bindings hold it |
 | a bit string whose size varies, as the identifier of a gNB | `{"value": "000004", "length": 22}`: its octets in hexadecimal, from its first bit, and its length in bits |
@@ -1055,21 +1076,7 @@ usually written, and take them so or in the form of their ASN.1 type.
 The documentation of the [`inspect`] module has the rules of the paths, of
 the edits and of the values, and the kinds of the errors of the JSON forms.
 
-## Examples
-
-| Example | Shows | Feature |
-|---------|-------|---------|
-| `s1ap_build_pdu` | Initial Context Setup request and response, UE Context Release, Handover Required and Acknowledge, S1 Setup Failure, and one IE built alone | |
-| `s1ap_decode_manually` | An S1 Setup Response built and read without the macros: the identifier, the criticality and the octets of each IE | |
-| `s1ap_extract_ies` | UE release, handover, and nested EPS bearer and NAS data read from decoded messages | |
-| `s1ap_inspect` | An Initial UE Message: its values with their paths, one IE edited, one added by its value and one by its octets, and the PDU encoded again | `inspect` |
-
-```bash
-cargo run --example s1ap_build_pdu
-cargo run --example s1ap_inspect --features inspect
-```
-
-## What the crate does not do
+## Limits
 
 - Procedures, state and transport: it is a codec.
 - Judge a conditional IE: `check()` reports what the object sets say, and a
@@ -1079,104 +1086,136 @@ cargo run --example s1ap_inspect --features inspect
   a tree and a view keep them.
 - Look into an RRC container, or into the container of a handover for
   another system than E-UTRAN: they stay octets.
+- The crate has no limit on the octets of a PDU, and each call takes time and
+  memory in proportion to them, a view up to 143 octets for an octet
+  ([`to_view`]): a receiver bounds what a peer makes it spend by what it reads
+  from SCTP.
+- The bindings are those of TS 36.413 V19.2.0 (Release 19), from the archive
+  `36413-j20.zip`, in aligned PER (ITU-T X.691 (02/2021)).
+- No PDU of a commercial RAN or core is among the fixtures: what such equipment
+  sends that open-source nodes did not is untested.
 
-## Specifications
+## Performance
 
-| Specification | Version | For |
-|---------------|---------|-----|
-| 3GPP TS 36.413 | V19.2.0 (Release 19), `36413-j20.zip` | The six ASN.1 modules of clause 9.3, and clause 9.2 for what the ASN.1 leaves to prose |
-| ITU-T X.691 | (02/2021) | Aligned PER |
+The crate against four other implementations of S1AP, on the six PDUs of
+`benches/compare/pdus.tsv`, which each decodes and encodes. The envelope alone
+is `S1AP_PDU::decode`, which leaves the value of each IE in its octets; "this
+crate" decodes the PDU and then every IE of its message as its type, which is
+what the others do; and encoding writes the PDU from the typed values of its
+IEs, as `build_s1ap!` does.
 
-## Tests
+Decoding, ns per call, and the ratio to this crate:
 
-In a clone of the repository, cargo takes `oxirush-aper` and `oxirush-utils`
-at the revisions that `build/revisions` pins with `--config`, as CI does:
+| PDU (octets) | this crate, the envelope alone | this crate | rasn 0.29 | hampi 0.7.2 | asn1c (Open5GS 2.8.0) | pycrate 0.8.1 |
+|---|---|---|---|---|---|---|
+| DownlinkNASTransport (73) | 9 | 87 | 779 (9.0x) | 913 (10.5x) | 1,816 (20.9x) | 73,347 (843.1x) |
+| InitialContextSetupRequest (197) | 9 | 249 | 2,291 (9.2x) | 3,486 (14.0x) | 5,136 (20.6x) | 231,762 (930.4x) |
+| S1SetupResponse (45) | 9 | 222 | 1,150 (5.2x) | 1,373 (6.2x) | 2,183 (9.8x) | 101,654 (456.9x) |
+| HandoverRequest (146) | 10 | 287 | 2,770 (9.7x) | 3,657 (12.7x) | 5,545 (19.3x) | 269,845 (940.2x) |
+| UEContextReleaseCommand (21) | 9 | 104 | 623 (6.0x) | 678 (6.5x) | 1,388 (13.3x) | 70,827 (677.8x) |
+| InitialUEMessage (48) | 9 | 143 | 1,375 (9.6x) | 1,427 (10.0x) | 2,578 (18.0x) | 125,781 (879.6x) |
 
-```bash
-cargo test --all-features \
-  --config 'patch.crates-io.oxirush-aper.git="https://github.com/linouxis9/oxirush-aper"' \
-  --config 'patch.crates-io.oxirush-aper.rev="59832487ec3235247732ac38d02dc78789ae4485"' \
-  --config 'patch.crates-io.oxirush-utils.git="https://github.com/linouxis9/oxirush-utils"' \
-  --config 'patch.crates-io.oxirush-utils.rev="0617bcb831fec1e9a7a41f7c370a4f624868073e"'
-cd oracle && cargo test   # against the codec of rasn
+Encoding, ns per call, and the ratio to this crate:
+
+| PDU (octets) | this crate | rasn 0.29 | hampi 0.7.2 | asn1c (Open5GS 2.8.0) | pycrate 0.8.1 |
+|---|---|---|---|---|---|
+| DownlinkNASTransport (73) | 66 | 925 (14.0x) | 1,670 (25.2x) | 1,177 (17.7x) | 46,668 (703.9x) |
+| InitialContextSetupRequest (197) | 153 | 1,844 (12.0x) | 4,838 (31.5x) | 3,043 (19.8x) | 144,309 (940.7x) |
+| S1SetupResponse (45) | 88 | 1,086 (12.4x) | 1,907 (21.7x) | 1,036 (11.8x) | 63,240 (721.1x) |
+| HandoverRequest (146) | 180 | 2,291 (12.7x) | 5,145 (28.6x) | 3,170 (17.6x) | 165,840 (922.9x) |
+| UEContextReleaseCommand (21) | 68 | 809 (11.9x) | 1,302 (19.1x) | 751 (11.0x) | 46,124 (677.3x) |
+| InitialUEMessage (48) | 105 | 1,236 (11.8x) | 2,503 (23.8x) | 1,391 (13.2x) | 77,308 (735.6x) |
+
+Every figure for InitialContextSetupRequest, per call:
+
+|  | decode ns | cycles | instructions | allocations | octets allocated | encode ns | cycles | instructions | allocations | octets allocated | most memory held, KiB |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| this crate | 249 | 1,105 | 3,536 | 2 | 256 | 153 | 681 | 2,247 | 2 | 454 | 3,600 |
+| rasn 0.29 | 2,291 (9.2x) | 9,990 (9.0x) | 22,941 (6.5x) | 20 | 1,074 | 1,844 (12.0x) | 8,256 (12.1x) | 26,486 (11.8x) | 33 | 1,698 | 4,420 |
+| hampi 0.7.2 | 3,486 (14.0x) | 14,956 (13.5x) | 47,307 (13.4x) | 37 | 3,569 | 4,838 (31.5x) | 21,094 (31.0x) | 63,805 (28.4x) | 17 | 1,797 | 3,780 |
+| asn1c (Open5GS 2.8.0) | 5,136 (20.6x) | 22,805 (20.6x) | 81,660 (23.1x) | 79 | 10,046 | 3,043 (19.8x) | 13,301 (19.5x) | 50,473 (22.5x) | 25 | 3,728 | 4,552 |
+| pycrate 0.8.1 | 231,762 (930.4x) | 1,002,960 (907.7x) | 2,109,419 (596.5x) |  |  | 144,309 (940.7x) | 624,416 (917.0x) | 1,290,051 (574.0x) |  |  | 28,144 |
+
+The time is the fastest of three runs of a call repeated for about 0.2 s, and
+the cycles and the instructions those that `perf stat` counts for the calls
+alone (the difference between a run of twice the calls and one of the calls).
+The allocations and the octets that they ask for are counted by an allocator
+that counts in Rust, by `malloc`, `calloc` and `realloc` for asn1c; pycrate's
+are not counted. The most memory held is the high-water mark of the resident
+memory of the program (`VmHWM`), its runtime included. The figures were taken on
+an AMD Ryzen 7 5700G, each program on one core, while other work kept the load
+average of the machine between 4.2 and 8.2 (of 16 threads, the other thread of
+that core among them). The script fetches each implementation at a pinned
+version: hampi 0.7.2 and rasn 0.29.0 from crates.io, Open5GS v2.8.0 from GitHub,
+pycrate 0.8.1 from PyPI, and the ASN.1 from the archive of 3GPP. From the root
+of the repository, with what the script says it needs:
+
+```sh
+python3 benches/compare/compare.py --core 3 --perf "sudo -n perf"
 ```
+
+A clean `cargo build -j 5` of the crate and its dependencies on Rust 1.88, on
+five cores of the same machine while it ran other work (a load average of 4 to
+9), with the debug information of the default profile and without it:
+
+| Build | Time | Peak memory | Peak memory, `CARGO_PROFILE_DEV_DEBUG=0` |
+|-------|------|-------------|------------------------------------------|
+| No feature | 9 s | 0.69 GiB | 0.63 GiB |
+| `inspect` | 18 s | 0.98 GiB | 0.84 GiB |
+| `serde` | 19 s | 1.06 GiB | 0.87 GiB |
+| `inspect`, `--release` | 21 s | 0.92 GiB | the same |
+
+On a message of 65,535 IEs of one name, 393 KB, `decode` takes 0.01 ms, `check`
+7.22 ms, `to_view` 76 ms and 37 MB, `with_view` 136 ms and 48 MB,
+`inspect::paths` 44 ms, and an edit at a path 0.02 ms, on one core of the same
+machine at a load average of 8 to 12. In `benches/`, `cargo bench --bench scale`
+measures them, `python3 build_cost.py +1.88.0 --features inspect` a clean build,
+and `cargo bench --bench codec` and `--bench allocations` the codec on the PDUs
+of the tests.
+
+## Tests and fuzzing
 
 The tests read the 101 messages and the 284 vectors that pycrate 0.8.1
 encoded from the ASN.1, and 81 PDUs that the MME of Open5GS 2.8.0 sent in lab
 runs, through the codec, the views and the trees; `oracle/` compares each,
 cut, lengthened and with changed bits, with the codec of rasn 0.29, and
-`tests/package.sh` runs the tests from the package alone. 10 of the 101
-messages were seen on a wire, and no PDU that an eNB sent is among them, nor
-one of a commercial RAN or core: what such equipment sends that these did not
-is untested. [CONTRIBUTING.md](CONTRIBUTING.md) says how the vectors were
-made and the PDUs captured.
-
-## Fuzzing
-
-`fuzz/` has three [cargo-fuzz](https://crates.io/crates/cargo-fuzz) targets,
-which CI runs for a minute each: `decode` compares the crate with the codec
-of rasn on any octets, `view` the JSON forms, and `paths` the paths and the
-edits.
+`tests/package.sh` runs the tests from the package alone. `fuzz/` has three
+[cargo-fuzz](https://crates.io/crates/cargo-fuzz) targets, `decode`, `view`
+and `paths`, which CI runs for a minute each from the PDUs of the tests and
+from each of them under a procedure code that the specification does not
+have. `examples/` has four programs, which build, read, decode by hand and
+inspect messages.
 
 ```bash
-./fuzz/seed.sh
-RUSTFLAGS="--cfg oxirush_s1ap_hooks" cargo +nightly fuzz run decode -- -max_total_time=60
+cargo test --all-features   # with the --config lines of Installation
+cd oracle && cargo test     # against the codec of rasn
+./fuzz/seed.sh && RUSTFLAGS="--cfg oxirush_s1ap_hooks" cargo +nightly fuzz run view -- -max_total_time=60
+cargo run --example s1ap_build_pdu
 ```
 
-## Benchmarks
-
-`benches/` is a package of its own: criterion for the time, a counting
-allocator for the memory, pprof for the profiles, and `build_cost.py` for a
-clean build.
-
-```bash
-cd benches
-cargo bench --bench codec -- decode/
-cargo bench --bench allocations
-python3 build_cost.py +1.88.0 --features inspect
-```
-
-## Performance
-
-A clean `cargo build -j 5` of the crate and its dependencies on Rust 1.88, on
-five cores of an x86-64 Linux machine that runs other work:
-
-| Build | Time | Peak memory |
-|-------|------|-------------|
-| No feature | 8 s | 0.8 GiB |
-| `inspect` | 16 s | 1.1 GiB |
-| `serde` | 15 s | 1.0 GiB |
-| `inspect`, `--release` | 19 s | 0.9 GiB |
-
-On a message of 65,535 IEs, 393 KB, `decode` takes 0.02 ms, `check` 6 ms,
-`to_view` 83 ms and 37 MB, `with_view` 133 ms and 48 MB, `inspect::paths`
-39 ms, and an edit at a path 0.02 ms. `cargo bench --bench scale`, in
-`benches/`, measures them.
-
-## OxiRush crates
-
-[oxirush-ngap](https://github.com/linouxis9/oxirush-ngap) (NGAP, the same crate for TS 38.413) ·
-[oxirush-aper](https://github.com/linouxis9/oxirush-aper) (aligned PER) ·
-[oxirush-utils](https://github.com/linouxis9/oxirush-utils) (identities and
-trees) ·
-[oxirush-nas](https://github.com/linouxis9/oxirush-nas) (NAS) ·
-[oxirush-security](https://github.com/linouxis9/oxirush-security) (NAS keys
-and algorithms) ·
-[oxirush-gtp-u](https://github.com/linouxis9/oxirush-gtp-u) (user plane) ·
-[oxirush-sctp](https://github.com/linouxis9/oxirush-sctp) (transport)
-
-## Contributing
-
-The bindings are generated: [CONTRIBUTING.md](CONTRIBUTING.md) says how, and
-what a change to them, to the vectors or to the pinned revisions takes. Each
-commit is signed off (`git commit -s`), under the
+The bindings are generated: [CONTRIBUTING.md](CONTRIBUTING.md) says how, how
+the vectors were made and the PDUs captured, and what a change to them or to
+the pinned revisions takes. A pull request comes with a test for what it
+changes; the Rust blocks of this page are checked with what they print
+([`tests/readme.rs`](tests/readme.rs) says how). Sign off your commits
+(`git commit -s`): by contributing you agree to the
 [Developer Certificate of Origin](https://developercertificate.org/).
+
+## The OxiRush family
+
+- [oxirush-utils](https://github.com/linouxis9/oxirush-utils): the 3GPP identities, and the JSON tree with its paths that the others share.
+- [oxirush-aper](https://github.com/linouxis9/oxirush-aper): aligned PER, the runtime of the NGAP and S1AP codecs.
+- [oxirush-nas](https://github.com/linouxis9/oxirush-nas): the NAS messages of 5GS and EPS.
+- [oxirush-security](https://github.com/linouxis9/oxirush-security): NAS security, AKA and the derivation of keys.
+- [oxirush-ngap](https://github.com/linouxis9/oxirush-ngap): NGAP, between a gNB and an AMF.
+- [oxirush-s1ap](https://github.com/linouxis9/oxirush-s1ap): S1AP, between an eNB and an MME.
+- [oxirush-gtp-u](https://github.com/linouxis9/oxirush-gtp-u): GTP-U tunnels, with a test UPF.
+- [oxirush-sctp](https://github.com/linouxis9/oxirush-sctp): SCTP sockets, which carry NGAP and S1AP.
 
 ## License
 
-Copyright 2025-2026 Valentin D'Emmanuele
-
-Licensed under the Apache License, Version 2.0. See [LICENSE](https://github.com/linouxis9/oxirush-s1ap/blob/main/LICENSE) for details.
+Copyright 2025-2026 Valentin D'Emmanuele. Licensed under the Apache License,
+Version 2.0: see [LICENSE](LICENSE).
 
 [`inspect`]: https://docs.rs/oxirush-s1ap/0.3.0/oxirush_s1ap/inspect/index.html
 [`from_tree()`]: https://docs.rs/oxirush-s1ap/0.3.0/oxirush_s1ap/s1ap/s1_ap_pdu_descriptions/enum.S1APPDU.html#method.from_tree

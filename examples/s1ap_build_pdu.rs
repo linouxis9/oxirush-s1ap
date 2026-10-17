@@ -80,7 +80,7 @@ fn main() -> Result<(), Error> {
     // identity is mandatory in S1AP, and the transparent container uses the
     // ASN.1-derived underscore spelling accepted by the macro.
 
-    let target_enb = global_enb_id(network, 0x12345)?;
+    let target_enb = global_enb_id(network, EnbKind::Macro, 0x12345)?;
     let target_area = tai(network, [0x00, 0x01]);
     let target = TargetID::targeteNB_ID(TargeteNBID::new(target_enb, target_area, None));
     let cause = Cause::radioNetwork(CauseRadioNetwork::handover_desirable_for_radio_reason);
