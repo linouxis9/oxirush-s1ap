@@ -78,8 +78,8 @@ assert_eq!(octets, "0012401500000300000002002a0008000200070002400202a0");
 ```
 
 ```json
-{"ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}],"message":"UEContextReleaseRequest"}
-{"ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"radio-connection-with-ue-lost"}}],"message":"UEContextReleaseRequest"}
+{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
+{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"radio-connection-with-ue-lost"}}]}
 ```
 
 [`oxirush-ngap`](https://crates.io/crates/oxirush-ngap) is the same crate for NGAP, TS 38.413,
@@ -111,7 +111,11 @@ oxirush-s1ap = "0.3"
 |---------|------|---------|
 | `inspect` | A PDU as a `serde_json::Value`: its tree, in which a message is shown and written as its name and its IEs, its view and the paths of its values | `serde_json` |
 
-No feature is on by default. The examples of this page also use the `hex`
+No feature is on by default. With `inspect`, the members of a view and of a
+tree are in the order of the specification, through
+`serde_json/preserve_order`, which the feature turns on for the whole build:
+cargo unifies features, so every `serde_json::Map` of a program that has it
+keeps the order of insertion. The examples of this page also use the `hex`
 crate, and `serde_json` for JSON. The values of the bindings are native
 numbers, arrays and the types of `oxirush-aper`: `Octets`, `Bits` and
 `BitString`. The crate has them at its root, and the runtime as
@@ -252,13 +256,13 @@ most IEs that a message has and the most memory for an octet:
 | `decode`, `decode_borrowed` | 1.3 octets; none for `decode_borrowed` of a message of less than 16384 octets | 0.03 ms |
 | `protocol_ies`, `decode_value` | 9 | 0.4 ms |
 | `check` | 22 | 4.1 ms |
-| `to_view`, `to_tree`, `from_tree` | 125 | 85 to 109 ms, 49 MB |
-| `from_view`, `with_view` | 240 | 156 to 159 ms, 94 MB |
-| `inspect::paths` | 52 | 73 ms |
-| `inspect::set`, `remove`, `insert`, `open` | None for the view, which is edited in its place: a copy of each entry of a list that the path goes into | 0.01 ms |
+| `to_view`, `to_tree`, `from_tree` | 162 | 139 to 212 ms, 64 MB |
+| `from_view`, `with_view` | 238 | 193 to 210 ms, 94 MB |
+| `inspect::paths` | 78 | 55 ms |
+| `inspect::set`, `remove`, `insert`, `open` | None for the view, which is edited in its place | 0.02 ms |
 
 A message that a network sends costs less for an octet: `to_view` of a paging
-of 140 octets takes 27 KB, and of a handover of 4 KB, 40 KB. `cargo bench
+of 200 octets takes 36 KB, and of a handover of 4 KB, 35 KB. `cargo bench
 --bench scale`, in `benches/`, measures the table, and `--bench allocations`
 the memory of each call on the messages of the fixtures.
 
@@ -818,8 +822,8 @@ println!("{}", view["message"]["protocolIEs"][2]);
 ```
 
 ```json
-{"ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}],"message":"UEContextReleaseRequest"}
-{"_ie_name":"Cause","_original_id":2,"_raw_value":"0280","criticality":"ignore","id":2,"value":{"radioNetwork":"user-inactivity"}}
+{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
+{"id":2,"criticality":"ignore","value":{"radioNetwork":"user-inactivity"},"_raw_value":"0280","_original_id":2,"_ie_name":"Cause"}
 ```
 
 The JSON of this page is what the Rust above it prints, and the recipes
@@ -858,18 +862,18 @@ for (path, value) in inspect::paths(&view) {
 ```
 
 ```text
-/criticality = "ignore"
-/direction = "InitiatingMessage"
-/s1ap/MME-UE-S1AP-ID/criticality = "reject"
-/s1ap/MME-UE-S1AP-ID/id = 0
-/s1ap/MME-UE-S1AP-ID/value = 42
-/s1ap/eNB-UE-S1AP-ID/criticality = "reject"
-/s1ap/eNB-UE-S1AP-ID/id = 8
-/s1ap/eNB-UE-S1AP-ID/value = 7
-/s1ap/Cause/criticality = "ignore"
-/s1ap/Cause/id = 2
-/s1ap/Cause/value/radioNetwork = "user-inactivity"
 /procedure_code = 18
+/direction = "InitiatingMessage"
+/criticality = "ignore"
+/s1ap/MME-UE-S1AP-ID/id = 0
+/s1ap/MME-UE-S1AP-ID/criticality = "reject"
+/s1ap/MME-UE-S1AP-ID/value = 42
+/s1ap/eNB-UE-S1AP-ID/id = 8
+/s1ap/eNB-UE-S1AP-ID/criticality = "reject"
+/s1ap/eNB-UE-S1AP-ID/value = 7
+/s1ap/Cause/id = 2
+/s1ap/Cause/criticality = "ignore"
+/s1ap/Cause/value/radioNetwork = "user-inactivity"
 ```
 
 ### Change a value
@@ -899,8 +903,8 @@ println!("{}", wrong.unwrap_err());
 ```
 
 ```text
-{"ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":9},{"Cause":{"nas":"normal-release"}}],"message":"UEContextReleaseRequest"}
-"radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, at /s1ap/Cause/radioNetwrok; an IE itself has id, criticality, value, octets
+{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":9},{"Cause":{"nas":"normal-release"}}]}
+"radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
 ```
 
 ### Add or remove an IE
@@ -929,7 +933,7 @@ println!("{}", edited.to_tree().unwrap()["ies"]);
 ```
 
 ```json
-[{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"C0FFEE"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"criticality":"ignore","eNBname":"enb-1"}]
+[{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"C0FFEE"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"eNBname":"enb-1","criticality":"ignore"}]
 ```
 
 ### Write a message from its name and its IEs
@@ -991,8 +995,8 @@ println!("{}", edited.to_tree().unwrap());
 
 ```text
 0012401000000200000002002afde80003c0ffee
-{"_decode_error":"S1AP IE 65000 is unknown","_original_id":65000,"_raw_value":"C0FFEE","criticality":"reject","id":65000,"value":"C0FFEE"}
-{"ies":[{"MME-UE-S1AP-ID":255},{"65000":{"octets":"C0FFEE"},"criticality":"reject"}],"message":"UEContextReleaseRequest"}
+{"id":65000,"criticality":"reject","value":"C0FFEE","_decode_error":"S1AP IE 65000 is unknown","_raw_value":"C0FFEE","_original_id":65000}
+{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":255},{"65000":{"octets":"C0FFEE"},"criticality":"reject"}]}
 ```
 
 ### A repeated IE
@@ -1081,7 +1085,7 @@ println!("{}", edited.to_tree().unwrap());
 ```
 
 ```json
-{"ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"cause":{"nas":"normal-release"},"e-RAB-ID":6}},{"E-RABItem":{"cause":{"radioNetwork":"unspecified"},"e-RAB-ID":7}}]}],"message":"E-RABReleaseCommand"}
+{"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}}},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
 ```
 
 ### A transfer and its members
@@ -1129,8 +1133,8 @@ for wrong in ["/s1ap/Cause/radioNetwrok", "/s1ap/eNB-UE-S1AP-ID/valeu", "/s1ap/G
 ```
 
 ```text
-"radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, at /s1ap/Cause/radioNetwrok; an IE itself has id, criticality, value, octets
-"valeu" is not a member of this value, which has none, at /s1ap/eNB-UE-S1AP-ID/valeu; an IE itself has id, criticality, value, octets
+"radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
+"valeu" is not a member of this value, which has none; an IE itself has id, criticality, value, octets, at /s1ap/eNB-UE-S1AP-ID/valeu
 "GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
 ```
 
@@ -1203,7 +1207,7 @@ println!("{}", edited.to_tree().unwrap()["ies"][2]);
 
 ```text
 {"Source-ToTarget-TransparentContainer":"000201020002F83900012340200100"}
-{"rRC-Container":"0102","targetCell-ID":{"cell-ID":4660,"pLMNidentity":"208-93"},"uE-HistoryInformation":[{"uTRAN-Cell":"00"}]}
+{"rRC-Container":"0102","targetCell-ID":{"pLMNidentity":"208-93","cell-ID":4660},"uE-HistoryInformation":[{"uTRAN-Cell":"00"}]}
 {"Source-ToTarget-TransparentContainer":"000201020002F83900000070200100"}
 ```
 

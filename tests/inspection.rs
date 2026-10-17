@@ -532,8 +532,8 @@ fn the_value_of_an_ie_may_be_left_out_of_a_path() {
                 .to_string(),
         ] {
             assert!(error.contains(value), "{path}: {error}");
-            let own = "; an IE itself has id, criticality, value, octets";
-            assert!(error.ends_with(own), "{path}: {error}");
+            let own = format!("; an IE itself has id, criticality, value, octets, at {path}");
+            assert!(error.ends_with(&own), "{path}: {error}");
         }
     }
     assert_eq!(edited, before);
@@ -679,7 +679,10 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     ] {
         let error = inspect::check_path("HandoverRequired", &path).unwrap_err();
         let text = error.to_string();
-        assert!(text.contains(&format!("which has {name}, at")), "{error}");
+        assert!(
+            text.contains(&format!("which has {name}; an IE itself")),
+            "{error}"
+        );
         assert_eq!(inspect::select(&view, &path), Err(error.clone()), "{path}");
         assert_eq!(inspect::open(&mut view, &path), Err(error), "{path}");
     }
@@ -1025,21 +1028,23 @@ fn the_ies_of_a_message_have_paths_by_their_names() {
     let printed: Vec<_> = (paths.iter())
         .map(|(path, value)| format!("{path} = {value}"))
         .collect();
+    // The members in the order in which the view has them, which is that of the
+    // specification.
     assert_eq!(
         printed,
         [
-            "/criticality = \"ignore\"",
-            "/direction = \"InitiatingMessage\"",
-            "/s1ap/MME-UE-S1AP-ID/criticality = \"reject\"",
-            "/s1ap/MME-UE-S1AP-ID/id = 0",
-            "/s1ap/MME-UE-S1AP-ID/value = 1",
-            "/s1ap/eNB-UE-S1AP-ID/criticality = \"reject\"",
-            "/s1ap/eNB-UE-S1AP-ID/id = 8",
-            "/s1ap/eNB-UE-S1AP-ID/value = 7",
-            "/s1ap/Cause/criticality = \"ignore\"",
-            "/s1ap/Cause/id = 2",
-            "/s1ap/Cause/value/radioNetwork = \"user-inactivity\"",
             "/procedure_code = 18",
+            "/direction = \"InitiatingMessage\"",
+            "/criticality = \"ignore\"",
+            "/s1ap/MME-UE-S1AP-ID/id = 0",
+            "/s1ap/MME-UE-S1AP-ID/criticality = \"reject\"",
+            "/s1ap/MME-UE-S1AP-ID/value = 1",
+            "/s1ap/eNB-UE-S1AP-ID/id = 8",
+            "/s1ap/eNB-UE-S1AP-ID/criticality = \"reject\"",
+            "/s1ap/eNB-UE-S1AP-ID/value = 7",
+            "/s1ap/Cause/id = 2",
+            "/s1ap/Cause/criticality = \"ignore\"",
+            "/s1ap/Cause/value/radioNetwork = \"user-inactivity\"",
         ]
     );
     // A name is taken in any case, and an IE also by its identifier or its position.
@@ -1274,8 +1279,8 @@ fn a_path_that_names_nothing_is_refused_and_changes_nothing() {
     }
     for (path, reason) in [
         ("/s1ap/NoSuchIE/value", "is not an IE of S1AP"),
-        ("/s1ap/GUMMEI-ID/value", "an edit changes what is there"),
-        ("/s1ap/7/value", "an edit changes what is there"),
+        ("/s1ap/GUMMEI-ID/value", "the path selects nothing"),
+        ("/s1ap/7/value", "the path selects nothing"),
     ] {
         let error = inspect::set(&mut view, path, json!(1))
             .unwrap_err()
@@ -1397,7 +1402,7 @@ fn null_takes_an_optional_member_out() {
     let error = inspect::set(&mut edited, nas, Value::Null)
         .unwrap_err()
         .to_string();
-    assert!(error.contains("an edit changes what is there"), "{error}");
+    assert!(error.contains("the path selects nothing"), "{error}");
 }
 
 #[test]
@@ -1946,14 +1951,14 @@ fn a_path_is_checked_against_a_message_without_a_view() {
         (
             "UEContextReleaseRequest",
             "/s1ap/Cause/misspelled",
-            "is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, \
-             at /s1ap/Cause/misspelled; an IE itself has id, criticality, value, octets",
+            "is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; \
+             an IE itself has id, criticality, value, octets, at /s1ap/Cause/misspelled",
         ),
         (
             "UEContextReleaseRequest",
             "/s1ap/eNB-UE-S1AP-ID/valeu",
-            "is not a member of this value, which has none, at /s1ap/eNB-UE-S1AP-ID/valeu; an \
-             IE itself has id, criticality, value, octets",
+            "is not a member of this value, which has none; an IE itself has id, criticality, \
+             value, octets, at /s1ap/eNB-UE-S1AP-ID/valeu",
         ),
         (
             "UEContextReleaseRequest",
