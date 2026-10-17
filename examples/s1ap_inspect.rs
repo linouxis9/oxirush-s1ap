@@ -5,8 +5,8 @@
 //! cargo run --example s1ap_inspect --features inspect
 //! ```
 
+use oxirush_s1ap::tree;
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-use serde_json::json;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // INITIAL UE MESSAGE: eNB-UE-S1AP-ID, NAS-PDU, TAI, EUTRAN-CGI and
@@ -28,22 +28,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The PLMN identity is "208-93", and the TAC and the cell identity are numbers.
     let plmn = "/s1ap/TAI/value/pLMNidentity";
     let tac = "/s1ap/TAI/value/tAC";
-    assert_eq!(inspect::select(&view, plmn)?, [&json!("208-93")]);
-    assert_eq!(inspect::select(&view, tac)?, [&json!(0x595c)]);
+    assert_eq!(inspect::select(&view, plmn)?, [&tree!("208-93")]);
+    assert_eq!(inspect::select(&view, tac)?, [&tree!(0x595c)]);
 
     // Edit an IE through its typed value. The other IEs keep the octets received.
-    inspect::set(&mut view, tac, json!(7))?;
-    inspect::set(&mut view, plmn, json!("001-01"))?;
+    inspect::set(&mut view, tac, tree!(7))?;
+    inspect::set(&mut view, plmn, tree!("001-01"))?;
 
     // Add an IE at the end: its `value` has the type of the identifier. A number is
     // also written in hexadecimal.
-    let identity = json!({"mMEC": 1, "m-TMSI": "0xC0FFEE01"});
-    let identity = json!({"id": "S-TMSI", "criticality": "reject", "value": identity});
+    let identity = tree!({"mMEC": 1, "m-TMSI": "0xC0FFEE01"});
+    let identity = tree!({"id": "S-TMSI", "criticality": "reject", "value": identity});
     inspect::insert(&mut view, "/s1ap/-", identity)?;
 
     // Add given octets as an IE, before the establishment cause: its `octets`, without
     // `value`.
-    let unknown = json!({"id": 60000, "criticality": "ignore", "octets": "C0FFEE"});
+    let unknown = tree!({"id": 60000, "criticality": "ignore", "octets": "C0FFEE"});
     inspect::insert(&mut view, "/s1ap/RRC-Establishment-Cause", unknown)?;
 
     // Encode the view again.
@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The IE that was not edited is the octets that were received.
     let view = edited.to_view()?;
     let nas = inspect::select(&view, "/s1ap/NAS-PDU/octets")?;
-    assert_eq!(nas, [&json!("03076002")]);
+    assert_eq!(nas, [&tree!("03076002")]);
 
     Ok(())
 }

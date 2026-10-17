@@ -24,7 +24,7 @@ pub use oxirush_s1ap as codec;
 use crate::{Typed, Written, done};
 use codec::s1ap;
 use codec::{Error, build_s1ap, extract_s1ap_ies};
-use serde_json::{Value, json};
+use oxirush_s1ap::{tree, tree::Value};
 
 /// A PDU of the protocol, which owns its octets.
 pub type Pdu = s1ap::S1AP_PDU;
@@ -106,7 +106,7 @@ fn octets(length: usize) -> String {
 /// What an E-RAB is set up with: its QoS, the tunnel of its gateway and a
 /// NAS-PDU of 96 octets.
 fn e_rab(id: u8) -> Value {
-    json!({
+    tree!({
         "e-RAB-ID": id,
         "e-RABlevelQoSParameters": {
             "qCI": 9,
@@ -124,7 +124,7 @@ fn e_rab(id: u8) -> Value {
 
 /// The bit rates of a UE.
 fn ue_bit_rates() -> Value {
-    json!({
+    tree!({
         "uEaggregateMaximumBitRateDL": 2_000_000_000,
         "uEaggregateMaximumBitRateUL": 1_000_000_000,
     })
@@ -133,8 +133,8 @@ fn ue_bit_rates() -> Value {
 /// An INITIAL CONTEXT SETUP REQUEST with eight E-RABs and the radio
 /// capability of the UE.
 fn initial_context_setup_request() -> Written {
-    let e_rab = |id: u8| json!({"E-RABToBeSetupItemCtxtSUReq": e_rab(id)});
-    let tree = json!({"message": "InitialContextSetupRequest", "ies": [
+    let e_rab = |id: u8| tree!({"E-RABToBeSetupItemCtxtSUReq": e_rab(id)});
+    let tree = tree!({"message": "InitialContextSetupRequest", "ies": [
         {"MME-UE-S1AP-ID": 4_000_000_000u32},
         {"eNB-UE-S1AP-ID": 16_000_000},
         {"uEaggregateMaximumBitrate": ue_bit_rates()},
@@ -157,7 +157,7 @@ fn initial_context_setup_request() -> Written {
         edit: (
             "/s1ap/E-RABToBeSetupListCtxtSUReq/7/E-RABToBeSetupItemCtxtSUReq\
              /e-RABlevelQoSParameters/allocationRetentionPriority/priorityLevel",
-            json!(3),
+            tree!(3),
         ),
         typed: typed!(InitiatingMessage InitialContextSetup REJECT InitialContextSetupRequest {
             REJECT MME_UE_S1AP_ID: MMEUES1APID,
@@ -175,8 +175,8 @@ fn initial_context_setup_request() -> Written {
 
 /// An E-RAB SETUP REQUEST with eight E-RABs.
 fn e_rab_setup_request() -> Written {
-    let e_rab = |id: u8| json!({"E-RABToBeSetupItemBearerSUReq": e_rab(id)});
-    let tree = json!({"message": "E-RABSetupRequest", "ies": [
+    let e_rab = |id: u8| tree!({"E-RABToBeSetupItemBearerSUReq": e_rab(id)});
+    let tree = tree!({"message": "E-RABSetupRequest", "ies": [
         {"MME-UE-S1AP-ID": 4_000_000_000u32},
         {"eNB-UE-S1AP-ID": 16_000_000},
         {"uEaggregateMaximumBitrate": ue_bit_rates()},
@@ -189,7 +189,7 @@ fn e_rab_setup_request() -> Written {
         path: "/s1ap/E-RABToBeSetupListBearerSUReq/7/E-RABToBeSetupItemBearerSUReq/gTP-TEID",
         edit: (
             "/s1ap/E-RABToBeSetupListBearerSUReq/7/E-RABToBeSetupItemBearerSUReq/gTP-TEID",
-            json!(0x0200_000c),
+            tree!(0x0200_000c),
         ),
         typed: typed!(InitiatingMessage E_RABSetup REJECT ERABSetupRequest {
             REJECT MME_UE_S1AP_ID: MMEUES1APID,
@@ -207,8 +207,8 @@ const RRC_CONTAINER: usize = 3_967;
 /// A HANDOVER REQUIRED between two eNBs, with a transparent container of
 /// 4,000 octets, most of which is its RRC container.
 fn handover_required() -> Written {
-    let cell = |identity: u32| json!({"pLMNidentity": "208-93", "cell-ID": identity});
-    let container = json!({"SourceeNB-ToTargeteNB-TransparentContainer": {
+    let cell = |identity: u32| tree!({"pLMNidentity": "208-93", "cell-ID": identity});
+    let container = tree!({"SourceeNB-ToTargeteNB-TransparentContainer": {
         "rRC-Container": octets(RRC_CONTAINER),
         "e-RABInformationList": [
             {"E-RABInformationListItem": {"e-RAB-ID": 5}},
@@ -221,7 +221,7 @@ fn handover_required() -> Written {
             "time-UE-StayedInCell": 600,
         }}],
     }});
-    let tree = json!({"message": "HandoverRequired", "ies": [
+    let tree = tree!({"message": "HandoverRequired", "ies": [
         {"MME-UE-S1AP-ID": 4_000_000_000u32},
         {"eNB-UE-S1AP-ID": 16_000_000},
         {"HandoverType": "intralte"},
@@ -238,7 +238,7 @@ fn handover_required() -> Written {
         what: "HANDOVER REQUIRED with a transparent container of 4,000 octets",
         tree,
         path: "/s1ap/TargetID/targeteNB-ID/selected-TAI/tAC",
-        edit: ("/s1ap/TargetID/targeteNB-ID/selected-TAI/tAC", json!(2)),
+        edit: ("/s1ap/TargetID/targeteNB-ID/selected-TAI/tAC", tree!(2)),
         typed: typed!(InitiatingMessage HandoverPreparation REJECT HandoverRequired {
             REJECT MME_UE_S1AP_ID: MMEUES1APID,
             REJECT eNB_UE_S1AP_ID: ENBUES1APID,
@@ -253,8 +253,8 @@ fn handover_required() -> Written {
 
 /// A PAGING for sixteen tracking areas.
 fn paging() -> Written {
-    let area = |tac: u16| json!({"TAIItem": {"tAI": {"pLMNidentity": "208-93", "tAC": tac}}});
-    let tree = json!({"message": "Paging", "ies": [
+    let area = |tac: u16| tree!({"TAIItem": {"tAI": {"pLMNidentity": "208-93", "tAC": tac}}});
+    let tree = tree!({"message": "Paging", "ies": [
         {"UEIdentityIndexValue": "0A40"},
         {"UEPagingID": {"s-TMSI": {"mMEC": 1, "m-TMSI": 3_661_752_294u32}}},
         {"pagingDRX": "v128"},
@@ -267,7 +267,7 @@ fn paging() -> Written {
         what: "PAGING for 16 tracking areas",
         tree,
         path: "/s1ap/TAIList/15/TAIItem/tAI/tAC",
-        edit: ("/s1ap/TAIList/15/TAIItem/tAI/tAC", json!(17)),
+        edit: ("/s1ap/TAIList/15/TAIItem/tAI/tAC", tree!(17)),
         typed: typed!(InitiatingMessage Paging IGNORE Paging {
             IGNORE UEIdentityIndexValue: UEIdentityIndexValue,
             IGNORE UEPagingID: UEPagingID<'a>,

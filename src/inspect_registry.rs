@@ -12,63 +12,40 @@ carried! {
     104 "SourceeNB-ToTargeteNB-TransparentContainer" crate::s1ap::SourceeNBToTargeteNBTransparentContainer;
     123 "TargeteNB-ToSourceeNB-TransparentContainer" crate::s1ap::TargeteNBToSourceeNBTransparentContainer;
 }
-pub(crate) fn member_form(name: &str) -> Option<Form> {
+pub(crate) fn type_form(name: &str) -> Option<Form> {
     Some(match name {
         // CI
-        "cI" => Form::Number(16),
+        "CI" => Form::Number(16),
         // CellIdentity
-        "cell-ID" => Form::Number(28),
+        "CellIdentity" => Form::Number(28),
         // FiveGSTAC
-        "fiveGSTAC" => Form::Number(24),
+        "FiveGSTAC" => Form::Number(24),
         // GTP-TEID
-        "dL-GTP-TEID" | "dL-gTP-TEID" | "gTP-TEID" | "uL-GTP-TEID" => Form::Number(32),
+        "GTPTEID" => Form::Number(32),
         // IMSI
-        "iMSI" => Form::Digits,
+        "IMSI" => Form::Digits,
         // LAC
-        "forbiddenLACs" | "lAC" => Form::Number(16),
-        // M-TMSI
-        "m-TMSI" => Form::Number(32),
+        "LAC" => Form::Number(16),
         // MME-Code
-        "mME-Code" | "mMEC" | "servedMMECs" => Form::Number(8),
+        "MMECode" => Form::Number(8),
         // MME-Group-ID
-        "mME-Group-ID" | "servedGroupIDs" => Form::Number(16),
+        "MMEGroupID" => Form::Number(16),
+        // M-TMSI
+        "MTMSI" => Form::Number(32),
         // NRCellIdentity
-        "nRCellIdentity" => Form::Number(36),
+        "NRCellIdentity" => Form::Number(36),
         // PLMNidentity
-        "broadcastPLMNs" | "equivalentPLMNs" | "pLMN-Identity" | "pLMNIdentity"
-        | "pLMNidentity" | "plmnListforQMC" | "servedPLMNs" | "servingPLMN" => Form::Plmn,
+        "PLMNidentity" => Form::Plmn,
         // Port-Number
-        "uDP-Port-Number" => Form::Number(16),
+        "PortNumber" => Form::Number(16),
         // RAC
-        "rAC" => Form::Number(8),
+        "RAC" => Form::Number(8),
         // TAC
-        "forbiddenTACs"
-        | "tAC"
-        | "tACList-In-LTE-NTN"
-        | "tAListforMDT"
-        | "tAListforQMC"
-        | "uE-Location-Derived-TAC" => Form::Number(16),
+        "TAC" => Form::Number(16),
         // TransportLayerAddress
-        "dL-transportLayerAddress"
-        | "eNBX2TransportLayerAddresses"
-        | "gTPTLAa"
-        | "iPsecTLA"
-        | "traceCollectionEntityIPAddress"
-        | "transportLayerAddress"
-        | "uL-TransportLayerAddress" => Form::Address,
+        "TransportLayerAddress" => Form::Address,
         // UL-NAS-Count
-        "ul-NAS-Count" => Form::Number(5),
-        _ => return None,
-    })
-}
-pub(crate) fn ie_form(id: u16) -> Option<Form> {
-    Some(match id {
-        // MME-Group-ID
-        223 => Form::Number(16),
-        // PLMNidentity
-        177 | 178 | 290 => Form::Plmn,
-        // TransportLayerAddress
-        131 | 155 | 184 | 193 | 328 | 340 => Form::Address,
+        "ULNASCount" => Form::Number(5),
         _ => return None,
     })
 }
@@ -589,15 +566,15 @@ pub(crate) const ENUMERATIONS: &[(&str, &[&str])] = &[
     ("WLANMeasurementConfigurationWlanRtt", &["true"]),
 ];
 types! {
-    AdditionalGUTI sequence { "gUMMEI": GUMMEI, "m-TMSI": _, "iE-Extensions"? extensions };
+    AdditionalGUTI sequence { "gUMMEI": GUMMEI, "m-TMSI": MTMSI, "iE-Extensions"? extensions };
     AllocationAndRetentionPriority sequence { "priorityLevel": _, "pre-emptionCapability": PreEmptionCapability, "pre-emptionVulnerability": PreEmptionVulnerability, "iE-Extensions"? extensions };
     AnonymousPrivateMessagePrivateIEs sequence { "id": PrivateIEID, "criticality": Criticality, "value": _ };
-    AreaScopeOfMDT choice { "cellBased": CellBasedMDT, "tABased": TABasedMDT, "pLMNWide": _, "tAIBased": TAIBasedMDT };
+    AreaScopeOfMDT choice { "cellBased": CellBasedMDT, "tABased": TABasedMDT, "pLMNWide": null, "tAIBased": TAIBasedMDT };
     AreaScopeOfQMC choice { "cellBased": CellBasedQMC, "tABased": TABasedQMC, "tAIBased": TAIBasedQMC, "pLMNAreaBased": PLMNAreaBasedQMC };
     AssistanceDataForCECapableUEs sequence { "cellIdentifierAndCELevelForCECapableUEs": CellIdentifierAndCELevelForCECapableUEs, "iE-Extensions"? extensions };
     AssistanceDataForPaging sequence { "assistanceDataForRecommendedCells"? AssistanceDataForRecommendedCells, "assistanceDataForCECapableUEs"? AssistanceDataForCECapableUEs, "pagingAttemptInformation"? PagingAttemptInformation, "iE-Extensions"? extensions };
     AssistanceDataForRecommendedCells sequence { "recommendedCellsForPaging": RecommendedCellsForPaging, "iE-Extensions"? extensions };
-    BPLMNs = [_];
+    BPLMNs = [PLMNidentity];
     BearersSubjectToDLDiscardingItem sequence { "e-RAB-ID": _, "dL-Discarding": DLDiscarding, "iE-Extensions"? extensions };
     BearersSubjectToDLDiscardingList = [ie];
     BearersSubjectToEarlyStatusTransferItem sequence { "e-RAB-ID": _, "dLCOUNT-PDCP-SNlength": DLCOUNTPDCPSNlength, "iE-Extensions"? extensions };
@@ -608,15 +585,15 @@ types! {
     BluetoothMeasurementConfiguration sequence { "bluetoothMeasConfig": BluetoothMeasConfig, "bluetoothMeasConfigNameList"? BluetoothMeasConfigNameList, "bt-rssi"? BluetoothMeasurementConfigurationBtRssi, "iE-Extensions"? extensions };
     BroadcastCancelledAreaList choice { "cellID-Cancelled": CellIDCancelled, "tAI-Cancelled": TAICancelled, "emergencyAreaID-Cancelled": EmergencyAreaIDCancelled };
     BroadcastCompletedAreaList choice { "cellID-Broadcast": CellIDBroadcast, "tAI-Broadcast": TAIBroadcast, "emergencyAreaID-Broadcast": EmergencyAreaIDBroadcast };
-    CGI sequence { "pLMNidentity": _, "lAC": _, "cI": _, "rAC"? _, "iE-Extensions"? extensions };
+    CGI sequence { "pLMNidentity": PLMNidentity, "lAC": LAC, "cI": CI, "rAC"? RAC, "iE-Extensions"? extensions };
     CNTypeRestrictions = [CNTypeRestrictionsItem];
-    CNTypeRestrictionsItem sequence { "pLMN-Identity": _, "cNType": CNType, "iE-Extensions"? extensions };
+    CNTypeRestrictionsItem sequence { "pLMN-Identity": PLMNidentity, "cNType": CNType, "iE-Extensions"? extensions };
     COUNTValueExtended sequence { "pDCP-SNExtended": _, "hFNModified": _, "iE-Extensions"? extensions };
     COUNTvalue sequence { "pDCP-SN": _, "hFN": _, "iE-Extensions"? extensions };
     COUNTvaluePDCPSNlength18 sequence { "pDCP-SNlength18": _, "hFNforPDCP-SNlength18": _, "iE-Extensions"? extensions };
     CSGIdList = [CSGIdListItem];
     CSGIdListItem sequence { "cSG-Id": _, "iE-Extensions"? extensions };
-    CSGMembershipInfo sequence { "cSGMembershipStatus": CSGMembershipStatus, "cSG-Id": _, "cellAccessMode"? CellAccessMode, "pLMNidentity"? _, "iE-Extensions"? extensions };
+    CSGMembershipInfo sequence { "cSGMembershipStatus": CSGMembershipStatus, "cSG-Id": _, "cellAccessMode"? CellAccessMode, "pLMNidentity"? PLMNidentity, "iE-Extensions"? extensions };
     CancelledCellinEAI = [CancelledCellinEAIItem];
     CancelledCellinEAIItem sequence { "eCGI": EUTRANCGI, "numberOfBroadcasts": _, "iE-Extensions"? extensions };
     CancelledCellinTAI = [CancelledCellinTAIItem];
@@ -682,10 +659,10 @@ types! {
     ENDCSONengNBIdentification sequence { "globalengNBID": GlobalEnGNBID, "selectedTAI": TAI, "iE-Extensions"? extensions };
     ENDCTransferTypeReply sequence { "sourceengNB": ENDCSONengNBIdentification, "targeteNB": ENDCSONeNBIdentification, "iE-Extensions"? extensions };
     ENDCTransferTypeRequest sequence { "sourceeNB": ENDCSONeNBIdentification, "targetengNB": ENDCSONengNBIdentification, "targeteNB"? ENDCSONeNBIdentification, "associatedTAI"? TAI, "broadcast5GSTAI"? FiveGSTAI, "iE-Extensions"? extensions };
-    EPLMNs = [_];
-    ERABAdmittedItem sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": _, "dL-transportLayerAddress"? TransportLayerAddress, "dL-gTP-TEID"? _, "uL-TransportLayerAddress"? TransportLayerAddress, "uL-GTP-TEID"? _, "iE-Extensions"? extensions };
+    EPLMNs = [PLMNidentity];
+    ERABAdmittedItem sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": GTPTEID, "dL-transportLayerAddress"? TransportLayerAddress, "dL-gTP-TEID"? GTPTEID, "uL-TransportLayerAddress"? TransportLayerAddress, "uL-GTP-TEID"? GTPTEID, "iE-Extensions"? extensions };
     ERABAdmittedList = [ie];
-    ERABDataForwardingItem sequence { "e-RAB-ID": _, "dL-transportLayerAddress"? TransportLayerAddress, "dL-gTP-TEID"? _, "uL-TransportLayerAddress"? TransportLayerAddress, "uL-GTP-TEID"? _, "iE-Extensions"? extensions };
+    ERABDataForwardingItem sequence { "e-RAB-ID": _, "dL-transportLayerAddress"? TransportLayerAddress, "dL-gTP-TEID"? GTPTEID, "uL-TransportLayerAddress"? TransportLayerAddress, "uL-GTP-TEID"? GTPTEID, "iE-Extensions"? extensions };
     ERABFailedToResumeItemResumeReq sequence { "e-RAB-ID": _, "cause": Cause, "iE-Extensions"? extensions };
     ERABFailedToResumeItemResumeRes sequence { "e-RAB-ID": _, "cause": Cause, "iE-Extensions"? extensions };
     ERABFailedToResumeListResumeReq = [ie];
@@ -705,7 +682,7 @@ types! {
     ERABModifyListBearerModRes = [ie];
     ERABModifyRequest sequence { "protocolIEs": ies };
     ERABModifyResponse sequence { "protocolIEs": ies };
-    ERABNotToBeModifiedItemBearerModInd sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "dL-GTP-TEID": _, "iE-Extensions"? extensions };
+    ERABNotToBeModifiedItemBearerModInd sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "dL-GTP-TEID": GTPTEID, "iE-Extensions"? extensions };
     ERABNotToBeModifiedListBearerModInd = [ie];
     ERABReleaseCommand sequence { "protocolIEs": ies };
     ERABReleaseIndication sequence { "protocolIEs": ies };
@@ -714,32 +691,32 @@ types! {
     ERABReleaseResponse sequence { "protocolIEs": ies };
     ERABSecurityResultItem sequence { "e-RAB-ID": _, "securityResult": SecurityResult, "iE-Extensions"? extensions };
     ERABSecurityResultList = [ie];
-    ERABSetupItemBearerSURes sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": _, "iE-Extensions"? extensions };
-    ERABSetupItemCtxtSURes sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": _, "iE-Extensions"? extensions };
+    ERABSetupItemBearerSURes sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": GTPTEID, "iE-Extensions"? extensions };
+    ERABSetupItemCtxtSURes sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": GTPTEID, "iE-Extensions"? extensions };
     ERABSetupListBearerSURes = [ie];
     ERABSetupListCtxtSURes = [ie];
     ERABSetupRequest sequence { "protocolIEs": ies };
     ERABSetupResponse sequence { "protocolIEs": ies };
     ERABSubjecttoDataForwardingList = [ie];
-    ERABToBeModifiedItemBearerModInd sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "dL-GTP-TEID": _, "iE-Extensions"? extensions };
+    ERABToBeModifiedItemBearerModInd sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "dL-GTP-TEID": GTPTEID, "iE-Extensions"? extensions };
     ERABToBeModifiedItemBearerModReq sequence { "e-RAB-ID": _, "e-RABLevelQoSParameters": ERABLevelQoSParameters, "nAS-PDU": _, "iE-Extensions"? extensions };
     ERABToBeModifiedListBearerModInd = [ie];
     ERABToBeModifiedListBearerModReq = [ie];
-    ERABToBeSetupItemBearerSUReq sequence { "e-RAB-ID": _, "e-RABlevelQoSParameters": ERABLevelQoSParameters, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": _, "nAS-PDU": _, "iE-Extensions"? extensions };
-    ERABToBeSetupItemCtxtSUReq sequence { "e-RAB-ID": _, "e-RABlevelQoSParameters": ERABLevelQoSParameters, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": _, "nAS-PDU"? _, "iE-Extensions"? extensions };
-    ERABToBeSetupItemHOReq sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": _, "e-RABlevelQosParameters": ERABLevelQoSParameters, "iE-Extensions"? extensions };
+    ERABToBeSetupItemBearerSUReq sequence { "e-RAB-ID": _, "e-RABlevelQoSParameters": ERABLevelQoSParameters, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": GTPTEID, "nAS-PDU": _, "iE-Extensions"? extensions };
+    ERABToBeSetupItemCtxtSUReq sequence { "e-RAB-ID": _, "e-RABlevelQoSParameters": ERABLevelQoSParameters, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": GTPTEID, "nAS-PDU"? _, "iE-Extensions"? extensions };
+    ERABToBeSetupItemHOReq sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": GTPTEID, "e-RABlevelQosParameters": ERABLevelQoSParameters, "iE-Extensions"? extensions };
     ERABToBeSetupListBearerSUReq = [ie];
     ERABToBeSetupListCtxtSUReq = [ie];
     ERABToBeSetupListHOReq = [ie];
-    ERABToBeSwitchedDLItem sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": _, "iE-Extensions"? extensions };
+    ERABToBeSwitchedDLItem sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": GTPTEID, "iE-Extensions"? extensions };
     ERABToBeSwitchedDLList = [ie];
-    ERABToBeSwitchedULItem sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": _, "iE-Extensions"? extensions };
+    ERABToBeSwitchedULItem sequence { "e-RAB-ID": _, "transportLayerAddress": TransportLayerAddress, "gTP-TEID": GTPTEID, "iE-Extensions"? extensions };
     ERABToBeSwitchedULList = [ie];
     ERABToBeUpdatedItem sequence { "e-RAB-ID": _, "securityIndication"? SecurityIndication, "iE-Extensions"? extensions };
     ERABToBeUpdatedList = [ie];
     ERABUsageReportItem sequence { "startTimestamp": _, "endTimestamp": _, "usageCountUL": _, "usageCountDL": _, "iE-Extensions"? extensions };
     ERABUsageReportList = [ie];
-    EUTRANCGI sequence { "pLMNidentity": _, "cell-ID": _, "iE-Extensions"? extensions };
+    EUTRANCGI sequence { "pLMNidentity": PLMNidentity, "cell-ID": CellIdentity, "iE-Extensions"? extensions };
     EmergencyAreaIDBroadcast = [EmergencyAreaIDBroadcastItem];
     EmergencyAreaIDBroadcastItem sequence { "emergencyAreaID": _, "completedCellinEAI": CompletedCellinEAI, "iE-Extensions"? extensions };
     EmergencyAreaIDCancelled = [EmergencyAreaIDCancelledItem];
@@ -753,23 +730,23 @@ types! {
     EventTrigger choice { "outOfCoverage": EventTriggerOutOfCoverage, "eventL1LoggedMDTConfig": EventL1LoggedMDTConfig, "choice-Extensions": ie };
     ExpectedUEActivityBehaviour sequence { "expectedActivityPeriod"? _, "expectedIdlePeriod"? _, "sourceofUEActivityBehaviourInformation"? SourceOfUEActivityBehaviourInformation, "iE-Extensions"? extensions };
     ExpectedUEBehaviour sequence { "expectedActivity"? ExpectedUEActivityBehaviour, "expectedHOInterval"? ExpectedHOInterval, "iE-Extensions"? extensions };
-    FiveGSTAI sequence { "pLMNidentity": _, "fiveGSTAC": _, "iE-Extensions"? extensions };
-    ForbiddenLACs = [_];
+    FiveGSTAI sequence { "pLMNidentity": PLMNidentity, "fiveGSTAC": FiveGSTAC, "iE-Extensions"? extensions };
+    ForbiddenLACs = [LAC];
     ForbiddenLAs = [ForbiddenLAsItem];
-    ForbiddenLAsItem sequence { "pLMN-Identity": _, "forbiddenLACs": ForbiddenLACs, "iE-Extensions"? extensions };
-    ForbiddenTACs = [_];
+    ForbiddenLAsItem sequence { "pLMN-Identity": PLMNidentity, "forbiddenLACs": ForbiddenLACs, "iE-Extensions"? extensions };
+    ForbiddenTACs = [TAC];
     ForbiddenTAs = [ForbiddenTAsItem];
-    ForbiddenTAsItem sequence { "pLMN-Identity": _, "forbiddenTACs": ForbiddenTACs, "iE-Extensions"? extensions };
+    ForbiddenTAsItem sequence { "pLMN-Identity": PLMNidentity, "forbiddenTACs": ForbiddenTACs, "iE-Extensions"? extensions };
     GBRQosInformation sequence { "e-RAB-MaximumBitrateDL": _, "e-RAB-MaximumBitrateUL": _, "e-RAB-GuaranteedBitrateDL": _, "e-RAB-GuaranteedBitrateUL": _, "iE-Extensions"? extensions };
-    GERANCellID sequence { "lAI": LAI, "rAC": _, "cI": _, "iE-Extensions"? extensions };
+    GERANCellID sequence { "lAI": LAI, "rAC": RAC, "cI": CI, "iE-Extensions"? extensions };
     GNB sequence { "global-gNB-ID": GlobalGNBID, "iE-Extensions"? extensions };
     GNBID = bits;
     GNBIdentity choice { "gNB-ID": GNBID };
-    GUMMEI sequence { "pLMN-Identity": _, "mME-Group-ID": _, "mME-Code": _, "iE-Extensions"? extensions };
+    GUMMEI sequence { "pLMN-Identity": PLMNidentity, "mME-Group-ID": MMEGroupID, "mME-Code": MMECode, "iE-Extensions"? extensions };
     GUMMEIList = [GUMMEI];
-    GlobalENBID sequence { "pLMNidentity": _, "eNB-ID": ENBID, "iE-Extensions"? extensions };
-    GlobalEnGNBID sequence { "pLMNidentity": _, "en-gNB-ID": EnGNBID, "iE-Extensions"? extensions };
-    GlobalGNBID sequence { "pLMN-Identity": _, "gNB-ID": GNBIdentity, "iE-Extensions"? extensions };
+    GlobalENBID sequence { "pLMNidentity": PLMNidentity, "eNB-ID": ENBID, "iE-Extensions"? extensions };
+    GlobalEnGNBID sequence { "pLMNidentity": PLMNidentity, "en-gNB-ID": EnGNBID, "iE-Extensions"? extensions };
+    GlobalGNBID sequence { "pLMN-Identity": PLMNidentity, "gNB-ID": GNBIdentity, "iE-Extensions"? extensions };
     GlobalRANNODEID choice { "gNB": GNB, "ng-eNB": NGENB };
     HandoverCancel sequence { "protocolIEs": ies };
     HandoverCancelAcknowledge sequence { "protocolIEs": ies };
@@ -780,7 +757,7 @@ types! {
     HandoverRequest sequence { "protocolIEs": ies };
     HandoverRequestAcknowledge sequence { "protocolIEs": ies };
     HandoverRequired sequence { "protocolIEs": ies };
-    HandoverRestrictionList sequence { "servingPLMN": _, "equivalentPLMNs"? EPLMNs, "forbiddenTAs"? ForbiddenTAs, "forbiddenLAs"? ForbiddenLAs, "forbiddenInterRATs"? ForbiddenInterRATs, "iE-Extensions"? extensions };
+    HandoverRestrictionList sequence { "servingPLMN": PLMNidentity, "equivalentPLMNs"? EPLMNs, "forbiddenTAs"? ForbiddenTAs, "forbiddenLAs"? ForbiddenLAs, "forbiddenInterRATs"? ForbiddenInterRATs, "iE-Extensions"? extensions };
     HandoverSuccess sequence { "protocolIEs": ies };
     ImmediateMDT sequence { "measurementsToActivate": _, "m1reportingTrigger": M1ReportingTrigger, "m1thresholdeventA2"? M1ThresholdEventA2, "m1periodicReporting"? M1PeriodicReporting, "iE-Extensions"? extensions };
     InformationOnRecommendedCellsAndENBsForPaging sequence { "recommendedCellsForPaging": RecommendedCellsForPaging, "recommendENBsForPaging": RecommendedENBsForPaging, "iE-Extensions"? extensions };
@@ -797,11 +774,11 @@ types! {
     IntersystemMeasurementConfiguration sequence { "rSRP"? _, "rSRQ"? _, "sINR"? _, "interSystemMeasurementParameters": InterSystemMeasurementParameters, "iE-Extensions"? extensions };
     KillRequest sequence { "protocolIEs": ies };
     KillResponse sequence { "protocolIEs": ies };
-    LAI sequence { "pLMNidentity": _, "lAC": _, "iE-Extensions"? extensions };
-    LTENTNTAIInformation sequence { "servingPLMN": _, "tACList-In-LTE-NTN": TACListInLTENTN, "uE-Location-Derived-TAC"? _, "iE-Extensions"? extensions };
+    LAI sequence { "pLMNidentity": PLMNidentity, "lAC": LAC, "iE-Extensions"? extensions };
+    LTENTNTAIInformation sequence { "servingPLMN": PLMNidentity, "tACList-In-LTE-NTN": TACListInLTENTN, "uE-Location-Derived-TAC"? TAC, "iE-Extensions"? extensions };
     LastVisitedCellItem choice { "e-UTRAN-Cell": LastVisitedEUTRANCellInformation, "uTRAN-Cell": _, "gERAN-Cell": LastVisitedGERANCellInformation, "nG-RAN-Cell": _ };
     LastVisitedEUTRANCellInformation sequence { "global-Cell-ID": EUTRANCGI, "cellType": CellType, "time-UE-StayedInCell": _, "iE-Extensions"? extensions };
-    LastVisitedGERANCellInformation choice { "undefined": _ };
+    LastVisitedGERANCellInformation choice { "undefined": null };
     LastVisitedPSCellInformation sequence { "pSCellID"? PSCellInformation, "timeStay": _, "iE-Extensions"? extensions };
     LastVisitedPSCellList = [LastVisitedPSCellInformation];
     ListeningSubframePattern sequence { "pattern-period": ListeningSubframePatternPatternPeriod, "pattern-offset": _, "iE-Extensions"? extensions };
@@ -810,7 +787,7 @@ types! {
     LocationReportingFailureIndication sequence { "protocolIEs": ies };
     LoggedMBSFNMDT sequence { "loggingInterval": LoggingInterval, "loggingDuration": LoggingDuration, "mBSFN-ResultToLog"? MBSFNResultToLog, "iE-Extensions"? extensions };
     LoggedMDT sequence { "loggingInterval": LoggingInterval, "loggingDuration": LoggingDuration, "iE-Extensions"? extensions };
-    LoggedMDTTrigger choice { "periodical": _, "eventTrigger": EventTrigger };
+    LoggedMDTTrigger choice { "periodical": null, "eventTrigger": EventTrigger };
     M1PeriodicReporting sequence { "reportInterval": ReportIntervalMDT, "reportAmount": ReportAmountMDT, "iE-Extensions"? extensions };
     M1ThresholdEventA2 sequence { "measurementThreshold": MeasurementThresholdA2, "iE-Extensions"? extensions };
     M3Configuration sequence { "m3period": M3period, "iE-Extensions"? extensions };
@@ -822,7 +799,7 @@ types! {
     MBSFNResultToLogInfo sequence { "mBSFN-AreaId"? _, "carrierFreq": _, "iE-Extensions"? extensions };
     MDTConfiguration sequence { "mdt-Activation": MDTActivation, "areaScopeOfMDT": AreaScopeOfMDT, "mDTMode": MDTMode, "iE-Extensions"? extensions };
     MDTMode choice { "immediateMDT": ImmediateMDT, "loggedMDT": LoggedMDT, "mDTMode-Extension": ie };
-    MDTPLMNList = [_];
+    MDTPLMNList = [PLMNidentity];
     MMECPRelocationIndication sequence { "protocolIEs": ies };
     MMEConfigurationTransfer sequence { "protocolIEs": ies };
     MMEConfigurationUpdate sequence { "protocolIEs": ies };
@@ -839,7 +816,7 @@ types! {
     NASNonDeliveryIndication sequence { "protocolIEs": ies };
     NBIoTPagingEDRXInformation sequence { "nB-IoT-paging-eDRX-Cycle": NBIoTPagingEDRXCycle, "nB-IoT-pagingTimeWindow"? NBIoTPagingTimeWindow, "iE-Extensions"? extensions };
     NGENB sequence { "global-ng-eNB-ID": GlobalENBID, "iE-Extensions"? extensions };
-    NRCGI sequence { "pLMNIdentity": _, "nRCellIdentity": _, "iE-Extensions"? extensions };
+    NRCGI sequence { "pLMNIdentity": PLMNidentity, "nRCellIdentity": NRCellIdentity, "iE-Extensions"? extensions };
     NRUESecurityCapabilities sequence { "nRencryptionAlgorithms": NRencryptionAlgorithms, "nRintegrityProtectionAlgorithms": NRintegrityProtectionAlgorithms, "iE-Extensions"? extensions };
     NRUESidelinkAggregateMaximumBitrate sequence { "uEaggregateMaximumBitRate": _, "iE-Extensions"? extensions };
     NRV2XServicesAuthorized sequence { "vehicleUE"? VehicleUE, "pedestrianUE"? PedestrianUE, "iE-Extensions"? extensions };
@@ -853,7 +830,7 @@ types! {
     PC5QoSFlowList = [PC5QoSFlowItem];
     PC5QoSParameters sequence { "pc5QoSFlowList": PC5QoSFlowList, "pc5LinkAggregatedBitRates"? _, "iE-Extensions"? extensions };
     PLMNAreaBasedQMC sequence { "plmnListforQMC": PLMNListforQMC, "iE-Extensions"? extensions };
-    PLMNListforQMC = [_];
+    PLMNListforQMC = [PLMNidentity];
     PSCellInformation sequence { "nCGI": NRCGI, "iE-Extensions"? extensions };
     PWSFailureIndication sequence { "protocolIEs": ies };
     PWSRestartIndication sequence { "protocolIEs": ies };
@@ -869,7 +846,7 @@ types! {
     PrivateMessagePrivateIEs = [AnonymousPrivateMessagePrivateIEs];
     ProSeAuthorized sequence { "proSeDirectDiscovery"? ProSeDirectDiscovery, "proSeDirectCommunication"? ProSeDirectCommunication, "iE-Extensions"? extensions };
     RATRestrictions = [RATRestrictionsItem];
-    RATRestrictionsItem sequence { "pLMNidentity": _, "rAT-RestrictionInformation": bits, "iE-Extensions"? extensions };
+    RATRestrictionsItem sequence { "pLMNidentity": PLMNidentity, "rAT-RestrictionInformation": bits, "iE-Extensions"? extensions };
     RIMRoutingAddress choice { "gERAN-Cell-ID": GERANCellID, "targetRNC-ID": TargetRNCID, "eHRPD-Sector-ID": _ };
     RIMTransfer sequence { "rIMInformation": _, "rIMRoutingAddress"? RIMRoutingAddress, "iE-Extensions"? extensions };
     RLFReportInformation sequence { "uE-RLF-Report-Container": _, "uE-RLF-Report-Container-for-extended-bands"? _, "iE-Extensions"? extensions };
@@ -882,7 +859,7 @@ types! {
     RecommendedENBList = [ie];
     RecommendedENBsForPaging sequence { "recommendedENBList": RecommendedENBList, "iE-Extensions"? extensions };
     RequestType sequence { "eventType": EventType, "reportArea": ReportArea, "iE-Extensions"? extensions };
-    RequestedTNLInfo sequence { "pLMNidentity": _, "iE-Extensions"? extensions };
+    RequestedTNLInfo sequence { "pLMNidentity": PLMNidentity, "iE-Extensions"? extensions };
     RerouteNASRequest sequence { "protocolIEs": ies };
     Reset sequence { "protocolIEs": ies };
     ResetAcknowledge sequence { "protocolIEs": ies };
@@ -899,7 +876,7 @@ types! {
     SONInformation choice { "sONInformationRequest": SONInformationRequest, "sONInformationReply": SONInformationReply, "sONInformation-Extension": ie };
     SONInformationReply sequence { "x2TNLConfigurationInfo"? X2TNLConfigurationInfo, "iE-Extensions"? extensions };
     SONInformationReport choice { "rLFReportInformation": RLFReportInformation };
-    STMSI sequence { "mMEC": _, "m-TMSI": _, "iE-Extensions"? extensions };
+    STMSI sequence { "mMEC": MMECode, "m-TMSI": MTMSI, "iE-Extensions"? extensions };
     ScheduledCommunicationTime sequence { "dayofWeek"? bits, "timeofDayStart"? _, "timeofDayEnd"? _, "iE-Extensions"? extensions };
     SecondaryRATDataUsageReport sequence { "protocolIEs": ies };
     SecondaryRATDataUsageReportItem sequence { "e-RAB-ID": _, "secondaryRATType": SecondaryRATType, "e-RABUsageReportList": ERABUsageReportList, "iE-Extensions"? extensions };
@@ -915,9 +892,9 @@ types! {
     ServedDCNsItem sequence { "dCN-ID": _, "relativeDCNCapacity": _, "iE-Extensions"? extensions };
     ServedGUMMEIs = [ServedGUMMEIsItem];
     ServedGUMMEIsItem sequence { "servedPLMNs": ServedPLMNs, "servedGroupIDs": ServedGroupIDs, "servedMMECs": ServedMMECs, "iE-Extensions"? extensions };
-    ServedGroupIDs = [_];
-    ServedMMECs = [_];
-    ServedPLMNs = [_];
+    ServedGroupIDs = [MMEGroupID];
+    ServedMMECs = [MMECode];
+    ServedPLMNs = [PLMNidentity];
     SourceNgRanNodeID sequence { "global-RAN-NODE-ID": GlobalRANNODEID, "selected-TAI": FiveGSTAI, "iE-Extensions"? extensions };
     SourceNodeID choice { "sourceNgRanNode-ID": SourceNgRanNodeID, "sourceNodeID-Extension": ie };
     SourceeNBID sequence { "global-ENB-ID": GlobalENBID, "selected-TAI": TAI, "iE-Extensions"? extensions };
@@ -925,12 +902,12 @@ types! {
     SubscriptionBasedUEDifferentiationInfo sequence { "periodicCommunicationIndicator"? SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator, "periodicTime"? _, "scheduledCommunicationTime"? ScheduledCommunicationTime, "stationaryIndication"? SubscriptionBasedUEDifferentiationInfoStationaryIndication, "trafficProfile"? SubscriptionBasedUEDifferentiationInfoTrafficProfile, "batteryIndication"? SubscriptionBasedUEDifferentiationInfoBatteryIndication, "iE-Extensions"? extensions };
     SuccessfulOutcome sequence { "procedureCode": _, "criticality": Criticality, "value": _ };
     SupportedTAs = [SupportedTAsItem];
-    SupportedTAsItem sequence { "tAC": _, "broadcastPLMNs": BPLMNs, "iE-Extensions"? extensions };
+    SupportedTAsItem sequence { "tAC": TAC, "broadcastPLMNs": BPLMNs, "iE-Extensions"? extensions };
     SynchronisationInformation sequence { "sourceStratumLevel"? _, "listeningSubframePattern"? ListeningSubframePattern, "aggressoreCGI-List"? ECGI_List, "iE-Extensions"? extensions };
     TABasedMDT sequence { "tAListforMDT": TAListforMDT, "iE-Extensions"? extensions };
     TABasedQMC sequence { "tAListforQMC": TAListforQMC, "iE-Extensions"? extensions };
-    TACListInLTENTN = [_];
-    TAI sequence { "pLMNidentity": _, "tAC": _, "iE-Extensions"? extensions };
+    TACListInLTENTN = [TAC];
+    TAI sequence { "pLMNidentity": PLMNidentity, "tAC": TAC, "iE-Extensions"? extensions };
     TAIBasedMDT sequence { "tAIListforMDT": TAIListforMDT, "iE-Extensions"? extensions };
     TAIBasedQMC sequence { "tAIListforQMC": TAIListforQMC, "iE-Extensions"? extensions };
     TAIBroadcast = [TAIBroadcastItem];
@@ -943,11 +920,11 @@ types! {
     TAIListforMDT = [TAI];
     TAIListforQMC = [TAI];
     TAIListforWarning = [TAI];
-    TAListforMDT = [_];
-    TAListforQMC = [_];
+    TAListforMDT = [TAC];
+    TAListforQMC = [TAC];
     TargetID choice { "targeteNB-ID": TargeteNBID, "targetRNC-ID": TargetRNCID, "cGI": CGI, "targetgNgRanNode-ID": TargetNgRanNodeID };
     TargetNgRanNodeID sequence { "global-RAN-NODE-ID": GlobalRANNODEID, "selected-TAI": FiveGSTAI, "iE-Extensions"? extensions };
-    TargetRNCID sequence { "lAI": LAI, "rAC"? _, "rNC-ID": _, "extendedRNC-ID"? _, "iE-Extensions"? extensions };
+    TargetRNCID sequence { "lAI": LAI, "rAC"? RAC, "rNC-ID": _, "extendedRNC-ID"? _, "iE-Extensions"? extensions };
     TargeteNBID sequence { "global-ENB-ID": GlobalENBID, "selected-TAI": TAI, "iE-Extensions"? extensions };
     TargeteNBToSourceeNBTransparentContainer sequence { "rRC-Container": _, "iE-Extensions"? extensions };
     TimeBasedHandoverInformation sequence { "hOWindowStart": _, "hOWindowDuration": _, "iE-Extensions"? extensions };
@@ -955,9 +932,9 @@ types! {
     TraceActivation sequence { "e-UTRAN-Trace-ID": _, "interfacesToTrace": _, "traceDepth": TraceDepth, "traceCollectionEntityIPAddress": TransportLayerAddress, "iE-Extensions"? extensions };
     TraceFailureIndication sequence { "protocolIEs": ies };
     TraceStart sequence { "protocolIEs": ies };
-    TransportInformation sequence { "transportLayerAddress": TransportLayerAddress, "uL-GTP-TEID": _ };
+    TransportInformation sequence { "transportLayerAddress": TransportLayerAddress, "uL-GTP-TEID": GTPTEID };
     TransportLayerAddress = bits;
-    TunnelInformation sequence { "transportLayerAddress": TransportLayerAddress, "uDP-Port-Number"? _, "iE-Extensions"? extensions };
+    TunnelInformation sequence { "transportLayerAddress": TransportLayerAddress, "uDP-Port-Number"? PortNumber, "iE-Extensions"? extensions };
     UEAggregateMaximumBitrate sequence { "uEaggregateMaximumBitRateDL": _, "uEaggregateMaximumBitRateUL": _, "iE-Extensions"? extensions };
     UEAppLayerMeasConfig sequence { "containerForAppLayerMeasConfig": _, "areaScopeOfQMC": AreaScopeOfQMC, "iE-Extensions"? extensions };
     UEAssociatedLogicalS1ConnectionItem sequence { "mME-UE-S1AP-ID"? _, "eNB-UE-S1AP-ID"? _, "iE-Extensions"? extensions };
@@ -979,7 +956,7 @@ types! {
     UEContextSuspendResponse sequence { "protocolIEs": ies };
     UEHistoryInformation = [LastVisitedCellItem];
     UEInformationTransfer sequence { "protocolIEs": ies };
-    UEPagingID choice { "s-TMSI": STMSI, "iMSI": _ };
+    UEPagingID choice { "s-TMSI": STMSI, "iMSI": IMSI };
     UERadioCapabilityIDMappingRequest sequence { "protocolIEs": ies };
     UERadioCapabilityIDMappingResponse sequence { "protocolIEs": ies };
     UERadioCapabilityMatchRequest sequence { "protocolIEs": ies };
@@ -988,7 +965,7 @@ types! {
     UES1APIDs choice { "uE-S1AP-ID-pair": UES1APIDPair, "mME-UE-S1AP-ID": _ };
     UESecurityCapabilities sequence { "encryptionAlgorithms": EncryptionAlgorithms, "integrityProtectionAlgorithms": IntegrityProtectionAlgorithms, "iE-Extensions"? extensions };
     UESidelinkAggregateMaximumBitrate sequence { "uESidelinkAggregateMaximumBitRate": _, "iE-Extensions"? extensions };
-    ULCPSecurityInformation sequence { "ul-NAS-MAC": _, "ul-NAS-Count": _, "iE-Extensions"? extensions };
+    ULCPSecurityInformation sequence { "ul-NAS-MAC": _, "ul-NAS-Count": ULNASCount, "iE-Extensions"? extensions };
     UnsuccessfulOutcome sequence { "procedureCode": _, "criticality": Criticality, "value": _ };
     UplinkNASTransport sequence { "protocolIEs": ies };
     UplinkNonUEAssociatedLPPaTransport sequence { "protocolIEs": ies };

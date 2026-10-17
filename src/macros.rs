@@ -899,6 +899,33 @@ macro_rules! __s1ap_ie_syntax {
 /// that `with_s1ap_ie_mut!` changes. Any of them that does not decode is the error of a `req`
 /// and of an `opt` field, and a `lax` field is `None` when the last one does not
 /// decode.
+///
+/// ```
+/// use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies, s1ap::*};
+///
+/// fn released(pdu: &S1AP_PDU) -> Result<(u32, bool, Option<GWContextReleaseIndication>), Error> {
+///     let message: UEContextReleaseRequest = pdu.decode_value()?;
+///     extract_s1ap_ies!(message, UEContextReleaseRequest,
+///         // The one value that the IE is a name for
+///         req mme: u32 = MME_UE_S1AP_ID(id),
+///         // An expression of the value after `=>`, which the field is
+///         req inactive: bool = Cause(cause) =>
+///             cause == Cause::radioNetwork(CauseRadioNetwork::user_inactivity),
+///         // An IE that the message may not have
+///         opt gateway: GWContextReleaseIndication = GWContextReleaseIndication(indication),
+///     );
+///     Ok((mme, inactive, gateway))
+/// }
+///
+/// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+///     IGNORE, UEContextReleaseRequest,
+///     REJECT MME_UE_S1AP_ID(1u32),
+///     REJECT eNB_UE_S1AP_ID(7u32),
+///     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+/// )?;
+/// assert_eq!(released(&pdu)?, (1, true, None));
+/// # Ok::<(), Error>(())
+/// ```
 #[macro_export]
 macro_rules! extract_s1ap_ies {
     ($msg_var:expr, $msg:ident,
@@ -919,7 +946,7 @@ macro_rules! extract_s1ap_ies {
                     let _value: ::core::result::Result<$ty, $crate::Error> =
                         match $crate::registry::ies::$ie_name::decode(&_ie.value) {
                             ::core::result::Result::Ok($bind) => ::core::result::Result::Ok(
-                                $crate::extract_s1ap_ies!(@val $bind $(, $expr)?),
+                                $crate::__extract_s1ap_ie!(@val $bind $(, $expr)?),
                             ),
                             ::core::result::Result::Err(_error) => ::core::result::Result::Err(
                                 $crate::macros::__undecodable_ie::<$crate::s1ap::$msg<'_>>(
@@ -927,16 +954,27 @@ macro_rules! extract_s1ap_ies {
                                 ),
                             ),
                         };
-                    $name = $crate::extract_s1ap_ies!(@last $kind $name, _value);
+                    $name = $crate::__extract_s1ap_ie!(@last $kind $name, _value);
                 }
             )+
         }
-        $( $crate::extract_s1ap_ies!(@check $kind $name, $msg, $ie_name); )+
+        $( $crate::__extract_s1ap_ie!(@check $kind $name, $msg, $ie_name); )+
     };
+}
+
+/// The arms of `extract_s1ap_ies!` that its expansion calls: the value of a field, the
+/// last of the IEs of one name, and what a field is after the loop.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __extract_s1ap_ie {
     // The value of the IE, or the one value that its type is a name for: what the
     // type of the field says.
-    (@val $bind:ident) => { $crate::macros::__Field::__field($bind) };
-    (@val $_bind:ident, $expr:expr) => { $expr };
+    (@val $bind:ident) => {
+        $crate::macros::__Field::__field($bind)
+    };
+    (@val $_bind:ident, $expr:expr) => {
+        $expr
+    };
     // The last one decides a `lax` field.
     (@last lax $name:ident, $value:ident) => {
         ::core::option::Option::Some($value)
@@ -1006,6 +1044,48 @@ macro_rules! extract_s1ap_ies {
 ///
 /// When the message has the IE twice, the last one is changed, which is the one that
 /// `extract_s1ap_ies!` reads, and any of them that does not decode is the error.
+///
+/// `= value` gives the one value that the IE is a name for. After `=>` comes a block
+/// that changes the value of the IE, which it has by the name in parentheses, mutable
+/// and its own, and gives whether it changed it, a `bool`: a value of a CHOICE is
+/// matched by `&mut`, so that what the match finds is changed in place.
+///
+/// ```
+/// use oxirush_s1ap::{Error, build_s1ap, with_s1ap_ie_mut, s1ap::*};
+///
+/// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+///     IGNORE, UEContextReleaseRequest,
+///     REJECT MME_UE_S1AP_ID(1u32),
+///     REJECT eNB_UE_S1AP_ID(7u32),
+///     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+/// )?;
+/// let mut message: UEContextReleaseRequest = pdu.decode_value()?;
+///
+/// // The one value of an IE
+/// assert!(with_s1ap_ie_mut!(message, UEContextReleaseRequest, eNB_UE_S1AP_ID(id) = 8)?);
+///
+/// // A block that changes the value where it is, and says whether it did
+/// let changed = with_s1ap_ie_mut!(message, UEContextReleaseRequest, Cause(cause) => {
+///     match &mut cause {
+///         Cause::radioNetwork(why) => {
+///             *why = CauseRadioNetwork::unspecified;
+///             true
+///         }
+///         _ => false,
+///     }
+/// })?;
+/// assert!(changed);
+/// assert_eq!(message, {
+///     let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+///         IGNORE, UEContextReleaseRequest,
+///         REJECT MME_UE_S1AP_ID(1u32),
+///         REJECT eNB_UE_S1AP_ID(8u32),
+///         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::unspecified)),
+///     )?;
+///     pdu.decode_value::<UEContextReleaseRequest>()?.into_owned()
+/// });
+/// # Ok::<(), Error>(())
+/// ```
 #[macro_export]
 macro_rules! with_s1ap_ie_mut {
     ($msg_var:expr, $msg:ident, $ie_name:ident($bind:ident) = $value:expr $(,)?) => {{
@@ -1103,15 +1183,25 @@ macro_rules! build_s1ap {
             $(
                 _message.ie(
                     $crate::__s1ap_ie_id!($ie_name),
-                    $crate::build_s1ap!(@criticality $ie_crit),
+                    $crate::__s1ap_criticality!($ie_crit),
                     &$crate::registry::ies::$ie_name::value(($($ie_value)+)),
                 );
             )*
             _message.pdu::<$crate::s1ap::$msg<'static>>(
-                $crate::build_s1ap!(@criticality $outer_crit),
+                $crate::__s1ap_criticality!($outer_crit),
             )
         }
     };
+    // What is not written so, which says what is wrong.
+    ($($other:tt)*) => {
+        $crate::__build_s1ap_mistake!($($other)*)
+    };
+}
+
+/// What `build_s1ap!` says of a call that is not written as it takes one.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __build_s1ap_mistake {
     // The criticality of the PDU is left out: the message follows the procedure.
     ($direction:ident, $proc:ident, $msg:ident,
      $($ie_crit:ident $ie_name:ident ($($ie_value:tt)+)),*
@@ -1126,10 +1216,28 @@ macro_rules! build_s1ap {
     ($direction:ident, $proc:ident, $outer_crit:ident, $msg:ident, $($ies:tt)*) => {
         $crate::__s1ap_ie_syntax!($($ies)*)
     };
-    (@criticality REJECT) => { $crate::s1ap::Criticality::reject };
-    (@criticality IGNORE) => { $crate::s1ap::Criticality::ignore };
-    (@criticality NOTIFY) => { $crate::s1ap::Criticality::notify };
-    (@criticality $other:tt) => {
+    ($($other:tt)*) => {
+        compile_error!(
+            "build_s1ap! takes the direction, the procedure, the criticality of the PDU, \
+             the message, and each IE as `CRITICALITY Name(value)`"
+        )
+    };
+}
+
+/// The criticality that the macros take as `REJECT`, `IGNORE` or `NOTIFY`.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __s1ap_criticality {
+    (REJECT) => {
+        $crate::s1ap::Criticality::reject
+    };
+    (IGNORE) => {
+        $crate::s1ap::Criticality::ignore
+    };
+    (NOTIFY) => {
+        $crate::s1ap::Criticality::notify
+    };
+    ($other:tt) => {
         compile_error!(concat!(
             "`",
             stringify!($other),
@@ -1163,16 +1271,32 @@ macro_rules! build_s1ap_ie {
     ($criticality:ident $ie_name:ident ($($value:tt)+)) => {
         $crate::macros::__ie(
             $crate::__s1ap_ie_id!($ie_name),
-            $crate::build_s1ap!(@criticality $criticality),
+            $crate::__s1ap_criticality!($criticality),
             &$crate::registry::ies::$ie_name::value(($($value)+)),
         )
     };
+    // What is not written so, which says what is wrong.
+    ($($other:tt)*) => {
+        $crate::__build_s1ap_ie_mistake!($($other)*)
+    };
+}
+
+/// What `build_s1ap_ie!` says of a call that is not written as it takes one.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __build_s1ap_ie_mistake {
     ($msg:ident, $ie_name:ident ($($value:tt)+)) => {
         compile_error!(concat!(
             "the criticality of the IE ",
             stringify!($ie_name),
             " is missing: write REJECT, IGNORE or NOTIFY before its name",
         ))
+    };
+    ($($other:tt)*) => {
+        compile_error!(
+            "build_s1ap_ie! takes the message, then the IE as `CRITICALITY Name(value)`, or \
+             the IE alone for one that is in no message"
+        )
     };
 }
 

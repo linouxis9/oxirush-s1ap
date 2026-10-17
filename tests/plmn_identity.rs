@@ -185,15 +185,15 @@ fn octets_that_are_no_plmn_identity_are_refused() {
 #[test]
 fn octets_that_are_no_plmn_identity_are_shown_as_octets() {
     use oxirush_s1ap::inspect;
-    use serde_json::json;
+    use oxirush_s1ap::tree;
 
     for octets in ["abcdef", "02f8f9", "0ff839", "02f83f", "02a839"] {
         let wire = hex::decode(S1_SETUP.replacen("134001", octets, 1)).unwrap();
         let pdu = S1AP_PDU::decode(&wire).unwrap();
         let view = pdu.to_view().unwrap();
         let shown = inspect::select(&view, "/s1ap/Global-ENB-ID/pLMNidentity").unwrap();
-        assert_eq!(shown, [&json!(octets)]);
-        let tree = pdu.to_tree().unwrap();
+        assert_eq!(shown, [&tree!(octets)]);
+        let tree = pdu.to_tree();
         assert_eq!(tree["ies"][0]["Global-ENB-ID"]["pLMNidentity"], octets);
         assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
         assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
@@ -206,34 +206,34 @@ fn octets_that_are_no_plmn_identity_are_shown_as_octets() {
 #[test]
 fn the_notation_of_a_plmn_identity_has_the_octets_of_the_clause() {
     use oxirush_s1ap::inspect;
-    use serde_json::json;
+    use oxirush_s1ap::tree;
 
     // Shown: the tree and the view of the request name the networks that tshark reads.
     let wire = hex::decode(S1_SETUP).unwrap();
     let pdu = S1AP_PDU::decode(&wire).unwrap();
-    let tree = pdu.to_tree().unwrap();
+    let tree = pdu.to_tree();
     assert_eq!(tree["ies"][0]["Global-ENB-ID"]["pLMNidentity"], "310-410");
     let broadcast = &tree["ies"][1]["SupportedTAs"][0]["broadcastPLMNs"];
-    assert_eq!(*broadcast, json!(["208-93", "310-410"]));
+    assert_eq!(*broadcast, tree!(["208-93", "310-410"]));
     let mut view = pdu.to_view().unwrap();
     let of_the_enb = "/s1ap/Global-ENB-ID/pLMNidentity";
     assert_eq!(
         inspect::select(&view, of_the_enb).unwrap(),
-        [&json!("310-410")]
+        [&tree!("310-410")]
     );
 
     // Written: the tree is the octets of the message, and so is each identity of the
     // vectors, set through the view.
     assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
     for (mcc, mnc, octets) in IDENTITIES {
-        inspect::set(&mut view, of_the_enb, json!(format!("{mcc}-{mnc}"))).unwrap();
+        inspect::set(&mut view, of_the_enb, tree!(format!("{mcc}-{mnc}"))).unwrap();
         let edited = S1AP_PDU::from_view(&view).unwrap();
         let request: S1SetupRequest = edited.decode_value().unwrap();
         let enb: GlobalENBID = decode_open_type(&request.protocol_ies.0[0].value).unwrap();
         assert_eq!(&enb.plmn_identity.0.0[..], octets, "{mcc}-{mnc}");
         let shown = edited.to_view().unwrap();
         let shown = inspect::select(&shown, of_the_enb).unwrap();
-        assert_eq!(shown, [&json!(format!("{mcc}-{mnc}"))]);
+        assert_eq!(shown, [&tree!(format!("{mcc}-{mnc}"))]);
     }
 }
 

@@ -7,6 +7,9 @@ use crate::registry::{
     CauseProtocol, Criticality, CriticalityDiagnosticsIEItem, IE_NAMES, OBJECT_SETS, ProtocolIEID,
     TypeOfError,
 };
+use crate::s1ap::{
+    CriticalityDiagnostics, CriticalityDiagnosticsIEList, ProcedureCode, TriggeringMessage,
+};
 use oxirush_aper::check::{Diagnostics, ProtocolCause};
 pub(crate) use oxirush_aper::check::{Wrong, deviations};
 
@@ -38,7 +41,8 @@ pub(crate) fn name(id: u16) -> Option<&'static str> {
 
 /// S1AP, as the types that its deviations are told with: a [`Deviation`] has the
 /// [`Criticality`] of the protocol, and its answer the [`TypeOfError`], the
-/// [`CauseProtocol`] and the [`CriticalityDiagnosticsIEItem`] of the protocol.
+/// [`CauseProtocol`], the [`CriticalityDiagnosticsIEItem`] and the
+/// [`CriticalityDiagnostics`] of the protocol.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct S1ap;
 
@@ -47,6 +51,7 @@ impl Diagnostics for S1ap {
     type TypeOfError = TypeOfError;
     type Cause = CauseProtocol;
     type Item = CriticalityDiagnosticsIEItem;
+    type CriticalityDiagnostics = CriticalityDiagnostics;
 
     fn name(id: u16) -> Option<&'static str> {
         name(id)
@@ -78,6 +83,26 @@ impl Diagnostics for S1ap {
         type_of_error: TypeOfError,
     ) -> CriticalityDiagnosticsIEItem {
         CriticalityDiagnosticsIEItem::new(criticality, ProtocolIEID(id), type_of_error, None)
+    }
+
+    fn criticality_diagnostics(
+        procedure_code: u8,
+        direction: &str,
+        criticality: Criticality,
+        items: Option<Vec<CriticalityDiagnosticsIEItem>>,
+    ) -> CriticalityDiagnostics {
+        let triggering = match direction {
+            "SuccessfulOutcome" => TriggeringMessage::successful_outcome,
+            "UnsuccessfulOutcome" => TriggeringMessage::unsuccessfull_outcome,
+            _ => TriggeringMessage::initiating_message,
+        };
+        CriticalityDiagnostics::new(
+            Some(ProcedureCode(procedure_code)),
+            Some(triggering),
+            Some(criticality),
+            items.map(CriticalityDiagnosticsIEList),
+            None,
+        )
     }
 }
 

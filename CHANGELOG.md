@@ -94,12 +94,16 @@ not source compatible with 0.2.0.
 - `pdu.check()`: how a PDU deviates from the object set of its message, as
   `Deviation`s, refusing nothing. `deviation.cause()` and
   `deviation.diagnostics_item()` give what a receiver answers, as TS 36.413
-  clause 10 has it, and `error.ie()` the IE of an error of the macros. A
-  value outside the root of an extensible constraint and one in another form
-  than the canonical one are reported too, and `aper::encode_strict` and
-  `aper::decode_strict` refuse them.
+  clause 10 has it, `pdu.criticality_diagnostics(&deviations)` the whole
+  Criticality Diagnostics IE of the answer, and `error.ie()` the IE of an
+  error of the macros. A value outside the root of an extensible constraint
+  and one in another form than the canonical one are reported too, and
+  `aper::encode_strict` and `aper::decode_strict` refuse them. A procedure
+  that the specification does not have is the deviation `UnknownProcedure`,
+  which a receiver answers by the criticality of the PDU (clause 10.3.4.1).
 - `pdu.protocol_ies()` and `pdu.set_protocol_ies(ies)`: the IEs of any
-  message.
+  message, and `S1AP_PDU::of_message(&message, criticality)`, the PDU of a
+  message that is at hand.
 - `S1AP_PDU::decode_borrowed`, which copies nothing, `pdu.message()`, which
   lives as long as what the PDU borrows, and `pdu.encode_into(&mut octets)`.
 - A field of `extract_s1ap_ies!` of the type of the one value of its IE,
@@ -112,20 +116,31 @@ not source compatible with 0.2.0.
 - `PLMNidentity` converts to and from the `Plmn` of `oxirush-utils`, which
   the crate has as `oxirush_s1ap::identity`.
 - Each type of the bindings says in its documentation what it is in ASN.1:
-  `MME-UE-S1AP-ID ::= INTEGER (0..4294967295)`.
-- The `inspect` feature: a PDU as a `serde_json::Value`, as its tree
-  (`to_tree`, `from_tree`) and as its view (`to_view`, `with_view`,
-  `from_view`), with the paths of the values of a view (`select`, `paths`,
-  `set`, `insert`, `remove`, `open`, `check_path`, `enumerated_at`) and
-  what the ASN.1 says of each message (`message_ies`,
+  `MME-UE-S1AP-ID ::= INTEGER (0..4294967295)`, and what the comments of the ASN.1 say of it, without the
+  banners of the sections of the modules. The pages of the macros show the
+  forms that a caller writes, with an example of `=>`.
+- The `inspect` feature: a PDU as JSON, the trees of `oxirush-utils`
+  (`oxirush_s1ap::tree`), as its tree (`to_tree`, `from_tree`) and as its view
+  (`to_view`, `with_view`, `from_view`), with the paths of the values of a
+  view (`select`, `paths`, `set`, `insert`, `remove`, `open`, `check_path`,
+  `enumerated_at`) and what the ASN.1 says of each message (`message_ies`,
   `message_ie_criticalities`, `item_criticality` and the others). A
   transfer and the container of a handover are read as their types, the
-  usual values as they are written, and what is not edited keeps the octets
-  received. The trees and the paths are those of `oxirush-aper`, which
-  oxirush-ngap shares, on `oxirush-utils`: octets in lower case, members in
-  the order of the specification.
+  well-known values as they are usually written, wherever they are, and what
+  is not edited keeps the octets received. Every PDU that decodes has a
+  tree, which is the same PDU again: a procedure that the protocol does not
+  have by its procedure code and its direction, a message that has no list
+  of IEs or does not decode by its octets, and an IE or a transfer whose
+  typed value has no place for what a later release added by its octets. An
+  alternative of the type `NULL` is `{"pLMNWide": null}`, whose `null` a
+  path lists and selects. The trees and the paths are those of
+  `oxirush-aper`, which oxirush-ngap shares, on `oxirush-utils`: octets in
+  lower case, members in the order of the specification, and the JSON of the
+  program that uses the crate as the program has it.
 - The `serde` feature: `Serialize` and `Deserialize` through the trees, a
-  PDU as the tree of its message.
+  PDU as the tree of its message and each other type as the tree of a PDU
+  shows it, read back in it or in the form of its ASN.1 type. A name that an
+  object has twice is refused.
 - Tests on 101 messages and 284 vectors that pycrate 0.8.1 encoded, on 81
   PDUs that the MME of Open5GS sent, against the codec of
   rasn 0.29 in `oracle/`, with three fuzz targets, and from the published

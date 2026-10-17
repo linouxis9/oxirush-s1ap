@@ -12,8 +12,9 @@
 //! The tree of a PDU is the name of its message and its IEs by name. The view of a PDU
 //! keeps what was received, and the rest of this page is about it. With the feature
 //! `serde`, a PDU is serialized as its tree in every format of serde, and each other
-//! type of the bindings as its value in the form of its ASN.1 type, which
-//! [`oxirush_aper::json`] describes.
+//! type of the bindings as its own tree, the form in which a tree of a PDU shows it.
+//! A tree and a view are a [`Value`] of `oxirush-utils`, which the crate has as
+//! [`tree::Value`](crate::tree::Value), with `tree!` to write one.
 //!
 //! [`to_view`] returns `procedure_code`, `direction`, `criticality` and `message`: the
 //! message in JSON, each value in the form of its ASN.1 type, which [Values](#values)
@@ -24,7 +25,8 @@
 //! `OCTET STRING (CONTAINING ...)`, is its `decoded` value beside its `_raw_transfer`.
 //! Repeated IEs stay ordered array entries.
 //!
-//! The values of some well-known types are shown as they are usually written:
+//! The values of some well-known types are shown as they are usually written, in a view,
+//! in a tree and alone:
 //!
 //! - a PLMN identity as its MCC and MNC, `"208-93"`;
 //! - a transport layer address as an IP address, `"10.0.0.1"` or `"2001:db8::1"`, or as
@@ -52,7 +54,11 @@
 //!   decode, or the IE is nested deeper than 64 levels. The rest of the PDU is read all
 //!   the same;
 //! - `_edited`: [`set`], [`remove`] or [`insert`] changed something under the value, whose
-//!   octets are no longer those beside it.
+//!   octets are no longer those beside it;
+//! - `_lossy`: the typed value encodes to other octets than those beside it: they hold
+//!   what a later version of its type adds, which the value has no place for, or are in
+//!   another form than the canonical one. A tree has the octets in the place of the
+//!   value, so that it gives them back.
 //!
 //! [`from_view`] encodes the view, and [`with_view`] the view of a PDU that is at hand.
 //! What was not edited keeps the octets received. To edit:
@@ -172,7 +178,8 @@
 //! A path selects nothing where the message could have a value and does not:
 //!
 //! - an IE that the message does not have;
-//! - an OPTIONAL member that is absent, and another alternative of a CHOICE:
+//! - an OPTIONAL member that is absent, and another alternative of a CHOICE (one of the
+//!   type `NULL` that is there has its `null`, which a path selects):
 //!   `/s1ap/Cause/value/nas` when the cause is one of the radio network;
 //! - what follows in the path, which is still checked against the type.
 //!
@@ -204,7 +211,7 @@
 //!
 //! ```
 //! use oxirush_s1ap::{build_s1ap, inspect, s1ap::*};
-//! use serde_json::json;
+//! use oxirush_s1ap::tree;
 //!
 //! let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
 //!     IGNORE, UEContextReleaseRequest,
@@ -213,14 +220,14 @@
 //!     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
 //! )?;
 //! let mut view = pdu.to_view()?;
-//! assert_eq!(inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/value")?, [&json!(7)]);
+//! assert_eq!(inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/value")?, [&tree!(7)]);
 //!
-//! inspect::set(&mut view, "/s1ap/Cause/value", json!({"nas": "detach"}))?;
+//! inspect::set(&mut view, "/s1ap/Cause/value", tree!({"nas": "detach"}))?;
 //! inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID")?;
-//! let name = json!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
+//! let name = tree!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
 //! inspect::insert(&mut view, "/s1ap/-", name)?;
 //! let edited = pdu.with_view(&view)?.to_view()?;
-//! assert_eq!(inspect::select(&edited, "/s1ap/*/id")?, [&json!(8), &json!(2), &json!(60)]);
+//! assert_eq!(inspect::select(&edited, "/s1ap/*/id")?, [&tree!(8), &tree!(2), &tree!(60)]);
 //! # Ok::<(), oxirush_s1ap::Error>(())
 //! ```
 //!
@@ -232,7 +239,7 @@
 //!
 //! | ASN.1 | JSON |
 //! | --- | --- |
-//! | `BOOLEAN`, `NULL` | `true` or `false`, and `null` |
+//! | `BOOLEAN`, `NULL` | `true` or `false`, and `null`: an alternative of the type `NULL` is `{"pLMNWide": null}`, whose `null` a path lists and selects |
 //! | `INTEGER` | A number, which 64 bits hold, as the bindings hold it: X.697 has a number of any size |
 //! | `ENUMERATED` | The name of the value |
 //! | `OCTET STRING` | Its octets in hexadecimal |
@@ -270,7 +277,7 @@
 //! | `Value` | A JSON value that is not a value of its ASN.1 type: of another form than [Values](#values) lists, a name that an `ENUMERATED` does not have, a number outside its constraint, octets that are no hexadecimal. The message says at which member, by the names of the value |
 //! | `Form` | JSON that is not written as a tree or as a view: no name of a message, a member that neither has, an IE with its value and its octets, an IE that says no criticality where no table has one |
 //! | `Edit` | An edit that is refused: a member that its type always has, the value of an IE or the alternative of a `CHOICE` taken out, an insertion where there is no list, and the octets of a value that was edited since |
-//! | `Limit` | A path of more than 64 segments or 4096 octets, a selection of more than 4096 values, a tree nested deeper than 256 levels, and the tree of a message without a list of IEs |
+//! | `Limit` | A path of more than 64 segments or 4096 octets, a selection of more than 65,536 values, a tree nested deeper than 256 levels |
 //! | `UndecodableIe` | A path into an IE or a transfer that did not decode |
 //! | `Decode` | A PDU whose message does not decode, and octets of a view that are not what they were decoded as |
 //!
@@ -316,14 +323,13 @@
 //! [`from_view`]: S1AP_PDU::from_view
 //! [`with_view`]: S1AP_PDU::with_view
 
-use serde_json::Value;
-
 use crate::Error;
 use crate::inspect_paths::{TABLES, same_name};
 pub use crate::inspect_paths::{check_path, enumerated_at, insert, paths, remove, select, set};
 use crate::inspect_registry as registry;
 use crate::s1ap::{S1AP_PDU, S1APPDU};
 use oxirush_aper::inspect::{self as shared, Parts};
+pub use oxirush_aper::json::Value;
 use oxirush_aper::json::{self, Tree};
 use oxirush_aper::{AsnType, Decode, Encode, Octets};
 
@@ -409,17 +415,28 @@ pub(crate) fn any_message() -> Typed {
     typed!(crate::s1ap::ErrorIndication<'a>)
 }
 
-/// The value of the type `T` that the octets `raw` are, in its JSON form. `name` is the
-/// name of the type in the bindings.
-pub(crate) fn decode_typed<'a, T>(name: &'static str, raw: &'a [u8]) -> Result<Value, Error>
+/// The value of the type `T` that the octets `raw` are, in its JSON form, and whether it
+/// encodes back to them: it does not when they hold what a later version of the type
+/// adds, which the value has no place for, or are in another form than the canonical
+/// one. `name` is the name of the type in the bindings.
+pub(crate) fn decode_typed<'a, T>(
+    name: &'static str,
+    raw: &'a [u8],
+) -> Result<oxirush_aper::inspect::Decoded, Error>
 where
-    T: Decode<'a> + Tree,
+    T: Decode<'a> + Encode + Tree,
 {
     let read: Result<T, Error> = oxirush_aper::decode(raw);
-    let shown = read.map(|value| value.to_tree());
+    let shown = read.map(|value| {
+        let exact = oxirush_aper::encode(&value).is_ok_and(|octets| octets == raw);
+        (value.to_tree(), exact)
+    });
+    // The oracle writes the form of the JSON Encoding Rules, which a tree has but for the
+    // well-known types.
     #[cfg(oxirush_s1ap_hooks)]
     if let Some(observer) = OBSERVER.get() {
-        observer(name, raw, &shown);
+        let jer = |(value, _): &(Value, bool)| TABLES.jer(value.clone(), name);
+        observer(name, raw, &shown.as_ref().map(jer).map_err(Clone::clone));
     }
     let _ = name;
     shown
@@ -494,12 +511,12 @@ macro_rules! typed {
     ($type:ty) => {{
         // A type that borrows nothing leaves the lifetime without a use.
         #[allow(clippy::needless_lifetimes)]
-        fn decode<'a>(raw: &'a [u8]) -> Result<serde_json::Value, $crate::Error> {
+        fn decode<'a>(raw: &'a [u8]) -> Result<oxirush_aper::inspect::Decoded, $crate::Error> {
             let name = $crate::macros::type_name(stringify!($type));
             $crate::inspect::decode_typed::<$type>(name, raw)
         }
         #[allow(clippy::needless_lifetimes)]
-        fn encode<'a>(value: &'a serde_json::Value) -> Result<Vec<u8>, $crate::Error> {
+        fn encode<'a>(value: &'a $crate::inspect::Value) -> Result<Vec<u8>, $crate::Error> {
             $crate::inspect::encode_typed::<$type>(value)
         }
         $crate::inspect::Typed { decode, encode }
@@ -507,7 +524,7 @@ macro_rules! typed {
 }
 pub(crate) use typed;
 
-/// How a view and a tree show the values of a well-known type.
+/// How a tree shows the values of a well-known type.
 pub(crate) use oxirush_aper::inspect::Form;
 
 /// Decode, in `view`, the octets that `path` takes as a type that they may carry: those
@@ -548,7 +565,7 @@ impl S1APPDU<'_> {
     /// // A UE CONTEXT RELEASE REQUEST
     /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
     /// let pdu = S1AP_PDU::decode(&octets)?;
-    /// let tree = pdu.to_tree()?;
+    /// let tree = pdu.to_tree();
     /// assert_eq!(tree["message"], "UEContextReleaseRequest");
     /// assert_eq!(tree["ies"][2]["Cause"]["radioNetwork"], "user-inactivity");
     ///
@@ -558,15 +575,16 @@ impl S1APPDU<'_> {
     /// ```
     ///
     /// An IE is one member: the name that ASN.1 gives it, or its identifier in digits when
-    /// it has none, with its value. One that did not decode has its octets, as
-    /// `{"octets": "…"}`. What the specification assigns is left out: the `criticality` of
+    /// it has none, with its value. One that did not decode, and one whose typed value
+    /// has no place for what it was received with, which a later version of its type
+    /// adds, has its octets, as `{"octets": "…"}`. What the specification assigns is left out: the `criticality` of
     /// the PDU is there when it is not that of the procedure, and that of an IE, beside its
     /// name, when it is not the one that the message assigns it.
     /// [`from_tree`](Self::from_tree) reads this form back.
     ///
     /// A value is as [`to_view`](Self::to_view) shows it, without what a view keeps of
     /// what was received, to any depth. A transfer is its decoded value, or
-    /// `{"octets": "…"}` when it did not decode. The IEs that a value holds, alone, as the
+    /// `{"octets": "…"}` when it did not decode or its value has no place for all of it. The IEs that a value holds, alone, as the
     /// entries of a list or in an extension container, are each a name with a value too:
     ///
     /// ```json
@@ -579,17 +597,22 @@ impl S1APPDU<'_> {
     /// extension container is always there: the tables have the criticality that an object
     /// set assigns for the messages of the procedures and for the single containers only.
     ///
-    /// An error for a PDU whose message does not decode, for a procedure that the
-    /// specification does not have in that direction, and for a message without a list of
-    /// IEs of the protocol, as a private message.
-    pub fn to_tree(&self) -> Result<Value, Error> {
-        if message_name(self).is_none() {
-            let (direction, code) = (self.direction(), self.procedure_code());
-            let protocol = registry::PROTOCOL;
-            let what = format!("{protocol} has no {direction} of procedure {code}");
-            return Err(Error::unknown_message(what));
-        }
-        shared::tree(&TABLES, self.to_view()?)
+    /// Every PDU that decodes has a tree, which [`from_tree`](Self::from_tree) makes the
+    /// same PDU again. A procedure that the specification does not have in that direction
+    /// has its `procedure_code` and its `direction` in the place of the name of a message,
+    /// and its `criticality`, which no table assigns:
+    ///
+    /// ```json
+    /// {"procedure_code": 200, "direction": "InitiatingMessage", "ies": [...], "criticality": "ignore"}
+    /// ```
+    ///
+    /// A message that has no list of IEs, as the private one, one that does not decode,
+    /// and one whose typed value has no place for what it was received with, has its
+    /// `octets` in the place of its IEs: `{"message": "PrivateMessage", "octets": "…"}`.
+    pub fn to_tree(&self) -> Value {
+        let (direction, code) = (self.direction(), self.procedure_code());
+        let criticality = json::to_value(&self.criticality());
+        shared::tree(&TABLES, direction, code, criticality, self.value())
     }
 
     /// The PDU of a tree: a message written as its name and its IEs by name, as
@@ -601,7 +624,10 @@ impl S1APPDU<'_> {
     /// beside the name of the message or of an IE is sent in its place. An IE that the
     /// message does not have, by its name or by its identifier in digits, says its
     /// `criticality`. A value is encoded as the type of the IE; `{"octets": "…"}` is the
-    /// octets of the IE as they are sent, whatever they are.
+    /// octets of the IE as they are sent, whatever they are. A procedure that the protocol
+    /// does not have in that direction is written by its `procedure_code` and its
+    /// `direction`, with its `criticality`, and a message as it is sent by its `octets`
+    /// in the place of its `ies`.
     ///
     /// A value is written as [`to_tree`](Self::to_tree) shows it: a transfer as its
     /// decoded value, or as its `octets`, and each IE that the value holds as its name
@@ -613,9 +639,9 @@ impl S1APPDU<'_> {
     ///
     /// ```
     /// use oxirush_s1ap::s1ap::S1AP_PDU;
-    /// use serde_json::json;
+    /// use oxirush_s1ap::tree;
     ///
-    /// let request = json!({"message": "UEContextReleaseRequest", "ies": [
+    /// let request = tree!({"message": "UEContextReleaseRequest", "ies": [
     ///     {"MME-UE-S1AP-ID": 42},
     ///     {"eNB-UE-S1AP-ID": 7},
     ///     {"Cause": {"radioNetwork": "user-inactivity"}},
@@ -649,22 +675,22 @@ impl S1APPDU<'_> {
     /// does not have in that direction has a view too: its message is read as a container
     /// of protocol IEs, which every message of the protocol but the private one is, and
     /// each IE with the type of its identifier, as
-    /// [`protocol_ies`](Self::protocol_ies) reads them whatever the message is. It has
-    /// no tree, which names its message.
+    /// [`protocol_ies`](Self::protocol_ies) reads them whatever the message is. Its tree
+    /// has its procedure code and its direction in the place of the name of a message.
     ///
-    /// A view takes up to 162 octets of memory for each octet of the S1AP_PDU, and
-    /// [`with_view`](Self::with_view) 238: 64 MB and 94 MB for a message of 65,535
+    /// A view takes up to 94 octets of memory for each octet of the S1AP_PDU, and
+    /// [`with_view`](Self::with_view) 122: 37 MB and 48 MB for a message of 65,535
     /// IEs, 393 KB. The crate has no limit on the octets of a S1AP_PDU: the caller bounds them.
     ///
     /// ```
     /// use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-    /// use serde_json::json;
+    /// use oxirush_s1ap::tree;
     ///
     /// // A UE CONTEXT RELEASE REQUEST
     /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
     /// let view = S1AP_PDU::decode(&octets)?.to_view()?;
     /// assert_eq!(view["procedure_code"], 18);
-    /// assert_eq!(inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/value")?, [&json!(7)]);
+    /// assert_eq!(inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/value")?, [&tree!(7)]);
     /// # Ok::<(), oxirush_s1ap::Error>(())
     /// ```
     pub fn to_view(&self) -> Result<Value, Error> {
@@ -693,18 +719,18 @@ impl S1APPDU<'_> {
     ///
     /// ```
     /// use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1AP_PDU};
-    /// use serde_json::json;
+    /// use oxirush_s1ap::tree;
     ///
     /// // A UE CONTEXT RELEASE REQUEST, and its view with another cause
     /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
     /// let pdu = S1AP_PDU::decode(&octets)?;
     /// let mut view = pdu.to_view()?;
-    /// inspect::set(&mut view, "/s1ap/Cause/nas", json!("normal-release"))?;
+    /// inspect::set(&mut view, "/s1ap/Cause/nas", tree!("normal-release"))?;
     /// let edited = pdu.with_view(&view)?;
-    /// assert_eq!(edited.to_tree()?["ies"][2], json!({"Cause": {"nas": "normal-release"}}));
+    /// assert_eq!(edited.to_tree()["ies"][2], tree!({"Cause": {"nas": "normal-release"}}));
     ///
     /// // A view that says another procedure is not a view of this PDU
-    /// view["procedure_code"] = json!(17);
+    /// view["procedure_code"] = tree!(17);
     /// assert_eq!(pdu.with_view(&view).unwrap_err().kind(), ErrorKind::Form);
     /// # Ok::<(), oxirush_s1ap::Error>(())
     /// ```
@@ -721,9 +747,7 @@ impl S1APPDU<'_> {
 #[cfg(feature = "serde")]
 impl serde_core::Serialize for S1APPDU<'_> {
     fn serialize<S: serde_core::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use serde_core::ser::Error as _;
-        let tree = self.to_tree().map_err(S::Error::custom)?;
-        serde_core::Serialize::serialize(&tree, serializer)
+        serde_core::Serialize::serialize(&self.to_tree(), serializer)
     }
 }
 

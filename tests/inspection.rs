@@ -26,13 +26,13 @@ fn inspect_every_canonical_procedure_and_round_trip() {
 
 #[test]
 fn the_view_of_a_pdu_that_was_edited_is_that_pdu_edited() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
 
     // UE CONTEXT RELEASE REQUEST
     let wire = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
     let pdu = S1AP_PDU::decode(&wire).unwrap();
     let mut view = pdu.to_view().unwrap();
-    inspect::set(&mut view, "/s1ap/Cause/radioNetwork", json!("unspecified")).unwrap();
+    inspect::set(&mut view, "/s1ap/Cause/radioNetwork", tree!("unspecified")).unwrap();
     inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID").unwrap();
 
     // The edits, and the octets received for what was not edited.
@@ -43,8 +43,8 @@ fn the_view_of_a_pdu_that_was_edited_is_that_pdu_edited() {
         "0012400f000002000800020007000240020000"
     );
     assert_eq!(
-        edited.to_tree().unwrap(),
-        json!({"message": "UEContextReleaseRequest", "ies": [
+        edited.to_tree(),
+        tree!({"message": "UEContextReleaseRequest", "ies": [
             {"eNB-UE-S1AP-ID": 7},
             {"Cause": {"radioNetwork": "unspecified"}},
         ]})
@@ -65,8 +65,8 @@ fn editing_a_known_ie_cannot_drop_unknown_sequence_additions() {
     let mut view = pdu.to_view().unwrap();
     assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
     let path = "/message/protocolIEs/2/value/trackingAreaListforWarning/0/tAC";
-    assert_eq!(view.pointer(path), Some(&serde_json::json!(1)));
-    *view.pointer_mut(path).unwrap() = serde_json::json!(3);
+    assert_eq!(view.pointer(path), Some(&oxirush_s1ap::tree!(1)));
+    *view.pointer_mut(path).unwrap() = oxirush_s1ap::tree!(3);
     assert!(
         S1AP_PDU::from_view(&view).is_err(),
         "a typed edit must not silently discard a future IE extension"
@@ -86,13 +86,13 @@ fn release_request(enb_ue_id: u32) -> S1AP_PDU {
 fn a_typed_edit_is_encoded_and_the_other_ies_keep_their_octets() {
     let mut view = release_request(7).to_view().unwrap();
     let path = "/message/protocolIEs/1/value";
-    assert_eq!(view.pointer(path), Some(&serde_json::json!(7)));
-    *view.pointer_mut(path).unwrap() = serde_json::json!(9);
+    assert_eq!(view.pointer(path), Some(&oxirush_s1ap::tree!(7)));
+    *view.pointer_mut(path).unwrap() = oxirush_s1ap::tree!(9);
     assert_eq!(
         S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
         release_request(9).encode().unwrap()
     );
-    view["typo"] = serde_json::json!(1);
+    view["typo"] = oxirush_s1ap::tree!(1);
     assert!(S1AP_PDU::from_view(&view).is_err());
 }
 
@@ -106,16 +106,16 @@ fn the_octets_of_an_ie_are_replaced_or_added_as_its_raw_value_without_value() {
     let ies = view.pointer_mut("/message/protocolIEs").unwrap();
     ies.as_array_mut()
         .unwrap()
-        .push(serde_json::json!({"id": 60000, "criticality": "ignore", "_raw_value": "C0FFEE"}));
+        .push(oxirush_s1ap::tree!({"id": 60000, "criticality": "ignore", "_raw_value": "C0FFEE"}));
     let edited = S1AP_PDU::from_view(&view).unwrap();
     let view = edited.to_view().unwrap();
     assert_eq!(
         view.pointer("/message/protocolIEs/1/value"),
-        Some(&serde_json::json!(9))
+        Some(&oxirush_s1ap::tree!(9))
     );
     assert_eq!(
         view.pointer("/message/protocolIEs/2/value"),
-        Some(&serde_json::json!("c0ffee"))
+        Some(&oxirush_s1ap::tree!("c0ffee"))
     );
 }
 
@@ -128,21 +128,21 @@ fn a_new_ie_takes_a_typed_value_of_the_type_of_its_identifier() {
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
     )
     .unwrap();
-    let added = |id: u16, value: serde_json::Value| {
+    let added = |id: u16, value: oxirush_s1ap::tree::Value| {
         let mut view = release_request(7).to_view().unwrap();
         let ies = view.pointer_mut("/message/protocolIEs").unwrap();
         ies.as_array_mut()
             .unwrap()
-            .push(serde_json::json!({"id": id, "criticality": "ignore", "value": value}));
+            .push(oxirush_s1ap::tree!({"id": id, "criticality": "ignore", "value": value}));
         S1AP_PDU::from_view(&view)
     };
-    let cause = serde_json::json!({"radioNetwork": "user-inactivity"});
+    let cause = oxirush_s1ap::tree!({"radioNetwork": "user-inactivity"});
     assert_eq!(
         added(2, cause.clone()).unwrap().encode().unwrap(),
         with_cause.encode().unwrap()
     );
     // A value that the type does not have, and an identifier without a type.
-    assert!(added(2, serde_json::json!({"radioNetwork": "no-such-cause"})).is_err());
+    assert!(added(2, oxirush_s1ap::tree!({"radioNetwork": "no-such-cause"})).is_err());
     assert!(
         added(60000, cause)
             .unwrap_err()
@@ -170,14 +170,14 @@ fn a_new_ie_whose_value_is_a_string_is_typed_too() {
     let ies = ies.as_array_mut().unwrap();
     // An ENUMERATED by its name and an OCTET STRING by its octets, not the
     // octets of their open types.
-    ies.push(serde_json::json!({"id": 134, "criticality": "ignore", "value": "mo-Signalling"}));
-    ies.push(serde_json::json!({"id": 26, "criticality": "reject", "value": "076a"}));
+    ies.push(oxirush_s1ap::tree!({"id": 134, "criticality": "ignore", "value": "mo-Signalling"}));
+    ies.push(oxirush_s1ap::tree!({"id": 26, "criticality": "reject", "value": "076a"}));
     assert_eq!(
         S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
         typed.encode().unwrap()
     );
     // Hexadecimal in lower case is the same octets.
-    *view.pointer_mut("/message/protocolIEs/2/value").unwrap() = serde_json::json!("076a");
+    *view.pointer_mut("/message/protocolIEs/2/value").unwrap() = oxirush_s1ap::tree!("076a");
     assert_eq!(
         S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
         typed.encode().unwrap()
@@ -198,20 +198,20 @@ fn an_ie_that_does_not_decode_is_edited_as_its_octets() {
     ));
     let mut view = pdu.to_view().unwrap();
     let path = "/message/protocolIEs/0/value";
-    assert_eq!(view.pointer(path), Some(&serde_json::json!("c0ffee")));
+    assert_eq!(view.pointer(path), Some(&oxirush_s1ap::tree!("c0ffee")));
     assert!(view["message"]["protocolIEs"][0]["_decode_error"].is_string());
     assert_eq!(
         S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
         pdu.encode().unwrap()
     );
-    *view.pointer_mut(path).unwrap() = serde_json::json!("DECAFBAD");
+    *view.pointer_mut(path).unwrap() = oxirush_s1ap::tree!("DECAFBAD");
     let edited = S1AP_PDU::from_view(&view).unwrap();
     assert_eq!(
         edited.to_view().unwrap().pointer(path),
-        Some(&serde_json::json!("decafbad"))
+        Some(&oxirush_s1ap::tree!("decafbad"))
     );
     // Its type is unknown, so a typed value has no encoding.
-    *view.pointer_mut(path).unwrap() = serde_json::json!(5);
+    *view.pointer_mut(path).unwrap() = oxirush_s1ap::tree!(5);
     assert!(S1AP_PDU::from_view(&view).is_err());
 }
 
@@ -237,20 +237,14 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
     {
         let fields: Vec<_> = line.split('\t').collect();
         let wire = hex::decode(fields[1]).unwrap();
-        let shown = match S1AP_PDU::decode(&wire).unwrap().to_tree() {
-            Ok(shown) => shown,
-            // A private message has no IEs of the protocol to name.
-            Err(reason) => {
-                assert_eq!(reason.kind(), oxirush_s1ap::ErrorKind::Limit);
-                assert!(
-                    reason
-                        .to_string()
-                        .contains("PrivateMessage has no list of IEs"),
-                    "{reason}"
-                );
-                continue;
-            }
-        };
+        let shown = S1AP_PDU::decode(&wire).unwrap().to_tree();
+        // A private message has no IEs of the protocol to name: its octets.
+        if shown.get("ies").is_none() {
+            assert_eq!(shown["message"], "PrivateMessage");
+            assert!(shown["octets"].is_string());
+            assert_eq!(S1AP_PDU::from_tree(&shown).unwrap().encode().unwrap(), wire);
+            continue;
+        }
         assert!(
             shown["message"].is_string() && shown["ies"].is_array(),
             "{}",
@@ -266,7 +260,7 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
     }
     // The name gives the procedure and the criticalities; an IE that the message does
     // not have says its own, and octets are sent as they are.
-    let request = serde_json::json!({
+    let request = oxirush_s1ap::tree!({
         "message": "ue context release request",
         "ies": [
             {"mme-ue-s1ap-id": 1},
@@ -284,17 +278,19 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
         .map(|ie| ie["criticality"].as_str().unwrap())
         .collect();
     assert_eq!(criticalities, ["reject", "reject", "ignore", "reject"]);
-    let shown = pdu.to_tree().unwrap();
+    let shown = pdu.to_tree();
     assert_eq!(shown["message"], "UEContextReleaseRequest");
-    assert_eq!(shown["ies"][0], serde_json::json!({"MME-UE-S1AP-ID": 1}));
+    assert_eq!(shown["ies"][0], oxirush_s1ap::tree!({"MME-UE-S1AP-ID": 1}));
     assert_eq!(
         shown["ies"][3],
-        serde_json::json!({"65000": {"octets": "00"}, "criticality": "reject"})
+        oxirush_s1ap::tree!({"65000": {"octets": "00"}, "criticality": "reject"})
     );
     // What is not a message, not an IE, or an IE of another message without its
     // criticality, is refused with what is wrong.
-    let refused = |tree: serde_json::Value| S1AP_PDU::from_tree(&tree).unwrap_err().to_string();
-    let named = |message: &str, ie: &str| serde_json::json!({"message": message, "ies": [{ie: 1}]});
+    let refused =
+        |tree: oxirush_s1ap::tree::Value| S1AP_PDU::from_tree(&tree).unwrap_err().to_string();
+    let named =
+        |message: &str, ie: &str| oxirush_s1ap::tree!({"message": message, "ies": [{ie: 1}]});
     assert!(
         refused(named("UEContextReleaseRequst", "MME-UE-S1AP-ID")).contains("is not a message")
     );
@@ -302,14 +298,14 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
     assert!(
         refused(named("UEContextReleaseRequest", "CSG-Id")).contains("says its \"criticality\"")
     );
-    assert!(refused(serde_json::json!({"message": "Paging", "ies": [{}]})).contains("one IE"));
-    assert!(refused(serde_json::json!({"message": "Paging", "ie": []})).contains("is no member"));
+    assert!(refused(oxirush_s1ap::tree!({"message": "Paging", "ies": [{}]})).contains("one IE"));
+    assert!(refused(oxirush_s1ap::tree!({"message": "Paging", "ie": []})).contains("is no member"));
 }
 
 /// The members of `value`, a tree or a part of one, that only repeat what its form says:
 /// those of an IE in a view, and a `criticality` that the tables have.
-fn redundant(value: &serde_json::Value, found: &mut Vec<String>) {
-    use serde_json::Value;
+fn redundant(value: &oxirush_s1ap::tree::Value, found: &mut Vec<String>) {
+    use oxirush_s1ap::tree::Value;
     match value {
         Value::Object(members) => {
             for (name, member) in members {
@@ -332,14 +328,15 @@ fn redundant(value: &serde_json::Value, found: &mut Vec<String>) {
 
 #[test]
 fn a_message_is_shown_and_written_by_name_to_any_depth() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let shown = |wire: &[u8]| S1AP_PDU::decode(wire).unwrap().to_tree();
-    let written =
-        |tree: &serde_json::Value| S1AP_PDU::from_tree(tree).map(|pdu| pdu.encode().unwrap());
+    let written = |tree: &oxirush_s1ap::tree::Value| {
+        S1AP_PDU::from_tree(tree).map(|pdu| pdu.encode().unwrap())
+    };
     // The items of a list of E-RABs go by name, without the criticality that their
     // object set assigns.
     let wire = fixture("E-RABSetupRequest");
-    let bearer = json!({
+    let bearer = tree!({
         "e-RAB-ID": 0,
         "e-RABlevelQoSParameters": {"qCI": 0, "allocationRetentionPriority": {
             "priorityLevel": 0,
@@ -350,8 +347,8 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
         "gTP-TEID": 2778534635u32,
         "nAS-PDU": "076002",
     });
-    let request = |bearer: &serde_json::Value| {
-        json!({
+    let request = |bearer: &oxirush_s1ap::tree::Value| {
+        tree!({
             "message": "E-RABSetupRequest",
             "ies": [
                 {"MME-UE-S1AP-ID": 0},
@@ -360,8 +357,8 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
             ],
         })
     };
-    let by_name = request(&json!({"E-RABToBeSetupItemBearerSUReq": bearer}));
-    assert_eq!(shown(&wire).unwrap(), by_name);
+    let by_name = request(&tree!({"E-RABToBeSetupItemBearerSUReq": &bearer}));
+    assert_eq!(shown(&wire), by_name);
     assert_eq!(written(&by_name).unwrap(), wire);
     // No message of the fixtures is shown with a member that only wraps a value, nor
     // with a criticality: the tables have each of them.
@@ -371,28 +368,29 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
         .filter(|line| !line.starts_with('#') && !line.is_empty())
     {
         let fields: Vec<_> = line.split('\t').collect();
-        if let Ok(shown) = shown(&hex::decode(fields[1]).unwrap()) {
+        let shown = shown(&hex::decode(fields[1]).unwrap());
+        if shown.get("ies").is_some() {
             redundant(&shown["ies"], &mut found);
         }
     }
     assert_eq!(found, Vec::<String>::new());
     // The same message as a view has it, with an entry for the item.
-    let entry = json!({"id": 17, "criticality": "reject", "value": bearer});
+    let entry = tree!({"id": 17, "criticality": "reject", "value": &bearer});
     assert_eq!(written(&request(&entry)).unwrap(), wire);
     // An IE of an extension container says its criticality, which `to_tree`
     // shows: the tables have none for it.
     let mut extended = bearer.clone();
-    extended["iE-Extensions"] = json!([{"BearerType": "non-IP", "criticality": "reject"}]);
-    let extended = request(&json!({"E-RABToBeSetupItemBearerSUReq": extended}));
+    extended["iE-Extensions"] = tree!([{"BearerType": "non-IP", "criticality": "reject"}]);
+    let extended = request(&tree!({"E-RABToBeSetupItemBearerSUReq": extended}));
     let pdu = S1AP_PDU::from_tree(&extended).unwrap();
     let view = pdu.to_view().unwrap();
     let extension = "/s1ap/E-RABToBeSetupListBearerSUReq/0/iE-Extensions/0";
     let value = inspect::select(&view, &format!("{extension}/extensionValue")).unwrap();
-    assert_eq!(value, [&json!("non-IP")]);
-    assert_eq!(pdu.to_tree().unwrap(), extended);
+    assert_eq!(value, [&tree!("non-IP")]);
+    assert_eq!(pdu.to_tree(), extended);
     let mut unassigned = bearer.clone();
-    unassigned["iE-Extensions"] = json!([{"BearerType": "non-IP"}]);
-    let unassigned = request(&json!({"E-RABToBeSetupItemBearerSUReq": unassigned}));
+    unassigned["iE-Extensions"] = tree!([{"BearerType": "non-IP"}]);
+    let unassigned = request(&tree!({"E-RABToBeSetupItemBearerSUReq": unassigned}));
     let error = written(&unassigned).unwrap_err().to_string();
     assert!(
         error.contains("BearerType says its \"criticality\""),
@@ -400,29 +398,29 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
     );
     // An item that two object sets give two criticalities says its own: that of a
     // connection is `reject` in a RESET and `ignore` in its acknowledgement.
-    let reset = |connection: &serde_json::Value| {
-        json!({"message": "Reset", "ies": [
+    let reset = |connection: &oxirush_s1ap::tree::Value| {
+        tree!({"message": "Reset", "ies": [
             {"Cause": {"misc": "unspecified"}},
             {"ResetType": {"partOfS1-Interface": [connection]}},
         ]})
     };
-    let mut connection = json!({"UE-associatedLogicalS1-ConnectionItem": {"mME-UE-S1AP-ID": 1}});
+    let mut connection = tree!({"UE-associatedLogicalS1-ConnectionItem": {"mME-UE-S1AP-ID": 1}});
     let error = written(&reset(&connection)).unwrap_err().to_string();
     assert!(error.contains("Item says its \"criticality\""), "{error}");
-    connection["criticality"] = json!("reject");
+    connection["criticality"] = tree!("reject");
     let pdu = S1AP_PDU::from_tree(&reset(&connection)).unwrap();
-    assert_eq!(pdu.to_tree().unwrap(), reset(&connection));
+    assert_eq!(pdu.to_tree(), reset(&connection));
     // An IE that a value holds alone, as the alternative that extends a CHOICE, has
     // the criticality of its object set.
-    let node = json!({
+    let node = tree!({
         "global-ENB-ID": {"pLMNidentity": "208-93", "eNB-ID": {"macroENB-ID": "000010"}},
         "selected-TAI": {"pLMNidentity": "208-93", "tAC": 1},
     });
-    let report = json!({"rLFReportInformation": {"uE-RLF-Report-Container": "00"}});
-    let transfer = json!({"message": "ENBConfigurationTransfer", "ies": [
+    let report = tree!({"rLFReportInformation": {"uE-RLF-Report-Container": "00"}});
+    let transfer = tree!({"message": "ENBConfigurationTransfer", "ies": [
         {"SONConfigurationTransferECT": {
-            "targeteNB-ID": node,
-            "sourceeNB-ID": node,
+            "targeteNB-ID": &node,
+            "sourceeNB-ID": &node,
             "sONInformation": {"sONInformation-Extension": {"SON-Information-Report": report}},
         }},
     ]});
@@ -430,12 +428,12 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
     let view = pdu.to_view().unwrap();
     let held = "/s1ap/SONConfigurationTransferECT/sONInformation/sONInformation-Extension";
     let criticality = inspect::select(&view, &format!("{held}/criticality")).unwrap();
-    assert_eq!(criticality, [&json!("ignore")]);
+    assert_eq!(criticality, [&tree!("ignore")]);
     let container = format!("{held}/rLFReportInformation/uE-RLF-Report-Container");
-    assert_eq!(inspect::select(&view, &container).unwrap(), [&json!("00")]);
-    assert_eq!(pdu.to_tree().unwrap(), transfer);
+    assert_eq!(inspect::select(&view, &container).unwrap(), [&tree!("00")]);
+    assert_eq!(pdu.to_tree(), transfer);
     // What is in the place of an IE and is none is refused.
-    let error = written(&request(&json!({"a": 1, "b": 2})))
+    let error = written(&request(&tree!({"a": 1, "b": 2})))
         .unwrap_err()
         .to_string();
     assert!(error.contains("one IE"), "{error}");
@@ -443,7 +441,7 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
 
 #[test]
 fn the_value_of_an_ie_may_be_left_out_of_a_path() {
-    use serde_json::{Value, json};
+    use oxirush_s1ap::{tree, tree::Value};
     let name = "E-RABSetupRequest";
     let view = S1AP_PDU::decode(&fixture(name)).unwrap().to_view().unwrap();
     let long = "/s1ap/E-RABToBeSetupListBearerSUReq/value/0/value";
@@ -452,7 +450,7 @@ fn the_value_of_an_ie_may_be_left_out_of_a_path() {
     // Each of the two is left out alone, and both together; the item goes by its
     // position, its name or its identifier.
     let tunnel = inspect::select(&view, &format!("{long}/gTP-TEID")).unwrap();
-    assert_eq!(tunnel, [&json!(2778534635u32)]);
+    assert_eq!(tunnel, [&tree!(2778534635u32)]);
     for path in [
         format!("{list}/0/value"),
         format!("{list}/value/0"),
@@ -469,10 +467,10 @@ fn the_value_of_an_ie_may_be_left_out_of_a_path() {
     // What an IE has itself comes first: `*` is each of its members, and the entries
     // of its value are after `value`.
     let select = |path: &str| inspect::select(&view, path).unwrap();
-    assert_eq!(select(&format!("{list}/criticality")), [&json!("reject")]);
-    assert_eq!(select(&format!("{short}/criticality")), [&json!("reject")]);
+    assert_eq!(select(&format!("{list}/criticality")), [&tree!("reject")]);
+    assert_eq!(select(&format!("{short}/criticality")), [&tree!("reject")]);
     assert_eq!(select(&format!("{list}/*")).len(), 3);
-    assert_eq!(select(&format!("{list}/value/*/id")), [&json!(17)]);
+    assert_eq!(select(&format!("{list}/value/*/id")), [&tree!(17)]);
     assert!(select(&format!("{short}/octets"))[0].is_string());
     // The names of an ENUMERATED are found on the same path.
     let capability = "e-RABlevelQoSParameters/allocationRetentionPriority/pre-emptionCapability";
@@ -487,20 +485,20 @@ fn the_value_of_an_ie_may_be_left_out_of_a_path() {
     // and the octets of the IE are no longer those of its value.
     let mut edited = view.clone();
     let second = inspect::select(&view, &short).unwrap()[0].clone();
-    inspect::set(&mut edited, &format!("{short}/e-RAB-ID"), json!(5)).unwrap();
+    inspect::set(&mut edited, &format!("{short}/e-RAB-ID"), tree!(5)).unwrap();
     let error = inspect::select(&edited, &format!("{list}/octets"))
         .unwrap_err()
         .to_string();
     assert!(error.contains("the value was edited"), "{error}");
     inspect::insert(&mut edited, &format!("{list}/-"), second.clone()).unwrap();
     inspect::insert(&mut edited, &format!("{list}/0"), second).unwrap();
-    inspect::set(&mut edited, &format!("{list}/0/nAS-PDU"), json!("0760")).unwrap();
+    inspect::set(&mut edited, &format!("{list}/0/nAS-PDU"), tree!("0760")).unwrap();
     inspect::remove(&mut edited, &format!("{list}/2")).unwrap();
     let after = S1AP_PDU::from_view(&edited).unwrap().to_view().unwrap();
     let bearers = inspect::select(&after, &format!("{list}/value/*/e-RAB-ID")).unwrap();
-    assert_eq!(bearers, [&json!(0), &json!(5)]);
+    assert_eq!(bearers, [&tree!(0), &tree!(5)]);
     let messages = inspect::select(&after, &format!("{list}/value/*/nAS-PDU")).unwrap();
-    assert_eq!(messages, [&json!("0760"), &json!("076002")]);
+    assert_eq!(messages, [&tree!("0760"), &tree!("076002")]);
     let error = inspect::set(&mut edited, &format!("{list}/0/nAS-PDU"), Value::Null);
     assert!(
         error
@@ -527,7 +525,7 @@ fn the_value_of_an_ie_may_be_left_out_of_a_path() {
                 .map(|_| ())
                 .unwrap_err()
                 .to_string(),
-            inspect::set(&mut edited, &path, json!(1))
+            inspect::set(&mut edited, &path, tree!(1))
                 .unwrap_err()
                 .to_string(),
         ] {
@@ -539,38 +537,38 @@ fn the_value_of_an_ie_may_be_left_out_of_a_path() {
     assert_eq!(edited, before);
     // A member of a value that is named as one of its IE is that of the IE: the `value`
     // of a bit string whose size varies is reached after `value`.
-    let address = json!({"value": "0a0000", "length": 24});
+    let address = tree!({"value": "0a0000", "length": 24});
     let entry =
-        json!({"id": "TraceCollectionEntityIPAddress", "criticality": "ignore", "value": address});
+        tree!({"id": "TraceCollectionEntityIPAddress", "criticality": "ignore", "value": &address});
     let view = sent(&[entry]).unwrap();
     let ie = "/s1ap/TraceCollectionEntityIPAddress";
     let select = |path: &str| inspect::select(&view, &format!("{ie}/{path}")).unwrap();
     assert_eq!(select("value"), [&address]);
-    assert_eq!(select("value/value"), [&json!("0a0000")]);
-    assert_eq!(select("length"), [&json!(24)]);
-    assert_eq!(select("value/length"), [&json!(24)]);
+    assert_eq!(select("value/value"), [&tree!("0a0000")]);
+    assert_eq!(select("length"), [&tree!(24)]);
+    assert_eq!(select("value/length"), [&tree!(24)]);
 }
 
 #[test]
 fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carries() {
-    use serde_json::{Value, json};
+    use oxirush_s1ap::{tree, tree::Value};
     // Between eNBs, the Source to Target Transparent Container of a HANDOVER REQUIRED
     // carries a Source eNB to Target eNB Transparent Container: TS 36.413 clause
     // 9.2.1.56 says so, and the ASN.1 has an OCTET STRING.
     let name = "SourceeNB-ToTargeteNB-TransparentContainer";
-    let container = json!({
+    let container = tree!({
         "rRC-Container": "0102",
         "targetCell-ID": {"pLMNidentity": "208-93", "cell-ID": 4660},
         "uE-HistoryInformation": [{"uTRAN-Cell": "00"}],
     });
     let required = |container: Value| {
-        json!({"message": "HandoverRequired", "ies": [
+        tree!({"message": "HandoverRequired", "ies": [
             {"MME-UE-S1AP-ID": 1},
             {"eNB-UE-S1AP-ID": 2},
             {"Source-ToTarget-TransparentContainer": container},
         ]})
     };
-    let pdu = S1AP_PDU::from_tree(&required(json!({name: container}))).unwrap();
+    let pdu = S1AP_PDU::from_tree(&required(tree!({name: &container}))).unwrap();
     // The octets are the APER encoding of the type, which the bindings read.
     let message: HandoverRequired = pdu.decode_value().unwrap();
     let octets: SourceToTargetTransparentContainer =
@@ -582,10 +580,10 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     // Nothing says what the octets carry: a view and a tree have them as they are.
     let mut view = pdu.to_view().unwrap();
     let ie = "/s1ap/Source-ToTarget-TransparentContainer";
-    let hexadecimal = json!(hex::encode(&octets.0));
+    let hexadecimal = tree!(hex::encode(&octets.0));
     let value = inspect::select(&view, &format!("{ie}/value")).unwrap();
     assert_eq!(value, [&hexadecimal]);
-    let shown = pdu.to_tree().unwrap();
+    let shown = pdu.to_tree();
     assert_eq!(shown, required(hexadecimal.clone()));
     // A path names the type. The types say whether it can select, and the octets are
     // opened before it does.
@@ -594,13 +592,13 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     let error = inspect::select(&view, &cell).unwrap_err().to_string();
     assert!(error.contains("open decodes them"), "{error}");
     inspect::open(&mut view, &cell).unwrap();
-    assert_eq!(inspect::select(&view, &cell).unwrap(), [&json!(4660)]);
+    assert_eq!(inspect::select(&view, &cell).unwrap(), [&tree!(4660)]);
     // What was written by the type is selected by the type, in any case of its name,
     // and its paths are listed.
     let decoded = inspect::select(&view, &format!("{ie}/{name}/decoded")).unwrap();
     assert_eq!(decoded, [&container]);
     let loose = format!("{ie}/value/{}/rrc_container", name.to_lowercase());
-    assert_eq!(inspect::select(&view, &loose).unwrap(), [&json!("0102")]);
+    assert_eq!(inspect::select(&view, &loose).unwrap(), [&tree!("0102")]);
     let listed = format!("{ie}/value/{name}/decoded/rRC-Container");
     let paths = inspect::paths(&view);
     assert!(paths.iter().any(|(path, _)| *path == listed), "{paths:?}");
@@ -614,15 +612,15 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     // An edit changes what the view has: octets are opened before it goes into them.
     let mut view = pdu.to_view().unwrap();
     for path in [cell.clone(), cell.replace(name, &format!("value/{name}"))] {
-        let error = inspect::set(&mut view, &path, json!(7))
+        let error = inspect::set(&mut view, &path, tree!(7))
             .unwrap_err()
             .to_string();
         assert!(error.contains("open decodes them"), "{error}");
     }
     inspect::open(&mut view, &cell).unwrap();
-    inspect::set(&mut view, &cell, json!(7)).unwrap();
+    inspect::set(&mut view, &cell, tree!(7)).unwrap();
     inspect::remove(&mut view, &format!("{ie}/{name}/uE-HistoryInformation/0")).unwrap();
-    let cells = json!({"uTRAN-Cell": "01"});
+    let cells = tree!({"uTRAN-Cell": "01"});
     inspect::insert(
         &mut view,
         &format!("{ie}/{name}/uE-HistoryInformation/-"),
@@ -632,16 +630,16 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     let mut after = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
     assert!(inspect::select(&after, &format!("{ie}/value")).unwrap()[0].is_string());
     inspect::open(&mut after, &cell).unwrap();
-    assert_eq!(inspect::select(&after, &cell).unwrap(), [&json!(7)]);
+    assert_eq!(inspect::select(&after, &cell).unwrap(), [&tree!(7)]);
     let history = format!("{ie}/{name}/uE-HistoryInformation/0");
     let visited = inspect::select(&after, &history).unwrap();
-    assert_eq!(visited, [&json!({"uTRAN-Cell": "01"})]);
+    assert_eq!(visited, [&tree!({"uTRAN-Cell": "01"})]);
     // The value of the IE is set by the type, and an IE is added by it: the container
     // of the other direction.
-    let back = json!({"targetenb_tosourceenb_transparentcontainer": {"rRC-Container": "03"}});
-    inspect::set(&mut after, &format!("{ie}/value"), json!({name: container})).unwrap();
+    let back = tree!({"targetenb_tosourceenb_transparentcontainer": {"rRC-Container": "03"}});
+    inspect::set(&mut after, &format!("{ie}/value"), tree!({name: container})).unwrap();
     let id = "Target-ToSource-TransparentContainer";
-    let entry = json!({"id": id, "criticality": "reject", "value": back});
+    let entry = tree!({"id": id, "criticality": "reject", "value": &back});
     inspect::insert(&mut after, "/s1ap/-", entry).unwrap();
     let sent = S1AP_PDU::from_view(&after).unwrap().to_view().unwrap();
     let octets = |ie: &str| inspect::select(&sent, &format!("/s1ap/{ie}/value")).unwrap();
@@ -651,11 +649,11 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     );
     assert_eq!(
         octets("Target-ToSource-TransparentContainer"),
-        [&json!("000103")]
+        [&tree!("000103")]
     );
     // Octets that are not of the type say so where they are selected, and are sent
     // as they came.
-    let other = S1AP_PDU::from_tree(&required(json!("ff"))).unwrap();
+    let other = S1AP_PDU::from_tree(&required(tree!("ff"))).unwrap();
     let mut view = other.to_view().unwrap();
     inspect::open(&mut view, &cell).unwrap();
     let error = inspect::select(&view, &cell).unwrap_err().to_string();
@@ -695,8 +693,12 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
 
 /// Each value of `shown`, a tree or a part of one, with the path that joins the names
 /// and the positions on the way to it. A list of plain values is one value.
-fn joined(shown: &serde_json::Value, path: &str, found: &mut Vec<(String, serde_json::Value)>) {
-    use serde_json::Value;
+fn joined(
+    shown: &oxirush_s1ap::tree::Value,
+    path: &str,
+    found: &mut Vec<(String, oxirush_s1ap::tree::Value)>,
+) {
+    use oxirush_s1ap::tree::Value;
     match shown {
         Value::Object(members) if !members.is_empty() => {
             for (name, member) in members {
@@ -714,7 +716,7 @@ fn joined(shown: &serde_json::Value, path: &str, found: &mut Vec<(String, serde_
 
 #[test]
 fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let (mut values, mut whole, mut bits) = (0, 0, 0);
     for line in include_str!("fixtures/messages.tsv")
         .lines()
@@ -723,9 +725,10 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
         let fields: Vec<_> = line.split('\t').collect();
         let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
         // A private message has no IEs of the protocol to name.
-        let Ok(shown) = pdu.to_tree() else {
+        let shown = pdu.to_tree();
+        if shown.get("ies").is_none() {
             continue;
-        };
+        }
         let view = pdu.to_view().unwrap();
         let ies = shown["ies"].as_array().unwrap();
         for (index, ie) in ies.iter().enumerate() {
@@ -775,7 +778,7 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
     let tunnel = format!("{list}/0/E-RABToBeSetupItemBearerSUReq/gTP-TEID");
     assert_eq!(
         inspect::select(&view, &tunnel).unwrap(),
-        [&json!(2778534635u32)]
+        [&tree!(2778534635u32)]
     );
     // The name of another IE says which IE the entry is, where a view says it.
     let other = format!("{list}/0/E-RABItem/e-RAB-ID");
@@ -787,7 +790,7 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
         text.contains("is not a member of ERABToBeSetupItemBearerSUReq"),
         "{error}"
     );
-    assert_eq!(inspect::set(&mut view, &other, json!(5)), Err(error));
+    assert_eq!(inspect::set(&mut view, &other, tree!(5)), Err(error));
     // Without a view, the entry at a position is the IE that the segment names, and
     // the path is read against its type.
     assert_eq!(inspect::check_path(name, &tunnel), Ok(()));
@@ -804,7 +807,7 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
     assert!(names.is_some_and(|names| names.contains(&"may-trigger-pre-emption")));
     // An edit takes the same path, and the entry itself where the path ends with its
     // name.
-    inspect::set(&mut view, &tunnel, json!(7)).unwrap();
+    inspect::set(&mut view, &tunnel, tree!(7)).unwrap();
     let second = inspect::select(&view, &item).unwrap()[0].clone();
     inspect::insert(&mut view, &item, second).unwrap();
     inspect::remove(
@@ -814,19 +817,19 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
     .unwrap();
     let sent = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
     let tunnels = inspect::select(&sent, &format!("{list}/value/*/gTP-TEID")).unwrap();
-    assert_eq!(tunnels, [&json!(7)]);
+    assert_eq!(tunnels, [&tree!(7)]);
     // A member of a value that is named as another IE is that member: an E-RAB has a
     // `nAS-PDU`, and `NAS-PDU` is an IE.
     let message = inspect::select(&sent, &format!("{item}/nAS-PDU")).unwrap();
-    assert_eq!(message, [&json!("076002")]);
+    assert_eq!(message, [&tree!("076002")]);
     let checked = inspect::check_path(name, &format!("{item}/nAS-PDU"));
     assert_eq!(checked, Ok(()));
     // The value of one IE has a member that is named as the IE itself. A segment is the
     // IE when it spells the name as ASN.1 spells that of the IE, which is how a message
     // shows it, and the member otherwise, as it was before an IE could be named there.
-    let limit = json!({"uESidelinkAggregateMaximumBitRate": 5});
-    let limit = json!({"UESidelinkAggregateMaximumBitrate": limit, "criticality": "ignore"});
-    let request = json!({"message": "InitialContextSetupRequest", "ies": [limit]});
+    let limit = tree!({"uESidelinkAggregateMaximumBitRate": 5});
+    let limit = tree!({"UESidelinkAggregateMaximumBitrate": limit, "criticality": "ignore"});
+    let request = tree!({"message": "InitialContextSetupRequest", "ies": [limit]});
     let view = S1AP_PDU::from_tree(&request).unwrap().to_view().unwrap();
     for path in [
         "/s1ap/0/UESidelinkAggregateMaximumBitrate/uESidelinkAggregateMaximumBitRate",
@@ -835,12 +838,12 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
         "/s1ap/0/uesidelinkaggregatemaximumbitrate",
         "/s1ap/0/UESidelinkAggregateMaximumBitrate/value/UESidelinkAggregateMaximumBitrate",
     ] {
-        assert_eq!(inspect::select(&view, path).unwrap(), [&json!(5)], "{path}");
+        assert_eq!(inspect::select(&view, path).unwrap(), [&tree!(5)], "{path}");
         let checked = inspect::check_path("InitialContextSetupRequest", path);
         assert_eq!(checked, Ok(()), "{path}");
     }
     let ie = inspect::select(&view, "/s1ap/0/UESidelinkAggregateMaximumBitrate").unwrap();
-    assert_eq!(ie[0]["id"], json!(248));
+    assert_eq!(ie[0]["id"], tree!(248));
 }
 
 /// The octets of the message `name` of the fixtures.
@@ -851,13 +854,15 @@ fn fixture(name: &str) -> Vec<u8> {
 }
 
 /// The entry of the IE `id` of a view.
-fn ie(view: &mut serde_json::Value, id: u16) -> &mut serde_json::Value {
+fn ie(view: &mut oxirush_s1ap::tree::Value, id: u16) -> &mut oxirush_s1ap::tree::Value {
     let ies = view["message"]["protocolIEs"].as_array_mut().unwrap();
     ies.iter_mut().find(|ie| ie["id"] == id).unwrap()
 }
 
 /// The view of a message that has `entries` for IEs, encoded and decoded again.
-fn sent(entries: &[serde_json::Value]) -> Result<serde_json::Value, oxirush_s1ap::Error> {
+fn sent(
+    entries: &[oxirush_s1ap::tree::Value],
+) -> Result<oxirush_s1ap::tree::Value, oxirush_s1ap::Error> {
     let pdu = build_s1ap!(
         InitiatingMessage,
         UEContextReleaseRequest,
@@ -872,26 +877,26 @@ fn sent(entries: &[serde_json::Value]) -> Result<serde_json::Value, oxirush_s1ap
 
 #[test]
 fn well_known_values_are_shown_and_taken_as_they_are_usually_written() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     // S1 SETUP REQUEST: Global-ENB-ID is IE 59 and SupportedTAs IE 64.
     let wire = fixture("S1SetupRequest");
     let mut view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
     let area = &ie(&mut view, 64)["value"][0];
-    assert_eq!(area["tAC"], json!(0x9302));
-    assert_eq!(area["broadcastPLMNs"], json!(["208-93"]));
-    assert_eq!(ie(&mut view, 59)["value"]["pLMNidentity"], json!("208-93"));
+    assert_eq!(area["tAC"], tree!(0x9302));
+    assert_eq!(area["broadcastPLMNs"], tree!(["208-93"]));
+    assert_eq!(ie(&mut view, 59)["value"]["pLMNidentity"], tree!("208-93"));
     // What is not edited keeps its octets.
     assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
 
     // Edited as they are shown, a number in hexadecimal too.
     let area = &mut ie(&mut view, 64)["value"][0];
-    area["tAC"] = json!("0x7");
-    area["broadcastPLMNs"] = json!(["001-01", "310-410"]);
+    area["tAC"] = tree!("0x7");
+    area["broadcastPLMNs"] = tree!(["001-01", "310-410"]);
     let edited = S1AP_PDU::from_view(&view).unwrap();
     let mut shown = edited.to_view().unwrap();
     let area = &ie(&mut shown, 64)["value"][0];
-    assert_eq!(area["tAC"], json!(7));
-    assert_eq!(area["broadcastPLMNs"], json!(["001-01", "310-410"]));
+    assert_eq!(area["tAC"], tree!(7));
+    assert_eq!(area["broadcastPLMNs"], tree!(["001-01", "310-410"]));
     assert_eq!(
         ie(&mut shown, 59)["_raw_value"],
         ie(&mut view, 59)["_raw_value"]
@@ -900,57 +905,57 @@ fn well_known_values_are_shown_and_taken_as_they_are_usually_written() {
     // As JER writes them, which is what a view had before: the octets that TS 36.413
     // clause 9.2.3.8 has for 001-01 and for 310-410.
     let area = &mut ie(&mut view, 64)["value"][0];
-    area["tAC"] = json!("0007");
-    area["broadcastPLMNs"] = json!(["00f110", "134001"]);
+    area["tAC"] = tree!("0007");
+    area["broadcastPLMNs"] = tree!(["00f110", "134001"]);
     assert_eq!(
         S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
         edited.encode().unwrap()
     );
 
     // Neither form, and a number that the type has no room for.
-    for refused in [json!("7"), json!(1 << 16), json!("0x10000")] {
+    for refused in [tree!("7"), tree!(1 << 16), tree!("0x10000")] {
         ie(&mut view, 64)["value"][0]["tAC"] = refused.clone();
         assert!(S1AP_PDU::from_view(&view).is_err(), "{refused}");
     }
-    ie(&mut view, 64)["value"][0]["tAC"] = json!(7);
-    ie(&mut view, 64)["value"][0]["broadcastPLMNs"] = json!(["208-9"]);
+    ie(&mut view, 64)["value"][0]["tAC"] = tree!(7);
+    ie(&mut view, 64)["value"][0]["broadcastPLMNs"] = tree!(["208-9"]);
     assert!(S1AP_PDU::from_view(&view).is_err());
 }
 
 #[test]
 fn the_parts_of_a_gummei_are_numbers() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     // S1 SETUP RESPONSE: ServedGUMMEIs is IE 105.
     let wire = fixture("S1SetupResponse");
     let mut view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
     let served = &mut ie(&mut view, 105)["value"][0];
-    assert_eq!(served["servedPLMNs"], json!(["208-93"]));
-    assert_eq!(served["servedGroupIDs"], json!([0xB8A3]));
-    assert_eq!(served["servedMMECs"], json!([0x89]));
+    assert_eq!(served["servedPLMNs"], tree!(["208-93"]));
+    assert_eq!(served["servedGroupIDs"], tree!([0xB8A3]));
+    assert_eq!(served["servedMMECs"], tree!([0x89]));
     assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
     let served = &mut ie(&mut view, 105)["value"][0];
-    served["servedGroupIDs"] = json!([2, "0x8000"]);
-    served["servedMMECs"] = json!([1]);
+    served["servedGroupIDs"] = tree!([2, "0x8000"]);
+    served["servedMMECs"] = tree!([1]);
     let edited = S1AP_PDU::from_view(&view).unwrap();
     let mut shown = edited.to_view().unwrap();
     let served = &ie(&mut shown, 105)["value"][0];
-    assert_eq!(served["servedGroupIDs"], json!([2, 0x8000]));
-    assert_eq!(served["servedMMECs"], json!([1]));
+    assert_eq!(served["servedGroupIDs"], tree!([2, 0x8000]));
+    assert_eq!(served["servedMMECs"], tree!([1]));
     // An MME code has one octet.
-    ie(&mut view, 105)["value"][0]["servedMMECs"] = json!([256]);
+    ie(&mut view, 105)["value"][0]["servedMMECs"] = tree!([256]);
     assert!(S1AP_PDU::from_view(&view).is_err());
 }
 
 #[test]
 fn a_tunnel_endpoint_and_the_identities_of_a_ue_are_readable() {
-    use serde_json::json;
-    let added = |id: u16, value: serde_json::Value| {
-        sent(&[json!({"id": id, "criticality": "ignore", "value": value})])
+    use oxirush_s1ap::tree;
+    let added = |id: u16, value: oxirush_s1ap::tree::Value| {
+        sent(&[tree!({"id": id, "criticality": "ignore", "value": value})])
     };
-    let octets = |value: &[u8]| json!(hex::encode(value));
+    let octets = |value: &[u8]| tree!(hex::encode(value));
     // E-RABSetupListCtxtSURes is IE 51, a list of IEs 50.
-    let bearer = json!({"e-RAB-ID": 5, "transportLayerAddress": "10.0.0.2", "gTP-TEID": 2});
-    let bearers = json!([{"id": 50, "criticality": "ignore", "value": bearer}]);
+    let bearer = tree!({"e-RAB-ID": 5, "transportLayerAddress": "10.0.0.2", "gTP-TEID": 2});
+    let bearers = tree!([{"id": 50, "criticality": "ignore", "value": &bearer}]);
     let mut shown = added(51, bearers).unwrap();
     let item = &mut ie(&mut shown, 51)["value"][0];
     assert_eq!(item["value"], bearer);
@@ -966,33 +971,33 @@ fn a_tunnel_endpoint_and_the_identities_of_a_ue_are_readable() {
     );
 
     // UEPagingID is IE 43: an IMSI by its digits, or an S-TMSI by its numbers.
-    let mut shown = added(43, json!({"iMSI": "208930000000001"})).unwrap();
+    let mut shown = added(43, tree!({"iMSI": "208930000000001"})).unwrap();
     let imsi = IMSI(vec![0x02, 0x98, 0x03, 0x00, 0x00, 0x00, 0x00, 0xF1].into());
     let expected = encode_open_type(&UEPagingID::iMSI(imsi)).unwrap();
     assert_eq!(
         ie(&mut shown, 43)["value"]["iMSI"],
-        json!("208930000000001")
+        tree!("208930000000001")
     );
     assert_eq!(ie(&mut shown, 43)["_raw_value"], octets(&expected));
     // As JER writes it, with the filler that says it is not digits.
-    let mut same = added(43, json!({"iMSI": "02980300000000f1"})).unwrap();
+    let mut same = added(43, tree!({"iMSI": "02980300000000f1"})).unwrap();
     assert_eq!(
         ie(&mut same, 43)["_raw_value"],
         ie(&mut shown, 43)["_raw_value"]
     );
-    let temporary = json!({"s-TMSI": {"mMEC": 1, "m-TMSI": "0xC0FFEE01"}});
+    let temporary = tree!({"s-TMSI": {"mMEC": 1, "m-TMSI": "0xC0FFEE01"}});
     let mut shown = added(43, temporary).unwrap();
     let identity = &ie(&mut shown, 43)["value"]["s-TMSI"];
-    assert_eq!(identity, &json!({"mMEC": 1, "m-TMSI": 0xC0FFEE01u32}));
+    assert_eq!(identity, &tree!({"mMEC": 1, "m-TMSI": 0xC0FFEE01u32}));
 }
 
 #[test]
 fn an_enumerated_value_is_named_whatever_its_case_and_separators() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let causes = |cause: &str, establishment: &str| {
         sent(&[
-            json!({"id": 2, "criticality": "ignore", "value": {"radioNetwork": cause}}),
-            json!({"id": 134, "criticality": "ignore", "value": establishment}),
+            tree!({"id": 2, "criticality": "ignore", "value": {"radioNetwork": cause}}),
+            tree!({"id": 134, "criticality": "ignore", "value": establishment}),
         ])
     };
     let mut exact = causes("user-inactivity", "mo-Signalling").unwrap();
@@ -1022,7 +1027,7 @@ fn release_with_cause() -> S1AP_PDU {
 
 #[test]
 fn the_ies_of_a_message_have_paths_by_their_names() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let view = release_with_cause().to_view().unwrap();
     let paths = inspect::paths(&view);
     let printed: Vec<_> = (paths.iter())
@@ -1054,11 +1059,11 @@ fn the_ies_of_a_message_have_paths_by_their_names() {
         "/s1ap/@id=8/value",
         "/s1ap/1/value",
     ] {
-        assert_eq!(inspect::select(&view, path).unwrap(), [&json!(7)], "{path}");
+        assert_eq!(inspect::select(&view, path).unwrap(), [&tree!(7)], "{path}");
     }
     // The octets that an IE was received as.
     let octets = inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/octets").unwrap();
-    assert_eq!(octets, [&json!("0007")]);
+    assert_eq!(octets, [&tree!("0007")]);
     assert_eq!(inspect::select(&view, "/s1ap/*/id").unwrap().len(), 3);
 }
 
@@ -1091,7 +1096,7 @@ fn every_path_of_every_canonical_procedure_selects_its_value() {
 /// its way, which a path may leave out. One that the path ends with stays, and so does
 /// one before a member of the value that is named as a member of the IE or of the
 /// transfer.
-fn short(view: &serde_json::Value, path: &str) -> String {
+fn short(view: &oxirush_s1ap::tree::Value, path: &str) -> String {
     let segments: Vec<&str> = path.split('/').skip(1).collect();
     let mut short = String::new();
     for (at, segment) in segments.iter().enumerate() {
@@ -1124,7 +1129,7 @@ fn short(view: &serde_json::Value, path: &str) -> String {
 
 #[test]
 fn an_ie_that_is_there_twice_goes_by_its_position() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
         IGNORE, UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
@@ -1141,82 +1146,82 @@ fn an_ie_that_is_there_twice_goes_by_its_position() {
     assert_eq!(
         values,
         [
-            ("/s1ap/0/value", &json!(1)),
-            ("/s1ap/eNB-UE-S1AP-ID/value", &json!(7)),
-            ("/s1ap/2/value", &json!(2)),
+            ("/s1ap/0/value", &tree!(1)),
+            ("/s1ap/eNB-UE-S1AP-ID/value", &tree!(7)),
+            ("/s1ap/2/value", &tree!(2)),
         ]
     );
     // The name selects each of them, in the order of the message.
     let both = inspect::select(&view, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
-    assert_eq!(both, [&json!(1), &json!(2)]);
-    inspect::set(&mut view, "/s1ap/2/value", json!(3)).unwrap();
+    assert_eq!(both, [&tree!(1), &tree!(2)]);
+    inspect::set(&mut view, "/s1ap/2/value", tree!(3)).unwrap();
     let edited = S1AP_PDU::from_view(&view).unwrap();
     let view = edited.to_view().unwrap();
     let both = inspect::select(&view, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
-    assert_eq!(both, [&json!(1), &json!(3)]);
+    assert_eq!(both, [&tree!(1), &tree!(3)]);
 }
 
 #[test]
 fn a_value_set_at_a_path_changes_the_octets_of_its_ie_alone() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let mut view = release_with_cause().to_view().unwrap();
-    let octets = |view: &serde_json::Value| -> Vec<serde_json::Value> {
+    let octets = |view: &oxirush_s1ap::tree::Value| -> Vec<oxirush_s1ap::tree::Value> {
         let octets = inspect::select(view, "/s1ap/*/octets").unwrap();
         octets.into_iter().cloned().collect()
     };
     let before = octets(&view);
-    inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", json!(9)).unwrap();
-    let cause = json!("Release Due To EUTRAN Generated Reason");
+    inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9)).unwrap();
+    let cause = tree!("Release Due To EUTRAN Generated Reason");
     inspect::set(&mut view, "/s1ap/Cause/value/radioNetwork", cause).unwrap();
     let view = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
     let after = octets(&view);
     assert_eq!(after[0], before[0]);
-    assert_eq!(after[1], json!("0009"));
+    assert_eq!(after[1], tree!("0009"));
     assert_ne!(after[2], before[2]);
     let cause = inspect::select(&view, "/s1ap/Cause/value/radioNetwork").unwrap();
-    assert_eq!(cause, [&json!("release-due-to-eutran-generated-reason")]);
+    assert_eq!(cause, [&tree!("release-due-to-eutran-generated-reason")]);
 }
 
 #[test]
 fn ies_are_added_taken_out_and_given_their_octets_at_a_path() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let mut view = release_with_cause().to_view().unwrap();
     // An IE by the name of its identifier, with its typed value, at the end.
-    let name = json!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
+    let name = tree!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
     inspect::insert(&mut view, "/s1ap/-", name).unwrap();
     // Given octets as an IE, before the cause.
-    let unknown = json!({"id": 60000, "criticality": "ignore", "octets": "c0ffee"});
+    let unknown = tree!({"id": 60000, "criticality": "ignore", "octets": "c0ffee"});
     inspect::insert(&mut view, "/s1ap/Cause", unknown).unwrap();
     inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID").unwrap();
-    inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/octets", json!("400102")).unwrap();
+    inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/octets", tree!("400102")).unwrap();
     let view = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
     let ids: Vec<_> = (inspect::select(&view, "/s1ap/*/id").unwrap().into_iter())
         .map(|id| id.as_u64().unwrap())
         .collect();
     assert_eq!(ids, [8, 60000, 2, 60]);
     let select = |path: &str| inspect::select(&view, path).unwrap();
-    assert_eq!(select("/s1ap/eNB-UE-S1AP-ID/value"), [&json!(258)]);
-    assert_eq!(select("/s1ap/eNBname/value"), [&json!("enb-1")]);
-    assert_eq!(select("/s1ap/@id=60000/octets"), [&json!("c0ffee")]);
+    assert_eq!(select("/s1ap/eNB-UE-S1AP-ID/value"), [&tree!(258)]);
+    assert_eq!(select("/s1ap/eNBname/value"), [&tree!("enb-1")]);
+    assert_eq!(select("/s1ap/@id=60000/octets"), [&tree!("c0ffee")]);
     // An IE that the message does not have is nothing, not an error.
     assert!(select("/s1ap/MME-UE-S1AP-ID/value").is_empty());
 }
 
 #[test]
 fn the_entries_of_a_list_of_ies_go_by_name_too() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let pdu = S1AP_PDU::decode(&fixture("E-RABSetupRequest")).unwrap();
     let mut view = pdu.to_view().unwrap();
     let list = "/s1ap/E-RABToBeSetupListBearerSUReq/value";
     let by_name = format!("{list}/E-RABToBeSetupItemBearerSUReq/value/e-RAB-ID");
     let by_position = format!("{list}/0/value/e-RAB-ID");
-    assert_eq!(inspect::select(&view, &by_name).unwrap(), [&json!(0)]);
-    inspect::set(&mut view, &by_name, json!(5)).unwrap();
+    assert_eq!(inspect::select(&view, &by_name).unwrap(), [&tree!(0)]);
+    inspect::set(&mut view, &by_name, tree!(5)).unwrap();
     let view = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
-    assert_eq!(inspect::select(&view, &by_position).unwrap(), [&json!(5)]);
+    assert_eq!(inspect::select(&view, &by_position).unwrap(), [&tree!(5)]);
     // The IEs of a message that a view contains are selected in its place: no S1AP
     // type has one, so this is a view of that shape.
-    let mut contained = json!({"message": {"protocolIEs": [{"id": 2, "value": {"decoded":
+    let mut contained = tree!({"message": {"protocolIEs": [{"id": 2, "value": {"decoded":
         {"protocolIEs": [{"id": 8, "value": 7}, {"id": 60000, "value": "00"}]}}}]}});
     let paths: Vec<_> = (inspect::paths(&contained).into_iter())
         .map(|(path, _)| path)
@@ -1239,18 +1244,18 @@ fn the_entries_of_a_list_of_ies_go_by_name_too() {
         "/protocolIEs/eNB-UE-S1AP-ID",
     ] {
         let value = inspect::select(&contained, &format!("{inner}{path}/value"));
-        assert_eq!(value, Ok(vec![&json!(7)]), "{path}");
+        assert_eq!(value, Ok(vec![&tree!(7)]), "{path}");
     }
     let all = inspect::select(&contained, &format!("{inner}/*/id")).unwrap();
-    assert_eq!(all, [&json!(8), &json!(60000)]);
+    assert_eq!(all, [&tree!(8), &tree!(60000)]);
     inspect::remove(&mut contained, &format!("{inner}/eNB-UE-S1AP-ID")).unwrap();
     let all = inspect::select(&contained, &format!("{inner}/*/id")).unwrap();
-    assert_eq!(all, [&json!(60000)]);
+    assert_eq!(all, [&tree!(60000)]);
 }
 
 #[test]
 fn a_path_that_names_nothing_is_refused_and_changes_nothing() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let mut view = release_with_cause().to_view().unwrap();
     let before = view.clone();
     for (path, reason) in [
@@ -1282,22 +1287,22 @@ fn a_path_that_names_nothing_is_refused_and_changes_nothing() {
         ("/s1ap/GUMMEI-ID/value", "the path selects nothing"),
         ("/s1ap/7/value", "the path selects nothing"),
     ] {
-        let error = inspect::set(&mut view, path, json!(1))
+        let error = inspect::set(&mut view, path, tree!(1))
             .unwrap_err()
             .to_string();
         assert!(error.contains(reason), "{path}: {error}");
     }
     assert!(inspect::remove(&mut view, "/s1ap/GUMMEI-ID").is_err());
-    let both = json!({"id": "Cause", "criticality": "ignore", "value": 1, "octets": "00"});
+    let both = tree!({"id": "Cause", "criticality": "ignore", "value": 1, "octets": "00"});
     assert!(inspect::insert(&mut view, "/s1ap/-", both).is_err());
-    let unnamed = json!({"id": "NoSuchIE", "criticality": "ignore", "octets": "00"});
+    let unnamed = tree!({"id": "NoSuchIE", "criticality": "ignore", "octets": "00"});
     assert!(inspect::insert(&mut view, "/s1ap/-", unnamed).is_err());
     assert_eq!(view, before);
 }
 
 #[test]
 fn a_message_goes_by_the_name_that_asn1_gives_it() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     for line in include_str!("fixtures/messages.tsv")
         .lines()
         .filter(|line| !line.starts_with('#') && !line.is_empty())
@@ -1316,7 +1321,7 @@ fn a_message_goes_by_the_name_that_asn1_gives_it() {
     assert_eq!(inspect::message_named("NoSuchMessage"), None);
     // The view of a message that is written from its name.
     let (direction, procedure_code) = inspect::message_named("ue context release request").unwrap();
-    let mut view = json!({
+    let mut view = tree!({
         "direction": direction,
         "procedure_code": procedure_code,
         "criticality": "ignore",
@@ -1325,7 +1330,7 @@ fn a_message_goes_by_the_name_that_asn1_gives_it() {
     inspect::insert(
         &mut view,
         "/s1ap/-",
-        json!({"id": "eNB-UE-S1AP-ID", "criticality": "reject", "value": 7}),
+        tree!({"id": "eNB-UE-S1AP-ID", "criticality": "reject", "value": 7}),
     )
     .unwrap();
     let pdu = S1AP_PDU::from_view(&view).unwrap();
@@ -1335,7 +1340,7 @@ fn a_message_goes_by_the_name_that_asn1_gives_it() {
 
 #[test]
 fn an_edit_changes_what_is_sent_or_is_refused() {
-    use serde_json::{Value, json};
+    use oxirush_s1ap::{tree, tree::Value};
     let mut view = release_request(7).to_view().unwrap();
     let before = view.clone();
     // The value of an IE is not taken out: its octets would go out as they came.
@@ -1353,7 +1358,7 @@ fn an_edit_changes_what_is_sent_or_is_refused() {
     // The octets of an IE whose value was edited are no longer its octets.
     let octets = "/s1ap/eNB-UE-S1AP-ID/octets";
     let received = inspect::select(&view, octets).unwrap()[0].clone();
-    inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", json!(9)).unwrap();
+    inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9)).unwrap();
     let error = inspect::select(&view, octets).unwrap_err().to_string();
     assert!(error.contains("the value was edited"), "{error}");
     assert_eq!(
@@ -1371,21 +1376,21 @@ fn an_edit_changes_what_is_sent_or_is_refused() {
     assert_ne!(inspect::select(&sent, octets).unwrap(), [&received]);
     assert_eq!(
         inspect::select(&sent, "/s1ap/eNB-UE-S1AP-ID/value").unwrap(),
-        [&json!(9)]
+        [&tree!(9)]
     );
     // Octets that are set are those of the IE again.
     inspect::set(&mut view, octets, received.clone()).unwrap();
     assert_eq!(inspect::select(&view, octets).unwrap(), [&received]);
     assert_eq!(S1AP_PDU::from_view(&view).unwrap(), release_request(7));
     // The name of an ENUMERATED value of the PDU itself is taken as any other.
-    inspect::set(&mut view, "/criticality", json!("Reject")).unwrap();
+    inspect::set(&mut view, "/criticality", tree!("Reject")).unwrap();
     let pdu = S1AP_PDU::from_view(&view).unwrap();
     assert_eq!(pdu.to_view().unwrap()["criticality"], "reject");
 }
 
 #[test]
 fn null_takes_an_optional_member_out() {
-    use serde_json::{Value, json};
+    use oxirush_s1ap::{tree, tree::Value};
     let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
     let view = pdu.to_view().unwrap();
     let sent = |view: &Value| S1AP_PDU::from_view(view)?.to_view();
@@ -1393,9 +1398,9 @@ fn null_takes_an_optional_member_out() {
     // selected.
     let nas = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/0/value/nAS-PDU";
     let mut edited = view.clone();
-    inspect::set(&mut edited, nas, json!("0102")).unwrap();
+    inspect::set(&mut edited, nas, tree!("0102")).unwrap();
     let mut edited = sent(&edited).unwrap();
-    assert_eq!(inspect::select(&edited, nas).unwrap(), [&json!("0102")]);
+    assert_eq!(inspect::select(&edited, nas).unwrap(), [&tree!("0102")]);
     inspect::set(&mut edited, nas, Value::Null).unwrap();
     let none = Vec::<&Value>::new();
     assert_eq!(inspect::select(&sent(&edited).unwrap(), nas).unwrap(), none);
@@ -1508,8 +1513,8 @@ fn the_messages_of_the_fixtures_have_the_criticality_that_asn1_assigns() {
 
 /// The IEs that `value` holds, each as its identifier and its criticality: the entries
 /// that have a `value`, which an extension has not.
-fn held(value: &serde_json::Value, ies: &mut Vec<(u64, String)>) {
-    use serde_json::Value;
+fn held(value: &oxirush_s1ap::tree::Value, ies: &mut Vec<(u64, String)>) {
+    use oxirush_s1ap::tree::Value;
     let entry = (value["id"].as_u64(), value["criticality"].as_str());
     if let (Some(id), Some(criticality)) = entry
         && !value["value"].is_null()
@@ -1625,12 +1630,12 @@ fn a_kind_that_the_specification_does_not_have_says_the_direction_of_its_pdu() {
 
 #[test]
 fn a_member_that_is_absent_selects_nothing_and_one_that_its_type_has_not_is_an_error() {
-    use serde_json::{Value, json};
+    use oxirush_s1ap::{tree, tree::Value};
     let view = release_with_cause().to_view().unwrap();
     let none = Vec::<&Value>::new();
     let select = |path: &str| inspect::select(&view, path);
     // The alternative of a CHOICE that is there, and another one.
-    let cause = json!("user-inactivity");
+    let cause = tree!("user-inactivity");
     assert_eq!(select("/s1ap/Cause/value/radioNetwork").unwrap(), [&cause]);
     assert_eq!(select("/s1ap/Cause/value/nas").unwrap(), none);
     // What follows an IE or a member that is not there is still a path of its type.
@@ -1674,7 +1679,7 @@ fn a_member_that_is_absent_selects_nothing_and_one_that_its_type_has_not_is_an_e
 #[test]
 fn a_procedure_that_the_specification_does_not_have_has_a_view_of_its_ies() {
     use oxirush_s1ap::ErrorKind;
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     // The message of a UE CONTEXT RELEASE REQUEST, under a procedure code that the
     // specification does not have: the second octet of a PDU.
     let mut octets = release_request(7).encode().unwrap();
@@ -1686,10 +1691,10 @@ fn a_procedure_that_the_specification_does_not_have_has_a_view_of_its_ies() {
     assert_eq!(view["direction"], "InitiatingMessage");
     // Each IE is read with the type of its identifier, and has its name.
     let id = inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/value").unwrap();
-    assert_eq!(id, [&json!(7)]);
+    assert_eq!(id, [&tree!(7)]);
     let paths = inspect::paths(&view);
     assert!(
-        paths.contains(&("/s1ap/MME-UE-S1AP-ID/value".to_string(), json!(1))),
+        paths.contains(&("/s1ap/MME-UE-S1AP-ID/value".to_string(), tree!(1))),
         "{paths:?}"
     );
     // The view is the PDU, and an edit of it is sent under the same procedure code.
@@ -1698,42 +1703,64 @@ fn a_procedure_that_the_specification_does_not_have_has_a_view_of_its_ies() {
         S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
         octets
     );
-    inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", json!(9)).unwrap();
+    inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9)).unwrap();
     let edited = pdu.with_view(&view).unwrap();
     assert_eq!(edited.procedure_code(), 200);
     let again = edited.to_view().unwrap();
     let id = inspect::select(&again, "/s1ap/eNB-UE-S1AP-ID/value").unwrap();
-    assert_eq!(id, [&json!(9)]);
+    assert_eq!(id, [&tree!(9)]);
     // A view that is written by hand, without what a view keeps of what was received.
-    let written = json!({
+    let written = tree!({
         "procedure_code": 200, "direction": "InitiatingMessage", "criticality": "ignore",
         "message": {"protocolIEs": [{"id": 8, "criticality": "reject", "value": 9}]},
     });
     let written = S1AP_PDU::from_view(&written).unwrap();
     assert_eq!(written.protocol_ies().unwrap().0.len(), 1);
-    // It has no tree, which names its message.
-    assert_eq!(pdu.to_tree().unwrap_err().kind(), ErrorKind::UnknownMessage);
+    // Its tree has its procedure code and its direction in the place of a name, and
+    // the criticality of the PDU, which no table assigns: it is the PDU again.
+    let tree = pdu.to_tree();
+    assert_eq!(
+        (
+            &tree["procedure_code"],
+            &tree["direction"],
+            &tree["criticality"]
+        ),
+        (&tree!(200), &tree!("InitiatingMessage"), &tree!("ignore"))
+    );
+    assert_eq!(S1AP_PDU::from_tree(&tree).unwrap(), pdu);
+    // Without the criticality, which no table has for it, it is refused.
+    let mut unsaid = tree.clone();
+    unsaid.as_object_mut().unwrap().remove("criticality");
+    let error = S1AP_PDU::from_tree(&unsaid).unwrap_err();
+    assert_eq!(error.kind(), ErrorKind::Form);
     // A message that is no container of protocol IEs does not decode, and has no view:
-    // one IE is claimed, and none is there.
+    // one IE is claimed, and none is there. Its tree has its octets.
     let pdu = S1AP_PDU::decode(&[0x00, 200, 0x00, 0x03, 0x00, 0x00, 0x01]).unwrap();
     assert!(pdu.to_view().is_err());
+    let tree = pdu.to_tree();
+    assert_eq!(
+        tree,
+        tree!({"procedure_code": 200, "direction": "InitiatingMessage", "octets": "000001",
+               "criticality": "reject"})
+    );
+    assert_eq!(S1AP_PDU::from_tree(&tree).unwrap(), pdu);
 }
 
 #[test]
 fn an_edit_that_fails_after_it_changed_an_ie_leaves_the_view_as_it_was() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     // UE-S1AP-IDs is IE 99, a CHOICE that has no `radioNetwork`, and Cause IE 2, which
     // has it.
     let mut view = sent(&[
-        json!({"id": 99, "criticality": "ignore", "value": {"mME-UE-S1AP-ID": 1}}),
-        json!({"id": 2, "criticality": "ignore", "value": {"radioNetwork": "user-inactivity"}}),
+        tree!({"id": 99, "criticality": "ignore", "value": {"mME-UE-S1AP-ID": 1}}),
+        tree!({"id": 2, "criticality": "ignore", "value": {"radioNetwork": "user-inactivity"}}),
     ])
     .unwrap();
     let before = view.clone();
     // The entries that `*` selects are edited from the last: the cause takes the edit,
     // and the identifiers, before it, refuse the path.
     let everywhere = "/s1ap/*/value/radioNetwork";
-    let error = inspect::set(&mut view, everywhere, json!("unspecified"))
+    let error = inspect::set(&mut view, everywhere, tree!("unspecified"))
         .unwrap_err()
         .to_string();
     assert!(error.contains("is not a member of UES1APIDs"), "{error}");
@@ -1744,11 +1771,11 @@ fn an_edit_that_fails_after_it_changed_an_ie_leaves_the_view_as_it_was() {
     inspect::set(
         &mut view,
         "/s1ap/Cause/value/radioNetwork",
-        json!("unspecified"),
+        tree!("unspecified"),
     )
     .unwrap();
     let cause = inspect::select(&view, "/s1ap/Cause/value/radioNetwork").unwrap();
-    assert_eq!(cause, [&json!("unspecified")]);
+    assert_eq!(cause, [&tree!("unspecified")]);
     // An entry that is taken out before another refuses the path is put back where it
     // was: `0` then names the identifiers again.
     let mut view = before.clone();
@@ -1762,10 +1789,10 @@ fn an_edit_that_fails_after_it_changed_an_ie_leaves_the_view_as_it_was() {
 
 #[test]
 fn an_edit_names_a_member_that_the_type_has_and_keeps_what_it_always_has() {
-    use serde_json::{Value, json};
+    use oxirush_s1ap::{tree, tree::Value};
     let mut view = release_with_cause().to_view().unwrap();
     let before = view.clone();
-    let error = inspect::set(&mut view, "/s1ap/Cause/value/misspelled", json!(1))
+    let error = inspect::set(&mut view, "/s1ap/Cause/value/misspelled", tree!(1))
         .unwrap_err()
         .to_string();
     assert!(error.contains("is not a member of Cause"), "{error}");
@@ -1779,10 +1806,10 @@ fn an_edit_names_a_member_that_the_type_has_and_keeps_what_it_always_has() {
     assert!(error.contains("its type always has it"), "{error}");
     assert_eq!(view, before);
     // An alternative takes the place of the one that is there.
-    inspect::set(&mut view, "/s1ap/Cause/value/nas", json!("detach")).unwrap();
+    inspect::set(&mut view, "/s1ap/Cause/value/nas", tree!("detach")).unwrap();
     let sent = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
     let cause = inspect::select(&sent, "/s1ap/Cause/value").unwrap();
-    assert_eq!(cause, [&json!({"nas": "detach"})]);
+    assert_eq!(cause, [&tree!({"nas": "detach"})]);
     // A member that the type always has stays, and an optional one is added by its name.
     let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
     let mut setup = pdu.to_view().unwrap();
@@ -1795,15 +1822,15 @@ fn an_edit_names_a_member_that_the_type_has_and_keeps_what_it_always_has() {
         .unwrap_err()
         .to_string();
     assert!(error.contains("its type always has it"), "{error}");
-    inspect::set(&mut setup, &format!("{item}/nas_pdu"), json!("0102")).unwrap();
+    inspect::set(&mut setup, &format!("{item}/nas_pdu"), tree!("0102")).unwrap();
     let sent = S1AP_PDU::from_view(&setup).unwrap().to_view().unwrap();
     let nas = inspect::select(&sent, &format!("{item}/nAS-PDU")).unwrap();
-    assert_eq!(nas, [&json!("0102")]);
+    assert_eq!(nas, [&tree!("0102")]);
 }
 
 #[test]
 fn a_name_is_its_letters_and_its_digits() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let view = release_with_cause().to_view().unwrap();
     for path in [
         "/s1ap/eNB-UE-S1AP-ID/value",
@@ -1813,14 +1840,14 @@ fn a_name_is_its_letters_and_its_digits() {
         "/message/protocol-ies/1/value",
         "/Message/ProtocolIEs/1/VALUE",
     ] {
-        assert_eq!(inspect::select(&view, path).unwrap(), [&json!(7)], "{path}");
+        assert_eq!(inspect::select(&view, path).unwrap(), [&tree!(7)], "{path}");
     }
     for path in [
         "/s1ap/cause/value/radionetwork",
         "/s1ap/Cause/value/Radio-Network",
     ] {
         let cause = inspect::select(&view, path).unwrap();
-        assert_eq!(cause, [&json!("user-inactivity")], "{path}");
+        assert_eq!(cause, [&tree!("user-inactivity")], "{path}");
     }
     assert_eq!(
         inspect::select(&view, "/Procedure-Code").unwrap(),
@@ -1831,9 +1858,9 @@ fn a_name_is_its_letters_and_its_digits() {
     assert!(inspect::select(&view, "/s1ap/Cause/rawvalue").is_err());
     // An edit writes the member by the name that ASN.1 gives it.
     let mut edited = view.clone();
-    inspect::set(&mut edited, "/s1ap/cause/value/NAS", json!("detach")).unwrap();
+    inspect::set(&mut edited, "/s1ap/cause/value/NAS", tree!("detach")).unwrap();
     let cause = inspect::select(&edited, "/s1ap/Cause/value").unwrap();
-    assert_eq!(cause, [&json!({"nas": "detach"})]);
+    assert_eq!(cause, [&tree!({"nas": "detach"})]);
     assert!(S1AP_PDU::from_view(&edited).is_ok());
     assert_eq!(
         inspect::message_named("ue context-release_REQUEST"),
@@ -2003,20 +2030,20 @@ fn a_path_is_checked_against_a_message_without_a_view() {
 
 #[test]
 fn an_ie_is_written_by_its_name_and_its_octets_wherever_a_view_has_ies() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
     let view = pdu.to_view().unwrap();
     let list = "/s1ap/E-RABToBeSetupListCtxtSUReq/value";
-    let sent = |view: &serde_json::Value| S1AP_PDU::from_view(view)?.to_view();
+    let sent = |view: &oxirush_s1ap::tree::Value| S1AP_PDU::from_view(view)?.to_view();
     let item = inspect::select(&view, &format!("{list}/0/value")).unwrap()[0].clone();
-    let named = json!({
+    let named = tree!({
         "id": "E-RABToBeSetupItemCtxtSUReq", "criticality": "reject", "value": item,
     });
-    let unknown = json!({"id": 60000, "criticality": "ignore", "octets": "00"});
+    let unknown = tree!({"id": 60000, "criticality": "ignore", "octets": "00"});
     // The items of a list of IEs: in a value that is set whole, and at the end of the
     // list, on a path that has the root and on one that has not.
     let mut edited = view.clone();
-    inspect::set(&mut edited, list, json!([named, unknown])).unwrap();
+    inspect::set(&mut edited, list, tree!([&named, &unknown])).unwrap();
     let after = sent(&edited).unwrap();
     let id = format!("{list}/E-RABToBeSetupItemCtxtSUReq/value/e-RAB-ID");
     assert_eq!(
@@ -2024,7 +2051,7 @@ fn an_ie_is_written_by_its_name_and_its_octets_wherever_a_view_has_ies() {
         inspect::select(&view, &id).unwrap()
     );
     let octets = format!("{list}/@id=60000/octets");
-    assert_eq!(inspect::select(&after, &octets).unwrap(), [&json!("00")]);
+    assert_eq!(inspect::select(&after, &octets).unwrap(), [&tree!("00")]);
     let mut edited = view.clone();
     let position = (view["message"]["protocolIEs"].as_array().unwrap().iter())
         .position(|ie| ie["id"] == 24)
@@ -2039,31 +2066,31 @@ fn an_ie_is_written_by_its_name_and_its_octets_wherever_a_view_has_ies() {
             .len(),
         3
     );
-    assert_eq!(inspect::select(&after, &octets).unwrap(), [&json!("00")]);
+    assert_eq!(inspect::select(&after, &octets).unwrap(), [&tree!("00")]);
     // In a view written by hand.
     let mut edited = view.clone();
     let ies = edited["message"]["protocolIEs"].as_array_mut().unwrap();
-    ies[0]["id"] = json!("mme-ue-s1ap-id");
-    ies.push(json!({"id": "eNBname", "criticality": "ignore", "octets": "0461"}));
+    ies[0]["id"] = tree!("mme-ue-s1ap-id");
+    ies.push(tree!({"id": "eNBname", "criticality": "ignore", "octets": "0461"}));
     let after = sent(&edited).unwrap();
-    assert_eq!(after["message"]["protocolIEs"][0]["id"], json!(0));
+    assert_eq!(after["message"]["protocolIEs"][0]["id"], tree!(0));
     let name = inspect::select(&after, "/s1ap/eNBname/octets").unwrap();
-    assert_eq!(name, [&json!("0461")]);
+    assert_eq!(name, [&tree!("0461")]);
     // The octets of an IE that was added are set at its path too.
     let mut edited = view.clone();
-    let name = json!({"id": "eNBname", "criticality": "ignore", "value": "a"});
+    let name = tree!({"id": "eNBname", "criticality": "ignore", "value": "a"});
     inspect::insert(&mut edited, "/s1ap/-", name).unwrap();
-    inspect::set(&mut edited, "/s1ap/eNBname/octets", json!("0461")).unwrap();
+    inspect::set(&mut edited, "/s1ap/eNBname/octets", tree!("0461")).unwrap();
     let after = sent(&edited).unwrap();
     let name = inspect::select(&after, "/s1ap/eNBname/octets").unwrap();
-    assert_eq!(name, [&json!("0461")]);
+    assert_eq!(name, [&tree!("0461")]);
     // A name that no IE has is refused, and so are a value and octets together.
     let mut edited = view.clone();
-    edited["message"]["protocolIEs"][0]["id"] = json!("NoSuchIE");
+    edited["message"]["protocolIEs"][0]["id"] = tree!("NoSuchIE");
     let error = S1AP_PDU::from_view(&edited).unwrap_err().to_string();
     assert!(error.contains("is not an IE of S1AP"), "{error}");
     let mut edited = view.clone();
-    edited["message"]["protocolIEs"][0]["octets"] = json!("00");
+    edited["message"]["protocolIEs"][0]["octets"] = tree!("00");
     let error = S1AP_PDU::from_view(&edited).unwrap_err().to_string();
     assert!(
         error.contains("its value or its octets, not both"),
@@ -2073,15 +2100,15 @@ fn an_ie_is_written_by_its_name_and_its_octets_wherever_a_view_has_ies() {
 
 #[test]
 fn the_octets_of_an_ie_without_a_value_have_a_path() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let mut view = release_with_cause().to_view().unwrap();
     // The octets repeat a value that is there.
-    let listed = |view: &serde_json::Value, path: &str| {
+    let listed = |view: &oxirush_s1ap::tree::Value, path: &str| {
         let paths = inspect::paths(view);
         paths.iter().any(|(listed, _)| listed == path)
     };
     assert!(!listed(&view, "/s1ap/Cause/octets"));
-    inspect::set(&mut view, "/s1ap/Cause/octets", json!("0240")).unwrap();
+    inspect::set(&mut view, "/s1ap/Cause/octets", tree!("0240")).unwrap();
     assert!(listed(&view, "/s1ap/Cause/octets"));
     assert!(!listed(&view, "/s1ap/Cause/value"));
     for (path, value) in inspect::paths(&view) {
@@ -2109,17 +2136,17 @@ fn a_private_message_has_no_ies_under_the_root() {
 
 #[test]
 fn the_identifier_that_the_octets_were_decoded_as_is_a_number() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let mut view = release_with_cause().to_view().unwrap();
-    inspect::set(&mut view, "/s1ap/Cause/value/nas", json!("detach")).unwrap();
-    ie(&mut view, 2)["_original_id"] = json!("two");
+    inspect::set(&mut view, "/s1ap/Cause/value/nas", tree!("detach")).unwrap();
+    ie(&mut view, 2)["_original_id"] = tree!("two");
     let error = S1AP_PDU::from_view(&view).unwrap_err().to_string();
     assert!(error.contains("_original_id is the identifier"), "{error}");
 }
 
 /// A report of the data that a secondary RAT carried, with this count for the uplink.
-fn usage_report(count: u64) -> serde_json::Value {
-    serde_json::json!({"message": "SecondaryRATDataUsageReport", "ies": [
+fn usage_report(count: u64) -> oxirush_s1ap::tree::Value {
+    oxirush_s1ap::tree!({"message": "SecondaryRATDataUsageReport", "ies": [
         {"MME-UE-S1AP-ID": 1},
         {"eNB-UE-S1AP-ID": 2},
         {"SecondaryRATDataUsageReportList": [{"SecondaryRATDataUsageReportItem": {
@@ -2140,7 +2167,7 @@ fn usage_report(count: u64) -> serde_json::Value {
 /// octets.
 #[test]
 fn an_integer_of_two_to_the_63_or_more_is_a_number() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let report = "/s1ap/SecondaryRATDataUsageReportList/0/e-RABUsageReportList/0";
     let count = format!("{report}/usageCountUL");
 
@@ -2166,19 +2193,19 @@ fn an_integer_of_two_to_the_63_or_more_is_a_number() {
         let list = &view["message"]["protocolIEs"][2]["value"][0]["value"]["e-RABUsageReportList"];
         let entry = list[0].clone();
         assert!(entry.get("_decode_error").is_none(), "{entry}");
-        assert_eq!(inspect::select(&view, &count).unwrap(), [&json!(number)]);
+        assert_eq!(inspect::select(&view, &count).unwrap(), [&tree!(number)]);
         let item = hex::decode(entry["_raw_value"].as_str().unwrap()).unwrap();
         let item: ERABUsageReportItem = decode_open_type(&item).unwrap();
         assert_eq!(item.usage_count_ul, number);
 
         // A tree has it, and both forms are the same octets.
-        assert_eq!(pdu.to_tree().unwrap(), usage_report(number));
+        assert_eq!(pdu.to_tree(), usage_report(number));
         assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
 
         // Edited, it is the tree of the other number.
-        inspect::set(&mut view, &count, json!(number - 1)).unwrap();
+        inspect::set(&mut view, &count, tree!(number - 1)).unwrap();
         let edited = S1AP_PDU::from_view(&view).unwrap();
-        assert_eq!(edited.to_tree().unwrap(), usage_report(number - 1));
+        assert_eq!(edited.to_tree(), usage_report(number - 1));
     }
 
     // One more than the type has is no number that JSON has, and its decimal digits
@@ -2186,7 +2213,7 @@ fn an_integer_of_two_to_the_63_or_more_is_a_number() {
     let mut beyond = usage_report(1);
     let item = &mut beyond["ies"][2]["SecondaryRATDataUsageReportList"][0];
     let entry = &mut item["SecondaryRATDataUsageReportItem"]["e-RABUsageReportList"][0];
-    entry["E-RABUsageReportItem"]["usageCountUL"] = json!("18446744073709551616");
+    entry["E-RABUsageReportItem"]["usageCountUL"] = tree!("18446744073709551616");
     let error = S1AP_PDU::from_tree(&beyond).unwrap_err();
     assert_eq!(error.kind(), oxirush_s1ap::ErrorKind::Value);
     assert_eq!(
@@ -2201,7 +2228,7 @@ fn an_integer_of_two_to_the_63_or_more_is_a_number() {
 /// that were received, with why they do not decode, and write them back as they are.
 #[test]
 fn an_ie_with_an_integer_beyond_64_bits_keeps_the_octets_received() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     // The count of the paging attempts has an extension marker: INTEGER (1..16, ...).
     let attempts = PagingAttemptInformation::new(
         PagingAttemptCount(u64::MAX),
@@ -2229,7 +2256,7 @@ fn an_ie_with_an_integer_beyond_64_bits_keeps_the_octets_received() {
     );
 
     // A PAGING with these octets as its assistance data.
-    let mut pdu = S1AP_PDU::from_tree(&json!({"message": "Paging", "ies": [
+    let mut pdu = S1AP_PDU::from_tree(&tree!({"message": "Paging", "ies": [
         {"UEIdentityIndexValue": "0a40"},
         {"UEPagingID": {"s-TMSI": {"mMEC": 1, "m-TMSI": 1}}},
         {"CNDomain": "ps"},
@@ -2248,14 +2275,14 @@ fn an_ie_with_an_integer_beyond_64_bits_keeps_the_octets_received() {
     // The IE is the octets that were received, and the others are read.
     let view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
     let entry = &view["message"]["protocolIEs"][4];
-    assert_eq!(entry["_raw_value"], json!(hex::encode(&beyond)));
+    assert_eq!(entry["_raw_value"], tree!(hex::encode(&beyond)));
     assert_eq!(entry["value"], entry["_raw_value"]);
     let why = entry["_decode_error"].as_str().unwrap();
     assert!(why.contains("the number does not fit in 64 bits"), "{why}");
-    assert_eq!(view["message"]["protocolIEs"][2]["value"], json!("ps"));
+    assert_eq!(view["message"]["protocolIEs"][2]["value"], tree!("ps"));
     // The view and the tree give the octets back.
     assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
-    let tree = pdu.to_tree().unwrap();
+    let tree = pdu.to_tree();
     assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
 }
 
@@ -2288,7 +2315,7 @@ fn modification(bits: usize) -> S1AP_PDU {
 /// are those that the bindings encode.
 #[test]
 fn a_bit_string_of_another_size_than_its_type_gives_has_its_length() {
-    use serde_json::json;
+    use oxirush_s1ap::tree;
     let capabilities = "/s1ap/UESecurityCapabilities";
     let algorithms = format!("{capabilities}/encryptionAlgorithms");
     let message = "UEContextModificationRequest";
@@ -2297,13 +2324,13 @@ fn a_bit_string_of_another_size_than_its_type_gives_has_its_length() {
     let mut view = modification(16).to_view().unwrap();
     assert_eq!(
         inspect::select(&view, &algorithms).unwrap(),
-        [&json!("c000")]
+        [&tree!("c000")]
     );
-    inspect::set(&mut view, &algorithms, json!("8000")).unwrap();
+    inspect::set(&mut view, &algorithms, tree!("8000")).unwrap();
     let edited = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
     assert_eq!(
         inspect::select(&edited, &algorithms).unwrap(),
-        [&json!("8000")]
+        [&tree!("8000")]
     );
 
     // 20 bits and 24 bits are the same three octets, and not the same string.
@@ -2313,41 +2340,41 @@ fn a_bit_string_of_another_size_than_its_type_gives_has_its_length() {
         let mut view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
         let entry = &view["message"]["protocolIEs"][2];
         assert!(entry.get("_decode_error").is_none(), "{entry}");
-        let shown = json!({"value": "c00000", "length": bits});
+        let shown = tree!({"value": "c00000", "length": bits});
         assert_eq!(inspect::select(&view, &algorithms).unwrap(), [&shown]);
 
         // Its two members have paths, which a message is checked against.
         let length = format!("{algorithms}/length");
-        assert_eq!(inspect::select(&view, &length).unwrap(), [&json!(bits)]);
+        assert_eq!(inspect::select(&view, &length).unwrap(), [&tree!(bits)]);
         let listed = format!("{capabilities}/value/encryptionAlgorithms/length");
         let paths = inspect::paths(&view);
         assert!(paths.iter().any(|(path, _)| *path == listed), "{paths:?}");
         assert_eq!(inspect::check_path(message, &length), Ok(()));
 
         // A tree has it, and both forms are the octets that the bindings encoded.
-        let tree = pdu.to_tree().unwrap();
+        let tree = pdu.to_tree();
         let written = &tree["ies"][2]["UESecurityCapabilities"];
         assert_eq!(written["encryptionAlgorithms"], shown);
         assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
         assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
 
         // Edited to the size of the type, it is what the bindings encode for that.
-        inspect::set(&mut view, &algorithms, json!("c000")).unwrap();
+        inspect::set(&mut view, &algorithms, tree!("c000")).unwrap();
         assert_eq!(S1AP_PDU::from_view(&view).unwrap(), modification(16));
     }
 
     // From the size of the type to another one, by the whole value and by its length.
     let mut view = modification(16).to_view().unwrap();
-    let longer = json!({"value": "c00000", "length": 24});
+    let longer = tree!({"value": "c00000", "length": 24});
     inspect::set(&mut view, &algorithms, longer).unwrap();
     assert_eq!(S1AP_PDU::from_view(&view).unwrap(), modification(24));
-    inspect::set(&mut view, &format!("{algorithms}/length"), json!(20)).unwrap();
+    inspect::set(&mut view, &format!("{algorithms}/length"), tree!(20)).unwrap();
     assert_eq!(S1AP_PDU::from_view(&view).unwrap(), modification(20));
 
     // What is not the string that it says is refused: three octets without a length
     // are not the 16 bits of the type, and 20 bits are not two octets.
-    let written = |algorithms: serde_json::Value| {
-        S1AP_PDU::from_tree(&json!({"message": message, "ies": [
+    let written = |algorithms: oxirush_s1ap::tree::Value| {
+        S1AP_PDU::from_tree(&tree!({"message": message, "ies": [
             {"MME-UE-S1AP-ID": 1},
             {"eNB-UE-S1AP-ID": 1},
             {"UESecurityCapabilities": {
@@ -2356,13 +2383,13 @@ fn a_bit_string_of_another_size_than_its_type_gives_has_its_length() {
             }},
         ]}))
     };
-    assert!(written(json!("c000")).is_ok());
-    let error = written(json!("c00000")).unwrap_err();
+    assert!(written(tree!("c000")).is_ok());
+    let error = written(tree!("c00000")).unwrap_err();
     assert_eq!(error.kind(), oxirush_s1ap::ErrorKind::Value);
     assert_eq!(
         error.to_string(),
         "this is not a value of UESecurityCapabilities: 3 octets are written for a bit string \
          of 16 bits, which has 2, at encryptionAlgorithms"
     );
-    assert!(written(json!({"value": "c000", "length": 20})).is_err());
+    assert!(written(tree!({"value": "c000", "length": 20})).is_err());
 }
