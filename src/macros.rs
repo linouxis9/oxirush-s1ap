@@ -200,7 +200,7 @@ use crate::{Error, Message};
 
 /// For the macro that extracts IEs: what a field is given of the value of an IE.
 #[doc(hidden)]
-pub use crate::message::__Field;
+pub use crate::message::{__Field, __Ies};
 
 /// For the macro that builds an IE: one entry of the IEs of a message, which is the
 /// identifier of an IE, its criticality and its value in an open type, or why the
@@ -296,14 +296,14 @@ impl __Message {
 /// For the macro that extracts IEs: the IE `id`, which the field `field` requires, is
 /// not in a message of the type `M`.
 #[doc(hidden)]
-pub fn __missing_ie<'a, M: Message<'a>>(id: u16, field: &str) -> Error {
+pub fn __missing_ie<'a, M: __Ies<'a>>(id: u16, field: &str) -> Error {
     crate::error::missing_ie::<M>(id, field)
 }
 
 /// For the macros that read an IE: `error` is why `ie`, at `position` of a message of
 /// the type `M`, does not decode.
 #[doc(hidden)]
-pub fn __undecodable_ie<'a, M: Message<'a>>(
+pub fn __undecodable_ie<'a, M: __Ies<'a>>(
     error: Error,
     ie: &ProtocolIEField<'_>,
     position: usize,
@@ -313,10 +313,10 @@ pub fn __undecodable_ie<'a, M: Message<'a>>(
 
 /// For the macro that builds one IE: `M` is a message, and a container of protocol IEs.
 #[doc(hidden)]
-pub fn __message_of_protocol_ies<'a, M: Message<'a>>() {
+pub fn __message_of_protocol_ies<'a, M: __Ies<'a>>() {
     const {
         assert!(
-            M::__OF_PROTOCOL_IES,
+            <M as __Ies<'a>>::__OF_PROTOCOL_IES,
             "the message has private IEs, and no container of protocol IEs"
         )
     };

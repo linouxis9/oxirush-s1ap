@@ -53,6 +53,9 @@ pub const BLOCKS: &[fn()] = &[
     block_22,
     block_23,
     block_24,
+    block_25,
+    block_26,
+    block_27,
 ];
 
 /// The Rust block 1 of README.md.
@@ -318,6 +321,55 @@ fn block_10() {
 
 /// The Rust block 11 of README.md.
 fn block_11() {
+    use oxirush_s1ap::{BitString, build_s1ap, build_s1ap_ie, extract_s1ap_ies, s1ap::*};
+
+    fn main() -> Result<(), oxirush_s1ap::Error> {
+        // One E-RAB to set up, as the item of its list
+        let priority = AllocationAndRetentionPriority::new(
+            PriorityLevel(1),
+            PreEmptionCapability::shall_not_trigger_pre_emption,
+            PreEmptionVulnerability::not_pre_emptable,
+            None,
+        );
+        let bearer = ERABToBeSetupItemCtxtSUReq::new(
+            ERABID(5),
+            ERABLevelQoSParameters::new(QCI(9), priority, None, None),
+            TransportLayerAddress(BitString::from([10, 0, 0, 1])),
+            GTPTEID([0, 0, 0, 1]),
+            None,
+            None,
+        );
+        let item = build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?;
+        let pdu = build_s1ap!(InitiatingMessage, InitialContextSetup, REJECT,
+            InitialContextSetupRequest,
+            REJECT MME_UE_S1AP_ID(1u32),
+            REJECT eNB_UE_S1AP_ID(7u32),
+            REJECT E_RABToBeSetupListCtxtSUReq(vec![item]),
+        )?;
+
+        // Read back: the list, then each item as its type
+        let request: InitialContextSetupRequest = pdu.decode_value()?;
+        extract_s1ap_ies!(request, InitialContextSetupRequest,
+            req bearers: ERABToBeSetupListCtxtSUReq = E_RABToBeSetupListCtxtSUReq(list) => list,
+        );
+        for item in &bearers.0 {
+            let bearer: ERABToBeSetupItemCtxtSUReq = decode_open_type(&item.value)?;
+            println!("E-RAB {} with QCI {}", bearer.e_rab_id.0, bearer.e_rab_level_qos_parameters.qci.0);
+        }
+
+        // The octets of a Source-ToTarget-TransparentContainer, as the type that they carry
+        let octets = hex::decode("000201020002f83900012340200100").unwrap();
+        let container: SourceeNBToTargeteNBTransparentContainer = decode_open_type(&octets)?;
+        println!("{:?}", container.target_cell_id);
+        assert_eq!(encode_open_type(&container)?.as_ref(), &octets[..]);
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 12 of README.md.
+fn block_12() {
     use oxirush_s1ap::{build_s1ap, s1ap::*};
 
     fn main() -> Result<(), oxirush_s1ap::Error> {
@@ -345,8 +397,40 @@ fn block_11() {
     main().unwrap();
 }
 
-/// The Rust block 12 of README.md.
-fn block_12() {
+/// The Rust block 13 of README.md.
+fn block_13() {
+    use oxirush_s1ap::{Deviation, build_s1ap, s1ap::*};
+
+    fn main() -> Result<(), oxirush_s1ap::Error> {
+        // An S1 SETUP REQUEST with none of its mandatory IEs but the paging DRX
+        let request = build_s1ap!(InitiatingMessage, S1Setup, REJECT, S1SetupRequest,
+            IGNORE DefaultPagingDRX(PagingDRX::v128),
+        )?;
+        let deviations = S1AP_PDU::decode(&request.encode()?)?.check()?;
+
+        // Clause 10.3.5: the procedure is rejected, and the missing IEs are reported
+        let cause = deviations.iter().find_map(Deviation::cause).unwrap();
+        let items: Vec<_> = deviations.iter().filter_map(Deviation::diagnostics_item).collect();
+        let diagnostics = CriticalityDiagnosticsIEList(items);
+        let failure = build_s1ap!(UnsuccessfulOutcome, S1Setup, REJECT, S1SetupFailure,
+            IGNORE Cause(Cause::protocol(cause)),
+            IGNORE CriticalityDiagnostics(CriticalityDiagnostics::new(
+                None, None, None, Some(diagnostics), None,
+            )),
+        )?;
+        for deviation in &deviations {
+            println!("{deviation}");
+        }
+        let octets = hex::encode(failure.encode()?);
+        println!("{octets}");
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 14 of README.md.
+fn block_14() {
     use oxirush_s1ap::helpers::*;
 
     // A PLMN from its MCC and its MNC, and what is identified within it
@@ -366,8 +450,8 @@ fn block_12() {
     println!("{}", global_enb_id(network, 0x100000).unwrap_err());
 }
 
-/// The Rust block 13 of README.md.
-fn block_13() {
+/// The Rust block 15 of README.md.
+fn block_15() {
     use oxirush_s1ap::{ErrorKind, s1ap::*};
 
     // A UE CONTEXT RELEASE REQUEST is not decoded as an S1 SETUP REQUEST
@@ -383,8 +467,8 @@ fn block_13() {
     println!("{short}");
 }
 
-/// The Rust block 14 of README.md.
-fn block_14() {
+/// The Rust block 16 of README.md.
+fn block_16() {
     use oxirush_s1ap::s1ap::S1AP_PDU;
 
     // UE CONTEXT RELEASE REQUEST
@@ -397,8 +481,8 @@ fn block_14() {
     println!("{}", view["message"]["protocolIEs"][2]);
 }
 
-/// The Rust block 15 of README.md.
-fn block_15() {
+/// The Rust block 17 of README.md.
+fn block_17() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -428,8 +512,8 @@ fn block_15() {
     }
 }
 
-/// The Rust block 16 of README.md.
-fn block_16() {
+/// The Rust block 18 of README.md.
+fn block_18() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -453,8 +537,8 @@ fn block_16() {
     println!("{}", wrong.unwrap_err());
 }
 
-/// The Rust block 17 of README.md.
-fn block_17() {
+/// The Rust block 19 of README.md.
+fn block_19() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -477,8 +561,8 @@ fn block_17() {
     println!("{}", edited.to_tree().unwrap()["ies"]);
 }
 
-/// The Rust block 18 of README.md.
-fn block_18() {
+/// The Rust block 20 of README.md.
+fn block_20() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -503,8 +587,8 @@ fn block_18() {
     println!("{}", json!(inspect::select(&view, "/s1ap/*/criticality").unwrap()));
 }
 
-/// The Rust block 19 of README.md.
-fn block_19() {
+/// The Rust block 21 of README.md.
+fn block_21() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -526,8 +610,8 @@ fn block_19() {
     println!("{}", edited.to_tree().unwrap());
 }
 
-/// The Rust block 20 of README.md.
-fn block_20() {
+/// The Rust block 22 of README.md.
+fn block_22() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -558,8 +642,8 @@ fn block_20() {
     }
 }
 
-/// The Rust block 21 of README.md.
-fn block_21() {
+/// The Rust block 23 of README.md.
+fn block_23() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use serde_json::{Value, json};
 
@@ -600,8 +684,8 @@ fn block_21() {
     println!("{}", edited.to_tree().unwrap());
 }
 
-/// The Rust block 22 of README.md.
-fn block_22() {
+/// The Rust block 24 of README.md.
+fn block_24() {
     use oxirush_s1ap::inspect;
 
     // The names that the value at a path can have, as the specification spells them
@@ -613,8 +697,8 @@ fn block_22() {
     assert_eq!(choice, Ok(None));
 }
 
-/// The Rust block 23 of README.md.
-fn block_23() {
+/// The Rust block 25 of README.md.
+fn block_25() {
     use oxirush_s1ap::inspect;
 
     // Whether a path can select anything in a message of a name, without a view
@@ -628,8 +712,8 @@ fn block_23() {
     }
 }
 
-/// The Rust block 24 of README.md.
-fn block_24() {
+/// The Rust block 26 of README.md.
+fn block_26() {
     use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1AP_PDU};
     use serde_json::json;
 
@@ -668,4 +752,20 @@ fn block_24() {
     inspect::set(&mut view, &cell, json!(7)).unwrap();
     let edited = pdu.with_view(&view).unwrap();
     println!("{}", edited.to_tree().unwrap()["ies"][2]);
+}
+
+/// The Rust block 27 of README.md.
+fn block_27() {
+    use oxirush_s1ap::helpers::{plmn, tai};
+    use oxirush_s1ap::s1ap::S1AP_PDU;
+
+    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    let pdu = S1AP_PDU::decode(&bytes).unwrap();
+    let text = serde_json::to_string(&pdu).unwrap();
+    let read: S1AP_PDU = serde_json::from_str(&text).unwrap();
+    assert_eq!(read.encode().unwrap(), bytes);
+
+    // A value alone has the form of its type: a PLMN identity and a TAC are octets
+    let area = tai(plmn("208", "93").unwrap(), [0x00, 0x01]);
+    println!("{}", serde_json::to_string(&area).unwrap());
 }
