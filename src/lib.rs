@@ -211,20 +211,15 @@
 
 extern crate alloc;
 
-mod check;
-mod error;
 pub mod helpers;
-#[cfg(oxirush_s1ap_hooks)]
-#[doc(hidden)]
-pub mod hooks;
+// What the fuzz targets and the oracle take from the inside of the crate, with
+// `--cfg oxirush_s1ap_hooks`: the module `hooks`.
+oxirush_aper::__hooks! { cfg oxirush_s1ap_hooks, bindings s1ap, pdu S1APPDU, owned S1AP_PDU }
 #[cfg(feature = "inspect")]
 pub mod inspect;
 #[cfg(feature = "inspect")]
-mod inspect_paths;
-#[cfg(feature = "inspect")]
 mod inspect_registry;
 pub mod macros;
-mod message;
 // The bindings are formatted where they are generated, by the rustfmt of the toolchain
 // that the generator runs with: a later one breaks some of their long lines otherwise.
 #[rustfmt::skip]
@@ -250,11 +245,16 @@ pub use oxirush_utils::identity;
 #[cfg(feature = "inspect")]
 pub use oxirush_utils::tree;
 
-pub use check::{Deviation, S1ap};
-pub use message::Message;
+pub use oxirush_aper::protocol::Message;
 pub use oxirush_aper::{
     AsnType, BitString, Bits, Decode, Encode, Error, ErrorKind, Fault, Faults, Octets,
 };
+/// The IEs of the protocol, one marker type each, by the names that the macros take:
+/// `ies::<T>()` and `ie::<T>()` of a PDU and of a message take them, as
+/// `pdu.ie::<ie::Cause>()`. Each implements [`aper::protocol::Ie`], which gives its
+/// identifier and the type of its value.
+pub use registry::ie;
+pub use registry::{Deviation, S1ap};
 pub use s1ap::S1apPduKind;
 
 /// The examples of the README, which the documentation tests compile and run.

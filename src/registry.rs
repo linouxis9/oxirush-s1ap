@@ -1,6 +1,7 @@
 // Auto-generated from ASN.1 by the generator of oxirush-aper; do not edit.
-use crate::macros::{ies, procedures};
-procedures! {
+oxirush_aper::__protocol! { protocol S1ap "S1AP", bindings s1ap, pdu S1APPDU, triggering initiating_message successful_outcome unsuccessfull_outcome }
+oxirush_aper::__procedures! {
+    protocol S1ap "S1AP", bindings s1ap, pdu S1APPDU, kind S1apPduKind, hooks oxirush_s1ap_hooks;
     0 HandoverPreparation reject { InitiatingMessage Initiating_HandoverPreparation "HandoverRequired" crate::s1ap::HandoverRequired<'a> [0 reject mandatory, 8 reject mandatory, 1 reject mandatory, 2 ignore mandatory, 4 reject mandatory, 79 ignore optional, 125 reject optional, 104 reject mandatory, 138 reject optional, 132 reject conditional, 133 ignore conditional, 127 reject optional, 145 reject optional, 150 ignore optional]; SuccessfulOutcome Successful_HandoverPreparation "HandoverCommand" crate::s1ap::HandoverCommand<'a> [0 reject mandatory, 8 reject mandatory, 1 reject mandatory, 135 reject conditional, 12 ignore optional, 13 ignore optional, 123 reject mandatory, 139 reject optional, 58 ignore optional]; UnsuccessfulOutcome Unsuccessful_HandoverPreparation "HandoverPreparationFailure" crate::s1ap::HandoverPreparationFailure<'a> [0 ignore mandatory, 8 ignore mandatory, 2 ignore mandatory, 58 ignore optional]; }
     1 HandoverResourceAllocation reject { InitiatingMessage Initiating_HandoverResourceAllocation "HandoverRequest" crate::s1ap::HandoverRequest<'a> [0 reject mandatory, 1 reject mandatory, 2 ignore mandatory, 66 reject mandatory, 53 reject mandatory, 104 reject mandatory, 107 reject mandatory, 41 ignore optional, 25 ignore optional, 98 ignore optional, 124 ignore optional, 40 reject mandatory, 136 reject conditional, 127 reject optional, 146 ignore optional, 75 ignore optional, 158 ignore optional, 165 ignore optional, 177 ignore optional, 192 ignore optional, 196 ignore optional, 195 ignore optional, 241 ignore optional, 240 ignore optional, 248 ignore optional, 251 ignore optional, 269 ignore optional, 271 ignore optional, 277 ignore optional, 283 ignore optional, 278 ignore optional, 299 ignore optional, 301 reject optional, 306 ignore optional, 307 ignore optional, 308 ignore optional, 314 reject optional, 355 ignore optional]; SuccessfulOutcome Successful_HandoverResourceAllocation "HandoverRequestAcknowledge" crate::s1ap::HandoverRequestAcknowledge<'a> [0 ignore mandatory, 8 ignore mandatory, 18 ignore mandatory, 19 ignore optional, 123 reject mandatory, 127 ignore optional, 58 ignore optional, 145 ignore optional, 242 ignore optional]; UnsuccessfulOutcome Unsuccessful_HandoverResourceAllocation "HandoverFailure" crate::s1ap::HandoverFailure<'a> [0 ignore mandatory, 2 ignore mandatory, 58 ignore optional]; }
     2 HandoverNotification ignore { InitiatingMessage Initiating_HandoverNotification "HandoverNotify" crate::s1ap::HandoverNotify<'a> [0 reject mandatory, 8 reject mandatory, 100 ignore mandatory, 67 ignore mandatory, 176 ignore optional, 186 ignore optional, 288 ignore optional, 320 ignore optional, 339 ignore optional]; }
@@ -70,7 +71,8 @@ procedures! {
     66 MMEEarlyStatusTransfer ignore { InitiatingMessage Initiating_MMEEarlyStatusTransfer "MMEEarlyStatusTransfer" crate::s1ap::MMEEarlyStatusTransfer<'a> [0 reject mandatory, 8 reject mandatory, 321 reject mandatory]; }
     67 S1Removal reject { InitiatingMessage Initiating_S1Removal "S1RemovalRequest" crate::s1ap::S1RemovalRequest<'a> [59 reject mandatory]; SuccessfulOutcome Successful_S1Removal "S1RemovalResponse" crate::s1ap::S1RemovalResponse<'a> [61 ignore optional, 58 ignore optional]; UnsuccessfulOutcome Unsuccessful_S1Removal "S1RemovalFailure" crate::s1ap::S1RemovalFailure<'a> [2 ignore mandatory, 58 ignore optional]; }
 }
-ies! {
+oxirush_aper::__ies! {
+    protocol S1ap "S1AP";
     0 "MME-UE-S1AP-ID" crate::s1ap::MMEUES1APID => MME_UE_S1AP_ID;
     1 "HandoverType" crate::s1ap::HandoverType => HandoverType;
     2 "Cause" crate::s1ap::Cause => Cause;
@@ -398,4 +400,37 @@ ies! {
     354 "CoarseUELocation" crate::s1ap::CoarseUELocation<'a> => CoarseUELocation;
     355 "TimeRefDistribution" crate::s1ap::TimeRefDistribution => TimeRefDistribution;
     356 "RequestedTNLInfo" crate::s1ap::RequestedTNLInfo;
+}
+oxirush_aper::__lists! {
+    E_RABSubjecttoDataForwardingList E_RABDataForwardingItem 1 256;
+    E_RABtoReleaseListHOCmd E_RABItem 1 256;
+    E_RABToBeSetupListBearerSUReq E_RABToBeSetupItemBearerSUReq 1 256;
+    E_RABAdmittedList E_RABAdmittedItem 1 256;
+    E_RABFailedToSetupListHOReqAck E_RABFailedtoSetupItemHOReqAck 1 256;
+    E_RABToBeSwitchedDLList E_RABToBeSwitchedDLItem 1 256;
+    E_RABToBeSetupListCtxtSUReq E_RABToBeSetupItemCtxtSUReq 1 256;
+    E_RABSetupListBearerSURes E_RABSetupItemBearerSURes 1 256;
+    E_RABFailedToSetupListBearerSURes E_RABItem 1 256;
+    E_RABToBeModifiedListBearerModReq E_RABToBeModifiedItemBearerModReq 1 256;
+    E_RABModifyListBearerModRes E_RABModifyItemBearerModRes 1 256;
+    E_RABFailedToModifyList E_RABItem 1 256;
+    E_RABToBeReleasedList E_RABItem 1 256;
+    E_RABFailedToReleaseList E_RABItem 1 256;
+    TAIList TAIItem 1 256;
+    E_RABFailedToSetupListCtxtSURes E_RABItem 1 256;
+    E_RABSetupListCtxtSURes E_RABSetupItemCtxtSURes 1 256;
+    E_RABToBeSetupListHOReq E_RABToBeSetupItemHOReq 1 256;
+    E_RABReleaseListBearerRelComp E_RABReleaseItemBearerRelComp 1 256;
+    UE_associatedLogicalS1_ConnectionListResAck UE_associatedLogicalS1_ConnectionItem 1 256;
+    E_RABToBeSwitchedULList E_RABToBeSwitchedULItem 1 256;
+    E_RABReleasedList E_RABItem 1 256;
+    E_RABToBeModifiedListBearerModInd E_RABToBeModifiedItemBearerModInd 1 256;
+    E_RABNotToBeModifiedListBearerModInd E_RABNotToBeModifiedItemBearerModInd 1 256;
+    E_RABModifyListBearerModConf E_RABModifyItemBearerModConf 1 256;
+    E_RABFailedToModifyListBearerModConf E_RABItem 1 256;
+    E_RABToBeReleasedListBearerModConf E_RABItem 1 256;
+    E_RABFailedToResumeListResumeReq E_RABFailedToResumeItemResumeReq 1 256;
+    E_RABFailedToResumeListResumeRes E_RABFailedToResumeItemResumeRes 1 256;
+    SecondaryRATDataUsageReportList SecondaryRATDataUsageReportItem 1 256;
+    E_RABToBeUpdatedList E_RABToBeUpdatedItem 1 256;
 }

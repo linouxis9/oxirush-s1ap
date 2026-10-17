@@ -57,7 +57,13 @@ not source compatible with 0.2.0.
   missing or `None`. A field that is to go on without an IE that does not
   decode is `lax`.
 - When a message has an IE twice, `extract_s1ap_ies!` and `with_s1ap_ie_mut!`
-  take the last one, and one of them that does not decode is an error.
+  take the first one, and do not decode the second; `check()` reports it as
+  `Deviation::RepeatedIe`, and `ies::<T>()` gives each.
+- The macros, the readers, `check()` and the registry are those of
+  `oxirush_aper::protocol`, which oxirush-ngap and oxirush-s1ap share:
+  `Message` is `oxirush_aper::protocol::Message`, re-exported, with its
+  `Protocol`, and the hidden `registry::ies::NAME` modules are the marker
+  types of the module `ie`: `ie::NAME::ID` is `<ie::NAME as Ie>::ID`.
 - Each protocol IE and extension container is one type, `ProtocolIEContainer`
   of `ProtocolIEField` and `ProtocolExtensionContainer` of
   `ProtocolExtensionField`, in place of one for each use, as
@@ -104,6 +110,18 @@ not source compatible with 0.2.0.
 
 ### Added
 
+- `ie`: a marker type for each IE, by the names that the macros take it by,
+  and `ies::<T>()`, `ie::<T>()` and `items::<L>()` of a PDU, of a message and
+  of a transfer: every occurrence of an IE in order, decoded alone, the first,
+  and the items of a list of single containers, walked and not built. On a
+  PDU they read the octets of its message where they are, without
+  `decode_value` and without allocating.
+- `extract_s1ap_ies!` takes a PDU as well as a message, as the message that it
+  holds: it walks the IEs once and decodes those that a field asks for.
+- `check_structure()` of a PDU: the object set of its message, the presence,
+  the order, the repetition and the criticality of its IEs, without decoding a
+  value, for a receiver that reads the IEs that it needs; `check()` decodes
+  every value too.
 - `pdu.check()`: how a PDU deviates from the object set of its message, as
   `Deviation`s, refusing nothing. `deviation.cause()` and
   `deviation.diagnostics_item()` give what a receiver answers, as TS 36.413
@@ -162,6 +180,13 @@ not source compatible with 0.2.0.
   rasn 0.29 in `oracle/`, with three fuzz targets, and from the published
   package alone. `build/asn1.sha256` records the digests of the ASN.1 modules
   that the bindings are generated from.
+- The tools, the programs and the jobs that oxirush-ngap and oxirush-s1ap
+  share are those of the repository of `oxirush-aper`, at the revision of
+  `build/revisions`, from a checkout beside this repository: its
+  `protocols/` has the oracle and its tests, the fuzz targets, the
+  benchmarks, the scripts of the fixtures, of the package and of the
+  revisions, and the writer of the test of the README, and its workflows
+  the jobs of CI and of Reproduce. CONTRIBUTING.md says where each lives.
 - `helpers::enb_id`, the eNB ID of a kind.
 - In a tree and through serde, a string of decimal digits is never read as
   octets: a PLMN identity or a number written so (`"310410"`, a TAC

@@ -1,14 +1,13 @@
 // Auto-generated from ASN.1 by the generator of oxirush-aper; do not edit.
-use crate::inspect::{Form, Typed, carried, transfers};
-use crate::inspect_paths::types;
 pub(crate) use crate::registry::{
     IE_NAMES, IE_TYPES, ITEM_CRITICALITIES, MESSAGE_IE_CRITICALITIES, MESSAGES,
     PROCEDURE_CRITICALITIES, ie, ie_contents,
 };
+use oxirush_aper::inspect::Form;
 pub(crate) const PROTOCOL: &str = "S1AP";
 pub(crate) const ROOT: &str = "s1ap";
-transfers! {}
-carried! {
+oxirush_aper::__transfers! {}
+oxirush_aper::__carried! {
     104 "SourceeNB-ToTargeteNB-TransparentContainer" crate::s1ap::SourceeNBToTargeteNBTransparentContainer;
     123 "TargeteNB-ToSourceeNB-TransparentContainer" crate::s1ap::TargeteNBToSourceeNBTransparentContainer;
 }
@@ -565,7 +564,7 @@ pub(crate) const ENUMERATIONS: &[(&str, &[&str])] = &[
     ("WLANMeasurementConfigurationWlanRssi", &["true"]),
     ("WLANMeasurementConfigurationWlanRtt", &["true"]),
 ];
-types! {
+oxirush_aper::__types! {
     AdditionalGUTI sequence { "gUMMEI": GUMMEI, "m-TMSI": MTMSI, "iE-Extensions"? extensions };
     AllocationAndRetentionPriority sequence { "priorityLevel": _, "pre-emptionCapability": PreEmptionCapability, "pre-emptionVulnerability": PreEmptionVulnerability, "iE-Extensions"? extensions };
     AnonymousPrivateMessagePrivateIEs sequence { "id": PrivateIEID, "criticality": Criticality, "value": _ };

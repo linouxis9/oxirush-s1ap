@@ -1,120 +1,7 @@
-//! The README shows what its code prints.
-//!
-//! The Rust blocks of the README are documentation tests: they compile and
-//! run, and nothing looks at what they print. `readme/blocks.rs` has each of
-//! them as a function that prints into a string. The first test here keeps
-//! that file equal to the README, and the second compares what each function
-//! prints with the output that the README shows under its block.
-//!
-//! The output of a block is the `json` and `text` blocks that follow it with
-//! nothing but blank lines between them. A block that shows no output prints
-//! none. A block that has a `main` is run as the documentation test runs it:
-//! its function calls `main`, which returns a `Result`, and an error fails
-//! the test.
-//!
-//! After a change of the code of a Rust block of the README, write the file
-//! again and run the tests once more:
-//!
-//! ```bash
-//! README_BLOCKS=write cargo test --all-features --test readme
-//! cargo test --all-features --test readme
-//! ```
+// The Rust blocks of README.md, each as a function, with what the README shows under
+// each: `../oxirush-aper/protocols/tests/readme.py` writes this file from the README and
+// says how. Do not edit it.
 #![cfg(feature = "serde")]
-
-use std::fmt::Write;
-
-#[rustfmt::skip]
-#[path = "readme/blocks.rs"]
-mod blocks;
-
-const README: &str = include_str!("../README.md");
-const BLOCKS: &str = include_str!("readme/blocks.rs");
-const BLOCKS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/readme/blocks.rs");
-
-/// A Rust block of the README: the line of its opening fence, its code, and
-/// the output that the README shows under it.
-struct Example {
-    line: usize,
-    code: String,
-    output: String,
-}
-
-/// The Rust blocks of the README, each with its output.
-fn examples() -> Vec<Example> {
-    let mut examples: Vec<Example> = Vec::new();
-    // The language of the block that is open, and whether the blocks since
-    // the last Rust block are still its output.
-    let mut open: Option<&str> = None;
-    let mut output = false;
-
-    for (index, line) in README.lines().enumerate() {
-        match (open, line.strip_prefix("```")) {
-            (None, Some("rust")) => {
-                open = Some("rust");
-                output = true;
-                examples.push(Example {
-                    line: index + 1,
-                    code: String::new(),
-                    output: String::new(),
-                });
-            }
-            (None, Some(language)) => {
-                open = Some(language);
-                output &= matches!(language, "json" | "text");
-            }
-            (Some(_), Some("")) => open = None,
-            (Some("rust"), _) => {
-                let example = examples.last_mut().unwrap();
-                writeln!(example.code, "{line}").unwrap();
-            }
-            (Some(_), _) if output => {
-                let example = examples.last_mut().unwrap();
-                writeln!(example.output, "{line}").unwrap();
-            }
-            (Some(_), _) => {}
-            // Text between two blocks ends the output of the first.
-            (None, None) => output &= line.trim().is_empty(),
-        }
-    }
-    examples
-}
-
-/// The text of `readme/blocks.rs` for the Rust blocks of the README.
-fn generated(examples: &[Example]) -> String {
-    let mut file = String::from(HEAD);
-
-    // The blocks go by their rank, and not by their line: a change of the
-    // text of the README leaves this file as it is.
-    writeln!(file, "pub const BLOCKS: &[fn()] = &[").unwrap();
-    for rank in 1..=examples.len() {
-        writeln!(file, "    block_{rank},").unwrap();
-    }
-    writeln!(file, "];").unwrap();
-
-    for (example, rank) in examples.iter().zip(1..) {
-        writeln!(file, "\n/// The Rust block {rank} of README.md.").unwrap();
-        writeln!(file, "fn block_{rank}() {{").unwrap();
-        for code in example.code.lines() {
-            match code.is_empty() {
-                true => writeln!(file).unwrap(),
-                false => writeln!(file, "    {code}").unwrap(),
-            }
-        }
-        // The `main` of a block is what the block does.
-        if example
-            .code
-            .lines()
-            .any(|code| code.starts_with("fn main("))
-        {
-            writeln!(file, "\n    main().unwrap();").unwrap();
-        }
-        writeln!(file, "}}").unwrap();
-    }
-    file
-}
-
-const HEAD: &str = r#"// The Rust blocks of README.md, each as a function. `tests/readme.rs` writes
-// this file and says how: do not edit it.
 #![allow(unused)]
 
 use std::cell::RefCell;
@@ -141,43 +28,921 @@ macro_rules! println {
 }
 
 /// What `block` prints.
-pub fn printed(block: fn()) -> String {
+fn printed(block: fn()) -> String {
     PRINTED.with(|printed| printed.borrow_mut().clear());
     block();
     PRINTED.with(|printed| printed.take())
 }
 
-"#;
-
-#[test]
-fn the_blocks_are_those_of_the_readme() {
-    let generated = generated(&examples());
-    if generated == BLOCKS {
-        return;
-    }
-    if std::env::var("README_BLOCKS").as_deref() == Ok("write") {
-        std::fs::write(BLOCKS_PATH, generated).unwrap();
-        panic!("tests/readme/blocks.rs is written from the README: run the tests again");
-    }
-    panic!(
-        "tests/readme/blocks.rs is not the Rust blocks of the README: write it with \
-         `README_BLOCKS=write cargo test --all-features --test readme`, then run the tests again"
-    );
-}
-
 #[test]
 fn each_block_prints_what_the_readme_shows() {
-    let examples = examples();
-    assert_eq!(examples.len(), blocks::BLOCKS.len());
-
     let mut differences = String::new();
-    for (example, block) in examples.iter().zip(blocks::BLOCKS) {
-        let printed = blocks::printed(*block);
-        if printed != example.output {
-            let (line, shown) = (example.line, &example.output);
-            writeln!(differences, "README.md, the block of line {line} prints:").unwrap();
-            writeln!(differences, "{printed}and the README shows:\n{shown}").unwrap();
+    for (rank, (block, shown)) in (1..).zip(BLOCKS) {
+        let printed = printed(*block);
+        if printed != *shown {
+            differences += &format!("the Rust block {rank} of README.md prints:\n{printed}");
+            differences += &format!("and the README shows:\n{shown}\n");
         }
     }
     assert!(differences.is_empty(), "{differences}");
+}
+
+/// Each Rust block of README.md, by its rank, and what the README shows under it.
+#[rustfmt::skip]
+const BLOCKS: &[(fn(), &str)] = &[
+    (block_1, r#"UEContextReleaseRequest
+MME=Some(42) eNB=Some(7) cause=Some(radioNetwork(user_inactivity))
+"#),
+    (block_2, r#"{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
+{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"radio-connection-with-ue-lost"}}]}
+"#),
+    (block_3, r#"a release request with 3 IEs
+Unsuccessful_S1Setup is not handled here
+"#),
+    (block_4, r#""#),
+    (block_5, r#"UE 7: a NAS-PDU of 3 octets
+"#),
+    (block_6, r#"a NAS-PDU of 3 octets
+"#),
+    (block_7, r#"ignore 000c4011000002000800020007001a000403074171
+true
+TimeToWait is no IE of the object set of InitialUEMessage, which assigns it no criticality: write its criticality
+"#),
+    (block_8, r#""#),
+    (block_9, r#"MME=42 eNB=7
+radioNetwork(user_inactivity)
+"#),
+    (block_10, r#"Some(radioNetwork(user_inactivity))
+None
+"#),
+    (block_11, r#""#),
+    (block_12, r#"2 ignore 45
+S1Setup 4011000d00000200024001450041400120
+"#),
+    (block_13, r#"E-RAB 5 with QCI 9
+E-RAB 5
+EUTRANCGI { plmn_identity: PLMNidentity(208-93), cell_id: CellIdentity(0x1234/28), ie_extensions: None }
+"#),
+    (block_14, r#"the criticality of the PDU is reject, and that of its procedure is ignore
+MME-UE-S1AP-ID (IE 0), at position 1, comes after eNB-UE-S1AP-ID (IE 8), which the object set of the message has after it
+the criticality of MME-UE-S1AP-ID (IE 0), at position 1, is ignore, and the message assigns it reject
+TimeToWait (IE 65), at position 2, is not an IE of the message
+eNB-UE-S1AP-ID (IE 8), at position 3, is in the message already, at position 0
+Cause (IE 2) is mandatory, and the message does not have it
+"#),
+    (block_15, r#"Global-ENB-ID (IE 59) is mandatory, and the message does not have it
+SupportedTAs (IE 64) is mandatory, and the message does not have it
+401100150000020002400131003a4009180100003b40004040
+"#),
+    (block_16, r#""20" is not an MCC: it has three digits, 0 to 9
+the macro eNB ID 1048576 does not fit in 20 bits
+"#),
+    (block_17, r#"the message of this PDU is UEContextReleaseRequest, not S1SetupRequest: kind() says which message a PDU holds
+these octets do not decode as S1AP-PDU: the octets end before the value does, in its field `value`
+"#),
+    (block_18, r#"{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
+{"id":2,"criticality":"ignore","value":{"radioNetwork":"user-inactivity"},"_raw_value":"0280","_original_id":2,"_ie_name":"Cause"}
+"#),
+    (block_19, r#"/procedure_code = 18
+/direction = "InitiatingMessage"
+/criticality = "ignore"
+/s1ap/MME-UE-S1AP-ID/id = 0
+/s1ap/MME-UE-S1AP-ID/criticality = "reject"
+/s1ap/MME-UE-S1AP-ID/value = 42
+/s1ap/eNB-UE-S1AP-ID/id = 8
+/s1ap/eNB-UE-S1AP-ID/criticality = "reject"
+/s1ap/eNB-UE-S1AP-ID/value = 7
+/s1ap/Cause/id = 2
+/s1ap/Cause/criticality = "ignore"
+/s1ap/Cause/value/radioNetwork = "user-inactivity"
+"#),
+    (block_20, r#"{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":9},{"Cause":{"nas":"normal-release"}}]}
+"radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
+"#),
+    (block_21, r#"[{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"c0ffee"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"eNBname":"enb-1","criticality":"ignore"}]
+"#),
+    (block_22, r#"0012402000000400000002002a000800020007000240020280003c40070200656e622d31
+"InitiatingMessage" 18 "ignore"
+["reject","reject","ignore","ignore"]
+"#),
+    (block_23, r#"0012401000000200000002002afde80003c0ffee
+{"id":65000,"criticality":"reject","value":"c0ffee","_decode_error":"S1AP IE 65000 is unknown","_raw_value":"c0ffee","_original_id":65000}
+{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":255},{"65000":{"octets":"c0ffee"},"criticality":"reject"}]}
+"#),
+    (block_24, r#"this IE is MME-UE-S1AP-ID, not eNB-UE-S1AP-ID: "eNB-UE-S1AP-ID" is not a member of this value, which has none, at /s1ap/2/eNB-UE-S1AP-ID/value
+/s1ap/0/value = 1
+/s1ap/eNB-UE-S1AP-ID/value = 7
+/s1ap/2/value = 3
+"#),
+    (block_25, r#"{"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}}},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
+"#),
+    (block_26, r#"["normal-release", "authentication-failure", "detach", "unspecified", "csg-subscription-expiry", "uE-not-in-PLMN-serving-area", "iab-not-authorized"]
+"#),
+    (block_27, r#""radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
+"valeu" is not a member of this value, which has none; an IE itself has id, criticality, value, octets, at /s1ap/eNB-UE-S1AP-ID/valeu
+"GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
+"#),
+    (block_28, r#"{"Source-ToTarget-TransparentContainer":"000201020002f83900012340200100"}
+{"rRC-Container":"0102","targetCell-ID":{"pLMNidentity":"208-93","cell-ID":4660},"uE-HistoryInformation":[{"uTRAN-Cell":"00"}]}
+{"Source-ToTarget-TransparentContainer":"000201020002f83900000070200100"}
+"#),
+    (block_29, r#"{"pLMNidentity":"208-93","tAC":1}
+"#),
+];
+
+/// The Rust block 1 of README.md.
+#[rustfmt::skip]
+fn block_1() {
+    use oxirush_s1ap::{build_s1ap, extract_s1ap_ies, s1ap::*};
+
+    fn main() -> Result<(), Box<dyn std::error::Error>> {
+        // Decode a UE CONTEXT RELEASE REQUEST
+        let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
+        let pdu = S1AP_PDU::decode(&bytes)?;
+        assert_eq!((pdu.procedure_code(), pdu.is_initiating()), (18, true));
+        println!("{}", pdu.procedure_name());
+
+        // Read its IEs by name. An `opt` field is `None` when its IE is not there,
+        // and what follows `=>` is what the field keeps of the decoded value
+        let request: UEContextReleaseRequest = pdu.decode_value()?;
+        extract_s1ap_ies!(request, UEContextReleaseRequest,
+            opt mme_id: u32 = MME_UE_S1AP_ID(id),
+            opt enb_id: u32 = eNB_UE_S1AP_ID(id),
+            opt cause: Cause = Cause(cause) => cause,
+        );
+        println!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}");
+
+        // Build it with another cause: the direction, the procedure, the criticality
+        // of the PDU and the message, then each IE with its criticality
+        let rebuilt = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+            IGNORE, UEContextReleaseRequest,
+
+            REJECT MME_UE_S1AP_ID(42u32),
+            REJECT eNB_UE_S1AP_ID(7u32),
+            IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::radio_connection_with_ue_lost)),
+        )?;
+
+        // Encode it
+        let encoded = hex::encode(rebuilt.encode()?);
+        assert_eq!(encoded, "0012401500000300000002002a0008000200070002400202a0");
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 2 of README.md.
+#[rustfmt::skip]
+fn block_2() {
+    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+    use oxirush_s1ap::tree;
+
+    // The same message as a tree: its name and its IEs by name
+    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    let pdu = S1AP_PDU::decode(&bytes).unwrap();
+    println!("{}", pdu.to_tree());
+
+    // Its view is edited at a path, and is a PDU again
+    let mut view = pdu.to_view().unwrap();
+    let lost = tree!("radio-connection-with-ue-lost");
+    inspect::set(&mut view, "/s1ap/Cause/radioNetwork", lost).unwrap();
+    let edited = pdu.with_view(&view).unwrap();
+    println!("{}", edited.to_tree());
+
+    // Its octets are those that the typed example built
+    let octets = hex::encode(edited.encode().unwrap());
+    assert_eq!(octets, "0012401500000300000002002a0008000200070002400202a0");
+}
+
+/// The Rust block 3 of README.md.
+#[rustfmt::skip]
+fn block_3() {
+    use oxirush_s1ap::{S1apPduKind, s1ap::*};
+
+    fn receive(bytes: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
+        let pdu = S1AP_PDU::decode(bytes)?;
+
+        Ok(match pdu.kind() {
+            S1apPduKind::Initiating_UEContextReleaseRequest => {
+                let request: UEContextReleaseRequest = pdu.decode_value()?;
+                format!("a release request with {} IEs", request.protocol_ies.0.len())
+            }
+            S1apPduKind::Other { direction, procedure_code } => {
+                format!("procedure {procedure_code} has no {direction}")
+            }
+            kind => format!("{kind:?} is not handled here"),
+        })
+    }
+
+    // A UE CONTEXT RELEASE REQUEST, then an S1 SETUP FAILURE
+    let request = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    println!("{}", receive(&request).unwrap());
+
+    let failure = hex::decode("401100080000010002400145").unwrap();
+    println!("{}", receive(&failure).unwrap());
+}
+
+/// The Rust block 4 of README.md.
+#[rustfmt::skip]
+fn block_4() {
+    use oxirush_s1ap::s1ap::{Cause, EUTRANCGI, GUMMEI, TAI};
+
+    // What holds no octets of its own is kept as it is decoded
+    struct Cell {
+        tai: TAI,
+        cgi: EUTRANCGI,
+        gummei: GUMMEI,
+        last_cause: Option<Cause>,
+    }
+}
+
+/// The Rust block 5 of README.md.
+#[rustfmt::skip]
+fn block_5() {
+    use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies, s1ap::*};
+
+    // What a node keeps of a UE after its first message
+    struct Ue {
+        enb_id: u32,
+        nas: NASPDU<'static>,
+    }
+
+    fn admit(pdu: &S1AP_PDU) -> Result<Ue, Error> {
+        // `message` borrows from `pdu`, and `nas` from `message`
+        let message: InitialUEMessage = pdu.decode_value()?;
+        extract_s1ap_ies!(message, InitialUEMessage,
+            req enb_id: u32 = eNB_UE_S1AP_ID(id),
+            req nas: NASPDU = NAS_PDU(nas) => nas,
+        );
+        // Kept beyond the PDU: the octets are copied here, once
+        Ok(Ue { enb_id, nas: nas.into_owned() })
+    }
+
+    fn main() -> Result<(), Error> {
+        let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, IGNORE, InitialUEMessage,
+            REJECT eNB_UE_S1AP_ID(7u32),
+            REJECT NAS_PDU(vec![0x07, 0x41, 0x71]),
+        )?;
+        let ue = admit(&pdu)?;
+        drop(pdu);
+        println!("UE {}: a NAS-PDU of {} octets", ue.enb_id, ue.nas.0.len());
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 6 of README.md.
+#[rustfmt::skip]
+fn block_6() {
+    use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies, s1ap::*};
+
+    async fn deliver(nas: &[u8]) {
+        println!("a NAS-PDU of {} octets", nas.len());
+    }
+
+    async fn handle(received: Vec<u8>) -> Result<(), Error> {
+        // Nothing of `received` is copied
+        let pdu = S1AP_PDU::decode_borrowed(&received)?;
+        let message: UplinkNASTransport = pdu.decode_value()?;
+        extract_s1ap_ies!(message, UplinkNASTransport,
+            req nas: NASPDU = NAS_PDU(nas) => nas,
+        );
+        deliver(&nas.0).await;
+        Ok(())
+    }
+
+    fn main() -> Result<(), Error> {
+        let transport = build_s1ap!(InitiatingMessage, uplinkNASTransport, IGNORE, UplinkNASTransport,
+            REJECT MME_UE_S1AP_ID(1u32),
+            REJECT eNB_UE_S1AP_ID(7u32),
+            REJECT NAS_PDU(vec![0x07, 0x5e, 0x03]),
+        )?;
+        let handler = handle(transport.encode()?);
+
+        // A runtime may move the handler to another thread
+        fn is_send(_: &impl Send) {}
+        is_send(&handler);
+
+        // Polled here without a runtime: this handler never waits
+        let mut handler = std::pin::pin!(handler);
+        let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+        assert!(handler.as_mut().poll(&mut context).is_ready());
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 7 of README.md.
+#[rustfmt::skip]
+fn block_7() {
+    use oxirush_s1ap::{Message, build_s1ap, s1ap::*};
+
+    fn main() -> Result<(), oxirush_s1ap::Error> {
+        // The criticality of the procedure, and those of the object set of the message
+        let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+            eNB_UE_S1AP_ID(7u32),
+            NAS_PDU(vec![0x07, 0x41, 0x71]),
+        )?;
+        println!("{:?} {}", pdu.criticality(), hex::encode(pdu.encode()?));
+
+        // The PDU of a message that is at hand
+        let message: InitialUEMessage = pdu.decode_value()?;
+        let again = S1AP_PDU::of_message(&message, InitialUEMessage::CRITICALITY)?;
+        println!("{}", again == pdu);
+
+        // An IE that the object set of the message does not have is assigned none
+        let error = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+            TimeToWait(TimeToWait::v10s),
+        );
+        println!("{}", error.unwrap_err());
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 8 of README.md.
+#[rustfmt::skip]
+fn block_8() {
+    use oxirush_s1ap::{Error, extract_s1ap_ies, s1ap::*};
+
+    fn handle(request: &UEContextReleaseRequest) -> Result<(), Error> {
+        extract_s1ap_ies!(request, UEContextReleaseRequest,
+            req mme_id: u32 = MME_UE_S1AP_ID(id),
+            req enb_id: u32 = eNB_UE_S1AP_ID(id),
+            req cause: Cause = Cause(value) => value,
+        );
+
+        println!("MME={mme_id} eNB={enb_id} cause={cause:?}");
+        Ok(())
+    }
+}
+
+/// The Rust block 9 of README.md.
+#[rustfmt::skip]
+fn block_9() {
+    use oxirush_s1ap::{Error, extract_s1ap_ies, ie, s1ap::*};
+
+    fn main() -> Result<(), Error> {
+        // A UE CONTEXT RELEASE REQUEST, read in the buffer that it was received in
+        let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+        let pdu = S1AP_PDU::decode_borrowed(&octets)?;
+
+        // The IEs of its message, from the PDU: the Cause is not decoded
+        extract_s1ap_ies!(pdu, UEContextReleaseRequest,
+            req mme_id: u32 = MME_UE_S1AP_ID(id),
+            req enb_id: u32 = eNB_UE_S1AP_ID(id),
+        );
+        println!("MME={mme_id} eNB={enb_id}");
+
+        // One IE, by its marker type
+        let cause = pdu.ie::<ie::Cause>().unwrap()?;
+        println!("{cause:?}");
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 10 of README.md.
+#[rustfmt::skip]
+fn block_10() {
+    use oxirush_s1ap::{extract_s1ap_ies, s1ap::*};
+
+    // The cause of a request, when it has one that is read
+    fn cause(request: &UEContextReleaseRequest) -> Option<Cause> {
+        extract_s1ap_ies!(request, UEContextReleaseRequest,
+            lax cause: Cause = Cause(value) => value,
+        );
+        cause
+    }
+
+    // A UE CONTEXT RELEASE REQUEST, then the same with an octet of its Cause spoiled
+    for octets in [
+        "0012401500000300000002002a000800020007000240020280",
+        "0012401500000300000002002a000800020007000240027280",
+    ] {
+        let pdu = S1AP_PDU::decode(&hex::decode(octets).unwrap()).unwrap();
+        println!("{:?}", cause(&pdu.decode_value().unwrap()));
+    }
+}
+
+/// The Rust block 11 of README.md.
+#[rustfmt::skip]
+fn block_11() {
+    use oxirush_s1ap::{build_s1ap_ie, s1ap::*, with_s1ap_ie_mut};
+
+    // A message with one IE, which is built alone
+    let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
+        build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32)).unwrap(),
+    ]));
+
+    // The IE is decoded, changed and encoded again in its place
+    let updated = with_s1ap_ie_mut!(message, UplinkNASTransport,
+        MME_UE_S1AP_ID(id) = 42u32
+    );
+    assert_eq!(updated, Ok(true));
+}
+
+/// The Rust block 12 of README.md.
+#[rustfmt::skip]
+fn block_12() {
+    use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
+
+    fn main() -> Result<(), oxirush_s1ap::Error> {
+        // An S1 SETUP FAILURE, as any PDU that was received
+        let bytes = hex::decode("401100080000010002400145").unwrap();
+        let mut pdu = S1AP_PDU::decode(&bytes)?;
+
+        // Its IEs as they were received: identifier, criticality and octets. They
+        // borrow from the PDU, and are owned here, as the PDU is changed below
+        let mut ies = pdu.protocol_ies()?.into_owned();
+        for ie in &ies.0 {
+            let octets = hex::encode(&ie.value);
+            println!("{} {:?} {octets}", ie.id.0, ie.criticality);
+        }
+
+        // One more IE, and the container is the message of the same PDU again
+        let wait = build_s1ap_ie!(S1SetupFailure, IGNORE TimeToWait(TimeToWait::v5s))?;
+        ies.0.push(wait);
+        pdu.set_protocol_ies(ies)?;
+        let octets = hex::encode(pdu.encode()?);
+        println!("{} {octets}", pdu.procedure_name());
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 13 of README.md.
+#[rustfmt::skip]
+fn block_13() {
+    use oxirush_s1ap::{BitString, build_s1ap, build_s1ap_ie, extract_s1ap_ies, s1ap::*};
+
+    fn main() -> Result<(), oxirush_s1ap::Error> {
+        // One E-RAB to set up, as the item of its list
+        let priority = AllocationAndRetentionPriority::new(
+            PriorityLevel(1),
+            PreEmptionCapability::shall_not_trigger_pre_emption,
+            PreEmptionVulnerability::not_pre_emptable,
+            None,
+        );
+        let bearer = ERABToBeSetupItemCtxtSUReq::new(
+            ERABID(5),
+            ERABLevelQoSParameters::new(QCI(9), priority, None, None),
+            TransportLayerAddress(BitString::from([10, 0, 0, 1])),
+            GTPTEID([0, 0, 0, 1]),
+            None,
+            None,
+        );
+        let item = build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?;
+        let pdu = build_s1ap!(InitiatingMessage, InitialContextSetup, REJECT,
+            InitialContextSetupRequest,
+            REJECT MME_UE_S1AP_ID(1u32),
+            REJECT eNB_UE_S1AP_ID(7u32),
+            REJECT E_RABToBeSetupListCtxtSUReq(vec![item]),
+        )?;
+
+        // Read back: the list, then each item as its type
+        let request: InitialContextSetupRequest = pdu.decode_value()?;
+        extract_s1ap_ies!(request, InitialContextSetupRequest,
+            req bearers: ERABToBeSetupListCtxtSUReq = E_RABToBeSetupListCtxtSUReq(list) => list,
+        );
+        for item in &bearers.0 {
+            let bearer: ERABToBeSetupItemCtxtSUReq = decode_open_type(&item.value)?;
+            println!("E-RAB {} with QCI {}", bearer.e_rab_id.0, bearer.e_rab_level_qos_parameters.qci.0);
+        }
+
+        // Or each item of the list, walked in the PDU without building the list
+        for bearer in pdu.items::<oxirush_s1ap::ie::E_RABToBeSetupListCtxtSUReq>() {
+            println!("E-RAB {}", bearer?.e_rab_id.0);
+        }
+
+        // The octets of a Source-ToTarget-TransparentContainer, as the type that they carry
+        let octets = hex::decode("000201020002f83900012340200100").unwrap();
+        let container: SourceeNBToTargeteNBTransparentContainer = decode_open_type(&octets)?;
+        println!("{:?}", container.target_cell_id);
+        assert_eq!(encode_open_type(&container)?.as_ref(), &octets[..]);
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 14 of README.md.
+#[rustfmt::skip]
+fn block_14() {
+    use oxirush_s1ap::{build_s1ap, s1ap::*};
+
+    fn main() -> Result<(), oxirush_s1ap::Error> {
+        // A UE CONTEXT RELEASE REQUEST that deviates in each way, built all the same
+        let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+            REJECT, UEContextReleaseRequest,
+            REJECT eNB_UE_S1AP_ID(7u32),
+            IGNORE MME_UE_S1AP_ID(42u32),
+            IGNORE TimeToWait(TimeToWait::v5s),
+            REJECT eNB_UE_S1AP_ID(8u32),
+        )?;
+
+        // It is encoded and decoded as any other, and `check()` reports
+        let received = S1AP_PDU::decode(&pdu.encode()?)?;
+        for deviation in received.check()? {
+            println!("{deviation}");
+        }
+
+        // The message of the first example deviates in nothing
+        let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+        assert!(S1AP_PDU::decode(&bytes)?.check()?.is_empty());
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 15 of README.md.
+#[rustfmt::skip]
+fn block_15() {
+    use oxirush_s1ap::{Deviation, build_s1ap, s1ap::*};
+
+    fn main() -> Result<(), oxirush_s1ap::Error> {
+        // An S1 SETUP REQUEST with none of its mandatory IEs but the paging DRX
+        let request = build_s1ap!(InitiatingMessage, S1Setup, REJECT, S1SetupRequest,
+            IGNORE DefaultPagingDRX(PagingDRX::v128),
+        )?;
+        let received = S1AP_PDU::decode(&request.encode()?)?;
+        let deviations = received.check()?;
+
+        // Clause 10.3.5: the procedure is rejected, and the missing IEs are reported
+        let cause = deviations.iter().find_map(Deviation::cause).unwrap();
+        let failure = build_s1ap!(UnsuccessfulOutcome, S1Setup, REJECT, S1SetupFailure,
+            IGNORE Cause(Cause::protocol(cause)),
+            IGNORE CriticalityDiagnostics(received.criticality_diagnostics_for_response(&deviations)),
+        )?;
+        for deviation in &deviations {
+            println!("{deviation}");
+        }
+        let octets = hex::encode(failure.encode()?);
+        println!("{octets}");
+        Ok(())
+    }
+
+    main().unwrap();
+}
+
+/// The Rust block 16 of README.md.
+#[rustfmt::skip]
+fn block_16() {
+    use oxirush_s1ap::helpers::*;
+
+    // A PLMN from its MCC and its MNC, and what is identified within it
+    let network = plmn("208", "93").unwrap();
+    let mme = gummei(network, 1, 1); // group, code
+    let tracking_area = tai(network, [0x00, 0x01]); // TAC
+    let cell = eutran_cgi(network, EnbKind::Macro, 0x12345, 7).unwrap(); // eNB, cell
+    let enb = global_enb_id(network, EnbKind::Macro, 0x12345).unwrap();
+    let home = global_enb_id(network, EnbKind::Home, 0x123_4567).unwrap();
+
+    // A bit string from octets, and the algorithms of a UE: the first octet
+    // of its encryption bitmap, then of its integrity bitmap
+    let algorithm_mask = oxirush_s1ap::BitString::from([0xe0]);
+    let capabilities = ue_security_capabilities(0xe0, 0xe0);
+
+    // What is no MCC, and a macro eNB ID that does not fit in its 20 bits
+    println!("{}", plmn("20", "93").unwrap_err());
+    println!("{}", global_enb_id(network, EnbKind::Macro, 0x100000).unwrap_err());
+}
+
+/// The Rust block 17 of README.md.
+#[rustfmt::skip]
+fn block_17() {
+    use oxirush_s1ap::{ErrorKind, s1ap::*};
+
+    // A UE CONTEXT RELEASE REQUEST is not decoded as an S1 SETUP REQUEST
+    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    let pdu = S1AP_PDU::decode(&bytes).unwrap();
+    let wrong = pdu.decode_value::<S1SetupRequest>().unwrap_err();
+    assert_eq!(wrong.kind(), ErrorKind::WrongMessage);
+    println!("{wrong}");
+
+    // Octets that end early
+    let short = S1AP_PDU::decode(&bytes[..10]).unwrap_err();
+    assert_eq!(short.kind(), ErrorKind::Decode);
+    println!("{short}");
+}
+
+/// The Rust block 18 of README.md.
+#[rustfmt::skip]
+fn block_18() {
+    use oxirush_s1ap::s1ap::S1AP_PDU;
+
+    // UE CONTEXT RELEASE REQUEST
+    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    let pdu = S1AP_PDU::decode(&bytes).unwrap();
+
+    // Its tree, then its third IE as the view has it
+    println!("{}", pdu.to_tree());
+    let view = pdu.to_view().unwrap();
+    println!("{}", view["message"]["protocolIEs"][2]);
+}
+
+/// The Rust block 19 of README.md.
+#[rustfmt::skip]
+fn block_19() {
+    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+    use oxirush_s1ap::tree;
+
+    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    let pdu = S1AP_PDU::decode(&bytes).unwrap();
+    let view = pdu.to_view().unwrap();
+
+    // `/s1ap` is the IEs of the message, and an IE goes by its name
+    let select = |path| inspect::select(&view, path).unwrap();
+    assert_eq!(select("/s1ap/eNB-UE-S1AP-ID/value"), [&tree!(7)]);
+    assert_eq!(select("/s1ap/Cause/radioNetwork"), [&tree!("user-inactivity")]);
+    assert_eq!(select("/s1ap/Cause/octets"), [&tree!("0280")]);
+
+    // By its position, by its name whatever its case and its separators, by its
+    // identifier, and each IE with `*`
+    assert_eq!(select("/s1ap/1/value"), select("/S1AP/enb_ue_s1ap_id/value"));
+    assert_eq!(select("/s1ap/@id=8/value"), [&tree!(7)]);
+    assert_eq!(select("/s1ap/*/criticality").len(), 3);
+
+    // Nothing where the message could have a value and has none
+    assert!(select("/s1ap/Cause/nas").is_empty());
+    assert!(select("/s1ap/GUMMEI-ID/mME-Code").is_empty());
+
+    // Each value with the path that selects it
+    for (path, value) in inspect::paths(&view) {
+        println!("{path} = {value}");
+    }
+}
+
+/// The Rust block 20 of README.md.
+#[rustfmt::skip]
+fn block_20() {
+    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+    use oxirush_s1ap::tree;
+
+    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    let pdu = S1AP_PDU::decode(&bytes).unwrap();
+    let mut view = pdu.to_view().unwrap();
+
+    // A value, and another alternative of a CHOICE in place of the one that is there
+    inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9)).unwrap();
+    inspect::set(&mut view, "/s1ap/Cause/nas", tree!("Normal Release")).unwrap();
+    let edited = pdu.with_view(&view).unwrap();
+    println!("{}", edited.to_tree());
+
+    // What was not edited is the octets that were received
+    let after = edited.to_view().unwrap();
+    let octets = inspect::select(&after, "/s1ap/MME-UE-S1AP-ID/octets").unwrap();
+    assert_eq!(octets, [&tree!("002a")]);
+
+    // A name that the type does not have is refused, and the view is as it was
+    let wrong = inspect::set(&mut view, "/s1ap/Cause/radioNetwrok", tree!("unspecified"));
+    println!("{}", wrong.unwrap_err());
+}
+
+/// The Rust block 21 of README.md.
+#[rustfmt::skip]
+fn block_21() {
+    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+    use oxirush_s1ap::tree;
+
+    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    let pdu = S1AP_PDU::decode(&bytes).unwrap();
+    let mut view = pdu.to_view().unwrap();
+
+    // An IE is added at the end, by its name and its typed value
+    let name = tree!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
+    inspect::insert(&mut view, "/s1ap/-", name).unwrap();
+
+    // Before another IE, by its number and its octets
+    let unknown = tree!({"id": 60000, "criticality": "ignore", "octets": "c0ffee"});
+    inspect::insert(&mut view, "/s1ap/Cause", unknown).unwrap();
+
+    // An IE is taken out by its name
+    inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID").unwrap();
+
+    let edited = pdu.with_view(&view).unwrap();
+    println!("{}", edited.to_tree()["ies"]);
+}
+
+/// The Rust block 22 of README.md.
+#[rustfmt::skip]
+fn block_22() {
+    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+    use oxirush_s1ap::tree;
+
+    // A tree: the name of the message, whatever its case and its separators, then its IEs
+    let request = tree!({
+        "message": "ue context release request",
+        "ies": [
+            {"MME-UE-S1AP-ID": 42},
+            {"eNB-UE-S1AP-ID": 7},
+            {"Cause": {"radioNetwork": "user-inactivity"}},
+            // An IE that the message does not have says its criticality
+            {"eNBname": "enb-1", "criticality": "ignore"},
+        ],
+    });
+
+    let pdu = S1AP_PDU::from_tree(&request).unwrap();
+    println!("{}", hex::encode(pdu.encode().unwrap()));
+
+    // The name gave the direction, the procedure code and the criticalities
+    let view = pdu.to_view().unwrap();
+    println!("{} {} {}", view["direction"], view["procedure_code"], view["criticality"]);
+    println!("{}", tree!(inspect::select(&view, "/s1ap/*/criticality").unwrap()));
+}
+
+/// The Rust block 23 of README.md.
+#[rustfmt::skip]
+fn block_23() {
+    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+    use oxirush_s1ap::tree;
+
+    // `{"octets": "…"}` in place of a value is the octets of the IE, whatever they are
+    let request = tree!({"message": "UEContextReleaseRequest", "ies": [
+        {"MME-UE-S1AP-ID": 42},
+        {"65000": {"octets": "c0ffee"}, "criticality": "reject"},
+    ]});
+    let pdu = S1AP_PDU::from_tree(&request).unwrap();
+    println!("{}", hex::encode(pdu.encode().unwrap()));
+
+    // A view shows an IE that does not decode by its octets, and says why
+    let mut view = pdu.to_view().unwrap();
+    println!("{}", view["message"]["protocolIEs"][1]);
+
+    // In a view, the `octets` of an IE are set in place of its value
+    inspect::set(&mut view, "/s1ap/MME-UE-S1AP-ID/octets", tree!("00ff")).unwrap();
+    let edited = pdu.with_view(&view).unwrap();
+    println!("{}", edited.to_tree());
+}
+
+/// The Rust block 24 of README.md.
+#[rustfmt::skip]
+fn block_24() {
+    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+    use oxirush_s1ap::tree;
+
+    // A message that has one IE twice
+    let twice = tree!({"message": "UEContextReleaseRequest", "ies": [
+        {"MME-UE-S1AP-ID": 1},
+        {"eNB-UE-S1AP-ID": 7},
+        {"MME-UE-S1AP-ID": 2},
+    ]});
+    let pdu = S1AP_PDU::from_tree(&twice).unwrap();
+    let mut view = pdu.to_view().unwrap();
+
+    // The name selects both, in the order of the message
+    let both = inspect::select(&view, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
+    assert_eq!(both, [&tree!(1), &tree!(2)]);
+
+    // Each has its position, which is how `paths` names it, and its name may follow
+    inspect::set(&mut view, "/s1ap/2/MME-UE-S1AP-ID/value", tree!(3)).unwrap();
+
+    // After a position, the name of another IE is an error that says which IE is there
+    println!("{}", inspect::select(&view, "/s1ap/2/eNB-UE-S1AP-ID/value").unwrap_err());
+
+    // The values, each with its path
+    for (path, value) in inspect::paths(&view) {
+        if path.ends_with("/value") {
+            println!("{path} = {value}");
+        }
+    }
+}
+
+/// The Rust block 25 of README.md.
+#[rustfmt::skip]
+fn block_25() {
+    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+    use oxirush_s1ap::{tree, tree::Value};
+
+    // A message whose one IE is a list of two items
+    let command = tree!({"message": "E-RABReleaseCommand", "ies": [
+        {"E-RABToBeReleasedList": [
+            {"E-RABItem": {"e-RAB-ID": 5, "cause": {"nas": "normal-release"}}},
+            {"E-RABItem": {"e-RAB-ID": 6, "cause": {"nas": "normal-release"}}},
+        ]},
+    ]});
+    let pdu = S1AP_PDU::from_tree(&command).unwrap();
+    let mut view = pdu.to_view().unwrap();
+
+    // An item by its position or by its name, which selects each item of that name
+    let select = |view, path| -> Vec<Value> {
+        let selected = inspect::select(view, path).unwrap();
+        selected.into_iter().cloned().collect()
+    };
+    assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/e-RAB-ID"), [tree!(6)]);
+    assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/E-RABItem/e-RAB-ID"), [tree!(5), tree!(6)]);
+
+    // The same value by the path that says each `value`
+    assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/value/1/value/e-RAB-ID"), [tree!(6)]);
+
+    // And by the names that the tree shows, joined: the item by its position, then its name
+    assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/E-RABItem/e-RAB-ID"), [tree!(6)]);
+
+    // The criticality of an item is the one of its object set
+    assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/0/criticality"), [tree!("ignore")]);
+
+    // An item is added at the end, as the IE that it is, and one is taken out
+    let item = tree!({"e-RAB-ID": 7, "cause": {"radioNetwork": "unspecified"}});
+    let item = tree!({"id": "E-RABItem", "criticality": "ignore", "value": item});
+    inspect::insert(&mut view, "/s1ap/E-RABToBeReleasedList/-", item).unwrap();
+    inspect::remove(&mut view, "/s1ap/E-RABToBeReleasedList/0").unwrap();
+
+    let edited = pdu.with_view(&view).unwrap();
+    println!("{}", edited.to_tree());
+}
+
+/// The Rust block 26 of README.md.
+#[rustfmt::skip]
+fn block_26() {
+    use oxirush_s1ap::inspect;
+
+    // The names that the value at a path can have, as the specification spells them
+    let names = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause/nas").unwrap();
+    println!("{:?}", names.unwrap());
+
+    // A value of another type has none
+    let choice = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause/value");
+    assert_eq!(choice, Ok(None));
+}
+
+/// The Rust block 27 of README.md.
+#[rustfmt::skip]
+fn block_27() {
+    use oxirush_s1ap::inspect;
+
+    // Whether a path can select anything in a message of a name, without a view
+    let check = |path| inspect::check_path("UEContextReleaseRequest", path);
+    assert_eq!(check("/s1ap/Cause/nas"), Ok(()));
+    assert_eq!(check("/s1ap/*/radioNetwork"), Ok(()));
+
+    // A name that is written wrong, and an IE that the message does not have
+    for wrong in ["/s1ap/Cause/radioNetwrok", "/s1ap/eNB-UE-S1AP-ID/valeu", "/s1ap/GUMMEI-ID"] {
+        println!("{}", check(wrong).unwrap_err());
+    }
+}
+
+/// The Rust block 28 of README.md.
+#[rustfmt::skip]
+fn block_28() {
+    use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1AP_PDU};
+    use oxirush_s1ap::tree;
+
+    // Written: the name of the type with its value, in place of the octets
+    let name = "SourceeNB-ToTargeteNB-TransparentContainer";
+    let required = tree!({"message": "HandoverRequired", "ies": [
+        {"MME-UE-S1AP-ID": 42},
+        {"eNB-UE-S1AP-ID": 7},
+        {"Source-ToTarget-TransparentContainer": {name: {
+            "rRC-Container": "0102",
+            "targetCell-ID": {"pLMNidentity": "208-93", "cell-ID": 4660},
+            "uE-HistoryInformation": [{"uTRAN-Cell": "00"}],
+        }}},
+    ]});
+
+    // A tree shows the octets that the container was encoded as
+    let pdu = S1AP_PDU::from_tree(&required).unwrap();
+    println!("{}", pdu.to_tree()["ies"][2]);
+
+    // Read: a path goes through the name of the type
+    let mut view = pdu.to_view().unwrap();
+    let container = format!("/s1ap/Source-ToTarget-TransparentContainer/{name}");
+    let cell = format!("{container}/targetCell-ID/cell-ID");
+    assert_eq!(inspect::check_path("HandoverRequired", &cell), Ok(()));
+
+    // The path is an error until `open` has decoded the octets, and selects the value after that
+    assert_eq!(inspect::select(&view, &cell).unwrap_err().kind(), ErrorKind::NotOpened);
+    inspect::open(&mut view, &cell).unwrap();
+    assert_eq!(inspect::select(&view, &cell).unwrap(), [&tree!(4660)]);
+
+    // What the octets carry, decoded
+    let decoded = format!("{container}/decoded");
+    println!("{}", inspect::select(&view, &decoded).unwrap()[0]);
+
+    // An edit goes into it, and what is not edited is sent as it was received
+    inspect::set(&mut view, &cell, tree!(7)).unwrap();
+    let edited = pdu.with_view(&view).unwrap();
+    println!("{}", edited.to_tree()["ies"][2]);
+}
+
+/// The Rust block 29 of README.md.
+#[rustfmt::skip]
+fn block_29() {
+    use oxirush_s1ap::helpers::{plmn, tai};
+    use oxirush_s1ap::s1ap::S1AP_PDU;
+
+    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    let pdu = S1AP_PDU::decode(&bytes).unwrap();
+    let text = serde_json::to_string(&pdu).unwrap();
+    let read: S1AP_PDU = serde_json::from_str(&text).unwrap();
+    assert_eq!(read.encode().unwrap(), bytes);
+
+    // A value alone has the form that a tree shows it in: the MCC and the MNC, and a number
+    let area = tai(plmn("208", "93").unwrap(), [0x00, 0x01]);
+    println!("{}", serde_json::to_string(&area).unwrap());
 }

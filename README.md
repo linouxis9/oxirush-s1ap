@@ -108,7 +108,7 @@ others at the revisions that it is tested with:
 oxirush-s1ap = { git = "https://github.com/linouxis9/oxirush-s1ap", features = ["inspect"] }
 
 [patch.crates-io]
-oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "cf9cf1ada0d74ac0a23f3ecd823d40acd5f96f24" }
+oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "c39d2331388c3adf9bc2393169fc4c02094d5e98" }
 oxirush-utils = { git = "https://github.com/linouxis9/oxirush-utils", rev = "eb1c453cd08dc3d0b712f53d4273595793cb9106" }
 ```
 
@@ -117,7 +117,7 @@ In a clone of the repository, cargo takes them with `--config`, as CI does:
 ```bash
 cargo test --all-features \
   --config 'patch.crates-io.oxirush-aper.git="https://github.com/linouxis9/oxirush-aper"' \
-  --config 'patch.crates-io.oxirush-aper.rev="cf9cf1ada0d74ac0a23f3ecd823d40acd5f96f24"' \
+  --config 'patch.crates-io.oxirush-aper.rev="c39d2331388c3adf9bc2393169fc4c02094d5e98"' \
   --config 'patch.crates-io.oxirush-utils.git="https://github.com/linouxis9/oxirush-utils"' \
   --config 'patch.crates-io.oxirush-utils.rev="eb1c453cd08dc3d0b712f53d4273595793cb9106"'
 ```
@@ -338,6 +338,43 @@ fn handle(request: &UEContextReleaseRequest) -> Result<(), Error> {
 A field is `req`, `opt` or `lax`, its name and its type, then the IE with a
 name for its decoded value; after `=>` comes what the field keeps of it.
 
+The macro takes the PDU too, as the message that it holds, without
+`decode_value()`: it walks the IEs of the message once, where they are, and
+decodes those that a field asks for. `ie::<T>()` and `ies::<T>()` of a PDU and
+of a message read one IE, by its marker type in `oxirush_s1ap::ie`: the first
+occurrence, and every occurrence in order.
+
+```rust
+use oxirush_s1ap::{Error, extract_s1ap_ies, ie, s1ap::*};
+
+fn main() -> Result<(), Error> {
+    // A UE CONTEXT RELEASE REQUEST, read in the buffer that it was received in
+    let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    let pdu = S1AP_PDU::decode_borrowed(&octets)?;
+
+    // The IEs of its message, from the PDU: the Cause is not decoded
+    extract_s1ap_ies!(pdu, UEContextReleaseRequest,
+        req mme_id: u32 = MME_UE_S1AP_ID(id),
+        req enb_id: u32 = eNB_UE_S1AP_ID(id),
+    );
+    println!("MME={mme_id} eNB={enb_id}");
+
+    // One IE, by its marker type
+    let cause = pdu.ie::<ie::Cause>().unwrap()?;
+    println!("{cause:?}");
+    Ok(())
+}
+```
+
+```text
+MME=42 eNB=7
+radioNetwork(user_inactivity)
+```
+
+When a message has an IE twice, the macro, `ie` and `with_s1ap_ie_mut!` take
+the first one and decode no other; `ies` gives each, and `check()` reports the
+second as `Deviation::RepeatedIe`.
+
 | Field | Is | When the IE is not there | When it does not decode |
 |-------|----|--------------------------|-------------------------|
 | `req` | A `T` | An error of the kind `MissingIe` | An error of the kind `UndecodableIe` |
@@ -481,6 +518,11 @@ fn main() -> Result<(), oxirush_s1ap::Error> {
         println!("E-RAB {} with QCI {}", bearer.e_rab_id.0, bearer.e_rab_level_qos_parameters.qci.0);
     }
 
+    // Or each item of the list, walked in the PDU without building the list
+    for bearer in pdu.items::<oxirush_s1ap::ie::E_RABToBeSetupListCtxtSUReq>() {
+        println!("E-RAB {}", bearer?.e_rab_id.0);
+    }
+
     // The octets of a Source-ToTarget-TransparentContainer, as the type that they carry
     let octets = hex::decode("000201020002f83900012340200100").unwrap();
     let container: SourceeNBToTargeteNBTransparentContainer = decode_open_type(&octets)?;
@@ -492,6 +534,7 @@ fn main() -> Result<(), oxirush_s1ap::Error> {
 
 ```text
 E-RAB 5 with QCI 9
+E-RAB 5
 EUTRANCGI { plmn_identity: PLMNidentity(208-93), cell_id: CellIdentity(0x1234/28), ie_extensions: None }
 ```
 
@@ -546,6 +589,16 @@ Cause (IE 2) is mandatory, and the message does not have it
 
 `check()` decodes the value of each IE, not the IEs that a value holds as
 octets, and does not judge a conditional IE: its condition is prose.
+
+`check_structure()` compares the container alone with the object set: the
+presence, the order, the repetition and the criticality of the IEs, which is
+what TS 36.413 clause 10.3 has a receiver answer, and decodes no value. A
+receiver that checks the structure of a message and reads the IEs that it
+needs, with the macro or `ie`, pays for those IEs alone: decoding an IE checks
+its value, and one that does not decode is an error of the kind
+`UndecodableIe` there, which `Deviation::of` makes a deviation of. `check()`
+is for a tool that looks at every value: it costs 4 to 7 times as much
+([Performance](#performance)).
 
 ## Answer a faulty message
 
@@ -1148,30 +1201,68 @@ average of the machine between 4.2 and 8.2 (of 16 threads, the other thread of
 that core among them). The script fetches each implementation at a pinned
 version: hampi 0.7.2 and rasn 0.29.0 from crates.io, Open5GS v2.8.0 from GitHub,
 pycrate 0.8.1 from PyPI, and the ASN.1 from the archive of 3GPP. From the root
-of the repository, with what the script says it needs:
+of the repository, with oxirush-aper beside it, whose `protocols/benches/compare/`
+has the script, and with what the script says it needs:
 
 ```sh
-python3 benches/compare/compare.py --core 3 --perf "sudo -n perf"
+python3 ../oxirush-aper/protocols/benches/compare/compare.py --core 3 --perf "sudo -n perf"
 ```
 
+Reading the IEs of a message and checking a PDU, per call, on the four
+messages that `benches/` writes: `decode_value()` and then the macro on the
+message, which decodes the container of the message first; the macro on the
+PDU (`extract_s1ap_ies!(pdu, ...)`), which walks the octets of its message once and
+decodes the IEs that its fields ask for; and `ie::<T>()` of the PDU, which
+decodes one IE. In `benches/`, `cargo run --release --bin readers --features
+readers` measures them:
+
+| Message | the first IE: `decode_value()`, then the macro | the macro on the PDU | `ie::<T>()` | every IE: `decode_value()`, then the macro | the macro on the PDU |
+|---|---|---|---|---|---|
+| An INITIAL CONTEXT SETUP REQUEST of 8 E-RABs | 176 ns, 1 allocation | 69 ns, no allocation | 51 ns, no allocation | 591 ns, 2 allocations | 469 ns, 1 allocation |
+| An E-RAB SETUP REQUEST of 8 E-RABs | 113 ns, 1 allocation | 51 ns, no allocation | 50 ns, no allocation | 314 ns, 2 allocations | 244 ns, 1 allocation |
+| A HANDOVER REQUIRED of a container of 4,000 octets | 159 ns, 1 allocation | 59 ns, no allocation | 50 ns, no allocation | 355 ns, 1 allocation | 246 ns, no allocation |
+| A PAGING of 16 tracking areas | 136 ns, 1 allocation | 52 ns, no allocation | 46 ns, no allocation | 411 ns, 2 allocations | 315 ns, 1 allocation |
+
+`items::<L>()` walks the eight E-RABs of the E-RAB SETUP REQUEST in the octets
+of the PDU in 1,328 ns without an allocation, where `decode_value()`, the
+macro and then the decoding of each item take 1,195 ns and 2 allocations:
+the time is that of decoding the items.
+
+`check()`, which decodes the value of each IE, and `check_structure()`, which
+compares the container alone with the object set of its message, on the PDUs
+of the comparison (`cargo run --release --bin checks` in `benches/`):
+
+| PDU (octets) | `check()` | `check_structure()` | `check()` / `check_structure()` |
+|---|---|---|---|
+| DownlinkNASTransport (73) | 640 ns, 7 allocations | 173 ns, 2 allocations | 3.7x |
+| InitialContextSetupRequest (197) | 1,672 ns, 13 allocations | 295 ns, 2 allocations | 5.7x |
+| S1SetupResponse (45) | 814 ns, 12 allocations | 132 ns, 2 allocations | 6.2x |
+| HandoverRequest (146) | 2,113 ns, 17 allocations | 318 ns, 2 allocations | 6.6x |
+| UEContextReleaseCommand (21) | 457 ns, 5 allocations | 102 ns, 2 allocations | 4.5x |
+| InitialUEMessage (48) | 917 ns, 8 allocations | 211 ns, 2 allocations | 4.3x |
+
+These were taken on the same machine, each program on one core, at a load
+average of 10 to 12.
+
 A clean `cargo build -j 5` of the crate and its dependencies on Rust 1.88, on
-five cores of the same machine while it ran other work (a load average of 4 to
-9), with the debug information of the default profile and without it:
+five cores of the same machine while it ran other work (a load average of 9 to
+12), with the debug information of the default profile and without it:
 
 | Build | Time | Peak memory | Peak memory, `CARGO_PROFILE_DEV_DEBUG=0` |
 |-------|------|-------------|------------------------------------------|
-| No feature | 9 s | 0.69 GiB | 0.63 GiB |
-| `inspect` | 18 s | 0.98 GiB | 0.84 GiB |
-| `serde` | 19 s | 1.06 GiB | 0.87 GiB |
-| `inspect`, `--release` | 21 s | 0.92 GiB | the same |
+| No feature | 13 s | 0.75 GiB | 0.66 GiB |
+| `inspect` | 21 s | 1.12 GiB | 0.88 GiB |
+| `serde` | 24 s | 1.10 GiB | 0.90 GiB |
+| `inspect`, `--release` | 28 s | 0.92 GiB | the same |
 
 On a message of 65,535 IEs of one name, 393 KB, `decode` takes 0.01 ms, `check`
-7.22 ms, `to_view` 76 ms and 37 MB, `with_view` 136 ms and 48 MB,
-`inspect::paths` 44 ms, and an edit at a path 0.02 ms, on one core of the same
-machine at a load average of 8 to 12. In `benches/`, `cargo bench --bench scale`
-measures them, `python3 build_cost.py +1.88.0 --features inspect` a clean build,
-and `cargo bench --bench codec` and `--bench allocations` the codec on the PDUs
-of the tests.
+5.76 ms, `to_view` 71 ms and 37 MB, `with_view` 132 ms and 48 MB,
+`inspect::paths` 40 ms, and an edit at a path 0.01 ms, on one core of the same
+machine at a load average of 7 to 9. In `benches/`, `cargo bench --bench scale`
+measures them, and `cargo bench --bench codec` and `--bench allocations` the
+codec on the PDUs of the tests; from the root of the repository,
+`python3 ../oxirush-aper/protocols/benches/build_cost.py +1.88.0 --features inspect`
+measures a clean build.
 
 ## Tests and fuzzing
 
@@ -1179,7 +1270,8 @@ The tests read the 101 messages and the 284 vectors that pycrate 0.8.1
 encoded from the ASN.1, and 81 PDUs that the MME of Open5GS 2.8.0 sent in lab
 runs, through the codec, the views and the trees; `oracle/` compares each,
 cut, lengthened and with changed bits, with the codec of rasn 0.29, and
-`tests/package.sh` runs the tests from the package alone. `fuzz/` has three
+`protocols/tests/package.sh` of oxirush-aper runs the tests from the package
+alone. `fuzz/` has three
 [cargo-fuzz](https://crates.io/crates/cargo-fuzz) targets, `decode`, `view`
 and `paths`, which CI runs for a minute each from the PDUs of the tests and
 from each of them under a procedure code that the specification does not
@@ -1189,7 +1281,7 @@ inspect messages.
 ```bash
 cargo test --all-features   # with the --config lines of Installation
 cd oracle && cargo test     # against the codec of rasn
-./fuzz/seed.sh && RUSTFLAGS="--cfg oxirush_s1ap_hooks" cargo +nightly fuzz run view -- -max_total_time=60
+../oxirush-aper/protocols/fuzz/seed.sh && RUSTFLAGS="--cfg oxirush_s1ap_hooks" cargo +nightly fuzz run view -- -max_total_time=60
 cargo run --example s1ap_build_pdu
 ```
 
@@ -1197,7 +1289,8 @@ The bindings are generated: [CONTRIBUTING.md](CONTRIBUTING.md) says how, how
 the vectors were made and the PDUs captured, and what a change to them or to
 the pinned revisions takes. A pull request comes with a test for what it
 changes; the Rust blocks of this page are checked with what they print
-([`tests/readme.rs`](tests/readme.rs) says how). Sign off your commits
+(`tests/readme.rs`, which `protocols/tests/readme.py` of oxirush-aper writes
+from this page). Sign off your commits
 (`git commit -s`): by contributing you agree to the
 [Developer Certificate of Origin](https://developercertificate.org/).
 

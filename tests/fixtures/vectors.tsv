@@ -1,5 +1,5 @@
 # 3GPP TS 36.413 v19.2.0; pycrate 0.8.1 vectors with content, which
-# tests/fixtures/generate.py writes. The vectors of the passes hold
+# oxirush-aper/protocols/tests/fixtures/generate.py writes. The vectors of the passes hold
 # 790 IEs of object sets, 136 members that may be absent and are
 # there and 133 that are absent, 78 alternatives of CHOICE types,
 # 521 values of ENUMERATED types, 16 numbers and 9 sizes after the
