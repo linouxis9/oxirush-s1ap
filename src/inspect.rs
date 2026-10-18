@@ -88,6 +88,262 @@
 //! does not have is refused, and so is one beside the `decoded` value of a transfer.
 //! Hexadecimal is written in lower case and taken in either.
 //!
+//! # Examples
+//!
+//! The README has the main tasks of a PDU as JSON; these are the others.
+//!
+//! ## Add or remove an IE
+//!
+//! ```
+//! # use std::fmt::Write as _;
+//! # let mut printed = String::new();
+//! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
+//! use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+//! use oxirush_s1ap::tree;
+//!
+//! let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+//! let pdu = S1AP_PDU::decode(&bytes).unwrap();
+//! let mut view = pdu.to_view().unwrap();
+//!
+//! // An IE is added at the end, by its name and its typed value
+//! let name = tree!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
+//! inspect::insert(&mut view, "/s1ap/-", name).unwrap();
+//!
+//! // Before another IE, by its number and its octets
+//! let unknown = tree!({"id": 60000, "criticality": "ignore", "octets": "c0ffee"});
+//! inspect::insert(&mut view, "/s1ap/Cause", unknown).unwrap();
+//!
+//! // An IE is taken out by its name
+//! inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID").unwrap();
+//!
+//! let edited = pdu.with_view(&view).unwrap();
+//! println!("{}", edited.to_tree()["ies"]);
+//! # assert_eq!(printed, r##"[{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"c0ffee"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"eNBname":"enb-1","criticality":"ignore"}]
+//! # "##);
+//! ```
+//!
+//! ```json
+//! [{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"c0ffee"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"eNBname":"enb-1","criticality":"ignore"}]
+//! ```
+//!
+//! ## A repeated IE
+//!
+//! ```
+//! # use std::fmt::Write as _;
+//! # let mut printed = String::new();
+//! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
+//! use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+//! use oxirush_s1ap::tree;
+//!
+//! // A message that has one IE twice
+//! let twice = tree!({"message": "UEContextReleaseRequest", "ies": [
+//!     {"MME-UE-S1AP-ID": 1},
+//!     {"eNB-UE-S1AP-ID": 7},
+//!     {"MME-UE-S1AP-ID": 2},
+//! ]});
+//! let pdu = S1AP_PDU::from_tree(&twice).unwrap();
+//! let mut view = pdu.to_view().unwrap();
+//!
+//! // The name selects both, in the order of the message
+//! let both = inspect::select(&view, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
+//! assert_eq!(both, [&tree!(1), &tree!(2)]);
+//!
+//! // Each has its position, which is how `paths` names it, and its name may follow
+//! inspect::set(&mut view, "/s1ap/2/MME-UE-S1AP-ID/value", tree!(3)).unwrap();
+//!
+//! // After a position, the name of another IE is an error that says which IE is there
+//! println!("{}", inspect::select(&view, "/s1ap/2/eNB-UE-S1AP-ID/value").unwrap_err());
+//!
+//! // The values, each with its path
+//! for (path, value) in inspect::paths(&view) {
+//!     if path.ends_with("/value") {
+//!         println!("{path} = {value}");
+//!     }
+//! }
+//! # assert_eq!(printed, r##"this IE is MME-UE-S1AP-ID, not eNB-UE-S1AP-ID: "eNB-UE-S1AP-ID" is not a member of this value, which has none, at /s1ap/2/eNB-UE-S1AP-ID/value
+//! # /s1ap/0/value = 1
+//! # /s1ap/eNB-UE-S1AP-ID/value = 7
+//! # /s1ap/2/value = 3
+//! # "##);
+//! ```
+//!
+//! ```text
+//! this IE is MME-UE-S1AP-ID, not eNB-UE-S1AP-ID: "eNB-UE-S1AP-ID" is not a member of this value, which has none, at /s1ap/2/eNB-UE-S1AP-ID/value
+//! /s1ap/0/value = 1
+//! /s1ap/eNB-UE-S1AP-ID/value = 7
+//! /s1ap/2/value = 3
+//! ```
+//!
+//! ## An item of a list
+//!
+//! ```
+//! # use std::fmt::Write as _;
+//! # let mut printed = String::new();
+//! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
+//! use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+//! use oxirush_s1ap::{tree, tree::Value};
+//!
+//! // A message whose one IE is a list of two items
+//! let command = tree!({"message": "E-RABReleaseCommand", "ies": [
+//!     {"E-RABToBeReleasedList": [
+//!         {"E-RABItem": {"e-RAB-ID": 5, "cause": {"nas": "normal-release"}}},
+//!         {"E-RABItem": {"e-RAB-ID": 6, "cause": {"nas": "normal-release"}}},
+//!     ]},
+//! ]});
+//! let pdu = S1AP_PDU::from_tree(&command).unwrap();
+//! let mut view = pdu.to_view().unwrap();
+//!
+//! // An item by its position or by its name, which selects each item of that name
+//! let select = |view, path| -> Vec<Value> {
+//!     let selected = inspect::select(view, path).unwrap();
+//!     selected.into_iter().cloned().collect()
+//! };
+//! assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/e-RAB-ID"), [tree!(6)]);
+//! assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/E-RABItem/e-RAB-ID"), [tree!(5), tree!(6)]);
+//!
+//! // The same value by the path that says each `value`
+//! assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/value/1/value/e-RAB-ID"), [tree!(6)]);
+//!
+//! // And by the names that the tree shows, joined: the item by its position, then its name
+//! assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/E-RABItem/e-RAB-ID"), [tree!(6)]);
+//!
+//! // The criticality of an item is the one of its object set
+//! assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/0/criticality"), [tree!("ignore")]);
+//!
+//! // An item is added at the end, as the IE that it is, and one is taken out
+//! let item = tree!({"e-RAB-ID": 7, "cause": {"radioNetwork": "unspecified"}});
+//! let item = tree!({"id": "E-RABItem", "criticality": "ignore", "value": item});
+//! inspect::insert(&mut view, "/s1ap/E-RABToBeReleasedList/-", item).unwrap();
+//! inspect::remove(&mut view, "/s1ap/E-RABToBeReleasedList/0").unwrap();
+//!
+//! let edited = pdu.with_view(&view).unwrap();
+//! println!("{}", edited.to_tree());
+//! # assert_eq!(printed, r##"{"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}}},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
+//! # "##);
+//! ```
+//!
+//! ```json
+//! {"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}}},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
+//! ```
+//!
+//! ## The names of an ENUMERATED
+//!
+//! ```
+//! # use std::fmt::Write as _;
+//! # let mut printed = String::new();
+//! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
+//! use oxirush_s1ap::inspect;
+//!
+//! // The names that the value at a path can have, as the specification spells them
+//! let names = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause/nas").unwrap();
+//! println!("{:?}", names.unwrap());
+//!
+//! // A value of another type has none
+//! let choice = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause/value");
+//! assert_eq!(choice, Ok(None));
+//! # assert_eq!(printed, r##"["normal-release", "authentication-failure", "detach", "unspecified", "csg-subscription-expiry", "uE-not-in-PLMN-serving-area", "iab-not-authorized"]
+//! # "##);
+//! ```
+//!
+//! ```text
+//! ["normal-release", "authentication-failure", "detach", "unspecified", "csg-subscription-expiry", "uE-not-in-PLMN-serving-area", "iab-not-authorized"]
+//! ```
+//!
+//! A name is read in any case and with any separators, as `"Normal Release"`
+//! above, and shown as the specification spells it.
+//!
+//! ## Check a path before use
+//!
+//! ```
+//! # use std::fmt::Write as _;
+//! # let mut printed = String::new();
+//! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
+//! use oxirush_s1ap::inspect;
+//!
+//! // Whether a path can select anything in a message of a name, without a view
+//! let check = |path| inspect::check_path("UEContextReleaseRequest", path);
+//! assert_eq!(check("/s1ap/Cause/nas"), Ok(()));
+//! assert_eq!(check("/s1ap/*/radioNetwork"), Ok(()));
+//!
+//! // A name that is written wrong, and an IE that the message does not have
+//! for wrong in ["/s1ap/Cause/radioNetwrok", "/s1ap/eNB-UE-S1AP-ID/valeu", "/s1ap/GUMMEI-ID"] {
+//!     println!("{}", check(wrong).unwrap_err());
+//! }
+//! # assert_eq!(printed, r##""radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
+//! # "valeu" is not a member of this value, which has none; an IE itself has id, criticality, value, octets, at /s1ap/eNB-UE-S1AP-ID/valeu
+//! # "GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
+//! # "##);
+//! ```
+//!
+//! ```text
+//! "radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
+//! "valeu" is not a member of this value, which has none; an IE itself has id, criticality, value, octets, at /s1ap/eNB-UE-S1AP-ID/valeu
+//! "GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
+//! ```
+//!
+//! The functions `message_ies`, `message_ie_criticalities`, `item_criticality`
+//! and the others of this module give what the ASN.1 says of each message, which
+//! `check_path` reads.
+//!
+//! ## The container of a handover
+//!
+//! Written, read through [`open`], and edited, as
+//! [Octets that carry a type](#octets-that-carry-a-type) says:
+//!
+//! ```
+//! # use std::fmt::Write as _;
+//! # let mut printed = String::new();
+//! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
+//! use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1AP_PDU};
+//! use oxirush_s1ap::tree;
+//!
+//! // Written: the name of the type with its value, in place of the octets
+//! let name = "SourceeNB-ToTargeteNB-TransparentContainer";
+//! let required = tree!({"message": "HandoverRequired", "ies": [
+//!     {"MME-UE-S1AP-ID": 42},
+//!     {"eNB-UE-S1AP-ID": 7},
+//!     {"Source-ToTarget-TransparentContainer": {name: {
+//!         "rRC-Container": "0102",
+//!         "targetCell-ID": {"pLMNidentity": "208-93", "cell-ID": 4660},
+//!         "uE-HistoryInformation": [{"uTRAN-Cell": "00"}],
+//!     }}},
+//! ]});
+//!
+//! // A tree shows the octets that the container was encoded as
+//! let pdu = S1AP_PDU::from_tree(&required).unwrap();
+//! println!("{}", pdu.to_tree()["ies"][2]);
+//!
+//! // Read: a path goes through the name of the type
+//! let mut view = pdu.to_view().unwrap();
+//! let container = format!("/s1ap/Source-ToTarget-TransparentContainer/{name}");
+//! let cell = format!("{container}/targetCell-ID/cell-ID");
+//! assert_eq!(inspect::check_path("HandoverRequired", &cell), Ok(()));
+//!
+//! // The path is an error until `open` has decoded the octets, and selects the value after that
+//! assert_eq!(inspect::select(&view, &cell).unwrap_err().kind(), ErrorKind::NotOpened);
+//! inspect::open(&mut view, &cell).unwrap();
+//! assert_eq!(inspect::select(&view, &cell).unwrap(), [&tree!(4660)]);
+//!
+//! // What the octets carry, decoded
+//! let decoded = format!("{container}/decoded");
+//! println!("{}", inspect::select(&view, &decoded).unwrap()[0]);
+//!
+//! // An edit goes into it, and what is not edited is sent as it was received
+//! inspect::set(&mut view, &cell, tree!(7)).unwrap();
+//! let edited = pdu.with_view(&view).unwrap();
+//! println!("{}", edited.to_tree()["ies"][2]);
+//! # assert_eq!(printed, r##"{"Source-ToTarget-TransparentContainer":"000201020002f83900012340200100"}
+//! # {"rRC-Container":"0102","targetCell-ID":{"pLMNidentity":"208-93","cell-ID":4660},"uE-HistoryInformation":[{"uTRAN-Cell":"00"}]}
+//! # {"Source-ToTarget-TransparentContainer":"000201020002f83900000070200100"}
+//! # "##);
+//! ```
+//!
+//! ```text
+//! {"Source-ToTarget-TransparentContainer":"000201020002f83900012340200100"}
+//! {"rRC-Container":"0102","targetCell-ID":{"pLMNidentity":"208-93","cell-ID":4660},"uE-HistoryInformation":[{"uTRAN-Cell":"00"}]}
+//! {"Source-ToTarget-TransparentContainer":"000201020002f83900000070200100"}
+//! ```
+//!
 //! # Paths
 //!
 //! [`paths`] gives each value of a view with the path that selects it, [`select`] the
@@ -260,6 +516,25 @@
 //! written as its digits where JSON has a number for it, a bit string with other octets
 //! than its length has and padding bits that are not zero are each an error, which says
 //! where the fault is by the names of the value.
+//!
+//! ## Values as they are usually written
+//!
+//! A tree, a view and a value alone show the values of some types as they are
+//! usually written, and take them so or in the form of their ASN.1 type. A string
+//! of decimal digits is never read as octets: octets whose hexadecimal has no
+//! letter are written after `0x`.
+//!
+//! | Type | Notation |
+//! |------|----------|
+//! | `PLMNidentity` | `"208-93"`, the MCC and the MNC, or its octets: `"02f839"`, `"0x134001"`. `"310410"` is refused, as it is read as 310-410 and as the octets 0x310410 |
+//! | `TransportLayerAddress` | `"10.0.0.1"`, `"2001:db8::1"`, or the two with a comma |
+//! | `IMSI` | its digits |
+//! | `TAC`, `FiveGSTAC`, `LAC`, `RAC`, `CI`, `GTP-TEID`, `M-TMSI`, `MME-Group-ID`, `MME-Code`, `Port-Number`, `CellIdentity`, `NRCellIdentity`, `UL-NAS-Count` | a number, also read in hexadecimal as `"0x…"`. A string of digits, as `"1234"`, is refused: it is the number 1234 and the octets 0x1234 |
+//! | `ENUMERATED` | the name of the value, read in any case |
+//! | `INTEGER` | a number, which 64 bits hold, as the bindings hold it |
+//! | a bit string whose size varies, as the identifier of a gNB | `{"value": "000004", "length": 22}`: its octets in hexadecimal, from its first bit, and its length in bits |
+//! | a bit string of another size than the one that its type gives beside an extension marker | `{"value": "c00000", "length": 24}`, where a mask of the 16 bits of its type is `"c000"` |
+//! | the other strings: keys, the NAS-PDU and the other containers, and the identifiers of an eNB, whose length says which kind they are | hexadecimal, written in lower case and read in either |
 //!
 //! # Errors
 //!
@@ -499,6 +774,18 @@ impl S1APPDU<'_> {
     ///
     /// [`with_view`](Self::with_view) is this for the view of a PDU that is at hand, and
     /// refuses the view of another message.
+    ///
+    /// ```
+    /// use oxirush_s1ap::s1ap::S1AP_PDU;
+    ///
+    /// // A view, kept as JSON text and read back
+    /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    /// let view = S1AP_PDU::decode(&octets)?.to_view()?;
+    /// let text = view.to_string();
+    /// let read: oxirush_s1ap::tree::Value = text.parse().unwrap();
+    /// assert_eq!(S1AP_PDU::from_view(&read)?.encode()?, octets);
+    /// # Ok::<(), oxirush_s1ap::Error>(())
+    /// ```
     pub fn from_view(view: &Value) -> Result<S1AP_PDU, Error> {
         S1AP_PDU::of_parts(shared::view_parts(&TABLES, view)?)
     }

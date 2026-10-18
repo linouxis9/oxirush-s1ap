@@ -6,6 +6,42 @@
 //! None of them panics. One that takes a number for a field of a fixed size
 //! gives an [`Error`] of the kind `Argument` for a number that does not fit,
 //! and cuts none short.
+//!
+//! ```
+//! # use std::fmt::Write as _;
+//! # let mut printed = String::new();
+//! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
+//! use oxirush_s1ap::helpers::*;
+//!
+//! // A PLMN from its MCC and its MNC, and what is identified within it
+//! let network = plmn("208", "93").unwrap();
+//! let mme = gummei(network, 1, 1); // group, code
+//! let tracking_area = tai(network, [0x00, 0x01]); // TAC
+//! let cell = eutran_cgi(network, EnbKind::Macro, 0x12345, 7).unwrap(); // eNB, cell
+//! let enb = global_enb_id(network, EnbKind::Macro, 0x12345).unwrap();
+//! let home = global_enb_id(network, EnbKind::Home, 0x123_4567).unwrap();
+//!
+//! // A bit string from octets, and the algorithms of a UE: the first octet
+//! // of its encryption bitmap, then of its integrity bitmap
+//! let algorithm_mask = oxirush_s1ap::BitString::from([0xe0]);
+//! let capabilities = ue_security_capabilities(0xe0, 0xe0);
+//!
+//! // What is no MCC, and a macro eNB ID that does not fit in its 20 bits
+//! println!("{}", plmn("20", "93").unwrap_err());
+//! println!("{}", global_enb_id(network, EnbKind::Macro, 0x100000).unwrap_err());
+//! # assert_eq!(printed, r##""20" is not an MCC: it has three digits, 0 to 9
+//! # the macro eNB ID 1048576 does not fit in 20 bits
+//! # "##);
+//! ```
+//!
+//! ```text
+//! "20" is not an MCC: it has three digits, 0 to 9
+//! the macro eNB ID 1048576 does not fit in 20 bits
+//! ```
+//!
+//! A PLMN identity has its digits in the order of TS 36.413 clause 9.2.3.8:
+//! `plmn("310", "410")` is the octets `13 40 01`, where a NAS message has
+//! `13 00 14`. [`plmn_from`] reads the MCC and the MNC of a PLMN identity.
 
 use oxirush_aper::{BitString, Bits};
 use oxirush_utils::identity::Plmn;
@@ -57,6 +93,15 @@ fn digits(text: &str) -> Option<Vec<u8>> {
 ///
 /// An error of the kind `Argument` unless `mcc` is three decimal digits and `mnc` two
 /// or three.
+///
+/// ```
+/// use oxirush_s1ap::helpers::{plmn, plmn_from};
+///
+/// let network = plmn("310", "410")?;
+/// assert_eq!(network.0.0, [0x13, 0x40, 0x01]);
+/// assert_eq!(plmn_from(&network), Some(("310".into(), "410".into())));
+/// # Ok::<(), oxirush_s1ap::Error>(())
+/// ```
 pub fn plmn(mcc: &str, mnc: &str) -> Result<PLMNidentity, Error> {
     let refused = |what: &str, text: &str, has: &str| {
         Error::argument(format!(
@@ -76,6 +121,15 @@ pub fn plmn(mcc: &str, mnc: &str) -> Result<PLMNidentity, Error> {
 /// `None` for octets that are not a PLMN identity: a half octet is no digit, where it
 /// is not the filler before an MNC of two digits. `ab cd ef` is none, and so is
 /// `02 f8 f9`.
+///
+/// ```
+/// use oxirush_s1ap::helpers::plmn_from;
+/// use oxirush_s1ap::s1ap::{PLMNidentity, TBCDSTRING};
+///
+/// let network = PLMNidentity(TBCDSTRING([0x02, 0xf8, 0x39]));
+/// assert_eq!(plmn_from(&network), Some(("208".into(), "93".into())));
+/// assert_eq!(plmn_from(&PLMNidentity(TBCDSTRING([0xab, 0xcd, 0xef]))), None);
+/// ```
 pub fn plmn_from(identity: &PLMNidentity) -> Option<(String, String)> {
     plmn_digits(identity.0.0)
 }

@@ -51,34 +51,7 @@ UEContextReleaseRequest
 MME=Some(42) eNB=Some(7) cause=Some(radioNetwork(user_inactivity))
 ```
 
-With the `inspect` feature, a PDU is also JSON, read, edited and written by
-the names of the specification:
-
-```rust
-use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-use oxirush_s1ap::tree;
-
-// The same message as a tree: its name and its IEs by name
-let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-let pdu = S1AP_PDU::decode(&bytes).unwrap();
-println!("{}", pdu.to_tree());
-
-// Its view is edited at a path, and is a PDU again
-let mut view = pdu.to_view().unwrap();
-let lost = tree!("radio-connection-with-ue-lost");
-inspect::set(&mut view, "/s1ap/Cause/radioNetwork", lost).unwrap();
-let edited = pdu.with_view(&view).unwrap();
-println!("{}", edited.to_tree());
-
-// Its octets are those that the typed example built
-let octets = hex::encode(edited.encode().unwrap());
-assert_eq!(octets, "0012401500000300000002002a0008000200070002400202a0");
-```
-
-```json
-{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
-{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"radio-connection-with-ue-lost"}}]}
-```
+The text under a block is what the block prints.
 
 This page describes 0.3.0, which is not on crates.io yet.
 
@@ -127,6 +100,214 @@ The minimum supported Rust version is 1.88. The crate depends on one version of
 bindings are its types, as `Octets`, `Bits` and `Error`: a program names them
 through `oxirush_s1ap::aper`.
 
+## Answer an eNB, from S1 SETUP to the INITIAL CONTEXT SETUP
+
+The MME's side of an eNB and of the first UE that it serves: the eNB sets up
+the S1 interface, then sends the first NAS message of the UE; the MME answers
+the UE in a DOWNLINK NAS TRANSPORT, and sets up the default bearer of the UE
+with its security context, KeNB, in an INITIAL CONTEXT SETUP REQUEST. The
+NAS-PDUs are octets of [oxirush-nas](https://github.com/linouxis9/oxirush-nas),
+and KeNB is the one that the next section derives with
+[oxirush-security](https://github.com/linouxis9/oxirush-security).
+
+```rust
+use oxirush_s1ap::helpers::*;
+use oxirush_s1ap::{BitString, build_s1ap, build_s1ap_ie, extract_s1ap_ies, ie, s1ap::*};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let network = plmn("208", "93")?;
+
+    // The eNB: S1 SETUP REQUEST, its identity, its name and the tracking
+    // area that it serves
+    let enb = global_enb_id(network, EnbKind::Macro, 0x12345)?;
+    let area = SupportedTAsItem::new(TAC([0, 1]), BPLMNs(vec![network]), None);
+    let request = build_s1ap!(InitiatingMessage, S1Setup, S1SetupRequest,
+        Global_ENB_ID(enb),
+        eNBname("enb-1"),
+        SupportedTAs(SupportedTAs(vec![area])),
+        DefaultPagingDRX(PagingDRX::v128),
+    )?;
+
+    // The MME reads it, and answers with its name and its GUMMEIs
+    let received = S1AP_PDU::decode(&request.encode()?)?;
+    extract_s1ap_ies!(received, S1SetupRequest,
+        opt name: String = eNBname(name) => name.0.into_owned(),
+        req areas: SupportedTAs = SupportedTAs(areas) => areas,
+    );
+    println!("S1 SETUP REQUEST from {}: {} tracking area", name.unwrap_or_default(), areas.0.len());
+    let served = ServedGUMMEIsItem::new(
+        ServedPLMNs(vec![network]),
+        ServedGroupIDs(vec![MMEGroupID([0, 1])]),
+        ServedMMECs(vec![MMECode([1])]),
+        None,
+    );
+    let response = build_s1ap!(SuccessfulOutcome, S1Setup, S1SetupResponse,
+        MMEname("mme-1"),
+        ServedGUMMEIs(ServedGUMMEIs(vec![served])),
+        RelativeMMECapacity(RelativeMMECapacity(255)),
+    )?;
+    println!("S1 SETUP RESPONSE {}", hex::encode(response.encode()?));
+
+    // The eNB: INITIAL UE MESSAGE, with the ATTACH REQUEST of a UE and the
+    // cell that the UE is in
+    let attach = hex::decode("07410108298039000000001002e0e000040201d031")?;
+    let initial = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+        eNB_UE_S1AP_ID(7u32),
+        NAS_PDU(attach),
+        TAI(tai(network, [0, 1])),
+        EUTRAN_CGI(eutran_cgi(network, EnbKind::Macro, 0x12345, 1)?),
+        RRC_Establishment_Cause(RRCEstablishmentCause::mo_Signalling),
+    )?;
+
+    // The MME reads the IEs that it needs where they are in the octets
+    let octets = initial.encode()?;
+    let received = S1AP_PDU::decode_borrowed(&octets)?;
+    extract_s1ap_ies!(received, InitialUEMessage,
+        req enb_id: u32 = eNB_UE_S1AP_ID(id),
+        req nas: NASPDU = NAS_PDU(nas) => nas,
+    );
+    println!("INITIAL UE MESSAGE of eNB UE {enb_id}: NAS-PDU {}", hex::encode(&nas.0));
+
+    // It answers the UE, under the MME UE S1AP ID that it gives it: here an
+    // AUTHENTICATION REQUEST
+    let authentication = hex::decode(
+        "07520023553cbe9637a89d218ae64dae47bf3510aa689c648350b9b9a4a8043ac07aa7e0",
+    )?;
+    let downlink = build_s1ap!(InitiatingMessage, downlinkNASTransport, DownlinkNASTransport,
+        MME_UE_S1AP_ID(1u32),
+        eNB_UE_S1AP_ID(enb_id),
+        NAS_PDU(authentication),
+    )?;
+    println!("DOWNLINK NAS TRANSPORT {}", hex::encode(downlink.encode()?));
+
+    // After the security mode, the default bearer of the UE, whose item
+    // carries the ATTACH ACCEPT, and its security context for the eNB: its
+    // capabilities and KeNB
+    let priority = AllocationAndRetentionPriority::new(
+        PriorityLevel(8),
+        PreEmptionCapability::shall_not_trigger_pre_emption,
+        PreEmptionVulnerability::not_pre_emptable,
+        None,
+    );
+    let accept = hex::decode("07420121060002f839000100155201c101090908696e7465726e657405010a000001")?;
+    let bearer = ERABToBeSetupItemCtxtSUReq::new(
+        ERABID(5),
+        ERABLevelQoSParameters::new(QCI(9), priority, None, None),
+        TransportLayerAddress(BitString::from([10, 0, 0, 1])),
+        GTPTEID([0, 0, 0, 1]),
+        Some(NASPDU::from(accept)),
+        None,
+    );
+    let bearers = vec![build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?];
+    let rates = UEAggregateMaximumBitrate::new(BitRate(100_000_000), BitRate(50_000_000), None);
+    let k_enb = hex::decode("cd49a4ae7001cf3c810a89f47ced1b130f7b3f9b42bc9707431b3fb4e62b20fc")?;
+    let setup = build_s1ap!(InitiatingMessage, InitialContextSetup, InitialContextSetupRequest,
+        MME_UE_S1AP_ID(1u32),
+        eNB_UE_S1AP_ID(enb_id),
+        uEaggregateMaximumBitrate(rates),
+        E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(bearers)),
+        UESecurityCapabilities(ue_security_capabilities(0xe0, 0xe0)),
+        SecurityKey(<[u8; 32]>::try_from(k_enb).unwrap()),
+    )?;
+
+    // The eNB checks it against its object set, and takes the key
+    let received = S1AP_PDU::decode(&setup.encode()?)?;
+    let deviations = received.check()?;
+    let key = received.ie::<ie::SecurityKey>().unwrap()?;
+    let key = hex::encode(key.0.as_octets());
+    println!("INITIAL CONTEXT SETUP REQUEST, {} deviations: KeNB {key}", deviations.len());
+    Ok(())
+}
+```
+
+```text
+S1 SETUP REQUEST from enb-1: 1 tracking area
+S1 SETUP RESPONSE 20110022000003003d400702006d6d652d310069000b000002f83900000001000100574001ff
+INITIAL UE MESSAGE of eNB UE 7: NAS-PDU 07410108298039000000001002e0e000040201d031
+DOWNLINK NAS TRANSPORT 000b4038000003000000020001000800020007001a00252407520023553cbe9637a89d218ae64dae47bf3510aa689c648350b9b9a4a8043ac07aa7e0
+INITIAL CONTEXT SETUP REQUEST, 0 deviations: KeNB cd49a4ae7001cf3c810a89f47ced1b130f7b3f9b42bc9707431b3fb4e62b20fc
+```
+
+## With oxirush-nas and oxirush-security
+
+The same exchange, with the NAS-PDUs built and read by
+[oxirush-nas](https://github.com/linouxis9/oxirush-nas) and the keys of
+[oxirush-security](https://github.com/linouxis9/oxirush-security): the ATTACH
+REQUEST of the INITIAL UE MESSAGE, the SECURITY MODE COMMAND that the MME
+protects with the new EPS security context in a DOWNLINK NAS TRANSPORT, and
+KeNB from KASME and the uplink NAS COUNT.
+
+```rust,ignore
+use oxirush_nas::nas_eps::*;
+use oxirush_s1ap::{build_s1ap, extract_s1ap_ies, helpers, s1ap::*};
+use oxirush_security::milenage::{Amf, K, Milenage, Opc, Sqn};
+use oxirush_security::nas_eps::{derive_kasme, derive_kenb};
+use oxirush_security::Rand;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // The UE: an ATTACH REQUEST with its IMSI, read from a capture
+    let attach = NasEpsMessage::decode(&hex::decode("07410108298039000000001002e0e000040201d031")?)?;
+
+    // The eNB: the INITIAL UE MESSAGE carries its octets
+    let network = helpers::plmn("208", "93")?;
+    let cell = helpers::eutran_cgi(network, helpers::EnbKind::Macro, 0x12345, 1)?;
+    let initial = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+        eNB_UE_S1AP_ID(7u32),
+        NAS_PDU(attach.encode()?),
+        TAI(helpers::tai(network, [0, 1])),
+        EUTRAN_CGI(cell),
+        RRC_Establishment_Cause(RRCEstablishmentCause::mo_Signalling),
+    )?;
+
+    // The MME reads the NAS-PDU as a NAS message
+    extract_s1ap_ies!(initial, InitialUEMessage,
+        req enb_id: u32 = eNB_UE_S1AP_ID(id),
+        req nas: NASPDU = NAS_PDU(nas) => nas,
+    );
+    let NasEpsMessage::Emm(_, NasEmmMessage::AttachRequest(request)) = NasEpsMessage::decode(&nas.0)?
+    else {
+        unreachable!()
+    };
+    println!("eNB UE {enb_id}: IMSI {}", request.eps_mobile_identity.as_imsi().unwrap());
+
+    // EPS AKA gives KASME, from the vector of the subscriber of TS 35.208 test set 1
+    let octets = |text: &str| hex::decode(text).unwrap();
+    let k = K::from_slice(&octets("465b5ce8b199b49faa5f0a2ee238a6bc"))?;
+    let opc = Opc::from_slice(&octets("cd63cb71954a9f4e48a5994e37a02baf"))?;
+    let rand = Rand::from_slice(&octets("23553cbe9637a89d218ae64dae47bf35"))?;
+    let (sqn, amf) = (Sqn::try_from(32)?, Amf::new(&[0xb9, 0xb9]));
+    let vector = Milenage::new(&k, &opc).authentication_vector(&rand, &sqn, &amf);
+    let kasme = derive_kasme(vector.ck(), vector.ik(), Plmn::new("208", "93")?, vector.autn());
+
+    // The SECURITY MODE COMMAND, protected with the new context, in DOWNLINK NAS TRANSPORT
+    let (eia, eea) = (IntegrityAlgorithm::EIA2, CipheringAlgorithm::EEA2);
+    let mut context = NasSecurityContext::from_fresh_kasme(&kasme, eia, eea)?;
+    let ksi = NasKeySetIdentifier::from_key_set_identifier(KeySetIdentifier::Native(0))?;
+    let capability = NasUeSecurityCapability::from_ue_network_capability(&request.ue_network_capability);
+    let algorithms = NasSecurityAlgorithms::from_algorithms(eea, eia);
+    let command = NasEpsMessage::new_emm(NasSecurityModeCommand::new(algorithms, ksi, capability));
+    let header = NasEpsSecurityHeaderType::IntegrityProtectedWithNewEpsSecurityContext;
+    let downlink = build_s1ap!(InitiatingMessage, downlinkNASTransport, DownlinkNASTransport,
+        MME_UE_S1AP_ID(1u32),
+        eNB_UE_S1AP_ID(enb_id),
+        NAS_PDU(context.protect(&command, header, Direction::Downlink)?),
+    )?;
+    println!("{}", hex::encode(downlink.encode()?));
+
+    // The SECURITY MODE COMPLETE came with NAS COUNT 0: KeNB is derived from
+    // it, for the INITIAL CONTEXT SETUP REQUEST
+    let k_enb = derive_kenb(&kasme, NasCount::ZERO);
+    println!("KeNB {}", hex::encode(k_enb.as_octets()));
+    Ok(())
+}
+```
+
+```text
+eNB UE 7: IMSI 208930000000001
+000b4021000003000000020001000800020007001a000e0d37470f7b5100075d220002e0e0
+KeNB cd49a4ae7001cf3c810a89f47ced1b130f7b3f9b42bc9707431b3fb4e62b20fc
+```
+
 ## Decode a PDU
 
 ```rust
@@ -172,108 +353,6 @@ and `check` read the message, and what does not decode there is their error.
 | `decode_value()`, `message()` | The message as its type, which borrows from the PDU, or from what the PDU borrows |
 | `protocol_ies()`, `set_protocol_ies(ies)` | The IEs of its message, whatever the message is |
 | `check()` | How it deviates from the object set of its message |
-
-## Keep a value after its PDU
-
-A type that holds octets has a lifetime, as `NASPDU<'a>`: a value that is
-decoded borrows them from the PDU. A type that holds none, as `Cause`, `TAI`,
-`EUTRANCGI` or `GUMMEI`, has no lifetime, and the extension container of a value
-owns its octets so that it gives it none. `into_owned()` gives the value with
-the lifetime `'static`, which is the type to write in a struct.
-
-```rust
-use oxirush_s1ap::s1ap::{Cause, EUTRANCGI, GUMMEI, TAI};
-
-// What holds no octets of its own is kept as it is decoded
-struct Cell {
-    tai: TAI,
-    cgi: EUTRANCGI,
-    gummei: GUMMEI,
-    last_cause: Option<Cause>,
-}
-```
-
-```rust
-use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies, s1ap::*};
-
-// What a node keeps of a UE after its first message
-struct Ue {
-    enb_id: u32,
-    nas: NASPDU<'static>,
-}
-
-fn admit(pdu: &S1AP_PDU) -> Result<Ue, Error> {
-    // `message` borrows from `pdu`, and `nas` from `message`
-    let message: InitialUEMessage = pdu.decode_value()?;
-    extract_s1ap_ies!(message, InitialUEMessage,
-        req enb_id: u32 = eNB_UE_S1AP_ID(id),
-        req nas: NASPDU = NAS_PDU(nas) => nas,
-    );
-    // Kept beyond the PDU: the octets are copied here, once
-    Ok(Ue { enb_id, nas: nas.into_owned() })
-}
-
-fn main() -> Result<(), Error> {
-    let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, IGNORE, InitialUEMessage,
-        REJECT eNB_UE_S1AP_ID(7u32),
-        REJECT NAS_PDU(vec![0x07, 0x41, 0x71]),
-    )?;
-    let ue = admit(&pdu)?;
-    drop(pdu);
-    println!("UE {}: a NAS-PDU of {} octets", ue.enb_id, ue.nas.0.len());
-    Ok(())
-}
-```
-
-```text
-UE 7: a NAS-PDU of 3 octets
-```
-
-To return a message that borrows the caller's buffer, use
-`decode_borrowed(octets)?.message()`. A message may be held across an
-`.await`, and every value of the bindings is `Send`:
-
-```rust
-use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies, s1ap::*};
-
-async fn deliver(nas: &[u8]) {
-    println!("a NAS-PDU of {} octets", nas.len());
-}
-
-async fn handle(received: Vec<u8>) -> Result<(), Error> {
-    // Nothing of `received` is copied
-    let pdu = S1AP_PDU::decode_borrowed(&received)?;
-    let message: UplinkNASTransport = pdu.decode_value()?;
-    extract_s1ap_ies!(message, UplinkNASTransport,
-        req nas: NASPDU = NAS_PDU(nas) => nas,
-    );
-    deliver(&nas.0).await;
-    Ok(())
-}
-
-fn main() -> Result<(), Error> {
-    let transport = build_s1ap!(InitiatingMessage, uplinkNASTransport, IGNORE, UplinkNASTransport,
-        REJECT MME_UE_S1AP_ID(1u32),
-        REJECT eNB_UE_S1AP_ID(7u32),
-        REJECT NAS_PDU(vec![0x07, 0x5e, 0x03]),
-    )?;
-    let handler = handle(transport.encode()?);
-
-    // A runtime may move the handler to another thread
-    fn is_send(_: &impl Send) {}
-    is_send(&handler);
-
-    // Polled here without a runtime: this handler never waits
-    let mut handler = std::pin::pin!(handler);
-    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
-    assert!(handler.as_mut().poll(&mut context).is_ready());
-    Ok(())
-}
-```
-
-```text
-a NAS-PDU of 3 octets
-```
 
 ## Build a PDU
 
@@ -384,95 +463,9 @@ second as `Deviation::RepeatedIe`.
 The error is that of the enclosing function, converted by `?`. A `lax` field
 reads an IE as TS 36.413 clause 10.3.4.2 has a receiver read one of the
 criticality `ignore`: as if it had not been received when it does not decode.
-A character string is checked when it is decoded, so an eNB name with a
-character that a PrintableString does not have, as `_`, is `None` for a `lax`
-field and an error for an `opt` one.
 
-```rust
-use oxirush_s1ap::{extract_s1ap_ies, s1ap::*};
-
-// The cause of a request, when it has one that is read
-fn cause(request: &UEContextReleaseRequest) -> Option<Cause> {
-    extract_s1ap_ies!(request, UEContextReleaseRequest,
-        lax cause: Cause = Cause(value) => value,
-    );
-    cause
-}
-
-// A UE CONTEXT RELEASE REQUEST, then the same with an octet of its Cause spoiled
-for octets in [
-    "0012401500000300000002002a000800020007000240020280",
-    "0012401500000300000002002a000800020007000240027280",
-] {
-    let pdu = S1AP_PDU::decode(&hex::decode(octets).unwrap()).unwrap();
-    println!("{:?}", cause(&pdu.decode_value().unwrap()));
-}
-```
-
-```text
-Some(radioNetwork(user_inactivity))
-None
-```
-
-## Change or build one IE
-
-```rust
-use oxirush_s1ap::{build_s1ap_ie, s1ap::*, with_s1ap_ie_mut};
-
-// A message with one IE, which is built alone
-let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
-    build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32)).unwrap(),
-]));
-
-// The IE is decoded, changed and encoded again in its place
-let updated = with_s1ap_ie_mut!(message, UplinkNASTransport,
-    MME_UE_S1AP_ID(id) = 42u32
-);
-assert_eq!(updated, Ok(true));
-```
-
-`with_s1ap_ie_mut!` gives `Ok(false)` for an IE that is not in the message;
-`IE(value) => { … }` in place of `= value` changes the decoded value, mutable
-and its own, in a block that says whether it did: its documentation has an
-example. Where an IE is in a message twice, it and
-`extract_s1ap_ies!` take the last one.
-
-## The IEs of any message
-
-```rust
-use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
-
-fn main() -> Result<(), oxirush_s1ap::Error> {
-    // An S1 SETUP FAILURE, as any PDU that was received
-    let bytes = hex::decode("401100080000010002400145").unwrap();
-    let mut pdu = S1AP_PDU::decode(&bytes)?;
-
-    // Its IEs as they were received: identifier, criticality and octets. They
-    // borrow from the PDU, and are owned here, as the PDU is changed below
-    let mut ies = pdu.protocol_ies()?.into_owned();
-    for ie in &ies.0 {
-        let octets = hex::encode(&ie.value);
-        println!("{} {:?} {octets}", ie.id.0, ie.criticality);
-    }
-
-    // One more IE, and the container is the message of the same PDU again
-    let wait = build_s1ap_ie!(S1SetupFailure, IGNORE TimeToWait(TimeToWait::v5s))?;
-    ies.0.push(wait);
-    pdu.set_protocol_ies(ies)?;
-    let octets = hex::encode(pdu.encode()?);
-    println!("{} {octets}", pdu.procedure_name());
-    Ok(())
-}
-```
-
-```text
-2 ignore 45
-S1Setup 4011000d00000200024001450041400120
-```
-
-`protocol_ies()` gives the IEs of any message but the private one in their
-order, including those that the message cannot have or has twice, and
-`set_protocol_ies` writes any list without checking it.
+`with_s1ap_ie_mut!` changes one IE of a message in place, and `build_s1ap_ie!`
+builds one: their documentation has an example of each.
 
 ## A list of single containers, and a handover container, typed
 
@@ -538,7 +531,7 @@ E-RAB 5
 EUTRANCGI { plmn_identity: PLMNidentity(208-93), cell_id: CellIdentity(0x1234/28), ie_extensions: None }
 ```
 
-## Check a message against its object set
+## Check a message, and answer one that is faulty
 
 `check()` reports how a message deviates from the object set that the ASN.1
 gives it, and refuses nothing.
@@ -598,9 +591,8 @@ needs, with the macro or `ie`, pays for those IEs alone: decoding an IE checks
 its value, and one that does not decode is an error of the kind
 `UndecodableIe` there, which `Deviation::of` makes a deviation of. `check()`
 is for a tool that looks at every value: it costs 5 to 8 times as much
-([Performance](#performance)).
+([`benches/`](benches/README.md)).
 
-## Answer a faulty message
 
 Clause 10 of TS 36.413 has what the receiver of a message that deviates
 answers: `cause()` of a deviation is the protocol cause, and
@@ -640,123 +632,41 @@ SupportedTAs (IE 64) is mandatory, and the message does not have it
 401100150000020002400131003a4009180100003b40004040
 ```
 
-## Identities and capabilities
-
-```rust
-use oxirush_s1ap::helpers::*;
-
-// A PLMN from its MCC and its MNC, and what is identified within it
-let network = plmn("208", "93").unwrap();
-let mme = gummei(network, 1, 1); // group, code
-let tracking_area = tai(network, [0x00, 0x01]); // TAC
-let cell = eutran_cgi(network, EnbKind::Macro, 0x12345, 7).unwrap(); // eNB, cell
-let enb = global_enb_id(network, EnbKind::Macro, 0x12345).unwrap();
-let home = global_enb_id(network, EnbKind::Home, 0x123_4567).unwrap();
-
-// A bit string from octets, and the algorithms of a UE: the first octet
-// of its encryption bitmap, then of its integrity bitmap
-let algorithm_mask = oxirush_s1ap::BitString::from([0xe0]);
-let capabilities = ue_security_capabilities(0xe0, 0xe0);
-
-// What is no MCC, and a macro eNB ID that does not fit in its 20 bits
-println!("{}", plmn("20", "93").unwrap_err());
-println!("{}", global_enb_id(network, EnbKind::Macro, 0x100000).unwrap_err());
-```
-
-```text
-"20" is not an MCC: it has three digits, 0 to 9
-the macro eNB ID 1048576 does not fit in 20 bits
-```
-
-A PLMN identity has its digits in the order of TS 36.413 clause 9.2.3.8:
-`plmn("310", "410")` is the octets `13 40 01`, where a NAS message has
-`13 00 14`. `plmn_from` reads the MCC and the MNC of a PLMN identity.
-
-## Errors
-
-```rust
-use oxirush_s1ap::{ErrorKind, s1ap::*};
-
-// A UE CONTEXT RELEASE REQUEST is not decoded as an S1 SETUP REQUEST
-let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-let pdu = S1AP_PDU::decode(&bytes).unwrap();
-let wrong = pdu.decode_value::<S1SetupRequest>().unwrap_err();
-assert_eq!(wrong.kind(), ErrorKind::WrongMessage);
-println!("{wrong}");
-
-// Octets that end early
-let short = S1AP_PDU::decode(&bytes[..10]).unwrap_err();
-assert_eq!(short.kind(), ErrorKind::Decode);
-println!("{short}");
-```
-
-```text
-the message of this PDU is UEContextReleaseRequest, not S1SetupRequest: kind() says which message a PDU holds
-these octets do not decode as S1AP-PDU: the octets end before the value does, in its field `value`
-```
-
-Every call that can fail returns an `oxirush_s1ap::Error`. Its `kind()` is
-what a caller matches on, and the documentation of `ErrorKind` lists the
-kinds; `error.ie()` names the IE of an error of the macros.
-
-## The tree and the view of a PDU
+## A PDU as JSON
 
 With the `inspect` feature a PDU is JSON in two forms: a tree, in which a
-message is shown and written, and a view, which keeps what was received and is
-read and edited by paths with the functions of the [`inspect`] module. Every
-PDU that decodes has a tree, which is the same PDU again.
-
-```rust
-use oxirush_s1ap::s1ap::S1AP_PDU;
-
-// UE CONTEXT RELEASE REQUEST
-let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-let pdu = S1AP_PDU::decode(&bytes).unwrap();
-
-// Its tree, then its third IE as the view has it
-println!("{}", pdu.to_tree());
-let view = pdu.to_view().unwrap();
-println!("{}", view["message"]["protocolIEs"][2]);
-```
-
-```json
-{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
-{"id":2,"criticality":"ignore","value":{"radioNetwork":"user-inactivity"},"_raw_value":"0280","_original_id":2,"_ie_name":"Cause"}
-```
-
-## Read an IE
+message is shown and written, and a view, which keeps what was received and
+is read and edited by paths with the functions of the [`inspect`] module.
+`/s1ap` is the IEs of the message, and an IE goes by its name.
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
 use oxirush_s1ap::tree;
 
+// A UE CONTEXT RELEASE REQUEST, as a tree
 let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
 let pdu = S1AP_PDU::decode(&bytes).unwrap();
-let view = pdu.to_view().unwrap();
+println!("{}", pdu.to_tree());
 
-// `/s1ap` is the IEs of the message, and an IE goes by its name
-let select = |path| inspect::select(&view, path).unwrap();
-assert_eq!(select("/s1ap/eNB-UE-S1AP-ID/value"), [&tree!(7)]);
-assert_eq!(select("/s1ap/Cause/radioNetwork"), [&tree!("user-inactivity")]);
-assert_eq!(select("/s1ap/Cause/octets"), [&tree!("0280")]);
-
-// By its position, by its name whatever its case and its separators, by its
-// identifier, and each IE with `*`
-assert_eq!(select("/s1ap/1/value"), select("/S1AP/enb_ue_s1ap_id/value"));
-assert_eq!(select("/s1ap/@id=8/value"), [&tree!(7)]);
-assert_eq!(select("/s1ap/*/criticality").len(), 3);
-
-// Nothing where the message could have a value and has none
-assert!(select("/s1ap/Cause/nas").is_empty());
-assert!(select("/s1ap/GUMMEI-ID/mME-Code").is_empty());
-
-// Each value with the path that selects it
+// Its view: each value with the path that selects it
+let mut view = pdu.to_view().unwrap();
 for (path, value) in inspect::paths(&view) {
     println!("{path} = {value}");
 }
+
+// A value, and another alternative of a CHOICE in place of the one that is there
+inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9)).unwrap();
+inspect::set(&mut view, "/s1ap/Cause/nas", tree!("Normal Release")).unwrap();
+let edited = pdu.with_view(&view).unwrap();
+println!("{}", edited.to_tree());
+
+// A name that the type does not have is refused, and the view is as it was
+let wrong = inspect::set(&mut view, "/s1ap/Cause/radioNetwrok", tree!("unspecified"));
+println!("{}", wrong.unwrap_err());
 ```
 
 ```text
+{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
 /procedure_code = 18
 /direction = "InitiatingMessage"
 /criticality = "ignore"
@@ -769,69 +679,16 @@ for (path, value) in inspect::paths(&view) {
 /s1ap/Cause/id = 2
 /s1ap/Cause/criticality = "ignore"
 /s1ap/Cause/value/radioNetwork = "user-inactivity"
-```
-
-## Change a value
-
-```rust
-use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-use oxirush_s1ap::tree;
-
-let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-let pdu = S1AP_PDU::decode(&bytes).unwrap();
-let mut view = pdu.to_view().unwrap();
-
-// A value, and another alternative of a CHOICE in place of the one that is there
-inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9)).unwrap();
-inspect::set(&mut view, "/s1ap/Cause/nas", tree!("Normal Release")).unwrap();
-let edited = pdu.with_view(&view).unwrap();
-println!("{}", edited.to_tree());
-
-// What was not edited is the octets that were received
-let after = edited.to_view().unwrap();
-let octets = inspect::select(&after, "/s1ap/MME-UE-S1AP-ID/octets").unwrap();
-assert_eq!(octets, [&tree!("002a")]);
-
-// A name that the type does not have is refused, and the view is as it was
-let wrong = inspect::set(&mut view, "/s1ap/Cause/radioNetwrok", tree!("unspecified"));
-println!("{}", wrong.unwrap_err());
-```
-
-```text
 {"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":9},{"Cause":{"nas":"normal-release"}}]}
 "radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
 ```
 
-## Add or remove an IE
+The [`inspect`] module has examples of the other tasks: add or remove an IE,
+a repeated IE, an item of a list, the names of an ENUMERATED, a path checked
+before use, the container of a handover; and the rules of the paths, of the
+edits and of the values.
 
-```rust
-use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-use oxirush_s1ap::tree;
-
-let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-let pdu = S1AP_PDU::decode(&bytes).unwrap();
-let mut view = pdu.to_view().unwrap();
-
-// An IE is added at the end, by its name and its typed value
-let name = tree!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
-inspect::insert(&mut view, "/s1ap/-", name).unwrap();
-
-// Before another IE, by its number and its octets
-let unknown = tree!({"id": 60000, "criticality": "ignore", "octets": "c0ffee"});
-inspect::insert(&mut view, "/s1ap/Cause", unknown).unwrap();
-
-// An IE is taken out by its name
-inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID").unwrap();
-
-let edited = pdu.with_view(&view).unwrap();
-println!("{}", edited.to_tree()["ies"]);
-```
-
-```json
-[{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"c0ffee"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"eNBname":"enb-1","criticality":"ignore"}]
-```
-
-## Write a message from its name and its IEs
+## Write a message from its tree
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
@@ -864,7 +721,7 @@ println!("{}", tree!(inspect::select(&view, "/s1ap/*/criticality").unwrap()));
 ["reject","reject","ignore","ignore"]
 ```
 
-## Send octets as they are
+An IE may be its octets, whatever they are:
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
@@ -894,194 +751,6 @@ println!("{}", edited.to_tree());
 {"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":255},{"65000":{"octets":"c0ffee"},"criticality":"reject"}]}
 ```
 
-## A repeated IE
-
-```rust
-use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-use oxirush_s1ap::tree;
-
-// A message that has one IE twice
-let twice = tree!({"message": "UEContextReleaseRequest", "ies": [
-    {"MME-UE-S1AP-ID": 1},
-    {"eNB-UE-S1AP-ID": 7},
-    {"MME-UE-S1AP-ID": 2},
-]});
-let pdu = S1AP_PDU::from_tree(&twice).unwrap();
-let mut view = pdu.to_view().unwrap();
-
-// The name selects both, in the order of the message
-let both = inspect::select(&view, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
-assert_eq!(both, [&tree!(1), &tree!(2)]);
-
-// Each has its position, which is how `paths` names it, and its name may follow
-inspect::set(&mut view, "/s1ap/2/MME-UE-S1AP-ID/value", tree!(3)).unwrap();
-
-// After a position, the name of another IE is an error that says which IE is there
-println!("{}", inspect::select(&view, "/s1ap/2/eNB-UE-S1AP-ID/value").unwrap_err());
-
-// The values, each with its path
-for (path, value) in inspect::paths(&view) {
-    if path.ends_with("/value") {
-        println!("{path} = {value}");
-    }
-}
-```
-
-```text
-this IE is MME-UE-S1AP-ID, not eNB-UE-S1AP-ID: "eNB-UE-S1AP-ID" is not a member of this value, which has none, at /s1ap/2/eNB-UE-S1AP-ID/value
-/s1ap/0/value = 1
-/s1ap/eNB-UE-S1AP-ID/value = 7
-/s1ap/2/value = 3
-```
-
-## An item of a list
-
-```rust
-use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-use oxirush_s1ap::{tree, tree::Value};
-
-// A message whose one IE is a list of two items
-let command = tree!({"message": "E-RABReleaseCommand", "ies": [
-    {"E-RABToBeReleasedList": [
-        {"E-RABItem": {"e-RAB-ID": 5, "cause": {"nas": "normal-release"}}},
-        {"E-RABItem": {"e-RAB-ID": 6, "cause": {"nas": "normal-release"}}},
-    ]},
-]});
-let pdu = S1AP_PDU::from_tree(&command).unwrap();
-let mut view = pdu.to_view().unwrap();
-
-// An item by its position or by its name, which selects each item of that name
-let select = |view, path| -> Vec<Value> {
-    let selected = inspect::select(view, path).unwrap();
-    selected.into_iter().cloned().collect()
-};
-assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/e-RAB-ID"), [tree!(6)]);
-assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/E-RABItem/e-RAB-ID"), [tree!(5), tree!(6)]);
-
-// The same value by the path that says each `value`
-assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/value/1/value/e-RAB-ID"), [tree!(6)]);
-
-// And by the names that the tree shows, joined: the item by its position, then its name
-assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/E-RABItem/e-RAB-ID"), [tree!(6)]);
-
-// The criticality of an item is the one of its object set
-assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/0/criticality"), [tree!("ignore")]);
-
-// An item is added at the end, as the IE that it is, and one is taken out
-let item = tree!({"e-RAB-ID": 7, "cause": {"radioNetwork": "unspecified"}});
-let item = tree!({"id": "E-RABItem", "criticality": "ignore", "value": item});
-inspect::insert(&mut view, "/s1ap/E-RABToBeReleasedList/-", item).unwrap();
-inspect::remove(&mut view, "/s1ap/E-RABToBeReleasedList/0").unwrap();
-
-let edited = pdu.with_view(&view).unwrap();
-println!("{}", edited.to_tree());
-```
-
-```json
-{"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}}},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
-```
-
-## The names of an ENUMERATED
-
-```rust
-use oxirush_s1ap::inspect;
-
-// The names that the value at a path can have, as the specification spells them
-let names = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause/nas").unwrap();
-println!("{:?}", names.unwrap());
-
-// A value of another type has none
-let choice = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause/value");
-assert_eq!(choice, Ok(None));
-```
-
-```text
-["normal-release", "authentication-failure", "detach", "unspecified", "csg-subscription-expiry", "uE-not-in-PLMN-serving-area", "iab-not-authorized"]
-```
-
-A name is read in any case and with any separators, as `"Normal Release"`
-above, and shown as the specification spells it.
-
-## Check a path before use
-
-```rust
-use oxirush_s1ap::inspect;
-
-// Whether a path can select anything in a message of a name, without a view
-let check = |path| inspect::check_path("UEContextReleaseRequest", path);
-assert_eq!(check("/s1ap/Cause/nas"), Ok(()));
-assert_eq!(check("/s1ap/*/radioNetwork"), Ok(()));
-
-// A name that is written wrong, and an IE that the message does not have
-for wrong in ["/s1ap/Cause/radioNetwrok", "/s1ap/eNB-UE-S1AP-ID/valeu", "/s1ap/GUMMEI-ID"] {
-    println!("{}", check(wrong).unwrap_err());
-}
-```
-
-```text
-"radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
-"valeu" is not a member of this value, which has none; an IE itself has id, criticality, value, octets, at /s1ap/eNB-UE-S1AP-ID/valeu
-"GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
-```
-
-The functions `message_ies`, `message_ie_criticalities`, `item_criticality`
-and the others of [`inspect`] give what the ASN.1 says of each message, which
-`check_path` reads.
-
-## The container of a handover
-
-Two IEs carry octets that TS 36.413 gives by reference: between eNBs, a type
-of the specification, as `Source-ToTarget-TransparentContainer` carries a
-`SourceeNB-ToTargeteNB-TransparentContainer` (clause 9.2.1.56). Nothing in a message says which, so a tree and a view show the
-octets, and the one that writes or reads them names the type.
-
-```rust
-use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1AP_PDU};
-use oxirush_s1ap::tree;
-
-// Written: the name of the type with its value, in place of the octets
-let name = "SourceeNB-ToTargeteNB-TransparentContainer";
-let required = tree!({"message": "HandoverRequired", "ies": [
-    {"MME-UE-S1AP-ID": 42},
-    {"eNB-UE-S1AP-ID": 7},
-    {"Source-ToTarget-TransparentContainer": {name: {
-        "rRC-Container": "0102",
-        "targetCell-ID": {"pLMNidentity": "208-93", "cell-ID": 4660},
-        "uE-HistoryInformation": [{"uTRAN-Cell": "00"}],
-    }}},
-]});
-
-// A tree shows the octets that the container was encoded as
-let pdu = S1AP_PDU::from_tree(&required).unwrap();
-println!("{}", pdu.to_tree()["ies"][2]);
-
-// Read: a path goes through the name of the type
-let mut view = pdu.to_view().unwrap();
-let container = format!("/s1ap/Source-ToTarget-TransparentContainer/{name}");
-let cell = format!("{container}/targetCell-ID/cell-ID");
-assert_eq!(inspect::check_path("HandoverRequired", &cell), Ok(()));
-
-// The path is an error until `open` has decoded the octets, and selects the value after that
-assert_eq!(inspect::select(&view, &cell).unwrap_err().kind(), ErrorKind::NotOpened);
-inspect::open(&mut view, &cell).unwrap();
-assert_eq!(inspect::select(&view, &cell).unwrap(), [&tree!(4660)]);
-
-// What the octets carry, decoded
-let decoded = format!("{container}/decoded");
-println!("{}", inspect::select(&view, &decoded).unwrap()[0]);
-
-// An edit goes into it, and what is not edited is sent as it was received
-inspect::set(&mut view, &cell, tree!(7)).unwrap();
-let edited = pdu.with_view(&view).unwrap();
-println!("{}", edited.to_tree()["ies"][2]);
-```
-
-```text
-{"Source-ToTarget-TransparentContainer":"000201020002f83900012340200100"}
-{"rRC-Container":"0102","targetCell-ID":{"pLMNidentity":"208-93","cell-ID":4660},"uE-HistoryInformation":[{"uTRAN-Cell":"00"}]}
-{"Source-ToTarget-TransparentContainer":"000201020002f83900000070200100"}
-```
-
 ## Any format of serde
 
 With the `serde` feature, a PDU is serialized as its tree and deserialized
@@ -1107,28 +776,6 @@ println!("{}", serde_json::to_string(&area).unwrap());
 {"pLMNidentity":"208-93","tAC":1}
 ```
 
-## Write values as they are usually written
-
-A tree, a view and a value alone show the values of some types as they are
-usually written, and take them so or in the form of their ASN.1 type. A string
-of decimal digits is never read as octets: octets whose hexadecimal has no
-letter are written after `0x`.
-
-| Type | Notation |
-|------|----------|
-| `PLMNidentity` | `"208-93"`, the MCC and the MNC, or its octets: `"02f839"`, `"0x134001"`. `"310410"` is refused, as it is read as 310-410 and as the octets 0x310410 |
-| `TransportLayerAddress` | `"10.0.0.1"`, `"2001:db8::1"`, or the two with a comma |
-| `IMSI` | its digits |
-| `TAC`, `FiveGSTAC`, `LAC`, `RAC`, `CI`, `GTP-TEID`, `M-TMSI`, `MME-Group-ID`, `MME-Code`, `Port-Number`, `CellIdentity`, `NRCellIdentity`, `UL-NAS-Count` | a number, also read in hexadecimal as `"0x…"`. A string of digits, as `"1234"`, is refused: it is the number 1234 and the octets 0x1234 |
-| `ENUMERATED` | the name of the value, read in any case |
-| `INTEGER` | a number, which 64 bits hold, as the bindings hold it |
-| a bit string whose size varies, as the identifier of a gNB | `{"value": "000004", "length": 22}`: its octets in hexadecimal, from its first bit, and its length in bits |
-| a bit string of another size than the one that its type gives beside an extension marker | `{"value": "c00000", "length": 24}`, where a mask of the 16 bits of its type is `"c000"` |
-| the other strings: keys, the NAS-PDU and the other containers, and the identifiers of an eNB, whose length says which kind they are | hexadecimal, written in lower case and read in either |
-
-The documentation of the [`inspect`] module has the rules of the paths, of
-the edits and of the values, and the kinds of the errors of the JSON forms.
-
 ## Limits
 
 - Procedures, state and transport: it is a codec.
@@ -1153,6 +800,17 @@ the edits and of the values, and the kinds of the errors of the JSON forms.
   sends that open-source nodes did not is untested.
 
 ## Performance
+
+On one core of an AMD Ryzen 7 5700G (16 threads, Linux 7.0, Rust 1.98.1),
+measured on a quiet machine on 2026-10-18, the median of three runs: the
+macro on a PDU reads the IEs that its fields ask for in 24 to 33 ns, and
+`ie::<T>()` one IE in 28 to 29 ns, without an allocation; `check_structure()`
+takes 48 to 156 ns, and `check()` 5 to 8 times as much.
+[`benches/`](benches/README.md) has these figures by message, every figure
+of the comparison for InitialContextSetupRequest, the clean builds and a
+message of 65,535 IEs.
+
+### Against other implementations
 
 The crate against four other implementations of S1AP, on the six PDUs of
 `benches/compare/pdus.tsv`, which each decodes and encodes. The envelope alone
@@ -1183,16 +841,6 @@ Encoding, ns per call, and the ratio to this crate:
 | UEContextReleaseCommand (21) | 64 | 770 (12.0x) | 1,226 (19.0x) | 715 (11.1x) | 43,780 (679.8x) |
 | InitialUEMessage (48) | 95 | 1,183 (12.4x) | 2,178 (22.9x) | 1,332 (14.0x) | 72,281 (760.1x) |
 
-Every figure for InitialContextSetupRequest, per call:
-
-|  | decode ns | cycles | instructions | allocations | octets allocated | encode ns | cycles | instructions | allocations | octets allocated | most memory held, KiB |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| this crate | 221 | 1,014 | 3,401 | 2 | 256 | 144 | 624 | 2,247 | 2 | 454 | 3,326 |
-| rasn 0.29 | 2,123 (9.6x) | 10,072 (9.9x) | 22,939 (6.7x) | 20 | 1,074 | 1,757 (12.2x) | 8,086 (13.0x) | 26,482 (11.8x) | 33 | 1,698 | 3,812 |
-| hampi 0.7.2 | 3,320 (15.0x) | 15,135 (14.9x) | 48,070 (14.1x) | 37 | 3,569 | 4,420 (30.7x) | 20,491 (32.8x) | 63,793 (28.4x) | 17 | 1,797 | 3,330 |
-| asn1c (Open5GS 2.8.0) | 4,956 (22.5x) | 22,442 (22.1x) | 81,650 (24.0x) | 79 | 10,046 | 2,920 (20.3x) | 13,278 (21.3x) | 50,474 (22.5x) | 25 | 3,728 | 4,546 |
-| pycrate 0.8.1 | 218,657 (990.5x) | 985,521 (971.9x) | 2,090,371 (614.6x) |  |  | 135,987 (945.0x) | 612,914 (982.0x) | 1,280,226 (569.7x) |  |  | 28,128 |
-
 The time is the fastest of three runs of a call repeated for about 0.2 s, and
 the cycles and the instructions those that `perf stat` counts for the calls
 alone (the difference between a run of twice the calls and one of the calls).
@@ -1212,62 +860,6 @@ needs:
 ```sh
 python3 ../oxirush-aper/protocols/benches/compare/compare.py --core 3 --perf "sudo -n perf"
 ```
-
-Reading the IEs of a message and checking a PDU, per call, on the four
-messages that `benches/` writes: `decode_value()` and then the macro on the
-message, which decodes the container of the message first; the macro on the
-PDU (`extract_s1ap_ies!(pdu, ...)`), which walks the octets of its message once and
-decodes the IEs that its fields ask for; and `ie::<T>()` of the PDU, which
-decodes one IE. In `benches/`, `cargo run --release --bin readers --features
-readers` measures them:
-
-| Message | the first IE: `decode_value()`, then the macro | the macro on the PDU | `ie::<T>()` | every IE: `decode_value()`, then the macro | the macro on the PDU |
-|---|---|---|---|---|---|
-| An INITIAL CONTEXT SETUP REQUEST of 8 E-RABs | 96 ns, 1 allocation | 33 ns, no allocation | 28 ns, no allocation | 320 ns, 2 allocations | 279 ns, 1 allocation |
-| An E-RAB SETUP REQUEST of 8 E-RABs | 63 ns, 1 allocation | 24 ns, no allocation | 28 ns, no allocation | 177 ns, 2 allocations | 134 ns, 1 allocation |
-| A HANDOVER REQUIRED of a container of 4,000 octets | 88 ns, 1 allocation | 29 ns, no allocation | 28 ns, no allocation | 204 ns, 1 allocation | 156 ns, no allocation |
-| A PAGING of 16 tracking areas | 81 ns, 1 allocation | 24 ns, no allocation | 29 ns, no allocation | 231 ns, 2 allocations | 189 ns, 1 allocation |
-
-`items::<L>()` walks the eight E-RABs of the E-RAB SETUP REQUEST in the octets
-of the PDU in 901 ns without an allocation, where `decode_value()`, the
-macro and then the decoding of each item take 773 ns and 2 allocations:
-the time is that of decoding the items.
-
-`check()`, which decodes the value of each IE, and `check_structure()`, which
-compares the container alone with the object set of its message, on the PDUs
-of the comparison (`cargo run --release --bin checks` in `benches/`):
-
-| PDU (octets) | `check()` | `check_structure()` | `check()` / `check_structure()` |
-|---|---|---|---|
-| DownlinkNASTransport (73) | 408 ns, 7 allocations | 85 ns, 2 allocations | 4.8x |
-| InitialContextSetupRequest (197) | 989 ns, 13 allocations | 141 ns, 2 allocations | 7.0x |
-| S1SetupResponse (45) | 495 ns, 12 allocations | 67 ns, 2 allocations | 7.4x |
-| HandoverRequest (146) | 1,252 ns, 17 allocations | 156 ns, 2 allocations | 8.0x |
-| UEContextReleaseCommand (21) | 288 ns, 5 allocations | 48 ns, 2 allocations | 6.0x |
-| InitialUEMessage (48) | 607 ns, 8 allocations | 106 ns, 2 allocations | 5.7x |
-
-These were taken on the same machine, each program on one core, as the median
-of three runs.
-
-A clean `cargo build -j 5` of the crate and its dependencies on Rust 1.88, on
-five cores of the same machine, the median of three builds, with the debug
-information of the default profile and without it:
-
-| Build | Time | Peak memory | Peak memory, `CARGO_PROFILE_DEV_DEBUG=0` |
-|-------|------|-------------|------------------------------------------|
-| No feature | 8 s | 0.72 GiB | 0.68 GiB |
-| `inspect` | 13 s | 1.06 GiB | 0.85 GiB |
-| `serde` | 14 s | 1.10 GiB | 0.95 GiB |
-| `inspect`, `--release` | 17 s | 0.91 GiB | the same |
-
-On a message of 65,535 IEs of one name, 393 KB, `decode` takes 0.01 ms, `check`
-5.27 ms, `to_view` 67 ms and 37 MB, `with_view` 119 ms and 48 MB,
-`inspect::paths` 30 ms, and an edit at a path 0.01 ms, on one core of the same
-machine, the median of three runs. In `benches/`, `cargo bench --bench scale`
-measures them, and `cargo bench --bench codec` and `--bench allocations` the
-codec on the PDUs of the tests; from the root of the repository,
-`python3 ../oxirush-aper/protocols/benches/build_cost.py +1.88.0 --features inspect`
-measures a clean build.
 
 ## Tests and fuzzing
 
@@ -1295,9 +887,11 @@ the vectors were made and the PDUs captured, and what a change to them or to
 the pinned revisions takes. A pull request comes with a test for what it
 changes; the Rust blocks of this page are checked with what they print
 (`tests/readme.rs`, which `protocols/tests/readme.py` of oxirush-aper writes
-from this page). Sign off your commits
-(`git commit -s`): by contributing you agree to the
-[Developer Certificate of Origin](https://developercertificate.org/).
+from this page). The blocks that use other crates of the family run in the
+package of [`family/`](family/), which takes those crates at the revisions
+that its manifest names. Sign off your commits (`git commit -s`): by
+contributing you agree to the [Developer Certificate of
+Origin](https://developercertificate.org/).
 
 ## The OxiRush family
 
@@ -1315,6 +909,5 @@ from this page). Sign off your commits
 Copyright 2025-2026 Valentin D'Emmanuele. Licensed under the Apache License,
 Version 2.0: see [LICENSE](LICENSE).
 
-[`inspect`]: https://docs.rs/oxirush-s1ap/0.3.0/oxirush_s1ap/inspect/index.html
-[`from_tree()`]: https://docs.rs/oxirush-s1ap/0.3.0/oxirush_s1ap/s1ap/s1_ap_pdu_descriptions/enum.S1APPDU.html#method.from_tree
-[`to_view`]: https://docs.rs/oxirush-s1ap/0.3.0/oxirush_s1ap/s1ap/s1_ap_pdu_descriptions/enum.S1APPDU.html#method.to_view
+[`inspect`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/index.html
+[`to_view`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/s1ap/s1_ap_pdu_descriptions/enum.S1APPDU.html#method.to_view

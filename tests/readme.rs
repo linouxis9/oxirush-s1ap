@@ -53,57 +53,40 @@ const BLOCKS: &[(fn(), &str)] = &[
     (block_1, r#"UEContextReleaseRequest
 MME=Some(42) eNB=Some(7) cause=Some(radioNetwork(user_inactivity))
 "#),
-    (block_2, r#"{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
-{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"radio-connection-with-ue-lost"}}]}
+    (block_2, r#"S1 SETUP REQUEST from enb-1: 1 tracking area
+S1 SETUP RESPONSE 20110022000003003d400702006d6d652d310069000b000002f83900000001000100574001ff
+INITIAL UE MESSAGE of eNB UE 7: NAS-PDU 07410108298039000000001002e0e000040201d031
+DOWNLINK NAS TRANSPORT 000b4038000003000000020001000800020007001a00252407520023553cbe9637a89d218ae64dae47bf3510aa689c648350b9b9a4a8043ac07aa7e0
+INITIAL CONTEXT SETUP REQUEST, 0 deviations: KeNB cd49a4ae7001cf3c810a89f47ced1b130f7b3f9b42bc9707431b3fb4e62b20fc
 "#),
     (block_3, r#"a release request with 3 IEs
 Unsuccessful_S1Setup is not handled here
 "#),
-    (block_4, r#""#),
-    (block_5, r#"UE 7: a NAS-PDU of 3 octets
-"#),
-    (block_6, r#"a NAS-PDU of 3 octets
-"#),
-    (block_7, r#"ignore 000c4011000002000800020007001a000403074171
+    (block_4, r#"ignore 000c4011000002000800020007001a000403074171
 true
 TimeToWait is no IE of the object set of InitialUEMessage, which assigns it no criticality: write its criticality
 "#),
-    (block_8, r#""#),
-    (block_9, r#"MME=42 eNB=7
+    (block_5, r#""#),
+    (block_6, r#"MME=42 eNB=7
 radioNetwork(user_inactivity)
 "#),
-    (block_10, r#"Some(radioNetwork(user_inactivity))
-None
-"#),
-    (block_11, r#""#),
-    (block_12, r#"2 ignore 45
-S1Setup 4011000d00000200024001450041400120
-"#),
-    (block_13, r#"E-RAB 5 with QCI 9
+    (block_7, r#"E-RAB 5 with QCI 9
 E-RAB 5
 EUTRANCGI { plmn_identity: PLMNidentity(208-93), cell_id: CellIdentity(0x1234/28), ie_extensions: None }
 "#),
-    (block_14, r#"the criticality of the PDU is reject, and that of its procedure is ignore
+    (block_8, r#"the criticality of the PDU is reject, and that of its procedure is ignore
 MME-UE-S1AP-ID (IE 0), at position 1, comes after eNB-UE-S1AP-ID (IE 8), which the object set of the message has after it
 the criticality of MME-UE-S1AP-ID (IE 0), at position 1, is ignore, and the message assigns it reject
 TimeToWait (IE 65), at position 2, is not an IE of the message
 eNB-UE-S1AP-ID (IE 8), at position 3, is in the message already, at position 0
 Cause (IE 2) is mandatory, and the message does not have it
 "#),
-    (block_15, r#"Global-ENB-ID (IE 59) is mandatory, and the message does not have it
+    (block_9, r#"Global-ENB-ID (IE 59) is mandatory, and the message does not have it
 SupportedTAs (IE 64) is mandatory, and the message does not have it
 401100150000020002400131003a4009180100003b40004040
 "#),
-    (block_16, r#""20" is not an MCC: it has three digits, 0 to 9
-the macro eNB ID 1048576 does not fit in 20 bits
-"#),
-    (block_17, r#"the message of this PDU is UEContextReleaseRequest, not S1SetupRequest: kind() says which message a PDU holds
-these octets do not decode as S1AP-PDU: the octets end before the value does, in its field `value`
-"#),
-    (block_18, r#"{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
-{"id":2,"criticality":"ignore","value":{"radioNetwork":"user-inactivity"},"_raw_value":"0280","_original_id":2,"_ie_name":"Cause"}
-"#),
-    (block_19, r#"/procedure_code = 18
+    (block_10, r#"{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
+/procedure_code = 18
 /direction = "InitiatingMessage"
 /criticality = "ignore"
 /s1ap/MME-UE-S1AP-ID/id = 0
@@ -115,38 +98,18 @@ these octets do not decode as S1AP-PDU: the octets end before the value does, in
 /s1ap/Cause/id = 2
 /s1ap/Cause/criticality = "ignore"
 /s1ap/Cause/value/radioNetwork = "user-inactivity"
-"#),
-    (block_20, r#"{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":9},{"Cause":{"nas":"normal-release"}}]}
+{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":9},{"Cause":{"nas":"normal-release"}}]}
 "radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
 "#),
-    (block_21, r#"[{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"c0ffee"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"eNBname":"enb-1","criticality":"ignore"}]
-"#),
-    (block_22, r#"0012402000000400000002002a000800020007000240020280003c40070200656e622d31
+    (block_11, r#"0012402000000400000002002a000800020007000240020280003c40070200656e622d31
 "InitiatingMessage" 18 "ignore"
 ["reject","reject","ignore","ignore"]
 "#),
-    (block_23, r#"0012401000000200000002002afde80003c0ffee
+    (block_12, r#"0012401000000200000002002afde80003c0ffee
 {"id":65000,"criticality":"reject","value":"c0ffee","_decode_error":"S1AP IE 65000 is unknown","_raw_value":"c0ffee","_original_id":65000}
 {"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":255},{"65000":{"octets":"c0ffee"},"criticality":"reject"}]}
 "#),
-    (block_24, r#"this IE is MME-UE-S1AP-ID, not eNB-UE-S1AP-ID: "eNB-UE-S1AP-ID" is not a member of this value, which has none, at /s1ap/2/eNB-UE-S1AP-ID/value
-/s1ap/0/value = 1
-/s1ap/eNB-UE-S1AP-ID/value = 7
-/s1ap/2/value = 3
-"#),
-    (block_25, r#"{"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}}},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
-"#),
-    (block_26, r#"["normal-release", "authentication-failure", "detach", "unspecified", "csg-subscription-expiry", "uE-not-in-PLMN-serving-area", "iab-not-authorized"]
-"#),
-    (block_27, r#""radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
-"valeu" is not a member of this value, which has none; an IE itself has id, criticality, value, octets, at /s1ap/eNB-UE-S1AP-ID/valeu
-"GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
-"#),
-    (block_28, r#"{"Source-ToTarget-TransparentContainer":"000201020002f83900012340200100"}
-{"rRC-Container":"0102","targetCell-ID":{"pLMNidentity":"208-93","cell-ID":4660},"uE-HistoryInformation":[{"uTRAN-Cell":"00"}]}
-{"Source-ToTarget-TransparentContainer":"000201020002f83900000070200100"}
-"#),
-    (block_29, r#"{"pLMNidentity":"208-93","tAC":1}
+    (block_13, r#"{"pLMNidentity":"208-93","tAC":1}
 "#),
 ];
 
@@ -194,24 +157,115 @@ fn block_1() {
 /// The Rust block 2 of README.md.
 #[rustfmt::skip]
 fn block_2() {
-    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-    use oxirush_s1ap::tree;
+    use oxirush_s1ap::helpers::*;
+    use oxirush_s1ap::{BitString, build_s1ap, build_s1ap_ie, extract_s1ap_ies, ie, s1ap::*};
 
-    // The same message as a tree: its name and its IEs by name
-    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    let pdu = S1AP_PDU::decode(&bytes).unwrap();
-    println!("{}", pdu.to_tree());
+    fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let network = plmn("208", "93")?;
 
-    // Its view is edited at a path, and is a PDU again
-    let mut view = pdu.to_view().unwrap();
-    let lost = tree!("radio-connection-with-ue-lost");
-    inspect::set(&mut view, "/s1ap/Cause/radioNetwork", lost).unwrap();
-    let edited = pdu.with_view(&view).unwrap();
-    println!("{}", edited.to_tree());
+        // The eNB: S1 SETUP REQUEST, its identity, its name and the tracking
+        // area that it serves
+        let enb = global_enb_id(network, EnbKind::Macro, 0x12345)?;
+        let area = SupportedTAsItem::new(TAC([0, 1]), BPLMNs(vec![network]), None);
+        let request = build_s1ap!(InitiatingMessage, S1Setup, S1SetupRequest,
+            Global_ENB_ID(enb),
+            eNBname("enb-1"),
+            SupportedTAs(SupportedTAs(vec![area])),
+            DefaultPagingDRX(PagingDRX::v128),
+        )?;
 
-    // Its octets are those that the typed example built
-    let octets = hex::encode(edited.encode().unwrap());
-    assert_eq!(octets, "0012401500000300000002002a0008000200070002400202a0");
+        // The MME reads it, and answers with its name and its GUMMEIs
+        let received = S1AP_PDU::decode(&request.encode()?)?;
+        extract_s1ap_ies!(received, S1SetupRequest,
+            opt name: String = eNBname(name) => name.0.into_owned(),
+            req areas: SupportedTAs = SupportedTAs(areas) => areas,
+        );
+        println!("S1 SETUP REQUEST from {}: {} tracking area", name.unwrap_or_default(), areas.0.len());
+        let served = ServedGUMMEIsItem::new(
+            ServedPLMNs(vec![network]),
+            ServedGroupIDs(vec![MMEGroupID([0, 1])]),
+            ServedMMECs(vec![MMECode([1])]),
+            None,
+        );
+        let response = build_s1ap!(SuccessfulOutcome, S1Setup, S1SetupResponse,
+            MMEname("mme-1"),
+            ServedGUMMEIs(ServedGUMMEIs(vec![served])),
+            RelativeMMECapacity(RelativeMMECapacity(255)),
+        )?;
+        println!("S1 SETUP RESPONSE {}", hex::encode(response.encode()?));
+
+        // The eNB: INITIAL UE MESSAGE, with the ATTACH REQUEST of a UE and the
+        // cell that the UE is in
+        let attach = hex::decode("07410108298039000000001002e0e000040201d031")?;
+        let initial = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+            eNB_UE_S1AP_ID(7u32),
+            NAS_PDU(attach),
+            TAI(tai(network, [0, 1])),
+            EUTRAN_CGI(eutran_cgi(network, EnbKind::Macro, 0x12345, 1)?),
+            RRC_Establishment_Cause(RRCEstablishmentCause::mo_Signalling),
+        )?;
+
+        // The MME reads the IEs that it needs where they are in the octets
+        let octets = initial.encode()?;
+        let received = S1AP_PDU::decode_borrowed(&octets)?;
+        extract_s1ap_ies!(received, InitialUEMessage,
+            req enb_id: u32 = eNB_UE_S1AP_ID(id),
+            req nas: NASPDU = NAS_PDU(nas) => nas,
+        );
+        println!("INITIAL UE MESSAGE of eNB UE {enb_id}: NAS-PDU {}", hex::encode(&nas.0));
+
+        // It answers the UE, under the MME UE S1AP ID that it gives it: here an
+        // AUTHENTICATION REQUEST
+        let authentication = hex::decode(
+            "07520023553cbe9637a89d218ae64dae47bf3510aa689c648350b9b9a4a8043ac07aa7e0",
+        )?;
+        let downlink = build_s1ap!(InitiatingMessage, downlinkNASTransport, DownlinkNASTransport,
+            MME_UE_S1AP_ID(1u32),
+            eNB_UE_S1AP_ID(enb_id),
+            NAS_PDU(authentication),
+        )?;
+        println!("DOWNLINK NAS TRANSPORT {}", hex::encode(downlink.encode()?));
+
+        // After the security mode, the default bearer of the UE, whose item
+        // carries the ATTACH ACCEPT, and its security context for the eNB: its
+        // capabilities and KeNB
+        let priority = AllocationAndRetentionPriority::new(
+            PriorityLevel(8),
+            PreEmptionCapability::shall_not_trigger_pre_emption,
+            PreEmptionVulnerability::not_pre_emptable,
+            None,
+        );
+        let accept = hex::decode("07420121060002f839000100155201c101090908696e7465726e657405010a000001")?;
+        let bearer = ERABToBeSetupItemCtxtSUReq::new(
+            ERABID(5),
+            ERABLevelQoSParameters::new(QCI(9), priority, None, None),
+            TransportLayerAddress(BitString::from([10, 0, 0, 1])),
+            GTPTEID([0, 0, 0, 1]),
+            Some(NASPDU::from(accept)),
+            None,
+        );
+        let bearers = vec![build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?];
+        let rates = UEAggregateMaximumBitrate::new(BitRate(100_000_000), BitRate(50_000_000), None);
+        let k_enb = hex::decode("cd49a4ae7001cf3c810a89f47ced1b130f7b3f9b42bc9707431b3fb4e62b20fc")?;
+        let setup = build_s1ap!(InitiatingMessage, InitialContextSetup, InitialContextSetupRequest,
+            MME_UE_S1AP_ID(1u32),
+            eNB_UE_S1AP_ID(enb_id),
+            uEaggregateMaximumBitrate(rates),
+            E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(bearers)),
+            UESecurityCapabilities(ue_security_capabilities(0xe0, 0xe0)),
+            SecurityKey(<[u8; 32]>::try_from(k_enb).unwrap()),
+        )?;
+
+        // The eNB checks it against its object set, and takes the key
+        let received = S1AP_PDU::decode(&setup.encode()?)?;
+        let deviations = received.check()?;
+        let key = received.ie::<ie::SecurityKey>().unwrap()?;
+        let key = hex::encode(key.0.as_octets());
+        println!("INITIAL CONTEXT SETUP REQUEST, {} deviations: KeNB {key}", deviations.len());
+        Ok(())
+    }
+
+    main().unwrap();
 }
 
 /// The Rust block 3 of README.md.
@@ -245,98 +299,6 @@ fn block_3() {
 /// The Rust block 4 of README.md.
 #[rustfmt::skip]
 fn block_4() {
-    use oxirush_s1ap::s1ap::{Cause, EUTRANCGI, GUMMEI, TAI};
-
-    // What holds no octets of its own is kept as it is decoded
-    struct Cell {
-        tai: TAI,
-        cgi: EUTRANCGI,
-        gummei: GUMMEI,
-        last_cause: Option<Cause>,
-    }
-}
-
-/// The Rust block 5 of README.md.
-#[rustfmt::skip]
-fn block_5() {
-    use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies, s1ap::*};
-
-    // What a node keeps of a UE after its first message
-    struct Ue {
-        enb_id: u32,
-        nas: NASPDU<'static>,
-    }
-
-    fn admit(pdu: &S1AP_PDU) -> Result<Ue, Error> {
-        // `message` borrows from `pdu`, and `nas` from `message`
-        let message: InitialUEMessage = pdu.decode_value()?;
-        extract_s1ap_ies!(message, InitialUEMessage,
-            req enb_id: u32 = eNB_UE_S1AP_ID(id),
-            req nas: NASPDU = NAS_PDU(nas) => nas,
-        );
-        // Kept beyond the PDU: the octets are copied here, once
-        Ok(Ue { enb_id, nas: nas.into_owned() })
-    }
-
-    fn main() -> Result<(), Error> {
-        let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, IGNORE, InitialUEMessage,
-            REJECT eNB_UE_S1AP_ID(7u32),
-            REJECT NAS_PDU(vec![0x07, 0x41, 0x71]),
-        )?;
-        let ue = admit(&pdu)?;
-        drop(pdu);
-        println!("UE {}: a NAS-PDU of {} octets", ue.enb_id, ue.nas.0.len());
-        Ok(())
-    }
-
-    main().unwrap();
-}
-
-/// The Rust block 6 of README.md.
-#[rustfmt::skip]
-fn block_6() {
-    use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies, s1ap::*};
-
-    async fn deliver(nas: &[u8]) {
-        println!("a NAS-PDU of {} octets", nas.len());
-    }
-
-    async fn handle(received: Vec<u8>) -> Result<(), Error> {
-        // Nothing of `received` is copied
-        let pdu = S1AP_PDU::decode_borrowed(&received)?;
-        let message: UplinkNASTransport = pdu.decode_value()?;
-        extract_s1ap_ies!(message, UplinkNASTransport,
-            req nas: NASPDU = NAS_PDU(nas) => nas,
-        );
-        deliver(&nas.0).await;
-        Ok(())
-    }
-
-    fn main() -> Result<(), Error> {
-        let transport = build_s1ap!(InitiatingMessage, uplinkNASTransport, IGNORE, UplinkNASTransport,
-            REJECT MME_UE_S1AP_ID(1u32),
-            REJECT eNB_UE_S1AP_ID(7u32),
-            REJECT NAS_PDU(vec![0x07, 0x5e, 0x03]),
-        )?;
-        let handler = handle(transport.encode()?);
-
-        // A runtime may move the handler to another thread
-        fn is_send(_: &impl Send) {}
-        is_send(&handler);
-
-        // Polled here without a runtime: this handler never waits
-        let mut handler = std::pin::pin!(handler);
-        let mut context = std::task::Context::from_waker(std::task::Waker::noop());
-        assert!(handler.as_mut().poll(&mut context).is_ready());
-        Ok(())
-    }
-
-    main().unwrap();
-}
-
-/// The Rust block 7 of README.md.
-#[rustfmt::skip]
-fn block_7() {
     use oxirush_s1ap::{Message, build_s1ap, s1ap::*};
 
     fn main() -> Result<(), oxirush_s1ap::Error> {
@@ -363,9 +325,9 @@ fn block_7() {
     main().unwrap();
 }
 
-/// The Rust block 8 of README.md.
+/// The Rust block 5 of README.md.
 #[rustfmt::skip]
-fn block_8() {
+fn block_5() {
     use oxirush_s1ap::{Error, extract_s1ap_ies, s1ap::*};
 
     fn handle(request: &UEContextReleaseRequest) -> Result<(), Error> {
@@ -380,9 +342,9 @@ fn block_8() {
     }
 }
 
-/// The Rust block 9 of README.md.
+/// The Rust block 6 of README.md.
 #[rustfmt::skip]
-fn block_9() {
+fn block_6() {
     use oxirush_s1ap::{Error, extract_s1ap_ies, ie, s1ap::*};
 
     fn main() -> Result<(), Error> {
@@ -406,79 +368,9 @@ fn block_9() {
     main().unwrap();
 }
 
-/// The Rust block 10 of README.md.
+/// The Rust block 7 of README.md.
 #[rustfmt::skip]
-fn block_10() {
-    use oxirush_s1ap::{extract_s1ap_ies, s1ap::*};
-
-    // The cause of a request, when it has one that is read
-    fn cause(request: &UEContextReleaseRequest) -> Option<Cause> {
-        extract_s1ap_ies!(request, UEContextReleaseRequest,
-            lax cause: Cause = Cause(value) => value,
-        );
-        cause
-    }
-
-    // A UE CONTEXT RELEASE REQUEST, then the same with an octet of its Cause spoiled
-    for octets in [
-        "0012401500000300000002002a000800020007000240020280",
-        "0012401500000300000002002a000800020007000240027280",
-    ] {
-        let pdu = S1AP_PDU::decode(&hex::decode(octets).unwrap()).unwrap();
-        println!("{:?}", cause(&pdu.decode_value().unwrap()));
-    }
-}
-
-/// The Rust block 11 of README.md.
-#[rustfmt::skip]
-fn block_11() {
-    use oxirush_s1ap::{build_s1ap_ie, s1ap::*, with_s1ap_ie_mut};
-
-    // A message with one IE, which is built alone
-    let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
-        build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32)).unwrap(),
-    ]));
-
-    // The IE is decoded, changed and encoded again in its place
-    let updated = with_s1ap_ie_mut!(message, UplinkNASTransport,
-        MME_UE_S1AP_ID(id) = 42u32
-    );
-    assert_eq!(updated, Ok(true));
-}
-
-/// The Rust block 12 of README.md.
-#[rustfmt::skip]
-fn block_12() {
-    use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
-
-    fn main() -> Result<(), oxirush_s1ap::Error> {
-        // An S1 SETUP FAILURE, as any PDU that was received
-        let bytes = hex::decode("401100080000010002400145").unwrap();
-        let mut pdu = S1AP_PDU::decode(&bytes)?;
-
-        // Its IEs as they were received: identifier, criticality and octets. They
-        // borrow from the PDU, and are owned here, as the PDU is changed below
-        let mut ies = pdu.protocol_ies()?.into_owned();
-        for ie in &ies.0 {
-            let octets = hex::encode(&ie.value);
-            println!("{} {:?} {octets}", ie.id.0, ie.criticality);
-        }
-
-        // One more IE, and the container is the message of the same PDU again
-        let wait = build_s1ap_ie!(S1SetupFailure, IGNORE TimeToWait(TimeToWait::v5s))?;
-        ies.0.push(wait);
-        pdu.set_protocol_ies(ies)?;
-        let octets = hex::encode(pdu.encode()?);
-        println!("{} {octets}", pdu.procedure_name());
-        Ok(())
-    }
-
-    main().unwrap();
-}
-
-/// The Rust block 13 of README.md.
-#[rustfmt::skip]
-fn block_13() {
+fn block_7() {
     use oxirush_s1ap::{BitString, build_s1ap, build_s1ap_ie, extract_s1ap_ies, s1ap::*};
 
     fn main() -> Result<(), oxirush_s1ap::Error> {
@@ -531,9 +423,9 @@ fn block_13() {
     main().unwrap();
 }
 
-/// The Rust block 14 of README.md.
+/// The Rust block 8 of README.md.
 #[rustfmt::skip]
-fn block_14() {
+fn block_8() {
     use oxirush_s1ap::{build_s1ap, s1ap::*};
 
     fn main() -> Result<(), oxirush_s1ap::Error> {
@@ -561,9 +453,9 @@ fn block_14() {
     main().unwrap();
 }
 
-/// The Rust block 15 of README.md.
+/// The Rust block 9 of README.md.
 #[rustfmt::skip]
-fn block_15() {
+fn block_9() {
     use oxirush_s1ap::{Deviation, build_s1ap, s1ap::*};
 
     fn main() -> Result<(), oxirush_s1ap::Error> {
@@ -591,103 +483,22 @@ fn block_15() {
     main().unwrap();
 }
 
-/// The Rust block 16 of README.md.
+/// The Rust block 10 of README.md.
 #[rustfmt::skip]
-fn block_16() {
-    use oxirush_s1ap::helpers::*;
-
-    // A PLMN from its MCC and its MNC, and what is identified within it
-    let network = plmn("208", "93").unwrap();
-    let mme = gummei(network, 1, 1); // group, code
-    let tracking_area = tai(network, [0x00, 0x01]); // TAC
-    let cell = eutran_cgi(network, EnbKind::Macro, 0x12345, 7).unwrap(); // eNB, cell
-    let enb = global_enb_id(network, EnbKind::Macro, 0x12345).unwrap();
-    let home = global_enb_id(network, EnbKind::Home, 0x123_4567).unwrap();
-
-    // A bit string from octets, and the algorithms of a UE: the first octet
-    // of its encryption bitmap, then of its integrity bitmap
-    let algorithm_mask = oxirush_s1ap::BitString::from([0xe0]);
-    let capabilities = ue_security_capabilities(0xe0, 0xe0);
-
-    // What is no MCC, and a macro eNB ID that does not fit in its 20 bits
-    println!("{}", plmn("20", "93").unwrap_err());
-    println!("{}", global_enb_id(network, EnbKind::Macro, 0x100000).unwrap_err());
-}
-
-/// The Rust block 17 of README.md.
-#[rustfmt::skip]
-fn block_17() {
-    use oxirush_s1ap::{ErrorKind, s1ap::*};
-
-    // A UE CONTEXT RELEASE REQUEST is not decoded as an S1 SETUP REQUEST
-    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    let pdu = S1AP_PDU::decode(&bytes).unwrap();
-    let wrong = pdu.decode_value::<S1SetupRequest>().unwrap_err();
-    assert_eq!(wrong.kind(), ErrorKind::WrongMessage);
-    println!("{wrong}");
-
-    // Octets that end early
-    let short = S1AP_PDU::decode(&bytes[..10]).unwrap_err();
-    assert_eq!(short.kind(), ErrorKind::Decode);
-    println!("{short}");
-}
-
-/// The Rust block 18 of README.md.
-#[rustfmt::skip]
-fn block_18() {
-    use oxirush_s1ap::s1ap::S1AP_PDU;
-
-    // UE CONTEXT RELEASE REQUEST
-    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    let pdu = S1AP_PDU::decode(&bytes).unwrap();
-
-    // Its tree, then its third IE as the view has it
-    println!("{}", pdu.to_tree());
-    let view = pdu.to_view().unwrap();
-    println!("{}", view["message"]["protocolIEs"][2]);
-}
-
-/// The Rust block 19 of README.md.
-#[rustfmt::skip]
-fn block_19() {
+fn block_10() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use oxirush_s1ap::tree;
 
+    // A UE CONTEXT RELEASE REQUEST, as a tree
     let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
     let pdu = S1AP_PDU::decode(&bytes).unwrap();
-    let view = pdu.to_view().unwrap();
+    println!("{}", pdu.to_tree());
 
-    // `/s1ap` is the IEs of the message, and an IE goes by its name
-    let select = |path| inspect::select(&view, path).unwrap();
-    assert_eq!(select("/s1ap/eNB-UE-S1AP-ID/value"), [&tree!(7)]);
-    assert_eq!(select("/s1ap/Cause/radioNetwork"), [&tree!("user-inactivity")]);
-    assert_eq!(select("/s1ap/Cause/octets"), [&tree!("0280")]);
-
-    // By its position, by its name whatever its case and its separators, by its
-    // identifier, and each IE with `*`
-    assert_eq!(select("/s1ap/1/value"), select("/S1AP/enb_ue_s1ap_id/value"));
-    assert_eq!(select("/s1ap/@id=8/value"), [&tree!(7)]);
-    assert_eq!(select("/s1ap/*/criticality").len(), 3);
-
-    // Nothing where the message could have a value and has none
-    assert!(select("/s1ap/Cause/nas").is_empty());
-    assert!(select("/s1ap/GUMMEI-ID/mME-Code").is_empty());
-
-    // Each value with the path that selects it
+    // Its view: each value with the path that selects it
+    let mut view = pdu.to_view().unwrap();
     for (path, value) in inspect::paths(&view) {
         println!("{path} = {value}");
     }
-}
-
-/// The Rust block 20 of README.md.
-#[rustfmt::skip]
-fn block_20() {
-    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-    use oxirush_s1ap::tree;
-
-    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    let pdu = S1AP_PDU::decode(&bytes).unwrap();
-    let mut view = pdu.to_view().unwrap();
 
     // A value, and another alternative of a CHOICE in place of the one that is there
     inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9)).unwrap();
@@ -695,44 +506,14 @@ fn block_20() {
     let edited = pdu.with_view(&view).unwrap();
     println!("{}", edited.to_tree());
 
-    // What was not edited is the octets that were received
-    let after = edited.to_view().unwrap();
-    let octets = inspect::select(&after, "/s1ap/MME-UE-S1AP-ID/octets").unwrap();
-    assert_eq!(octets, [&tree!("002a")]);
-
     // A name that the type does not have is refused, and the view is as it was
     let wrong = inspect::set(&mut view, "/s1ap/Cause/radioNetwrok", tree!("unspecified"));
     println!("{}", wrong.unwrap_err());
 }
 
-/// The Rust block 21 of README.md.
+/// The Rust block 11 of README.md.
 #[rustfmt::skip]
-fn block_21() {
-    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-    use oxirush_s1ap::tree;
-
-    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    let pdu = S1AP_PDU::decode(&bytes).unwrap();
-    let mut view = pdu.to_view().unwrap();
-
-    // An IE is added at the end, by its name and its typed value
-    let name = tree!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
-    inspect::insert(&mut view, "/s1ap/-", name).unwrap();
-
-    // Before another IE, by its number and its octets
-    let unknown = tree!({"id": 60000, "criticality": "ignore", "octets": "c0ffee"});
-    inspect::insert(&mut view, "/s1ap/Cause", unknown).unwrap();
-
-    // An IE is taken out by its name
-    inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID").unwrap();
-
-    let edited = pdu.with_view(&view).unwrap();
-    println!("{}", edited.to_tree()["ies"]);
-}
-
-/// The Rust block 22 of README.md.
-#[rustfmt::skip]
-fn block_22() {
+fn block_11() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use oxirush_s1ap::tree;
 
@@ -757,9 +538,9 @@ fn block_22() {
     println!("{}", tree!(inspect::select(&view, "/s1ap/*/criticality").unwrap()));
 }
 
-/// The Rust block 23 of README.md.
+/// The Rust block 12 of README.md.
 #[rustfmt::skip]
-fn block_23() {
+fn block_12() {
     use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
     use oxirush_s1ap::tree;
 
@@ -781,158 +562,9 @@ fn block_23() {
     println!("{}", edited.to_tree());
 }
 
-/// The Rust block 24 of README.md.
+/// The Rust block 13 of README.md.
 #[rustfmt::skip]
-fn block_24() {
-    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-    use oxirush_s1ap::tree;
-
-    // A message that has one IE twice
-    let twice = tree!({"message": "UEContextReleaseRequest", "ies": [
-        {"MME-UE-S1AP-ID": 1},
-        {"eNB-UE-S1AP-ID": 7},
-        {"MME-UE-S1AP-ID": 2},
-    ]});
-    let pdu = S1AP_PDU::from_tree(&twice).unwrap();
-    let mut view = pdu.to_view().unwrap();
-
-    // The name selects both, in the order of the message
-    let both = inspect::select(&view, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
-    assert_eq!(both, [&tree!(1), &tree!(2)]);
-
-    // Each has its position, which is how `paths` names it, and its name may follow
-    inspect::set(&mut view, "/s1ap/2/MME-UE-S1AP-ID/value", tree!(3)).unwrap();
-
-    // After a position, the name of another IE is an error that says which IE is there
-    println!("{}", inspect::select(&view, "/s1ap/2/eNB-UE-S1AP-ID/value").unwrap_err());
-
-    // The values, each with its path
-    for (path, value) in inspect::paths(&view) {
-        if path.ends_with("/value") {
-            println!("{path} = {value}");
-        }
-    }
-}
-
-/// The Rust block 25 of README.md.
-#[rustfmt::skip]
-fn block_25() {
-    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
-    use oxirush_s1ap::{tree, tree::Value};
-
-    // A message whose one IE is a list of two items
-    let command = tree!({"message": "E-RABReleaseCommand", "ies": [
-        {"E-RABToBeReleasedList": [
-            {"E-RABItem": {"e-RAB-ID": 5, "cause": {"nas": "normal-release"}}},
-            {"E-RABItem": {"e-RAB-ID": 6, "cause": {"nas": "normal-release"}}},
-        ]},
-    ]});
-    let pdu = S1AP_PDU::from_tree(&command).unwrap();
-    let mut view = pdu.to_view().unwrap();
-
-    // An item by its position or by its name, which selects each item of that name
-    let select = |view, path| -> Vec<Value> {
-        let selected = inspect::select(view, path).unwrap();
-        selected.into_iter().cloned().collect()
-    };
-    assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/e-RAB-ID"), [tree!(6)]);
-    assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/E-RABItem/e-RAB-ID"), [tree!(5), tree!(6)]);
-
-    // The same value by the path that says each `value`
-    assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/value/1/value/e-RAB-ID"), [tree!(6)]);
-
-    // And by the names that the tree shows, joined: the item by its position, then its name
-    assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/E-RABItem/e-RAB-ID"), [tree!(6)]);
-
-    // The criticality of an item is the one of its object set
-    assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/0/criticality"), [tree!("ignore")]);
-
-    // An item is added at the end, as the IE that it is, and one is taken out
-    let item = tree!({"e-RAB-ID": 7, "cause": {"radioNetwork": "unspecified"}});
-    let item = tree!({"id": "E-RABItem", "criticality": "ignore", "value": item});
-    inspect::insert(&mut view, "/s1ap/E-RABToBeReleasedList/-", item).unwrap();
-    inspect::remove(&mut view, "/s1ap/E-RABToBeReleasedList/0").unwrap();
-
-    let edited = pdu.with_view(&view).unwrap();
-    println!("{}", edited.to_tree());
-}
-
-/// The Rust block 26 of README.md.
-#[rustfmt::skip]
-fn block_26() {
-    use oxirush_s1ap::inspect;
-
-    // The names that the value at a path can have, as the specification spells them
-    let names = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause/nas").unwrap();
-    println!("{:?}", names.unwrap());
-
-    // A value of another type has none
-    let choice = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause/value");
-    assert_eq!(choice, Ok(None));
-}
-
-/// The Rust block 27 of README.md.
-#[rustfmt::skip]
-fn block_27() {
-    use oxirush_s1ap::inspect;
-
-    // Whether a path can select anything in a message of a name, without a view
-    let check = |path| inspect::check_path("UEContextReleaseRequest", path);
-    assert_eq!(check("/s1ap/Cause/nas"), Ok(()));
-    assert_eq!(check("/s1ap/*/radioNetwork"), Ok(()));
-
-    // A name that is written wrong, and an IE that the message does not have
-    for wrong in ["/s1ap/Cause/radioNetwrok", "/s1ap/eNB-UE-S1AP-ID/valeu", "/s1ap/GUMMEI-ID"] {
-        println!("{}", check(wrong).unwrap_err());
-    }
-}
-
-/// The Rust block 28 of README.md.
-#[rustfmt::skip]
-fn block_28() {
-    use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1AP_PDU};
-    use oxirush_s1ap::tree;
-
-    // Written: the name of the type with its value, in place of the octets
-    let name = "SourceeNB-ToTargeteNB-TransparentContainer";
-    let required = tree!({"message": "HandoverRequired", "ies": [
-        {"MME-UE-S1AP-ID": 42},
-        {"eNB-UE-S1AP-ID": 7},
-        {"Source-ToTarget-TransparentContainer": {name: {
-            "rRC-Container": "0102",
-            "targetCell-ID": {"pLMNidentity": "208-93", "cell-ID": 4660},
-            "uE-HistoryInformation": [{"uTRAN-Cell": "00"}],
-        }}},
-    ]});
-
-    // A tree shows the octets that the container was encoded as
-    let pdu = S1AP_PDU::from_tree(&required).unwrap();
-    println!("{}", pdu.to_tree()["ies"][2]);
-
-    // Read: a path goes through the name of the type
-    let mut view = pdu.to_view().unwrap();
-    let container = format!("/s1ap/Source-ToTarget-TransparentContainer/{name}");
-    let cell = format!("{container}/targetCell-ID/cell-ID");
-    assert_eq!(inspect::check_path("HandoverRequired", &cell), Ok(()));
-
-    // The path is an error until `open` has decoded the octets, and selects the value after that
-    assert_eq!(inspect::select(&view, &cell).unwrap_err().kind(), ErrorKind::NotOpened);
-    inspect::open(&mut view, &cell).unwrap();
-    assert_eq!(inspect::select(&view, &cell).unwrap(), [&tree!(4660)]);
-
-    // What the octets carry, decoded
-    let decoded = format!("{container}/decoded");
-    println!("{}", inspect::select(&view, &decoded).unwrap()[0]);
-
-    // An edit goes into it, and what is not edited is sent as it was received
-    inspect::set(&mut view, &cell, tree!(7)).unwrap();
-    let edited = pdu.with_view(&view).unwrap();
-    println!("{}", edited.to_tree()["ies"][2]);
-}
-
-/// The Rust block 29 of README.md.
-#[rustfmt::skip]
-fn block_29() {
+fn block_13() {
     use oxirush_s1ap::helpers::{plmn, tai};
     use oxirush_s1ap::s1ap::S1AP_PDU;
 

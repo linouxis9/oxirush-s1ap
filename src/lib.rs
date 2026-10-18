@@ -17,28 +17,103 @@
 
 //! A codec for S1AP, the S1 Application Protocol of 3GPP TS 36.413, in aligned PER.
 //!
-//! ```
-//! use oxirush_s1ap::{build_s1ap, s1ap::*};
+//! ```rust
+//! use oxirush_s1ap::{build_s1ap, extract_s1ap_ies, s1ap::*};
 //!
-//! let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-//!     IGNORE, UEContextReleaseRequest,
-//!     REJECT MME_UE_S1AP_ID(1u32),
-//!     REJECT eNB_UE_S1AP_ID(7u32),
-//!     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
-//! )?;
-//! let bytes = pdu.encode()?;
-//! let decoded = S1AP_PDU::decode(&bytes)?;
-//! assert_eq!(decoded.procedure_name(), "UEContextReleaseRequest");
-//! # Ok::<(), oxirush_s1ap::Error>(())
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Decode a UE CONTEXT RELEASE REQUEST
+//!     let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
+//!     let pdu = S1AP_PDU::decode(&bytes)?;
+//!     assert_eq!((pdu.procedure_code(), pdu.is_initiating()), (18, true));
+//!     println!("{}", pdu.procedure_name());
+//!     # assert_eq!(pdu.procedure_name(), "UEContextReleaseRequest");
+//!
+//!     // Read its IEs by name. An `opt` field is `None` when its IE is not there,
+//!     // and what follows `=>` is what the field keeps of the decoded value
+//!     let request: UEContextReleaseRequest = pdu.decode_value()?;
+//!     extract_s1ap_ies!(request, UEContextReleaseRequest,
+//!         opt mme_id: u32 = MME_UE_S1AP_ID(id),
+//!         opt enb_id: u32 = eNB_UE_S1AP_ID(id),
+//!         opt cause: Cause = Cause(cause) => cause,
+//!     );
+//!     println!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}");
+//!     # assert_eq!(format!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}"), "MME=Some(42) eNB=Some(7) cause=Some(radioNetwork(user_inactivity))");
+//!
+//!     // Build it with another cause: the direction, the procedure, the criticality
+//!     // of the PDU and the message, then each IE with its criticality
+//!     let rebuilt = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
+//!         IGNORE, UEContextReleaseRequest,
+//!
+//!         REJECT MME_UE_S1AP_ID(42u32),
+//!         REJECT eNB_UE_S1AP_ID(7u32),
+//!         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::radio_connection_with_ue_lost)),
+//!     )?;
+//!
+//!     // Encode it
+//!     let encoded = hex::encode(rebuilt.encode()?);
+//!     assert_eq!(encoded, "0012401500000300000002002a0008000200070002400202a0");
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ```text
+//! UEContextReleaseRequest
+//! MME=Some(42) eNB=Some(7) cause=Some(radioNetwork(user_inactivity))
 //! ```
 //!
 //! The types of [`s1ap`] are generated from the ASN.1 modules of the specification and
 //! checked in: `rasn-compiler` resolves the modules, and the generator of the crate
-//! writes each type with its codec on [`oxirush-aper`](https://github.com/linouxis9/oxirush-aper).
-//! The README has the examples, task by task.
+//! writes each type with its codec on [`oxirush-aper`](aper).
+//!
+//! # Tasks
+//!
+//! The [README](https://github.com/linouxis9/oxirush-s1ap#readme) has an example of
+//! each, with what it prints.
+//!
+//! | Task | Items |
+//! |------|-------|
+//! | Answer an eNB, from S1 SETUP to the INITIAL CONTEXT SETUP | [`build_s1ap!`], [`build_s1ap_ie!`], [`extract_s1ap_ies!`], [`helpers`], [`S1AP_PDU::ie`](s1ap::S1APPDU::ie) |
+//! | Decode a PDU | [`S1AP_PDU::decode`](s1ap::S1APPDU::decode), [`S1AP_PDU::decode_borrowed`](s1ap::S1APPDU::decode_borrowed), [`S1AP_PDU::kind`](s1ap::S1APPDU::kind), [`S1AP_PDU::decode_value`](s1ap::S1APPDU::decode_value) |
+//! | Build a PDU | [`build_s1ap!`], [`S1AP_PDU::of_message`](s1ap::S1APPDU::of_message) |
+//! | Read the IEs of a message | [`extract_s1ap_ies!`], [`ie`], [`with_s1ap_ie_mut!`], [`build_s1ap_ie!`] |
+//! | A list of single containers, and a handover container, typed | [`S1AP_PDU::items`](s1ap::S1APPDU::items), [`s1ap::decode_open_type`], [`s1ap::encode_open_type`] |
+//! | Check a message, and answer one that is faulty | [`S1AP_PDU::check`](s1ap::S1APPDU::check), [`S1AP_PDU::check_structure`](s1ap::S1APPDU::check_structure), [`Deviation`], [`S1AP_PDU::criticality_diagnostics_for_response`](s1ap::S1APPDU::criticality_diagnostics_for_response) |
+//! | A PDU as JSON | [`S1AP_PDU::to_tree`](s1ap::S1APPDU::to_tree), [`S1AP_PDU::to_view`](s1ap::S1APPDU::to_view), [`S1AP_PDU::with_view`](s1ap::S1APPDU::with_view), [`inspect`] |
+//! | Write a message from its tree | [`S1AP_PDU::from_tree`](s1ap::S1APPDU::from_tree) |
 //!
 //! Every function and macro that can fail returns an [`Error`]: its [`ErrorKind`] is
 //! what a caller matches on, and its `Display` says what is wrong.
+//!
+//! ```
+//! # use std::fmt::Write as _;
+//! # let mut printed = String::new();
+//! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
+//! use oxirush_s1ap::{ErrorKind, s1ap::*};
+//!
+//! // A UE CONTEXT RELEASE REQUEST is not decoded as an S1 SETUP REQUEST
+//! let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+//! let pdu = S1AP_PDU::decode(&bytes).unwrap();
+//! let wrong = pdu.decode_value::<S1SetupRequest>().unwrap_err();
+//! assert_eq!(wrong.kind(), ErrorKind::WrongMessage);
+//! println!("{wrong}");
+//!
+//! // Octets that end early
+//! let short = S1AP_PDU::decode(&bytes[..10]).unwrap_err();
+//! assert_eq!(short.kind(), ErrorKind::Decode);
+//! println!("{short}");
+//! # assert_eq!(printed, r##"the message of this PDU is UEContextReleaseRequest, not S1SetupRequest: kind() says which message a PDU holds
+//! # these octets do not decode as S1AP-PDU: the octets end before the value does, in its field `value`
+//! # "##);
+//! ```
+//!
+//! ```text
+//! the message of this PDU is UEContextReleaseRequest, not S1SetupRequest: kind() says which message a PDU holds
+//! these octets do not decode as S1AP-PDU: the octets end before the value does, in its field `value`
+//! ```
+//!
+//! Every call that can fail returns an `oxirush_s1ap::Error`. Its `kind()` is
+//! what a caller matches on, and the documentation of `ErrorKind` lists the
+//! kinds; `error.ie()` names the IE of an error of the macros.
 //!
 //! The codec builds, encodes and decodes a message whatever its IEs are. `check()` of
 //! a PDU reports how it deviates from what the ASN.1 assigns its message, each as a
@@ -206,6 +281,17 @@
 //! `Decode` that says `the number does not fit in 64 bits`. The PDU still decodes:
 //! its IEs are octets until one is read, and the JSON forms of the `inspect` feature
 //! show an IE that does not decode as the octets received, and write them back.
+//!
+//! # The OxiRush family
+//!
+//! - [oxirush-utils](https://docs.rs/oxirush-utils): the 3GPP identities, and the JSON tree with its paths that the others share.
+//! - [oxirush-aper](https://docs.rs/oxirush-aper): aligned PER, the runtime of the NGAP and S1AP codecs.
+//! - [oxirush-nas](https://docs.rs/oxirush-nas): the NAS messages of 5GS and EPS.
+//! - [oxirush-security](https://docs.rs/oxirush-security): NAS security, AKA and the derivation of keys.
+//! - [oxirush-ngap](https://docs.rs/oxirush-ngap): NGAP, between a gNB and an AMF.
+//! - [oxirush-s1ap](https://docs.rs/oxirush-s1ap): S1AP, between an eNB and an MME.
+//! - [oxirush-gtp-u](https://docs.rs/oxirush-gtp-u): GTP-U tunnels, with a test UPF.
+//! - [oxirush-sctp](https://docs.rs/oxirush-sctp): SCTP sockets, which carry NGAP and S1AP.
 
 #![forbid(unsafe_code)]
 
@@ -220,6 +306,19 @@ pub mod inspect;
 #[cfg(feature = "inspect")]
 mod inspect_registry;
 pub mod macros;
+/// The types of the ASN.1 modules of TS 36.413, as the generator writes them:
+/// [`S1AP_PDU`](s1ap::S1AP_PDU) and its three directions, each message, each IE and
+/// each type of a value, which decode and encode themselves in aligned PER.
+///
+/// ```
+/// use oxirush_s1ap::s1ap::{MMEUES1APID, decode_open_type, encode_open_type};
+///
+/// // `MME-UE-S1AP-ID ::= INTEGER (0..4294967295)`, as the value of its IE holds it
+/// let octets = encode_open_type(&MMEUES1APID(42))?;
+/// assert_eq!(octets, [0x00, 0x2a]);
+/// assert_eq!(decode_open_type::<MMEUES1APID>(&octets)?, MMEUES1APID(42));
+/// # Ok::<(), oxirush_s1ap::Error>(())
+/// ```
 // The bindings are formatted where they are generated, by the rustfmt of the toolchain
 // that the generator runs with: a later one breaks some of their long lines otherwise.
 #[rustfmt::skip]

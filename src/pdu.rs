@@ -116,6 +116,21 @@ impl<'a> S1APPDU<'a> {
     /// An IE that the message has twice is there twice: `check()` reports the second as
     /// [`Deviation::RepeatedIe`](oxirush_aper::check::Deviation::RepeatedIe), and
     /// [`ie`](Self::ie) takes the first.
+    ///
+    /// ```
+    /// use oxirush_s1ap::{build_s1ap, ie, s1ap::*};
+    ///
+    /// // A UE CONTEXT RELEASE REQUEST with its eNB-UE-S1AP-ID twice
+    /// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, UEContextReleaseRequest,
+    ///     MME_UE_S1AP_ID(42u32),
+    ///     eNB_UE_S1AP_ID(7u32),
+    ///     eNB_UE_S1AP_ID(8u32),
+    ///     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+    /// )?;
+    /// let ids: Vec<_> = pdu.ies::<ie::eNB_UE_S1AP_ID>().collect::<Result<_, _>>()?;
+    /// assert_eq!(ids.len(), 2);
+    /// # Ok::<(), oxirush_s1ap::Error>(())
+    /// ```
     #[inline]
     pub fn ies<T: Ie<Protocol = S1ap>>(&self) -> protocol::Ies<'_, T> {
         Source::__of_pdu(self).ies::<T>()
@@ -124,6 +139,20 @@ impl<'a> S1APPDU<'a> {
     /// The first occurrence of the IE `T` in the message of this PDU, decoded as the type
     /// of `T`; `None` when the message does not have it. The octets of the message are read
     /// up to that IE, and nothing else is decoded: see [`ies`](Self::ies).
+    ///
+    /// ```
+    /// use oxirush_s1ap::{ie, s1ap::*};
+    ///
+    /// // The Cause of a UE CONTEXT RELEASE REQUEST, read in the buffer that it came in
+    /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    /// let pdu = S1AP_PDU::decode_borrowed(&octets)?;
+    /// let cause = pdu.ie::<ie::Cause>().unwrap()?;
+    /// assert_eq!(cause, Cause::radioNetwork(CauseRadioNetwork::user_inactivity));
+    ///
+    /// // An IE that the message does not have
+    /// assert!(pdu.ie::<ie::TimeToWait>().is_none());
+    /// # Ok::<(), oxirush_s1ap::Error>(())
+    /// ```
     #[inline]
     pub fn ie<T: Ie<Protocol = S1ap>>(&self) -> Option<Result<T::Value<'_>, Error>> {
         self.ies::<T>().next()
@@ -239,6 +268,19 @@ impl<'a> S1APPDU<'a> {
     /// each checks its value, and an IE that does not decode is the error of the kind
     /// `UndecodableIe` there, which [`Deviation::of`] makes a deviation of. `check`
     /// decodes every IE of the object set, for a tool that looks at every value.
+    ///
+    /// ```
+    /// use oxirush_s1ap::{build_s1ap, s1ap::*};
+    ///
+    /// // A UE CONTEXT RELEASE REQUEST without its Cause
+    /// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, UEContextReleaseRequest,
+    ///     MME_UE_S1AP_ID(42u32),
+    ///     eNB_UE_S1AP_ID(7u32),
+    /// )?;
+    /// let deviations = pdu.check_structure()?;
+    /// assert_eq!(deviations[0].to_string(), "Cause (IE 2) is mandatory, and the message does not have it");
+    /// # Ok::<(), oxirush_s1ap::Error>(())
+    /// ```
     ///
     /// # Errors
     ///

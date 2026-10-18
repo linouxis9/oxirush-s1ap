@@ -283,6 +283,40 @@ macro_rules! __s1ap_proc_code {
 /// assert_eq!(released(&pdu)?, (1, true, None));
 /// # Ok::<(), Error>(())
 /// ```
+///
+/// A `lax` field, on a message whose Cause decodes and on one whose Cause does not:
+///
+/// ```
+/// # use std::fmt::Write as _;
+/// # let mut printed = String::new();
+/// # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
+/// use oxirush_s1ap::{extract_s1ap_ies, s1ap::*};
+///
+/// // The cause of a request, when it has one that is read
+/// fn cause(request: &UEContextReleaseRequest) -> Option<Cause> {
+///     extract_s1ap_ies!(request, UEContextReleaseRequest,
+///         lax cause: Cause = Cause(value) => value,
+///     );
+///     cause
+/// }
+///
+/// // A UE CONTEXT RELEASE REQUEST, then the same with an octet of its Cause spoiled
+/// for octets in [
+///     "0012401500000300000002002a000800020007000240020280",
+///     "0012401500000300000002002a000800020007000240027280",
+/// ] {
+///     let pdu = S1AP_PDU::decode(&hex::decode(octets).unwrap()).unwrap();
+///     println!("{:?}", cause(&pdu.decode_value().unwrap()));
+/// }
+/// # assert_eq!(printed, r##"Some(radioNetwork(user_inactivity))
+/// # None
+/// # "##);
+/// ```
+///
+/// ```text
+/// Some(radioNetwork(user_inactivity))
+/// None
+/// ```
 #[macro_export]
 macro_rules! extract_s1ap_ies {
     ($($arguments:tt)*) => {
@@ -355,6 +389,20 @@ macro_rules! with_s1ap_ie_mut {
 /// criticality that a call leaves out is the one that the specification assigns: that of
 /// the procedure for the PDU, and that of the object set of the message for an IE, which
 /// an IE that the set does not have has not: an error of the kind `Argument`.
+///
+/// ```
+/// use oxirush_s1ap::{build_s1ap, s1ap::*};
+///
+/// // The direction, the procedure and the message, then each IE: the criticalities
+/// // are those of the specification, or written before what they are of
+/// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, UEContextReleaseRequest,
+///     MME_UE_S1AP_ID(42u32),
+///     eNB_UE_S1AP_ID(7u32),
+///     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
+/// )?;
+/// assert_eq!(hex::encode(pdu.encode()?), "0012401500000300000002002a000800020007000240020280");
+/// # Ok::<(), oxirush_s1ap::Error>(())
+/// ```
 #[macro_export]
 macro_rules! build_s1ap {
     ($($arguments:tt)*) => {
