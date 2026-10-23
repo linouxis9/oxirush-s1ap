@@ -412,18 +412,42 @@ macro_rules! build_s1ap {
 
 /// Build one S1AP protocol IE entry. Every message takes the same
 /// `ProtocolIEField`: the name before the comma says where the IE goes, and is the
-/// type of a message.
+/// type of a message. The IE has the criticality that the object set of that message
+/// assigns it, unless the call writes its own.
 ///
-/// An IE that goes in no message is built without that name. Such is an item of a
-/// list of single containers, as `E-RABToBeSetupListCtxtSUReq`, whose items are each one
-/// IE:
+/// An IE that goes in no message is built without that name, and with its criticality.
+/// Such is an item of a list of single containers, as `E-RABToBeSetupListCtxtSUReq`,
+/// whose items are each one IE.
 ///
-/// ```ignore
-/// build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(item))
+/// ```
+/// use oxirush_s1ap::aper::BitString;
+/// use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
+///
+/// // An IE of a message, of the criticality of its object set
+/// let mme = build_s1ap_ie!(UEContextReleaseRequest, MME_UE_S1AP_ID(1u32))?;
+/// assert_eq!(mme.criticality, Criticality::reject);
+///
+/// // One of another criticality, which a test of a peer sends
+/// let ignored = build_s1ap_ie!(UEContextReleaseRequest, IGNORE MME_UE_S1AP_ID(1u32))?;
+/// assert_eq!(ignored.criticality, Criticality::ignore);
+///
+/// // An item of a list of single containers: an E-RAB of QCI 9, and its tunnel
+/// let priority = AllocationAndRetentionPriority::new(PriorityLevel(15),
+///     PreEmptionCapability::shall_not_trigger_pre_emption,
+///     PreEmptionVulnerability::not_pre_emptable, None);
+/// let qos = ERABLevelQoSParameters::new(QCI(9), priority, None, None);
+/// let bearer = ERABToBeSetupItemCtxtSUReq::new(ERABID(5), qos,
+///     TransportLayerAddress(BitString::from([10, 0, 0, 1])), GTPTEID([0, 0, 0, 1]), None, None);
+/// let item = build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?;
+/// let list = build_s1ap_ie!(InitialContextSetupRequest,
+///     E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(vec![item])))?;
+/// assert_eq!(list.criticality, Criticality::reject);
+/// # Ok::<(), oxirush_s1ap::Error>(())
 /// ```
 ///
 /// Gives a `Result<ProtocolIEField, Error>`: a value that does not encode into its
-/// open type is an error of the kind `Encode`.
+/// open type is an error of the kind `Encode`, and an IE that the object set does not
+/// have, without its criticality, one of the kind `Argument`.
 #[macro_export]
 macro_rules! build_s1ap_ie {
     ($($arguments:tt)*) => {

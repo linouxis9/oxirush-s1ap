@@ -21,6 +21,41 @@ const CARRIED: &[(&str, &str)] = &[
     ),
 ];
 
+/// The examples of the types that a program meets first, which the documentation of each
+/// has after what the type is in ASN.1.
+const EXAMPLES: &[(&str, &str)] = &[(
+    "ERABToBeSetupItemCtxtSUReq",
+    r#"An E-RAB of an INITIAL CONTEXT SETUP REQUEST: the item of a list of single containers,
+which `items()` of a PDU walks.
+
+```
+use oxirush_s1ap::aper::BitString;
+use oxirush_s1ap::{build_s1ap, build_s1ap_ie, ie, s1ap::*};
+
+// The default bearer: E-RAB 5 of QCI 9, and the S-GW's end of its tunnel
+let priority = AllocationAndRetentionPriority::new(PriorityLevel(15),
+    PreEmptionCapability::shall_not_trigger_pre_emption,
+    PreEmptionVulnerability::not_pre_emptable, None);
+let qos = ERABLevelQoSParameters::new(QCI(9), priority, None, None);
+let bearer = ERABToBeSetupItemCtxtSUReq::new(ERABID(5), qos,
+    TransportLayerAddress(BitString::from([10, 0, 0, 1])), GTPTEID([0, 0, 0, 1]), None, None);
+let request = build_s1ap!(InitiatingMessage, InitialContextSetup, InitialContextSetupRequest,
+    MME_UE_S1AP_ID(1u32),
+    eNB_UE_S1AP_ID(7u32),
+    E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(vec![
+        build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?,
+    ])),
+)?;
+
+// Each item, where it is in the octets of the PDU
+for item in request.items::<ie::E_RABToBeSetupListCtxtSUReq>() {
+    let item = item?;
+    assert_eq!((item.e_rab_id, item.gtp_teid), (ERABID(5), GTPTEID([0, 0, 0, 1])));
+}
+# Ok::<(), oxirush_s1ap::Error>(())
+```"#,
+)];
+
 fn main() -> Result<()> {
     generate(&Protocol {
         name: "S1AP",
@@ -33,8 +68,10 @@ fn main() -> Result<()> {
             ("ENB_UE_S1AP_ID", "ENBUES1APID"),
         ],
         release_request: "0012401500000300000002002a000800020007000240020280",
+        release_display: "UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7",
         other_message: "S1SetupRequest",
         no_message: "ERABToBeSetupItemCtxtSUReq",
+        examples: EXAMPLES,
         correct,
     })
 }

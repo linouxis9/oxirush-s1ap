@@ -81,8 +81,12 @@
 //! | A PDU as JSON | [`S1AP_PDU::to_tree`](s1ap::S1APPDU::to_tree), [`S1AP_PDU::to_view`](s1ap::S1APPDU::to_view), [`S1AP_PDU::with_view`](s1ap::S1APPDU::with_view), [`inspect`] |
 //! | Write a message from its tree | [`S1AP_PDU::from_tree`](s1ap::S1APPDU::from_tree) |
 //!
+// Without `inspect` the items of the JSON forms in the tasks are no links: the links are
+// checked in the build of every feature, which docs.rs makes.
+#![cfg_attr(not(feature = "inspect"), allow(rustdoc::broken_intra_doc_links))]
 //! Every function and macro that can fail returns an [`Error`]: its [`ErrorKind`] is
-//! what a caller matches on, and its `Display` says what is wrong.
+//! what a caller matches on, and its `Display` says what is wrong. `error.ie()` names
+//! the IE of an error of the macros.
 //!
 //! ```
 //! # use std::fmt::Write as _;
@@ -110,10 +114,6 @@
 //! the message of this PDU is UEContextReleaseRequest, not S1SetupRequest: kind() says which message a PDU holds
 //! these octets do not decode as S1AP-PDU: the octets end before the value does, in its field `value`
 //! ```
-//!
-//! Every call that can fail returns an `oxirush_s1ap::Error`. Its `kind()` is
-//! what a caller matches on, and the documentation of `ErrorKind` lists the
-//! kinds; `error.ie()` names the IE of an error of the macros.
 //!
 //! The codec builds, encodes and decodes a message whatever its IEs are. `check()` of
 //! a PDU reports how it deviates from what the ASN.1 assigns its message, each as a
@@ -294,6 +294,7 @@
 //! - [oxirush-sctp](https://docs.rs/oxirush-sctp): SCTP sockets, which carry NGAP and S1AP.
 
 #![forbid(unsafe_code)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 extern crate alloc;
 
@@ -348,12 +349,23 @@ pub use oxirush_aper::protocol::Message;
 pub use oxirush_aper::{
     AsnType, BitString, Bits, Decode, Encode, Error, ErrorKind, Fault, Faults, Octets,
 };
+/// ```
+/// use oxirush_s1ap::{Deviation, build_s1ap, s1ap::*};
+///
+/// // An INITIAL UE MESSAGE of its first IE alone
+/// let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage, eNB_UE_S1AP_ID(7u32))?;
+/// let deviations: Vec<Deviation> = pdu.check()?;
+/// assert!(matches!(deviations[0], Deviation::MissingIe { id: 26, .. }));
+/// assert_eq!(deviations[0].to_string(), "NAS-PDU (IE 26) is mandatory, and the message does not have it");
+/// # Ok::<(), oxirush_s1ap::Error>(())
+/// ```
+pub use registry::Deviation;
+pub use registry::S1ap;
 /// The IEs of the protocol, one marker type each, by the names that the macros take:
 /// `ies::<T>()` and `ie::<T>()` of a PDU and of a message take them, as
 /// `pdu.ie::<ie::Cause>()`. Each implements [`aper::protocol::Ie`], which gives its
 /// identifier and the type of its value.
 pub use registry::ie;
-pub use registry::{Deviation, S1ap};
 pub use s1ap::S1apPduKind;
 
 /// The examples of the README, which the documentation tests compile and run.

@@ -234,7 +234,7 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq<'static> {
 }
 
 fn print_and_encode(pdu: &S1AP_PDU) -> Result<(), Error> {
-    // Display example: "InitiatingMessage S1Setup (code=17)".
+    // Display example: "S1SetupRequest (procedure 17, initiating message)".
     println!("{pdu}");
     println!(
         "  procedure: {}  direction: {}  code: {}",

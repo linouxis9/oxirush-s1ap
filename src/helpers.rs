@@ -134,7 +134,16 @@ pub fn plmn_from(identity: &PLMNidentity) -> Option<(String, String)> {
     plmn_digits(identity.0.0)
 }
 
-/// Build a Globally Unique MME Identifier.
+/// Build a Globally Unique MME Identifier: a PLMN, an MME Group ID and an MME Code.
+///
+/// ```
+/// use oxirush_s1ap::helpers::{gummei, plmn};
+///
+/// // MME Group 2 and MME Code 1, in PLMN 208-93
+/// let mme = gummei(plmn("208", "93")?, 2, 1);
+/// assert_eq!((mme.mme_group_id.0, mme.mme_code.0), ([0x00, 0x02], [0x01]));
+/// # Ok::<(), oxirush_s1ap::Error>(())
+/// ```
 pub fn gummei(plmn_identity: PLMNidentity, mme_group_id: u16, mme_code: u8) -> GUMMEI {
     GUMMEI::new(
         plmn_identity,
@@ -145,6 +154,16 @@ pub fn gummei(plmn_identity: PLMNidentity, mme_group_id: u16, mme_code: u8) -> G
 }
 
 /// Build an LTE Tracking Area Identity: a PLMN and the two octets of a TAC.
+///
+/// ```
+/// use oxirush_s1ap::helpers::{plmn, tai};
+///
+/// // TAC 1 of PLMN 208-93
+/// let area = tai(plmn("208", "93")?, [0x00, 0x01]);
+/// assert_eq!(area.plmn_identity.0.0, [0x02, 0xf8, 0x39]);
+/// assert_eq!(area.tac.0, [0x00, 0x01]);
+/// # Ok::<(), oxirush_s1ap::Error>(())
+/// ```
 pub fn tai(plmn_identity: PLMNidentity, tac: [u8; 2]) -> TAI {
     TAI::new(plmn_identity, TAC(tac), None)
 }
@@ -206,6 +225,19 @@ pub fn enb_id(kind: EnbKind, enb_id: u32) -> Result<ENBID, Error> {
 ///
 /// An error of the kind `Argument` for an eNB ID that does not fit in the bits of its
 /// kind, and for a cell that does not fit in the bits after it.
+///
+/// ```
+/// use oxirush_s1ap::helpers::{EnbKind, eutran_cgi, plmn};
+///
+/// // Cell 1 of the macro eNB 0x12345, of 20 bits: 8 bits are left for the cell
+/// let cell = eutran_cgi(plmn("208", "93")?, EnbKind::Macro, 0x12345, 1)?;
+/// assert_eq!(cell.cell_id.0.value(), 0x1234_501);
+///
+/// // A cell of 9 bits beside a macro eNB ID
+/// let error = eutran_cgi(plmn("208", "93")?, EnbKind::Macro, 0x12345, 0x100).unwrap_err();
+/// assert_eq!(error.to_string(), "the cell of the eNB 256 does not fit in 8 bits");
+/// # Ok::<(), oxirush_s1ap::Error>(())
+/// ```
 pub fn eutran_cgi(
     plmn_identity: PLMNidentity,
     kind: EnbKind,

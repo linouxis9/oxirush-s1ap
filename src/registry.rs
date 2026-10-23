@@ -434,3 +434,6 @@ oxirush_aper::__lists! {
     SecondaryRATDataUsageReportList SecondaryRATDataUsageReportItem 1 256;
     E_RABToBeUpdatedList E_RABToBeUpdatedItem 1 256;
 }
+oxirush_aper::__transfer_sets! {
+    protocol S1ap, bindings s1ap;
+}

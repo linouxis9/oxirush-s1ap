@@ -912,12 +912,20 @@ fn well_known_values_are_shown_and_taken_as_they_are_usually_written() {
         S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
         edited.encode().unwrap()
     );
-    // Digits alone are read in two ways, and refused with both.
+    // Digits alone are refused: read in two ways, with both, and where both are one
+    // number, with that number as JSON writes it.
+    let area = &mut ie(&mut view, 64)["value"][0];
+    area["tAC"] = tree!("0010");
+    let error = S1AP_PDU::from_view(&view).unwrap_err().to_string();
+    assert!(
+        error.contains("the number 10 ") && error.contains("the number 16"),
+        "{error}"
+    );
     let area = &mut ie(&mut view, 64)["value"][0];
     area["tAC"] = tree!("0007");
     let error = S1AP_PDU::from_view(&view).unwrap_err().to_string();
     assert!(
-        error.contains("the number 0007") && error.contains("the number 7"),
+        error.contains("\"0007\" is a number in quotes: write 7 without quotes"),
         "{error}"
     );
     let area = &mut ie(&mut view, 64)["value"][0];
@@ -2410,4 +2418,89 @@ fn a_bit_string_of_another_size_than_its_type_gives_has_its_length() {
          of 16 bits, which has 2, at encryptionAlgorithms"
     );
     assert!(written(tree!({"value": "c000", "length": 20})).is_err());
+}
+
+/// Where the tree of a PDU has an IE as its octets, the view says why, and so does its
+/// path list: octets that do not decode, or that are in another form than the one of
+/// X.691, have a `_decode_error`, and those that a typed value has no place for `_lossy`.
+fn agree(wire: &[u8]) -> usize {
+    use oxirush_s1ap::tree::Value;
+    let Ok(pdu) = S1AP_PDU::decode(wire) else {
+        return 0;
+    };
+    let (tree, Ok(view)) = (pdu.to_tree(), pdu.to_view()) else {
+        return 0;
+    };
+    let (Some(Value::Array(shown)), Some(Value::Array(viewed))) =
+        (tree.get("ies"), view.pointer("/message/protocolIEs"))
+    else {
+        return 0;
+    };
+    assert_eq!(shown.len(), viewed.len(), "{tree}");
+    let says_why =
+        |entry: &Value| entry.get("_decode_error").is_some() || entry.get("_lossy").is_some();
+    let mut why = 0;
+    for (shown, viewed) in shown.iter().zip(viewed) {
+        let mut members = shown.as_object().into_iter().flatten();
+        let value = members
+            .find(|(name, _)| *name != "criticality")
+            .map(|(_, value)| value);
+        let as_octets = (value.and_then(Value::as_object))
+            .is_some_and(|value| value.len() == 1 && value.contains_key("octets"));
+        let said = says_why(viewed) || viewed.get("value").is_some_and(says_why);
+        assert_eq!(
+            as_octets, said,
+            "{shown} is shown so, and viewed as {viewed}"
+        );
+        why += usize::from(said);
+    }
+    let listed = inspect::paths(&view);
+    let listed = listed
+        .iter()
+        .filter(|(path, _)| path.ends_with("/_decode_error") || path.ends_with("/_lossy"));
+    assert!(listed.count() >= why, "{view}");
+    why
+}
+
+#[test]
+fn the_tree_and_the_paths_of_a_view_read_the_octets_of_an_ie_alike() {
+    // Each PDU of the fixtures, and each with the last bit of the value of one of its IEs
+    // changed, which is a padding bit of many.
+    let mut said = 0;
+    for file in [
+        include_str!("fixtures/messages.tsv"),
+        include_str!("fixtures/vectors.tsv"),
+        include_str!("fixtures/captured.tsv"),
+        include_str!("fixtures/later.tsv"),
+        include_str!("fixtures/fuzzed.tsv"),
+    ] {
+        let lines = file
+            .lines()
+            .filter(|line| !line.starts_with('#') && !line.is_empty());
+        for line in lines {
+            let wire = hex::decode(line.split('\t').nth(1).unwrap()).unwrap();
+            said += agree(&wire);
+            let Ok(pdu) = S1AP_PDU::decode(&wire) else {
+                continue;
+            };
+            let Ok(ies) = pdu.protocol_ies() else {
+                continue;
+            };
+            let ies = ies.into_owned();
+            for at in 0..ies.0.len() {
+                let mut changed = ies.clone();
+                let mut value = changed.0[at].value.to_vec();
+                let Some(last) = value.last_mut() else {
+                    continue;
+                };
+                *last ^= 1;
+                changed.0[at].value = oxirush_s1ap::Octets::owned(value);
+                let mut pdu = pdu.clone();
+                pdu.set_protocol_ies(changed).unwrap();
+                said += agree(&pdu.encode().unwrap());
+            }
+        }
+    }
+    // Some of them have octets that the view says why it shows as such.
+    assert!(said > 100, "{said}");
 }

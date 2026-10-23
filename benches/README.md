@@ -9,7 +9,7 @@ the protocol is in `src/` and `compare/` here.
 The comparison with the other implementations of S1AP is in the
 [README](../README.md#performance). The figures below were taken on the same
 machine, an AMD Ryzen 7 5700G (16 threads, Linux 7.0, Rust 1.98.1), measured
-on a quiet machine on 2026-10-18.
+on a quiet machine on 2026-10-18, at 774c1b5.
 
 ## Reading the IEs, and checking a PDU
 
@@ -76,7 +76,23 @@ The programs, the machine and the method of the comparison of the
 |  | decode ns | cycles | instructions | allocations | octets allocated | encode ns | cycles | instructions | allocations | octets allocated | most memory held, KiB |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | this crate | 221 | 1,014 | 3,401 | 2 | 256 | 144 | 624 | 2,247 | 2 | 454 | 3,326 |
-| rasn 0.29 | 2,123 (9.6x) | 10,072 (9.9x) | 22,939 (6.7x) | 20 | 1,074 | 1,757 (12.2x) | 8,086 (13.0x) | 26,482 (11.8x) | 33 | 1,698 | 3,812 |
-| hampi 0.7.2 | 3,320 (15.0x) | 15,135 (14.9x) | 48,070 (14.1x) | 37 | 3,569 | 4,420 (30.7x) | 20,491 (32.8x) | 63,793 (28.4x) | 17 | 1,797 | 3,330 |
-| asn1c (Open5GS 2.8.0) | 4,956 (22.5x) | 22,442 (22.1x) | 81,650 (24.0x) | 79 | 10,046 | 2,920 (20.3x) | 13,278 (21.3x) | 50,474 (22.5x) | 25 | 3,728 | 4,546 |
-| pycrate 0.8.1 | 218,657 (990.5x) | 985,521 (971.9x) | 2,090,371 (614.6x) |  |  | 135,987 (945.0x) | 612,914 (982.0x) | 1,280,226 (569.7x) |  |  | 28,128 |
+| rasn 0.29 | 2,123 (9.6x) | 10,072 (9.9x) | 22,939 (6.7x) | 20 | 1,074 | 1,757 (12x) | 8,086 (13x) | 26,482 (12x) | 33 | 1,698 | 3,812 |
+| hampi 0.7.2 | 3,320 (15x) | 15,135 (15x) | 48,070 (14x) | 37 | 3,569 | 4,420 (31x) | 20,491 (33x) | 63,793 (28x) | 17 | 1,797 | 3,330 |
+| asn1c (Open5GS 2.8.0) | 4,956 (22x) | 22,442 (22x) | 81,650 (24x) | 79 | 10,046 | 2,920 (20x) | 13,278 (21x) | 50,474 (22x) | 25 | 3,728 | 4,546 |
+| pycrate 0.8.1 | 218,657 (990x) | 985,521 (970x) | 2,090,371 (610x) |  |  | 135,987 (940x) | 612,914 (980x) | 1,280,226 (570x) |  |  | 28,128 |
+
+## The method of the comparison
+
+A time is the fastest of three runs of a call repeated for about 0.2 s. The
+cycles and the instructions are those that `perf stat` counts for the calls
+alone: the difference between a run of twice the calls and one of the calls.
+The allocations and the octets that they ask for are counted by an allocator
+that counts in Rust, by `malloc`, `calloc` and `realloc` for asn1c; pycrate's
+are not counted. The most memory held is the high-water mark of the resident
+memory of the program (`VmHWM`), its runtime included. The figures were taken at 774c1b5 on
+an AMD Ryzen 7 5700G (16 threads, Linux 7.0, Rust 1.98.1, Python 3.14), each
+program on one core, measured on a quiet machine on 2026-10-18: each is the
+median of four runs of the script, which fetches each implementation at a
+pinned version: hampi 0.7.2 and rasn 0.29.0 from crates.io, Open5GS v2.8.0
+from GitHub, pycrate 0.8.1 from PyPI, and the ASN.1 from the archive of 3GPP.
+The [README](../README.md#against-other-implementations) has the command.

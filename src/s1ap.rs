@@ -44204,6 +44204,36 @@ pub mod s1_ap_pdu_contents {
     #[cfg(feature = "serde")]
     oxirush_utils::impl_serde!(ERABToBeSetupItemBearerSUReq<'a>);
     /// `E-RABToBeSetupItemCtxtSUReq ::= SEQUENCE`, with an extension marker.
+    ///
+    /// An E-RAB of an INITIAL CONTEXT SETUP REQUEST: the item of a list of single containers,
+    /// which `items()` of a PDU walks.
+    ///
+    /// ```
+    /// use oxirush_s1ap::aper::BitString;
+    /// use oxirush_s1ap::{build_s1ap, build_s1ap_ie, ie, s1ap::*};
+    ///
+    /// // The default bearer: E-RAB 5 of QCI 9, and the S-GW's end of its tunnel
+    /// let priority = AllocationAndRetentionPriority::new(PriorityLevel(15),
+    ///     PreEmptionCapability::shall_not_trigger_pre_emption,
+    ///     PreEmptionVulnerability::not_pre_emptable, None);
+    /// let qos = ERABLevelQoSParameters::new(QCI(9), priority, None, None);
+    /// let bearer = ERABToBeSetupItemCtxtSUReq::new(ERABID(5), qos,
+    ///     TransportLayerAddress(BitString::from([10, 0, 0, 1])), GTPTEID([0, 0, 0, 1]), None, None);
+    /// let request = build_s1ap!(InitiatingMessage, InitialContextSetup, InitialContextSetupRequest,
+    ///     MME_UE_S1AP_ID(1u32),
+    ///     eNB_UE_S1AP_ID(7u32),
+    ///     E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(vec![
+    ///         build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?,
+    ///     ])),
+    /// )?;
+    ///
+    /// // Each item, where it is in the octets of the PDU
+    /// for item in request.items::<ie::E_RABToBeSetupListCtxtSUReq>() {
+    ///     let item = item?;
+    ///     assert_eq!((item.e_rab_id, item.gtp_teid), (ERABID(5), GTPTEID([0, 0, 0, 1])));
+    /// }
+    /// # Ok::<(), oxirush_s1ap::Error>(())
+    /// ```
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupItemCtxtSUReq<'a> {
         pub e_rab_id: ERABID,
@@ -51313,6 +51343,18 @@ pub type MME_UE_S1AP_ID = MMEUES1APID;
 pub type ENB_UE_S1AP_ID = ENBUES1APID;
 /// A PDU that owns its octets: what `decode` gives, what the macros build, and what
 /// is kept and sent. It borrows nothing, and so has no lifetime to write.
+///
+/// ```
+/// use oxirush_s1ap::s1ap::S1AP_PDU;
+///
+/// // A UE CONTEXT RELEASE REQUEST, kept after the octets that it was read from
+/// let received = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+/// let pdu: S1AP_PDU = S1AP_PDU::decode(&received)?;
+/// drop(received);
+/// assert_eq!(pdu.procedure_name(), "UEContextReleaseRequest");
+/// assert_eq!(hex::encode(pdu.encode()?), "0012401500000300000002002a000800020007000240020280");
+/// # Ok::<(), oxirush_s1ap::Error>(())
+/// ```
 #[allow(non_camel_case_types)]
 pub type S1AP_PDU = S1APPDU<'static>;
 pub use crate::registry::S1apPduKind;
@@ -51325,6 +51367,19 @@ impl S1APPDU<'static> {
     /// `check`. The crate has no limit on the octets of a PDU, and a call on a PDU takes
     /// time and memory in proportion to them: the caller bounds what it reads from a
     /// peer.
+    ///
+    /// ```
+    /// use oxirush_s1ap::{ErrorKind, s1ap::S1AP_PDU};
+    ///
+    /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+    /// let pdu = S1AP_PDU::decode(&octets)?;
+    /// assert_eq!((pdu.direction(), pdu.procedure_name()), ("InitiatingMessage", "UEContextReleaseRequest"));
+    ///
+    /// // The octets of a PDU that end early
+    /// let error = S1AP_PDU::decode(&octets[..octets.len() - 1]).unwrap_err();
+    /// assert_eq!(error.kind(), ErrorKind::Decode);
+    /// # Ok::<(), oxirush_s1ap::Error>(())
+    /// ```
     pub fn decode(bytes: &[u8]) -> Result<Self, crate::Error> {
         match S1APPDU::usual(bytes) {
             Some((alternative, code, criticality, message)) => Ok(Self::of_alternative(
@@ -51584,25 +51639,78 @@ impl<'a> S1APPDU<'a> {
         matches!(self, S1APPDU::unsuccessfulOutcome(_))
     }
 }
+/// The name of the message, its procedure code and its direction, then the identifiers of
+/// the UE that the message has, by the names of its IEs:
+///
+/// ```
+/// use oxirush_s1ap::s1ap::S1AP_PDU;
+///
+/// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
+/// let pdu = S1AP_PDU::decode(&octets)?;
+/// assert_eq!(pdu.to_string(), "UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7");
+/// # Ok::<(), oxirush_s1ap::Error>(())
+/// ```
+///
+/// A procedure that the specification does not have in that direction is an unknown
+/// message, with its procedure code.
 impl core::fmt::Display for S1APPDU<'_> {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(
-            formatter,
-            "{} {} (code={})",
-            self.direction(),
-            self.procedure_name(),
-            self.procedure_code()
-        )
+        let direction = match self {
+            S1APPDU::initiatingMessage(_) => "initiating message",
+            S1APPDU::successfulOutcome(_) => "successful outcome",
+            S1APPDU::unsuccessfulOutcome(_) => "unsuccessful outcome",
+        };
+        let code = self.procedure_code();
+        match crate::registry::message_name(self.direction(), code) {
+            Some(name) => write!(formatter, "{name} (procedure {code}, {direction})")?,
+            None => write!(
+                formatter,
+                "an unknown message (procedure {code}, {direction})"
+            )?,
+        }
+        if let Some(Ok(id)) = self.ie::<crate::ie::MME_UE_S1AP_ID>() {
+            let name = <crate::ie::MME_UE_S1AP_ID as oxirush_aper::protocol::Ie>::NAME;
+            write!(formatter, ", {name} {}", id.0)?;
+        }
+        if let Some(Ok(id)) = self.ie::<crate::ie::ENB_UE_S1AP_ID>() {
+            let name = <crate::ie::ENB_UE_S1AP_ID as oxirush_aper::protocol::Ie>::NAME;
+            write!(formatter, ", {name} {}", id.0)?;
+        }
+        Ok(())
     }
 }
 /// The open type of a value: its complete encoding in aligned PER, in which an empty
-/// encoding becomes one zero octet (X.691 (02/2021) §11.1.4, §11.2.1).
+/// encoding becomes one zero octet (X.691 (02/2021) §11.1.4, §11.2.1). It is what a
+/// transfer, a container or the value of an IE holds as octets.
+///
+/// ```
+/// use oxirush_s1ap::s1ap::{Cause, CauseRadioNetwork, decode_open_type, encode_open_type};
+///
+/// let cause = Cause::radioNetwork(CauseRadioNetwork::unspecified);
+/// let octets = encode_open_type(&cause)?;
+/// assert_eq!(hex::encode(&octets), "0000");
+/// assert_eq!(decode_open_type::<Cause>(&octets)?, cause);
+/// # Ok::<(), oxirush_s1ap::Error>(())
+/// ```
 pub fn encode_open_type<T: Encode>(value: &T) -> Result<Octets<'static>, crate::Error> {
     oxirush_aper::encode(value).map(Octets::owned)
 }
 /// The value of the type `T` that the octets of an open type hold, in aligned PER: one
 /// value, whole, and no octet after it. What the value holds of octets is borrowed
 /// from `value`.
+///
+/// ```
+/// use oxirush_s1ap::{ErrorKind, s1ap::{Cause, CauseRadioNetwork, decode_open_type}};
+///
+/// // The octets of a Cause, as the value of its IE holds them
+/// let cause: Cause = decode_open_type(&[0x00, 0x00])?;
+/// assert_eq!(cause, Cause::radioNetwork(CauseRadioNetwork::unspecified));
+///
+/// // An octet after the value is an error
+/// let error = decode_open_type::<Cause>(&[0x00, 0x00, 0x00]).unwrap_err();
+/// assert_eq!(error.kind(), ErrorKind::Decode);
+/// # Ok::<(), oxirush_s1ap::Error>(())
+/// ```
 pub fn decode_open_type<'a, T: Decode<'a>>(value: &'a [u8]) -> Result<T, crate::Error> {
     oxirush_aper::decode(value)
 }

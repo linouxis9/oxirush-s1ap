@@ -16,6 +16,12 @@
 //! A tree and a view are a [`Value`] of `oxirush-utils`, which the crate has as
 //! [`tree::Value`](crate::tree::Value), with `tree!` to write one.
 //!
+//! A tree, a view and the serde form show each value as it is, keys too: the
+//! `SecurityKey` of an INITIAL CONTEXT SETUP REQUEST, KeNB, and the next hop NH are
+//! strings of hexadecimal digits in them, so that they are encoded back to the same
+//! octets. They are no form for a log: `Debug` and `Display` of the bindings print no
+//! key, and the length of the octets of a message that may hold one.
+//!
 //! [`to_view`] returns `procedure_code`, `direction`, `criticality` and `message`: the
 //! message in JSON, each value in the form of its ASN.1 type, which [Values](#values)
 //! lists. An IE whose identifier is known has its typed
@@ -56,9 +62,14 @@
 //! - `_edited`: [`set`], [`remove`] or [`insert`] changed something under the value, whose
 //!   octets are no longer those beside it;
 //! - `_lossy`: the typed value encodes to other octets than those beside it: they hold
-//!   what a later version of its type adds, which the value has no place for, or are in
-//!   another form than the canonical one. A tree has the octets in the place of the
-//!   value, so that it gives them back.
+//!   what a later version of its type adds, which the value has no place for, or, for
+//!   the container of the message, are in another form than the canonical one. A tree
+//!   has the octets in the place of the value, so that it gives them back.
+//!
+//! The value of an IE and a transfer in another form than the one that X.691 gives them,
+//! as with padding bits that are not zero, are their octets, with the `_decode_error` of
+//! a reader of that one form: the tree has their octets too. A path list has
+//! `_decode_error` and `_lossy`, which say why the tree has octets.
 //!
 //! [`from_view`] encodes the view, and [`with_view`] the view of a PDU that is at hand.
 //! What was not edited keeps the octets received. To edit:
@@ -122,7 +133,7 @@
 //! # "##);
 //! ```
 //!
-//! ```json
+//! ```text
 //! [{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"c0ffee"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"eNBname":"enb-1","criticality":"ignore"}]
 //! ```
 //!
@@ -222,7 +233,7 @@
 //! # "##);
 //! ```
 //!
-//! ```json
+//! ```text
 //! {"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}}},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
 //! ```
 //!

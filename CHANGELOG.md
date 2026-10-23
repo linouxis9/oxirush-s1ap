@@ -11,6 +11,12 @@ not source compatible with 0.2.0.
 
 ### Breaking changes relative to 0.2.0
 
+- `Display` of a PDU is the name of its message, its procedure code and its
+  direction, then the identifiers of the UE that it has, by the names of
+  their IEs: `UEContextReleaseRequest (procedure 18, initiating message),
+  MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7`, where 0.2.0 printed
+  `InitiatingMessage UEContextReleaseRequest (code=18)`. `Debug` prints octets in
+  hexadecimal in lower case.
 - The crate no longer depends on `rasn`, and `oxirush_s1ap::rasn` is gone.
   The bindings implement `AsnType`, `Decode` and `Encode` of
   `oxirush-aper`, which the crate re-exports as `oxirush_s1ap::aper`, and
@@ -209,6 +215,11 @@ not source compatible with 0.2.0.
 
 ### Fixed
 
+- A view and a tree read the value of an IE, and a transfer, alike. Octets in
+  another form than the one of X.691, as padding bits that are not zero, are
+  their octets with a `_decode_error` in a view, which a path list lists, where
+  the view had the value that a tolerant reader gives and the tree the octets.
+  A path list lists `_lossy`, where a typed value has no place for all its octets.
 - The octets of a PLMN identity with an MNC of three digits. TS 36.413 clause
   9.2.3.8 has the digits of the MCC, then those of the MNC: 310-410 is
   `13 40 01`. `helpers::plmn` wrote `13 00 14`, the order of TS 24.008,

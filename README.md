@@ -53,7 +53,7 @@ MME=Some(42) eNB=Some(7) cause=Some(radioNetwork(user_inactivity))
 
 The text under a block is what the block prints.
 
-This page describes 0.3.0, which is not on crates.io yet.
+This page describes oxirush-s1ap 0.3.0, which is not on crates.io yet.
 
 ## Installation
 
@@ -62,7 +62,7 @@ This page describes 0.3.0, which is not on crates.io yet.
 oxirush-s1ap = "0.3"
 # With the JSON forms:
 # oxirush-s1ap = { version = "0.3", features = ["inspect"] }
-# What the examples of this page write octets in hexadecimal and JSON as text with:
+# The examples of this page also use:
 # hex = "0.4"
 # serde_json = "1"
 ```
@@ -72,32 +72,31 @@ oxirush-s1ap = "0.3"
 | `inspect` | A PDU as JSON, a `oxirush_s1ap::tree::Value`: its tree, its view and the paths of its values, with the members in the order of the specification |
 | `serde` | `Serialize` and `Deserialize` for every type of the bindings, through its tree. It turns on `inspect` |
 
-Until 0.3.0 is on crates.io, with `oxirush-aper` 0.1.0 and `oxirush-utils`
-0.1.0 that it takes, a program takes the crate from its repository and the two
-others at the revisions that it is tested with:
+Until 0.3.0 is on crates.io, a program takes the crate from its repository, and
+oxirush-aper and oxirush-utils at the revisions that it is tested with:
 
 ```toml
 [dependencies]
 oxirush-s1ap = { git = "https://github.com/linouxis9/oxirush-s1ap", features = ["inspect"] }
 
 [patch.crates-io]
-oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "6252c750dde9ba669bcc3501dbf08ffec0638758" }
-oxirush-utils = { git = "https://github.com/linouxis9/oxirush-utils", rev = "2f99edcc40baa5cf7397f94ecfc131dc1143bac5" }
+oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "48d0bb4607f1ac11ada9966db59297a96d5ca154" }
+oxirush-utils = { git = "https://github.com/linouxis9/oxirush-utils", rev = "1fb4d2720fa0b1c036e54d3e9907b278adac0f80" }
 ```
 
-In a clone of the repository, cargo takes them with `--config`, as CI does:
+In a clone, cargo takes them with `--config`, as CI does:
 
-```bash
+```sh
 cargo test --all-features \
   --config 'patch.crates-io.oxirush-aper.git="https://github.com/linouxis9/oxirush-aper"' \
-  --config 'patch.crates-io.oxirush-aper.rev="6252c750dde9ba669bcc3501dbf08ffec0638758"' \
+  --config 'patch.crates-io.oxirush-aper.rev="48d0bb4607f1ac11ada9966db59297a96d5ca154"' \
   --config 'patch.crates-io.oxirush-utils.git="https://github.com/linouxis9/oxirush-utils"' \
-  --config 'patch.crates-io.oxirush-utils.rev="2f99edcc40baa5cf7397f94ecfc131dc1143bac5"'
+  --config 'patch.crates-io.oxirush-utils.rev="1fb4d2720fa0b1c036e54d3e9907b278adac0f80"'
 ```
 
 The minimum supported Rust version is 1.88. The crate depends on one version of
-`oxirush-aper` exactly, which is released with it, and the values of the
-bindings are its types, as `Octets`, `Bits` and `Error`: a program names them
+`oxirush-aper` exactly, which is released with it. The values of the bindings
+are of its types, as `Octets`, `Bits` and `Error`, which a program names
 through `oxirush_s1ap::aper`.
 
 ## Answer an eNB, from S1 SETUP to the INITIAL CONTEXT SETUP
@@ -328,12 +327,15 @@ fn receive(bytes: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
     })
 }
 
-// A UE CONTEXT RELEASE REQUEST, then an S1 SETUP FAILURE
-let request = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-println!("{}", receive(&request).unwrap());
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // A UE CONTEXT RELEASE REQUEST, then an S1 SETUP FAILURE
+    let request = hex::decode("0012401500000300000002002a000800020007000240020280")?;
+    println!("{}", receive(&request)?);
 
-let failure = hex::decode("401100080000010002400145").unwrap();
-println!("{}", receive(&failure).unwrap());
+    let failure = hex::decode("401100080000010002400145")?;
+    println!("{}", receive(&failure)?);
+    Ok(())
+}
 ```
 
 ```text
@@ -357,9 +359,11 @@ and `check` read the message, and what does not decode there is their error.
 ## Build a PDU
 
 An IE is named by its ASN.1 identifier without `id-` and with `_` for `-`
-(`MME_UE_S1AP_ID`), a type by the name that ASN.1 gives it without its hyphens
-(the IE `NAS_PDU` has the type `NASPDU`, `E_RAB_ID` `ERABID`), and a field by
-the words of its member in lower case (`pLMNidentity` is `plmn_identity`). The
+(`MME_UE_S1AP_ID`). A type is named by the name that ASN.1 gives it without its
+hyphens, with the letter after each hyphen in upper case:
+`Pre-emptionCapability` is `PreEmptionCapability`, the IE `NAS_PDU` has the
+type `NASPDU` and `E_RAB_ID` `ERABID`. A field has the words of its member in
+lower case (`pLMNidentity` is `plmn_identity`). The
 two identifiers of a UE are types of the names of their IEs too:
 `MME_UE_S1AP_ID` and `ENB_UE_S1AP_ID`, whose IE is `eNB_UE_S1AP_ID`. A
 criticality that a call leaves out is the one that TS 36.413 assigns, and a
@@ -412,6 +416,17 @@ fn handle(request: &UEContextReleaseRequest) -> Result<(), Error> {
     println!("MME={mme_id} eNB={enb_id} cause={cause:?}");
     Ok(())
 }
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // A UE CONTEXT RELEASE REQUEST
+    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
+    handle(&S1AP_PDU::decode(&bytes)?.decode_value()?)?;
+    Ok(())
+}
+```
+
+```text
+MME=42 eNB=7 cause=radioNetwork(user_inactivity)
 ```
 
 A field is `req`, `opt` or `lax`, its name and its type, then the IE with a
@@ -580,19 +595,18 @@ Cause (IE 2) is mandatory, and the message does not have it
 | `NotCanonical` | A value that is whole in another form than the one that ITU-T X.691 gives it: a `Fault`, with its clause and its bit |
 | `UnknownProcedure` | A procedure that the specification does not have in the direction of the PDU, as one that a later release adds |
 
-`check()` decodes the value of each IE, not the IEs that a value holds as
-octets, and does not judge a conditional IE: its condition is prose.
+`check()` decodes the value of each IE. It does not look into what a value
+holds as octets, and does not judge a conditional IE, whose condition is
+prose.
 
 `check_structure()` compares the container alone with the object set: the
-presence, the order, the repetition and the criticality of the IEs, which is
-what TS 36.413 clause 10.3 has a receiver answer, and decodes no value. A
-receiver that checks the structure of a message and reads the IEs that it
-needs, with the macro or `ie`, pays for those IEs alone: decoding an IE checks
-its value, and one that does not decode is an error of the kind
-`UndecodableIe` there, which `Deviation::of` makes a deviation of. `check()`
-is for a tool that looks at every value: it costs 5 to 8 times as much
-([`benches/`](benches/README.md)).
-
+presence, the order, the repetition and the criticality of the IEs, which TS
+36.413 clause 10.3 has a receiver answer. It decodes no value. A receiver that
+checks the structure and then reads the IEs that it needs, with the macro or
+`ie`, pays for those IEs alone. Decoding an IE checks its value: one that does
+not decode is an error of the kind `UndecodableIe`, which `Deviation::of`
+makes a deviation of. `check()` is for a tool that looks at every value, and
+costs 5 to 8 times as much ([`benches/`](benches/README.md)).
 
 Clause 10 of TS 36.413 has what the receiver of a message that deviates
 answers: `cause()` of a deviation is the protocol cause, and
@@ -637,32 +651,37 @@ SupportedTAs (IE 64) is mandatory, and the message does not have it
 With the `inspect` feature a PDU is JSON in two forms: a tree, in which a
 message is shown and written, and a view, which keeps what was received and
 is read and edited by paths with the functions of the [`inspect`] module.
-`/s1ap` is the IEs of the message, and an IE goes by its name.
+`/s1ap` is the IEs of the message, and an IE goes by its name. The two forms,
+and the serde form, carry the keys of a message, as KeNB, in hexadecimal: they
+are no form for a log.
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
 use oxirush_s1ap::tree;
 
-// A UE CONTEXT RELEASE REQUEST, as a tree
-let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-let pdu = S1AP_PDU::decode(&bytes).unwrap();
-println!("{}", pdu.to_tree());
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // A UE CONTEXT RELEASE REQUEST, as a tree
+    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
+    let pdu = S1AP_PDU::decode(&bytes)?;
+    println!("{}", pdu.to_tree());
 
-// Its view: each value with the path that selects it
-let mut view = pdu.to_view().unwrap();
-for (path, value) in inspect::paths(&view) {
-    println!("{path} = {value}");
+    // Its view: each value with the path that selects it
+    let mut view = pdu.to_view()?;
+    for (path, value) in inspect::paths(&view) {
+        println!("{path} = {value}");
+    }
+
+    // A value, and another alternative of a CHOICE in place of the one that is there
+    inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9))?;
+    inspect::set(&mut view, "/s1ap/Cause/nas", tree!("Normal Release"))?;
+    let edited = pdu.with_view(&view)?;
+    println!("{}", edited.to_tree());
+
+    // A name that the type does not have is refused, and the view is as it was
+    let wrong = inspect::set(&mut view, "/s1ap/Cause/radioNetwrok", tree!("unspecified"));
+    println!("{}", wrong.unwrap_err());
+    Ok(())
 }
-
-// A value, and another alternative of a CHOICE in place of the one that is there
-inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9)).unwrap();
-inspect::set(&mut view, "/s1ap/Cause/nas", tree!("Normal Release")).unwrap();
-let edited = pdu.with_view(&view).unwrap();
-println!("{}", edited.to_tree());
-
-// A name that the type does not have is refused, and the view is as it was
-let wrong = inspect::set(&mut view, "/s1ap/Cause/radioNetwrok", tree!("unspecified"));
-println!("{}", wrong.unwrap_err());
 ```
 
 ```text
@@ -694,25 +713,28 @@ edits and of the values.
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
 use oxirush_s1ap::tree;
 
-// A tree: the name of the message, whatever its case and its separators, then its IEs
-let request = tree!({
-    "message": "ue context release request",
-    "ies": [
-        {"MME-UE-S1AP-ID": 42},
-        {"eNB-UE-S1AP-ID": 7},
-        {"Cause": {"radioNetwork": "user-inactivity"}},
-        // An IE that the message does not have says its criticality
-        {"eNBname": "enb-1", "criticality": "ignore"},
-    ],
-});
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // A tree: the name of the message, whatever its case and its separators, then its IEs
+    let request = tree!({
+        "message": "ue context release request",
+        "ies": [
+            {"MME-UE-S1AP-ID": 42},
+            {"eNB-UE-S1AP-ID": 7},
+            {"Cause": {"radioNetwork": "user-inactivity"}},
+            // An IE that the message does not have says its criticality
+            {"eNBname": "enb-1", "criticality": "ignore"},
+        ],
+    });
 
-let pdu = S1AP_PDU::from_tree(&request).unwrap();
-println!("{}", hex::encode(pdu.encode().unwrap()));
+    let pdu = S1AP_PDU::from_tree(&request)?;
+    println!("{}", hex::encode(pdu.encode()?));
 
-// The name gave the direction, the procedure code and the criticalities
-let view = pdu.to_view().unwrap();
-println!("{} {} {}", view["direction"], view["procedure_code"], view["criticality"]);
-println!("{}", tree!(inspect::select(&view, "/s1ap/*/criticality").unwrap()));
+    // The name gave the direction, the procedure code and the criticalities
+    let view = pdu.to_view()?;
+    println!("{} {} {}", view["direction"], view["procedure_code"], view["criticality"]);
+    println!("{}", tree!(inspect::select(&view, "/s1ap/*/criticality")?));
+    Ok(())
+}
 ```
 
 ```text
@@ -727,22 +749,25 @@ An IE may be its octets, whatever they are:
 use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
 use oxirush_s1ap::tree;
 
-// `{"octets": "…"}` in place of a value is the octets of the IE, whatever they are
-let request = tree!({"message": "UEContextReleaseRequest", "ies": [
-    {"MME-UE-S1AP-ID": 42},
-    {"65000": {"octets": "c0ffee"}, "criticality": "reject"},
-]});
-let pdu = S1AP_PDU::from_tree(&request).unwrap();
-println!("{}", hex::encode(pdu.encode().unwrap()));
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // `{"octets": "…"}` in place of a value is the octets of the IE, whatever they are
+    let request = tree!({"message": "UEContextReleaseRequest", "ies": [
+        {"MME-UE-S1AP-ID": 42},
+        {"65000": {"octets": "c0ffee"}, "criticality": "reject"},
+    ]});
+    let pdu = S1AP_PDU::from_tree(&request)?;
+    println!("{}", hex::encode(pdu.encode()?));
 
-// A view shows an IE that does not decode by its octets, and says why
-let mut view = pdu.to_view().unwrap();
-println!("{}", view["message"]["protocolIEs"][1]);
+    // A view shows an IE that does not decode by its octets, and says why
+    let mut view = pdu.to_view()?;
+    println!("{}", view["message"]["protocolIEs"][1]);
 
-// In a view, the `octets` of an IE are set in place of its value
-inspect::set(&mut view, "/s1ap/MME-UE-S1AP-ID/octets", tree!("00ff")).unwrap();
-let edited = pdu.with_view(&view).unwrap();
-println!("{}", edited.to_tree());
+    // In a view, the `octets` of an IE are set in place of its value
+    inspect::set(&mut view, "/s1ap/MME-UE-S1AP-ID/octets", tree!("00ff"))?;
+    let edited = pdu.with_view(&view)?;
+    println!("{}", edited.to_tree());
+    Ok(())
+}
 ```
 
 ```text
@@ -761,15 +786,18 @@ as the tree of a PDU shows it.
 use oxirush_s1ap::helpers::{plmn, tai};
 use oxirush_s1ap::s1ap::S1AP_PDU;
 
-let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-let pdu = S1AP_PDU::decode(&bytes).unwrap();
-let text = serde_json::to_string(&pdu).unwrap();
-let read: S1AP_PDU = serde_json::from_str(&text).unwrap();
-assert_eq!(read.encode().unwrap(), bytes);
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
+    let pdu = S1AP_PDU::decode(&bytes)?;
+    let text = serde_json::to_string(&pdu)?;
+    let read: S1AP_PDU = serde_json::from_str(&text)?;
+    assert_eq!(read.encode()?, bytes);
 
-// A value alone has the form that a tree shows it in: the MCC and the MNC, and a number
-let area = tai(plmn("208", "93").unwrap(), [0x00, 0x01]);
-println!("{}", serde_json::to_string(&area).unwrap());
+    // A value alone has the form that a tree shows it in: the MCC and the MNC, and a number
+    let area = tai(plmn("208", "93")?, [0x00, 0x01]);
+    println!("{}", serde_json::to_string(&area)?);
+    Ok(())
+}
 ```
 
 ```text
@@ -801,8 +829,8 @@ println!("{}", serde_json::to_string(&area).unwrap());
 
 ## Performance
 
-On one core of an AMD Ryzen 7 5700G (16 threads, Linux 7.0, Rust 1.98.1),
-measured on a quiet machine on 2026-10-18, the median of three runs: the
+At 774c1b5, on one core of an AMD Ryzen 7 5700G (16 threads, Linux 7.0, Rust
+1.98.1) of a quiet machine, on 2026-10-18, the median of three runs: the
 macro on a PDU reads the IEs that its fields ask for in 24 to 33 ns, and
 `ie::<T>()` one IE in 28 to 29 ns, without an allocation; `check_structure()`
 takes 48 to 156 ns, and `check()` 5 to 8 times as much.
@@ -819,43 +847,34 @@ crate" decodes the PDU and then every IE of its message as its type, which is
 what the others do; and encoding writes the PDU from the typed values of its
 IEs, as `build_s1ap!` does.
 
-Decoding, ns per call, and the ratio to this crate:
+Decoding, ns per call, and in parentheses the ratio of each other implementation, <other> / this crate:
 
 | PDU (octets) | this crate, the envelope alone | this crate | rasn 0.29 | hampi 0.7.2 | asn1c (Open5GS 2.8.0) | pycrate 0.8.1 |
 |---|---|---|---|---|---|---|
-| DownlinkNASTransport (73) | 8 | 79 | 691 (8.8x) | 860 (11.0x) | 1,750 (22.3x) | 69,190 (880.8x) |
-| InitialContextSetupRequest (197) | 8 | 221 | 2,123 (9.6x) | 3,320 (15.0x) | 4,956 (22.5x) | 218,657 (990.5x) |
-| S1SetupResponse (45) | 8 | 176 | 1,104 (6.3x) | 1,308 (7.4x) | 2,098 (11.9x) | 95,205 (539.4x) |
-| HandoverRequest (146) | 8 | 266 | 2,519 (9.5x) | 3,554 (13.4x) | 5,369 (20.2x) | 255,711 (962.4x) |
-| UEContextReleaseCommand (21) | 8 | 95 | 611 (6.4x) | 637 (6.7x) | 1,327 (14.0x) | 66,970 (704.2x) |
-| InitialUEMessage (48) | 8 | 136 | 1,277 (9.4x) | 1,391 (10.2x) | 2,482 (18.3x) | 120,191 (883.8x) |
+| DownlinkNASTransport (73) | 8 | 79 | 691 (8.8x) | 860 (11x) | 1,750 (22x) | 69,190 (880x) |
+| InitialContextSetupRequest (197) | 8 | 221 | 2,123 (9.6x) | 3,320 (15x) | 4,956 (22x) | 218,657 (990x) |
+| S1SetupResponse (45) | 8 | 176 | 1,104 (6.3x) | 1,308 (7.4x) | 2,098 (12x) | 95,205 (540x) |
+| HandoverRequest (146) | 8 | 266 | 2,519 (9.5x) | 3,554 (13x) | 5,369 (20x) | 255,711 (960x) |
+| UEContextReleaseCommand (21) | 8 | 95 | 611 (6.4x) | 637 (6.7x) | 1,327 (14x) | 66,970 (700x) |
+| InitialUEMessage (48) | 8 | 136 | 1,277 (9.4x) | 1,391 (10x) | 2,482 (18x) | 120,191 (880x) |
 
-Encoding, ns per call, and the ratio to this crate:
+Encoding, ns per call, and in parentheses the ratio of each other implementation, <other> / this crate:
 
 | PDU (octets) | this crate | rasn 0.29 | hampi 0.7.2 | asn1c (Open5GS 2.8.0) | pycrate 0.8.1 |
 |---|---|---|---|---|---|
-| DownlinkNASTransport (73) | 64 | 880 (13.8x) | 1,528 (24.0x) | 1,113 (17.5x) | 45,097 (709.1x) |
-| InitialContextSetupRequest (197) | 144 | 1,757 (12.2x) | 4,420 (30.7x) | 2,920 (20.3x) | 135,987 (945.0x) |
-| S1SetupResponse (45) | 85 | 1,047 (12.3x) | 1,701 (20.0x) | 977 (11.5x) | 61,261 (719.4x) |
-| HandoverRequest (146) | 170 | 2,158 (12.7x) | 4,799 (28.2x) | 3,014 (17.7x) | 154,533 (907.4x) |
-| UEContextReleaseCommand (21) | 64 | 770 (12.0x) | 1,226 (19.0x) | 715 (11.1x) | 43,780 (679.8x) |
-| InitialUEMessage (48) | 95 | 1,183 (12.4x) | 2,178 (22.9x) | 1,332 (14.0x) | 72,281 (760.1x) |
+| DownlinkNASTransport (73) | 64 | 880 (14x) | 1,528 (24x) | 1,113 (18x) | 45,097 (710x) |
+| InitialContextSetupRequest (197) | 144 | 1,757 (12x) | 4,420 (31x) | 2,920 (20x) | 135,987 (940x) |
+| S1SetupResponse (45) | 85 | 1,047 (12x) | 1,701 (20x) | 977 (12x) | 61,261 (720x) |
+| HandoverRequest (146) | 170 | 2,158 (13x) | 4,799 (28x) | 3,014 (18x) | 154,533 (910x) |
+| UEContextReleaseCommand (21) | 64 | 770 (12x) | 1,226 (19x) | 715 (11x) | 43,780 (680x) |
+| InitialUEMessage (48) | 95 | 1,183 (12x) | 2,178 (23x) | 1,332 (14x) | 72,281 (760x) |
 
-The time is the fastest of three runs of a call repeated for about 0.2 s, and
-the cycles and the instructions those that `perf stat` counts for the calls
-alone (the difference between a run of twice the calls and one of the calls).
-The allocations and the octets that they ask for are counted by an allocator
-that counts in Rust, by `malloc`, `calloc` and `realloc` for asn1c; pycrate's
-are not counted. The most memory held is the high-water mark of the resident
-memory of the program (`VmHWM`), its runtime included. The figures were taken on
-an AMD Ryzen 7 5700G (16 threads, Linux 7.0, Rust 1.98.1, Python 3.14), each
-program on one core, measured on a quiet machine on 2026-10-18: each is the
-median of four runs of the script, which fetches each implementation at a
-pinned version: hampi 0.7.2 and rasn 0.29.0 from crates.io, Open5GS v2.8.0
-from GitHub, pycrate 0.8.1 from PyPI, and the ASN.1 from the archive of 3GPP.
-From the root of the repository, with oxirush-aper beside it, whose
-`protocols/benches/compare/` has the script, and with what the script says it
-needs:
+The figures were taken at 774c1b5 on an AMD Ryzen 7 5700G (16 threads, Linux 7.0,
+Rust 1.98.1), each program on one core of a quiet machine, on 2026-10-18.
+[`benches/`](benches/README.md#the-method-of-the-comparison) has the method and
+the version of each implementation that the script fetches. From the root of
+the repository, with oxirush-aper beside it, whose `protocols/benches/compare/`
+has the script:
 
 ```sh
 python3 ../oxirush-aper/protocols/benches/compare/compare.py --core 3 --perf "sudo -n perf"
@@ -875,7 +894,7 @@ from each of them under a procedure code that the specification does not
 have. `examples/` has four programs, which build, read, decode by hand and
 inspect messages.
 
-```bash
+```sh
 cargo test --all-features   # with the --config lines of Installation
 cd oracle && cargo test     # against the codec of rasn
 ../oxirush-aper/protocols/fuzz/seed.sh && RUSTFLAGS="--cfg oxirush_s1ap_hooks" cargo +nightly fuzz run view -- -max_total_time=60
@@ -884,14 +903,16 @@ cargo run --example s1ap_build_pdu
 
 The bindings are generated: [CONTRIBUTING.md](CONTRIBUTING.md) says how, how
 the vectors were made and the PDUs captured, and what a change to them or to
-the pinned revisions takes. A pull request comes with a test for what it
-changes; the Rust blocks of this page are checked with what they print
-(`tests/readme.rs`, which `protocols/tests/readme.py` of oxirush-aper writes
-from this page). The blocks that use other crates of the family run in the
-package of [`family/`](family/), which takes those crates at the revisions
-that its manifest names. Sign off your commits (`git commit -s`): by
-contributing you agree to the [Developer Certificate of
-Origin](https://developercertificate.org/).
+the pinned revisions takes. The Rust blocks of this page are checked with what
+they print (`tests/readme.rs`, which `protocols/tests/readme.py` of
+oxirush-aper writes from this page). The blocks that use other crates of the
+family run in the package of [`family/`](family/), which takes those crates at
+the revisions that its manifest names.
+
+A pull request comes with a test for what it changes. Sign off your commits
+(`git commit -s`): by contributing you agree to the [Developer Certificate
+of Origin](https://developercertificate.org/). [SECURITY.md](SECURITY.md)
+says how to report a vulnerability.
 
 ## The OxiRush family
 
