@@ -73,13 +73,30 @@ measures a clean build.
 The programs, the machine and the method of the comparison of the
 [README](../README.md#against-other-implementations), per call:
 
-|  | decode ns | cycles | instructions | allocations | octets allocated | encode ns | cycles | instructions | allocations | octets allocated | most memory held, KiB |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| this crate | 221 | 1,014 | 3,401 | 2 | 256 | 144 | 624 | 2,247 | 2 | 454 | 3,326 |
-| rasn 0.29 | 2,123 (9.6x) | 10,072 (9.9x) | 22,939 (6.7x) | 20 | 1,074 | 1,757 (12x) | 8,086 (13x) | 26,482 (12x) | 33 | 1,698 | 3,812 |
-| hampi 0.7.2 | 3,320 (15x) | 15,135 (15x) | 48,070 (14x) | 37 | 3,569 | 4,420 (31x) | 20,491 (33x) | 63,793 (28x) | 17 | 1,797 | 3,330 |
-| asn1c (Open5GS 2.8.0) | 4,956 (22x) | 22,442 (22x) | 81,650 (24x) | 79 | 10,046 | 2,920 (20x) | 13,278 (21x) | 50,474 (22x) | 25 | 3,728 | 4,546 |
-| pycrate 0.8.1 | 218,657 (990x) | 985,521 (970x) | 2,090,371 (610x) |  |  | 135,987 (940x) | 612,914 (980x) | 1,280,226 (570x) |  |  | 28,128 |
+|  | this crate | rasn 0.29 | hampi 0.7.2 | asn1c (Open5GS 2.8.0) | pycrate 0.8.1 |
+|---|---|---|---|---|---|
+| decode ns | 221 | 2,123 | 3,320 | 4,956 | 218,657 |
+| decode cycles | 1,014 | 10,072 | 15,135 | 22,442 | 985,521 |
+| decode instructions | 3,401 | 22,939 | 48,070 | 81,650 | 2,090,371 |
+| decode allocations | 2 | 20 | 37 | 79 |  |
+| decode octets allocated | 256 | 1,074 | 3,569 | 10,046 |  |
+| encode ns | 144 | 1,757 | 4,420 | 2,920 | 135,987 |
+| encode cycles | 624 | 8,086 | 20,491 | 13,278 | 612,914 |
+| encode instructions | 2,247 | 26,482 | 63,793 | 50,474 | 1,280,226 |
+| encode allocations | 2 | 33 | 17 | 25 |  |
+| encode octets allocated | 454 | 1,698 | 1,797 | 3,728 |  |
+| most memory held, KiB | 3,326 | 3,812 | 3,330 | 4,546 | 28,128 |
+
+The time, the cycles and the instructions of each other implementation over this crate's:
+
+|  | rasn / this crate | hampi / this crate | asn1c / this crate | pycrate / this crate |
+|---|---|---|---|---|
+| decode ns | 9.6x | 15x | 22x | 990x |
+| decode cycles | 9.9x | 15x | 22x | 970x |
+| decode instructions | 6.7x | 14x | 24x | 610x |
+| encode ns | 12x | 31x | 20x | 940x |
+| encode cycles | 13x | 33x | 21x | 980x |
+| encode instructions | 12x | 28x | 22x | 570x |
 
 ## The method of the comparison
 
