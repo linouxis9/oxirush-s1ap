@@ -44,8 +44,6 @@ MME UE 42, eNB UE 7, cause Some(radioNetwork(user_inactivity))
 
 Each example is followed by its output.
 
-This page describes oxirush-s1ap 0.3.0, which is not on crates.io yet.
-
 ## Installation
 
 ```toml
@@ -61,28 +59,6 @@ oxirush-s1ap = "0.3"
 |---------|------|
 | `inspect` | A PDU as JSON: its tree, its view, and paths to read and edit them |
 | `serde` | `Serialize` and `Deserialize` for every type, through its tree. Turns on `inspect` |
-
-Until 0.3.0 is on crates.io, a program takes the crate from its repository, and
-oxirush-aper and oxirush-utils at the revisions that it is tested with:
-
-```toml
-[dependencies]
-oxirush-s1ap = { git = "https://github.com/linouxis9/oxirush-s1ap", features = ["inspect"] }
-
-[patch.crates-io]
-oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "93754a798eba4b3f36fb37928bb12d21d5ec8961" }
-oxirush-utils = { git = "https://github.com/linouxis9/oxirush-utils", rev = "1fb4d2720fa0b1c036e54d3e9907b278adac0f80" }
-```
-
-In a clone, cargo takes them with `--config`, as CI does:
-
-```sh
-cargo test --all-features \
-  --config 'patch.crates-io.oxirush-aper.git="https://github.com/linouxis9/oxirush-aper"' \
-  --config 'patch.crates-io.oxirush-aper.rev="93754a798eba4b3f36fb37928bb12d21d5ec8961"' \
-  --config 'patch.crates-io.oxirush-utils.git="https://github.com/linouxis9/oxirush-utils"' \
-  --config 'patch.crates-io.oxirush-utils.rev="1fb4d2720fa0b1c036e54d3e9907b278adac0f80"'
-```
 
 The minimum supported Rust version is 1.88. The crate depends on one exact
 version of oxirush-aper, whose types (`Octets`, `Bits`, `Error`) the
@@ -590,7 +566,7 @@ bits flipped. `fuzz/` has three
 and `paths`, which CI runs for a minute each. `examples/` has four programs.
 
 ```sh
-cargo test --all-features   # with the --config lines of Installation
+cargo test --all-features
 cd oracle && cargo test     # against the codec of rasn
 ../oxirush-aper/protocols/fuzz/seed.sh && RUSTFLAGS="--cfg oxirush_s1ap_hooks" cargo +nightly fuzz run view -- -max_total_time=60
 cargo run --example s1ap_build_pdu
