@@ -2,6 +2,10 @@
 
 All notable changes to `oxirush-s1ap` are recorded here.
 
+## Unreleased
+
+- The keywords take `epc` and `mme` in the place of `asn1` and `telecom`, and the description says 4G LTE/EPS, eNB and MME, as those who look for the crate search.
+
 ## 0.3.0 - 2026-10-24
 
 The bindings come from TS 36.413 V19.2.0 (Release 19) instead of V16.6.0, and
