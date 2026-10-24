@@ -4,7 +4,7 @@
 //! and the oracle of the tests.
 
 use anyhow::{Result, ensure};
-use generator::protocol::{Protocol, generate};
+use generator::protocol::{Protocol, UeIds, generate};
 
 /// The IEs whose octets ASN.1 leaves open, each with the type of this module that TS
 /// 36.413 gives them for a handover between eNBs: clauses 9.2.1.56 and 9.2.1.57. For
@@ -67,6 +67,12 @@ fn main() -> Result<()> {
             ("MME_UE_S1AP_ID", "MMEUES1APID"),
             ("ENB_UE_S1AP_ID", "ENBUES1APID"),
         ],
+        ue_ids: UeIds {
+            ie: "UE_S1AP_IDs",
+            choice: "UES1APIDs",
+            pair: ("uE_S1AP_ID_pair", "mme_ue_s1ap_id", "enb_ue_s1ap_id"),
+            first: "mME_UE_S1AP_ID",
+        },
         release_request: "0012401500000300000002002a000800020007000240020280",
         release_display: "UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7",
         other_message: "S1SetupRequest",

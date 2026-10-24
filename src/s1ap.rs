@@ -51640,7 +51640,8 @@ impl<'a> S1APPDU<'a> {
     }
 }
 /// The name of the message, its procedure code and its direction, then the identifiers of
-/// the UE that the message has, by the names of its IEs:
+/// the UE that the message has, by the names of their IEs, also where one IE holds both
+/// or the first alone:
 ///
 /// ```
 /// use oxirush_s1ap::s1ap::S1AP_PDU;
@@ -51675,6 +51676,16 @@ impl core::fmt::Display for S1APPDU<'_> {
         if let Some(Ok(id)) = self.ie::<crate::ie::ENB_UE_S1AP_ID>() {
             let name = <crate::ie::ENB_UE_S1AP_ID as oxirush_aper::protocol::Ie>::NAME;
             write!(formatter, ", {name} {}", id.0)?;
+        }
+        if let Some(Ok(ids)) = self.ie::<crate::ie::UE_S1AP_IDs>() {
+            let first = <crate::ie::MME_UE_S1AP_ID as oxirush_aper::protocol::Ie>::NAME;
+            if let crate::s1ap::UES1APIDs::uE_S1AP_ID_pair(pair) = &ids {
+                let second = <crate::ie::ENB_UE_S1AP_ID as oxirush_aper::protocol::Ie>::NAME;
+                let (one, other) = (pair.mme_ue_s1ap_id.0, pair.enb_ue_s1ap_id.0);
+                write!(formatter, ", {first} {one}, {second} {other}")?;
+            } else if let crate::s1ap::UES1APIDs::mME_UE_S1AP_ID(id) = &ids {
+                write!(formatter, ", {first} {}", id.0)?;
+            }
         }
         Ok(())
     }

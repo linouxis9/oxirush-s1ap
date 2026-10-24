@@ -15,8 +15,10 @@ not source compatible with 0.2.0.
   direction, then the identifiers of the UE that it has, by the names of
   their IEs: `UEContextReleaseRequest (procedure 18, initiating message),
   MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7`, where 0.2.0 printed
-  `InitiatingMessage UEContextReleaseRequest (code=18)`. `Debug` prints octets in
-  hexadecimal in lower case.
+  `InitiatingMessage UEContextReleaseRequest (code=18)`. The identifiers that
+  UE-S1AP-IDs holds, as in a UE CONTEXT RELEASE COMMAND, are shown alike: the
+  pair, or the MME-UE-S1AP-ID alone. `Debug` prints octets in hexadecimal in
+  lower case.
 - The crate no longer depends on `rasn`, and `oxirush_s1ap::rasn` is gone.
   The bindings implement `AsnType`, `Decode` and `Encode` of
   `oxirush-aper`, which the crate re-exports as `oxirush_s1ap::aper`, and
