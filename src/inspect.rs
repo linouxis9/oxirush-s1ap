@@ -579,8 +579,17 @@
 //! | `Source-ToTarget-TransparentContainer` | `SourceeNB-ToTargeteNB-TransparentContainer` | 9.2.1.56 |
 //! | `Target-ToSource-TransparentContainer` | `TargeteNB-ToSourceeNB-TransparentContainer` | 9.2.1.57 |
 //!
-//! For another target system they are octets of its own specification, as are those of
-//! the secondary containers, and nothing in a message says which they are. So a view
+//! At a handover to 5GS they carry the containers of TS 38.413, which the tables of
+//! oxirush-ngap read once the program calls `oxirush_ngap::inspect::register()`:
+//!
+//! | The octets of | carry a | Clause |
+//! | --- | --- | --- |
+//! | `Source-ToTarget-TransparentContainer` | `SourceNGRANNode-ToTargetNGRANNode-TransparentContainer` | 9.2.1.56 |
+//! | `Target-ToSource-TransparentContainer` | `TargetNGRANNode-ToSourceNGRANNode-TransparentContainer` | 9.2.1.57 |
+//!
+//! Before that call such a name is an error that says to make it. For another target
+//! system the octets are those of its own specification, as are those of the secondary
+//! containers, and nothing in a message says which they are. So a view
 //! and a tree show such an IE by its octets, and the one that writes or reads it names
 //! the type, in any case:
 //!

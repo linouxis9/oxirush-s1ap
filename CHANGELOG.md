@@ -4,6 +4,15 @@ All notable changes to `oxirush-s1ap` are recorded here.
 
 ## Unreleased
 
+- At a handover to 5GS, the transparent containers carry those of TS 38.413
+  (TS 36.413 clauses 9.2.1.56 and 9.2.1.57): a tree writes them by the name
+  of their type, `SourceNGRANNode-ToTargetNGRANNode-TransparentContainer` and
+  `TargetNGRANNode-ToSourceNGRANNode-TransparentContainer`, and a view opens,
+  reads and edits them by the tables of oxirush-ngap, once a program calls
+  `oxirush_ngap::inspect::register()`. `inspect::register()` registers the
+  tables of S1AP for oxirush-ngap in the same way. Without the call, the name
+  is refused with the call to make. The feature `inspect` turns on the
+  register of oxirush-aper, which needs the standard library.
 - The keywords take `epc` and `mme` in the place of `asn1` and `telecom`, and the description says 4G LTE/EPS, eNB and MME, as those who look for the crate search.
 
 ## 0.3.0 - 2026-10-24
