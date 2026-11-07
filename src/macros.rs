@@ -66,7 +66,7 @@
 //! let ie = build_s1ap_ie!(UEContextReleaseRequest,
 //!     REJECT MME_UE_S1AP_ID(1u32)
 //! )?;
-//! assert_eq!(ie.criticality, Criticality::reject);
+//! assert_eq!(ie.criticality, Criticality::Reject);
 //! # Ok::<(), oxirush_s1ap::Error>(())
 //! ```
 //!
@@ -77,7 +77,7 @@
 //! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
 //!
 //! let ie = build_s1ap_ie!(UEContextReleaseRequest, MME_UE_S1AP_ID(1u32))?;
-//! assert_eq!(ie.criticality, Criticality::reject);
+//! assert_eq!(ie.criticality, Criticality::Reject);
 //! # Ok::<(), oxirush_s1ap::Error>(())
 //! ```
 //!
@@ -201,24 +201,6 @@
 //! assert!(updated);
 //! # Ok::<(), oxirush_s1ap::Error>(())
 //! ```
-
-/// The identifier of the IE that the macros take by this name.
-#[macro_export]
-#[doc(hidden)]
-macro_rules! __s1ap_ie_id {
-    ($name:ident) => {
-        <$crate::ie::$name as $crate::aper::protocol::Ie>::ID
-    };
-}
-
-/// The code of the procedure of this name.
-#[macro_export]
-#[doc(hidden)]
-macro_rules! __s1ap_proc_code {
-    ($name:ident) => {
-        $crate::registry::procedures::$name
-    };
-}
 
 /// Extract typed S1AP protocol IEs into `req`, `opt` and `lax` fields.
 ///
@@ -425,11 +407,11 @@ macro_rules! build_s1ap {
 ///
 /// // An IE of a message, of the criticality of its object set
 /// let mme = build_s1ap_ie!(UEContextReleaseRequest, MME_UE_S1AP_ID(1u32))?;
-/// assert_eq!(mme.criticality, Criticality::reject);
+/// assert_eq!(mme.criticality, Criticality::Reject);
 ///
 /// // One of another criticality, which a test of a peer sends
 /// let ignored = build_s1ap_ie!(UEContextReleaseRequest, IGNORE MME_UE_S1AP_ID(1u32))?;
-/// assert_eq!(ignored.criticality, Criticality::ignore);
+/// assert_eq!(ignored.criticality, Criticality::Ignore);
 ///
 /// // An item of a list of single containers: an E-RAB of QCI 9, and its tunnel
 /// let priority = AllocationAndRetentionPriority::new(PriorityLevel(15),
@@ -441,7 +423,7 @@ macro_rules! build_s1ap {
 /// let item = build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?;
 /// let list = build_s1ap_ie!(InitialContextSetupRequest,
 ///     E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(vec![item])))?;
-/// assert_eq!(list.criticality, Criticality::reject);
+/// assert_eq!(list.criticality, Criticality::Reject);
 /// # Ok::<(), oxirush_s1ap::Error>(())
 /// ```
 ///
@@ -527,7 +509,7 @@ mod tests {
         // after one that decodes and before it.
         let undecodable = || {
             let octets = crate::Octets::from(vec![0xff]);
-            ProtocolIEField::new(0u16, Criticality::reject, octets)
+            ProtocolIEField::new(0u16, Criticality::Reject, octets)
         };
         let entry = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(1u32))?;
         // The first one decodes: both macros take it, and decode no other.
@@ -593,15 +575,15 @@ mod tests {
 
         // The direction and the procedure code of a PDU are those of its message.
         let initiating = build_s1ap!(InitiatingMessage, S1Setup, REJECT, S1SetupRequest,)?;
-        assert!(initiating.is_initiating());
+        assert_eq!(initiating.direction(), crate::Direction::Initiating);
         assert_eq!(initiating.procedure_code(), 17);
 
         let successful = build_s1ap!(SuccessfulOutcome, S1Setup, REJECT, S1SetupResponse,)?;
-        assert!(successful.is_successful());
+        assert_eq!(successful.direction(), crate::Direction::Successful);
         assert_eq!(successful.procedure_code(), 17);
 
         let unsuccessful = build_s1ap!(UnsuccessfulOutcome, S1Setup, REJECT, S1SetupFailure,)?;
-        assert!(unsuccessful.is_unsuccessful());
+        assert_eq!(unsuccessful.direction(), crate::Direction::Unsuccessful);
         assert_eq!(unsuccessful.procedure_code(), 17);
         Ok(())
     }

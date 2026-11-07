@@ -69,7 +69,7 @@ fn a_message_in_fragments_is_read_through_a_pdu_that_borrows() -> Result<(), Err
     let nas = NASPDU(vec![0x7e; 20_000].into());
     let ie = ProtocolIEField::new(
         ProtocolIEID(26),
-        Criticality::reject,
+        Criticality::Reject,
         oxirush_s1ap::aper::encode(&nas)?.into(),
     );
     let mut pdu = S1AP_PDU::decode(&hex::decode(INITIAL_UE_MESSAGE).unwrap())?;
@@ -91,8 +91,8 @@ fn a_message_in_fragments_is_read_through_a_pdu_that_borrows() -> Result<(), Err
 fn a_criticality_that_a_call_leaves_out_is_the_one_that_is_assigned() -> Result<(), Error> {
     use oxirush_s1ap::{Message, build_s1ap, build_s1ap_ie};
 
-    assert_eq!(UEContextReleaseRequest::CRITICALITY, Criticality::ignore);
-    assert_eq!(S1SetupRequest::CRITICALITY, Criticality::reject);
+    assert_eq!(UEContextReleaseRequest::CRITICALITY, Criticality::Ignore);
+    assert_eq!(S1SetupRequest::CRITICALITY, Criticality::Reject);
     let written = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, IGNORE,
         UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
@@ -137,7 +137,7 @@ fn a_criticality_that_a_call_leaves_out_is_the_one_that_is_assigned() -> Result<
     );
     // One IE, of its message.
     let ie = build_s1ap_ie!(S1SetupRequest, DefaultPagingDRX(PagingDRX::v128))?;
-    assert_eq!(ie.criticality, Criticality::ignore);
+    assert_eq!(ie.criticality, Criticality::Ignore);
     let error = build_s1ap_ie!(S1SetupRequest, MME_UE_S1AP_ID(1u32)).unwrap_err();
     assert_eq!(error.kind(), ErrorKind::Argument);
     Ok(())

@@ -44,10 +44,10 @@ fn every_constrained_list_encodes_its_length_per_x691() -> Result<(), Error> {
     let diagnostics = CriticalityDiagnostics::new(
         Some(ProcedureCode(9)),
         Some(TriggeringMessage::initiating_message),
-        Some(Criticality::reject),
+        Some(Criticality::Reject),
         Some(CriticalityDiagnosticsIEList(vec![
             CriticalityDiagnosticsIEItem::new(
-                Criticality::reject,
+                Criticality::Reject,
                 ProtocolIEID(26),
                 TypeOfError::missing,
                 None,
@@ -87,7 +87,7 @@ fn e_rab_container_lists_encode_their_size_constraint() -> Result<(), Error> {
     );
     let admitted = ERABAdmittedList(vec![ProtocolIEField::new(
         ID_E_RABADMITTED_ITEM.0,
-        Criticality::ignore,
+        Criticality::Ignore,
         encode_open_type(&item).expect("encode E-RAB admitted item"),
     )]);
     let acknowledge = build_s1ap!(SuccessfulOutcome, HandoverResourceAllocation,
@@ -425,7 +425,7 @@ fn a_value_keeps_its_extension_container_after_its_octets() {
         Some(ProtocolExtensionContainer(vec![
             ProtocolExtensionField::new(
                 ProtocolExtensionID(1),
-                Criticality::ignore,
+                Criticality::Ignore,
                 Octets::from(vec![0x00]),
             ),
         ])),

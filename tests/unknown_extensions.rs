@@ -219,7 +219,7 @@ fn optional_root_extension_container_is_preserved() {
         Some(ProtocolExtensionContainer(vec![
             ProtocolExtensionField::new(
                 ProtocolExtensionID(65000),
-                Criticality::ignore,
+                Criticality::Ignore,
                 vec![0x5a].into(),
             ),
         ])),

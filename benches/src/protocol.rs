@@ -225,7 +225,7 @@ fn paging() -> Written {
 /// smallest IE that has a name and a value.
 pub(crate) fn many_ies(count: usize) -> Pdu {
     let (id, value) = (s1ap::ProtocolIEID(0), vec![0x00, 0x01]);
-    let ie = s1ap::ProtocolIEField::new(id, s1ap::Criticality::reject, value.into());
+    let ie = s1ap::ProtocolIEField::new(id, s1ap::Criticality::Reject, value.into());
     let mut pdu = Pdu::decode(&[0x00, 0x0d, 0x40, 0x03, 0x00, 0x00, 0x00]).unwrap();
     pdu.set_protocol_ies(s1ap::ProtocolIEContainer(vec![ie; count]))
         .unwrap();

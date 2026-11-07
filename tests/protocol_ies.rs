@@ -71,11 +71,11 @@ fn an_unknown_ie_and_a_repeated_one_are_kept_with_their_criticality() -> Result<
     // another value and another criticality, and an IE of another message.
     let unknown = ProtocolIEField::new(
         60000u16,
-        Criticality::notify,
+        Criticality::Notify,
         Octets::from(vec![0xc0, 0xff]),
     );
     let mut again = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(2u32))?;
-    again.criticality = Criticality::ignore;
+    again.criticality = Criticality::Ignore;
     let ies = vec![
         build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(1u32))?,
         unknown,
@@ -90,7 +90,7 @@ fn an_unknown_ie_and_a_repeated_one_are_kept_with_their_criticality() -> Result<
     let S1AP_PDU::initiatingMessage(held) = &pdu else {
         panic!("{pdu}");
     };
-    assert_eq!(held.criticality, Criticality::ignore);
+    assert_eq!(held.criticality, Criticality::Ignore);
 
     // They are read back as they were written, from the PDU and from its octets.
     assert_eq!(pdu.protocol_ies()?.0, ies);
@@ -102,10 +102,10 @@ fn an_unknown_ie_and_a_repeated_one_are_kept_with_their_criticality() -> Result<
     assert_eq!(
         told,
         [
-            (0, Criticality::reject),
-            (60000, Criticality::notify),
-            (0, Criticality::ignore),
-            (65, Criticality::notify),
+            (0, Criticality::Reject),
+            (60000, Criticality::Notify),
+            (0, Criticality::Ignore),
+            (65, Criticality::Notify),
         ]
     );
     Ok(())
@@ -269,7 +269,7 @@ fn an_item_of_a_list_of_single_containers_is_built_without_the_name_of_a_message
     for container in &list.0 {
         assert_eq!(
             (container.id.0, container.criticality),
-            (52, Criticality::reject)
+            (52, Criticality::Reject)
         );
         let item: ERABToBeSetupItemCtxtSUReq = decode_open_type(&container.value)?;
         ids.push(item.e_rab_id.0);

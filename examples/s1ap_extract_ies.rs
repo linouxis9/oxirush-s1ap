@@ -215,7 +215,7 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq<'static> {
     // An item of the list is an IE itself, alone in its container.
     ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField::new(
         ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ.0,
-        Criticality::reject,
+        Criticality::Reject,
         encode_open_type(&item).expect("encode E-RAB item"),
     )])
 }

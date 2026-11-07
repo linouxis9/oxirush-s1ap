@@ -194,7 +194,10 @@ fn octets_that_are_no_plmn_identity_are_shown_as_octets() {
         let shown = inspect::select(&view, "/s1ap/Global-ENB-ID/pLMNidentity").unwrap();
         assert_eq!(shown, [&tree!(octets)]);
         let tree = pdu.to_tree();
-        assert_eq!(tree["ies"][0]["Global-ENB-ID"]["pLMNidentity"], octets);
+        assert_eq!(
+            tree["ies"][0]["Global-ENB-ID"]["pLMNidentity"],
+            tree!(octets)
+        );
         assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
         assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
     }
@@ -212,7 +215,10 @@ fn the_notation_of_a_plmn_identity_has_the_octets_of_the_clause() {
     let wire = hex::decode(S1_SETUP).unwrap();
     let pdu = S1AP_PDU::decode(&wire).unwrap();
     let tree = pdu.to_tree();
-    assert_eq!(tree["ies"][0]["Global-ENB-ID"]["pLMNidentity"], "310-410");
+    assert_eq!(
+        tree["ies"][0]["Global-ENB-ID"]["pLMNidentity"],
+        tree!("310-410")
+    );
     let broadcast = &tree["ies"][1]["SupportedTAs"][0]["broadcastPLMNs"];
     assert_eq!(*broadcast, tree!(["208-93", "310-410"]));
     let mut view = pdu.to_view().unwrap();

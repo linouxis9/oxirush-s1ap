@@ -464,6 +464,6 @@ mod tests {
         let decoded = S1AP_PDU::decode(&bytes).expect("decode PDU");
         assert_eq!(pdu, decoded);
         assert_eq!(decoded.procedure_name(), "UEContextReleaseRequest");
-        assert!(decoded.is_initiating());
+        assert_eq!(decoded.direction(), crate::Direction::Initiating);
     }
 }

@@ -13,59 +13,13 @@ pub mod s1_ap_common_data_types {
     use super::*;
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
+    pub use oxirush_aper::Criticality;
     #[cfg(feature = "inspect")]
     use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
-        UNBOUNDED, Writer,
+        UNBOUNDED, Writer, in_field,
     };
-    /// `Criticality ::= ENUMERATED`.
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
-    pub enum Criticality {
-        reject = 0,
-        ignore = 1,
-        notify = 2,
-    }
-    impl AsnType for Criticality {
-        const NAME: &'static str = "Criticality";
-    }
-    impl Criticality {
-        /// The values in the order of their indexes in PER.
-        pub(crate) const VALUES: [Self; 3] = [Self::reject, Self::ignore, Self::notify];
-        /// The names that ASN.1 gives the values, in the same order.
-        #[cfg(feature = "inspect")]
-        pub(crate) const NAMES: [&'static str; 3] = ["reject", "ignore", "notify"];
-        /// The index of the value in PER.
-        #[inline]
-        fn index(&self) -> u64 {
-            *self as u64
-        }
-    }
-    impl<'a> Decode<'a> for Criticality {
-        #[inline]
-        fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
-            Ok(Self::VALUES[reader.enumerated(3, 0, false)? as usize])
-        }
-    }
-    impl Encode for Criticality {
-        #[inline]
-        fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.index(self.index(), 3, false);
-            Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for Criticality {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(Self::NAMES[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
-        }
-    }
-    #[cfg(feature = "serde")]
-    oxirush_utils::impl_serde!(Criticality);
     /// `Presence ::= ENUMERATED`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum Presence {
@@ -390,7 +344,7 @@ pub mod s1_ap_constants {
     use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
-        UNBOUNDED, Writer,
+        UNBOUNDED, Writer, in_field,
     };
     pub const ID_ADDITIONAL_GUTI: ProtocolIEID = ProtocolIEID(224);
     pub const ID_ADDITIONAL_CSFALLBACK_INDICATOR: ProtocolIEID = ProtocolIEID(187);
@@ -867,7 +821,7 @@ pub mod s1_ap_containers {
     use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
-        UNBOUNDED, Writer,
+        UNBOUNDED, Writer, in_field,
     };
     impl core::fmt::Debug for ProtocolIEField<'_> {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -920,18 +874,9 @@ pub mod s1_ap_containers {
     impl<'a> Decode<'a> for ProtocolIEField<'a> {
         #[inline(always)]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
-            let id = match ProtocolIEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("id")),
-            };
-            let criticality = match Criticality::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("criticality")),
-            };
-            let value = match reader.open_type() {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("value")),
-            };
+            let id = ProtocolIEID::decode(reader).map_err(in_field("id"))?;
+            let criticality = Criticality::decode(reader).map_err(in_field("criticality"))?;
+            let value = reader.open_type().map_err(in_field("value"))?;
             Ok(Self {
                 id,
                 criticality,
@@ -942,12 +887,10 @@ pub mod s1_ap_containers {
     impl Encode for ProtocolIEField<'_> {
         #[inline(always)]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            if let Err(error) = self.id.encode(writer) {
-                return Err(error.in_field("id"));
-            }
-            if let Err(error) = self.criticality.encode(writer) {
-                return Err(error.in_field("criticality"));
-            }
+            self.id.encode(writer).map_err(in_field("id"))?;
+            self.criticality
+                .encode(writer)
+                .map_err(in_field("criticality"))?;
             writer.open_type(&self.value);
             Ok(())
         }
@@ -964,9 +907,9 @@ pub mod s1_ap_containers {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["id", "criticality", "value"])?;
-            let id = reading.member(&members, 0, ProtocolIEID::from_tree)?;
-            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
-            let value = reading.member(&members, 2, |value, reading| {
+            let id = reading.member(&members, "id", ProtocolIEID::from_tree)?;
+            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
+            let value = reading.member(&members, "value", |value, reading| {
                 json::read_octets(reading, value)
             })?;
             Ok(Self {
@@ -1091,18 +1034,9 @@ pub mod s1_ap_containers {
     impl<'a> Decode<'a> for ProtocolExtensionField<'a> {
         #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
-            let id = match ProtocolExtensionID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("id")),
-            };
-            let criticality = match Criticality::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("criticality")),
-            };
-            let extension_value = match reader.open_type() {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("extension_value")),
-            };
+            let id = ProtocolExtensionID::decode(reader).map_err(in_field("id"))?;
+            let criticality = Criticality::decode(reader).map_err(in_field("criticality"))?;
+            let extension_value = reader.open_type().map_err(in_field("extension_value"))?;
             Ok(Self {
                 id,
                 criticality,
@@ -1113,12 +1047,10 @@ pub mod s1_ap_containers {
     impl Encode for ProtocolExtensionField<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            if let Err(error) = self.id.encode(writer) {
-                return Err(error.in_field("id"));
-            }
-            if let Err(error) = self.criticality.encode(writer) {
-                return Err(error.in_field("criticality"));
-            }
+            self.id.encode(writer).map_err(in_field("id"))?;
+            self.criticality
+                .encode(writer)
+                .map_err(in_field("criticality"))?;
             writer.open_type(&self.extension_value);
             Ok(())
         }
@@ -1135,11 +1067,12 @@ pub mod s1_ap_containers {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["id", "criticality", "extensionValue"])?;
-            let id = reading.member(&members, 0, ProtocolExtensionID::from_tree)?;
-            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
-            let extension_value = reading.member(&members, 2, |value, reading| {
-                json::read_octets(reading, value)
-            })?;
+            let id = reading.member(&members, "id", ProtocolExtensionID::from_tree)?;
+            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
+            let extension_value =
+                reading.member(&members, "extensionValue", |value, reading| {
+                    json::read_octets(reading, value)
+                })?;
             Ok(Self {
                 id,
                 criticality,
@@ -1228,7 +1161,7 @@ pub mod s1_ap_ies {
     use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
-        UNBOUNDED, Writer,
+        UNBOUNDED, Writer, in_field,
     };
     /// `Additional-GUTI ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1257,20 +1190,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let gummei = match GUMMEI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("gummei")),
-            };
-            let m_tmsi = match MTMSI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m_tmsi")),
-            };
+            let gummei = GUMMEI::decode(reader).map_err(in_field("gummei"))?;
+            let m_tmsi = MTMSI::decode(reader).map_err(in_field("m_tmsi"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -1290,16 +1215,10 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.gummei.encode(writer) {
-                return Err(error.in_field("gummei"));
-            }
-            if let Err(error) = self.m_tmsi.encode(writer) {
-                return Err(error.in_field("m_tmsi"));
-            }
+            self.gummei.encode(writer).map_err(in_field("gummei"))?;
+            self.m_tmsi.encode(writer).map_err(in_field("m_tmsi"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -1319,10 +1238,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["gUMMEI", "m-TMSI", "iE-Extensions"])?;
-            let gummei = reading.member(&members, 0, GUMMEI::from_tree)?;
-            let m_tmsi = reading.member(&members, 1, MTMSI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let gummei = reading.member(&members, "gUMMEI", GUMMEI::from_tree)?;
+            let m_tmsi = reading.member(&members, "m-TMSI", MTMSI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 gummei,
                 m_tmsi,
@@ -1508,24 +1430,16 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let priority_level = match PriorityLevel::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("priority_level")),
-            };
-            let pre_emption_capability = match PreEmptionCapability::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("pre_emption_capability")),
-            };
-            let pre_emption_vulnerability = match PreEmptionVulnerability::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("pre_emption_vulnerability")),
-            };
+            let priority_level =
+                PriorityLevel::decode(reader).map_err(in_field("priority_level"))?;
+            let pre_emption_capability =
+                PreEmptionCapability::decode(reader).map_err(in_field("pre_emption_capability"))?;
+            let pre_emption_vulnerability = PreEmptionVulnerability::decode(reader)
+                .map_err(in_field("pre_emption_vulnerability"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -1546,19 +1460,17 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.priority_level.encode(writer) {
-                return Err(error.in_field("priority_level"));
-            }
-            if let Err(error) = self.pre_emption_capability.encode(writer) {
-                return Err(error.in_field("pre_emption_capability"));
-            }
-            if let Err(error) = self.pre_emption_vulnerability.encode(writer) {
-                return Err(error.in_field("pre_emption_vulnerability"));
-            }
+            self.priority_level
+                .encode(writer)
+                .map_err(in_field("priority_level"))?;
+            self.pre_emption_capability
+                .encode(writer)
+                .map_err(in_field("pre_emption_capability"))?;
+            self.pre_emption_vulnerability
+                .encode(writer)
+                .map_err(in_field("pre_emption_vulnerability"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -1593,13 +1505,23 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let priority_level = reading.member(&members, 0, PriorityLevel::from_tree)?;
-            let pre_emption_capability =
-                reading.member(&members, 1, PreEmptionCapability::from_tree)?;
-            let pre_emption_vulnerability =
-                reading.member(&members, 2, PreEmptionVulnerability::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let priority_level =
+                reading.member(&members, "priorityLevel", PriorityLevel::from_tree)?;
+            let pre_emption_capability = reading.member(
+                &members,
+                "pre-emptionCapability",
+                PreEmptionCapability::from_tree,
+            )?;
+            let pre_emption_vulnerability = reading.member(
+                &members,
+                "pre-emptionVulnerability",
+                PreEmptionVulnerability::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 priority_level,
                 pre_emption_capability,
@@ -1841,20 +1763,12 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
             let cell_identifier_and_ce_level_for_ce_capable_ues =
-                match CellIdentifierAndCELevelForCECapableUEs::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => {
-                        return Err(
-                            error.in_field("cell_identifier_and_ce_level_for_ce_capable_ues")
-                        );
-                    }
-                };
+                CellIdentifierAndCELevelForCECapableUEs::decode(reader)
+                    .map_err(in_field("cell_identifier_and_ce_level_for_ce_capable_ues"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -1873,16 +1787,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self
-                .cell_identifier_and_ce_level_for_ce_capable_ues
+            self.cell_identifier_and_ce_level_for_ce_capable_ues
                 .encode(writer)
-            {
-                return Err(error.in_field("cell_identifier_and_ce_level_for_ce_capable_ues"));
-            }
+                .map_err(in_field("cell_identifier_and_ce_level_for_ce_capable_ues"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -1910,11 +1819,14 @@ pub mod s1_ap_ies {
             )?;
             let cell_identifier_and_ce_level_for_ce_capable_ues = reading.member(
                 &members,
-                0,
+                "cellIdentifierAndCELevelForCECapableUEs",
                 CellIdentifierAndCELevelForCECapableUEs::from_tree,
             )?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 cell_identifier_and_ce_level_for_ce_capable_ues,
                 ie_extensions,
@@ -1968,37 +1880,33 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(4)?;
             let assistance_data_for_recommended_cells = if present & 8 != 0 {
-                Some(match AssistanceDataForRecommendedCells::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => {
-                        return Err(error.in_field("assistance_data_for_recommended_cells"));
-                    }
-                })
+                Some(
+                    AssistanceDataForRecommendedCells::decode(reader)
+                        .map_err(in_field("assistance_data_for_recommended_cells"))?,
+                )
             } else {
                 None
             };
             let assistance_data_for_ce_capable_ues = if present & 4 != 0 {
-                Some(match AssistanceDataForCECapableUEs::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("assistance_data_for_ce_capable_ues")),
-                })
+                Some(
+                    AssistanceDataForCECapableUEs::decode(reader)
+                        .map_err(in_field("assistance_data_for_ce_capable_ues"))?,
+                )
             } else {
                 None
             };
             let paging_attempt_information = if present & 2 != 0 {
-                Some(match PagingAttemptInformation::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("paging_attempt_information")),
-                })
+                Some(
+                    PagingAttemptInformation::decode(reader)
+                        .map_err(in_field("paging_attempt_information"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -2023,24 +1931,22 @@ pub mod s1_ap_ies {
             writer.bit(self.paging_attempt_information.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.assistance_data_for_recommended_cells {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("assistance_data_for_recommended_cells"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("assistance_data_for_recommended_cells"))?;
             }
             if let Some(value) = &self.assistance_data_for_ce_capable_ues {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("assistance_data_for_ce_capable_ues"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("assistance_data_for_ce_capable_ues"))?;
             }
             if let Some(value) = &self.paging_attempt_information {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("paging_attempt_information"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("paging_attempt_information"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -2084,14 +1990,26 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let assistance_data_for_recommended_cells =
-                reading.optional(&members, 0, AssistanceDataForRecommendedCells::from_tree)?;
-            let assistance_data_for_ce_capable_ues =
-                reading.optional(&members, 1, AssistanceDataForCECapableUEs::from_tree)?;
-            let paging_attempt_information =
-                reading.optional(&members, 2, PagingAttemptInformation::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let assistance_data_for_recommended_cells = reading.optional(
+                &members,
+                "assistanceDataForRecommendedCells",
+                AssistanceDataForRecommendedCells::from_tree,
+            )?;
+            let assistance_data_for_ce_capable_ues = reading.optional(
+                &members,
+                "assistanceDataForCECapableUEs",
+                AssistanceDataForCECapableUEs::from_tree,
+            )?;
+            let paging_attempt_information = reading.optional(
+                &members,
+                "pagingAttemptInformation",
+                PagingAttemptInformation::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 assistance_data_for_recommended_cells,
                 assistance_data_for_ce_capable_ues,
@@ -2134,16 +2052,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let recommended_cells_for_paging = match RecommendedCellsForPaging::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("recommended_cells_for_paging")),
-            };
+            let recommended_cells_for_paging = RecommendedCellsForPaging::decode(reader)
+                .map_err(in_field("recommended_cells_for_paging"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -2162,13 +2076,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.recommended_cells_for_paging.encode(writer) {
-                return Err(error.in_field("recommended_cells_for_paging"));
-            }
+            self.recommended_cells_for_paging
+                .encode(writer)
+                .map_err(in_field("recommended_cells_for_paging"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -2191,10 +2103,16 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["recommendedCellsForPaging", "iE-Extensions"])?;
-            let recommended_cells_for_paging =
-                reading.member(&members, 0, RecommendedCellsForPaging::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let recommended_cells_for_paging = reading.member(
+                &members,
+                "recommendedCellsForPaging",
+                RecommendedCellsForPaging::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 recommended_cells_for_paging,
                 ie_extensions,
@@ -2328,20 +2246,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let dl_discarding = match DLDiscarding::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("dl_discarding")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let dl_discarding = DLDiscarding::decode(reader).map_err(in_field("dl_discarding"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -2361,16 +2271,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.dl_discarding.encode(writer) {
-                return Err(error.in_field("dl_discarding"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.dl_discarding
+                .encode(writer)
+                .map_err(in_field("dl_discarding"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -2391,10 +2297,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["e-RAB-ID", "dL-Discarding", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let dl_discarding = reading.member(&members, 1, DLDiscarding::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let dl_discarding =
+                reading.member(&members, "dL-Discarding", DLDiscarding::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 dl_discarding,
@@ -2494,20 +2404,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let dl_count_pdcp_sn_length = match DLCOUNTPDCPSNlength::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("dl_count_pdcp_sn_length")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let dl_count_pdcp_sn_length =
+                DLCOUNTPDCPSNlength::decode(reader).map_err(in_field("dl_count_pdcp_sn_length"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -2527,16 +2430,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.dl_count_pdcp_sn_length.encode(writer) {
-                return Err(error.in_field("dl_count_pdcp_sn_length"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.dl_count_pdcp_sn_length
+                .encode(writer)
+                .map_err(in_field("dl_count_pdcp_sn_length"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -2562,11 +2461,17 @@ pub mod s1_ap_ies {
                 value,
                 &["e-RAB-ID", "dLCOUNT-PDCP-SNlength", "iE-Extensions"],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let dl_count_pdcp_sn_length =
-                reading.member(&members, 1, DLCOUNTPDCPSNlength::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let dl_count_pdcp_sn_length = reading.member(
+                &members,
+                "dLCOUNT-PDCP-SNlength",
+                DLCOUNTPDCPSNlength::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 dl_count_pdcp_sn_length,
@@ -2685,32 +2590,21 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let ul_count_value = match COUNTvalue::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ul_count_value")),
-            };
-            let dl_count_value = match COUNTvalue::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("dl_count_value")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let ul_count_value = COUNTvalue::decode(reader).map_err(in_field("ul_count_value"))?;
+            let dl_count_value = COUNTvalue::decode(reader).map_err(in_field("dl_count_value"))?;
             let receive_statusof_ul_pdcp_sdus = if present & 2 != 0 {
-                Some(match ReceiveStatusofULPDCPSDUs::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("receive_statusof_ul_pdcp_sdus")),
-                })
+                Some(
+                    ReceiveStatusofULPDCPSDUs::decode(reader)
+                        .map_err(in_field("receive_statusof_ul_pdcp_sdus"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -2733,24 +2627,20 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.receive_statusof_ul_pdcp_sdus.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.ul_count_value.encode(writer) {
-                return Err(error.in_field("ul_count_value"));
-            }
-            if let Err(error) = self.dl_count_value.encode(writer) {
-                return Err(error.in_field("dl_count_value"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.ul_count_value
+                .encode(writer)
+                .map_err(in_field("ul_count_value"))?;
+            self.dl_count_value
+                .encode(writer)
+                .map_err(in_field("dl_count_value"))?;
             if let Some(value) = &self.receive_statusof_ul_pdcp_sdus {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("receive_statusof_ul_pdcp_sdus"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("receive_statusof_ul_pdcp_sdus"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -2786,13 +2676,21 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let ul_count_value = reading.member(&members, 1, COUNTvalue::from_tree)?;
-            let dl_count_value = reading.member(&members, 2, COUNTvalue::from_tree)?;
-            let receive_statusof_ul_pdcp_sdus =
-                reading.optional(&members, 3, ReceiveStatusofULPDCPSDUs::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let ul_count_value =
+                reading.member(&members, "uL-COUNTvalue", COUNTvalue::from_tree)?;
+            let dl_count_value =
+                reading.member(&members, "dL-COUNTvalue", COUNTvalue::from_tree)?;
+            let receive_statusof_ul_pdcp_sdus = reading.optional(
+                &members,
+                "receiveStatusofULPDCPSDUs",
+                ReceiveStatusofULPDCPSDUs::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 ul_count_value,
@@ -3104,34 +3002,28 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
-            let bluetooth_meas_config = match BluetoothMeasConfig::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("bluetooth_meas_config")),
-            };
+            let bluetooth_meas_config =
+                BluetoothMeasConfig::decode(reader).map_err(in_field("bluetooth_meas_config"))?;
             let bluetooth_meas_config_name_list = if present & 4 != 0 {
-                Some(match BluetoothMeasConfigNameList::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("bluetooth_meas_config_name_list")),
-                })
+                Some(
+                    BluetoothMeasConfigNameList::decode(reader)
+                        .map_err(in_field("bluetooth_meas_config_name_list"))?,
+                )
             } else {
                 None
             };
             let bt_rssi = if present & 2 != 0 {
                 Some(
-                    match BluetoothMeasurementConfigurationBtRssi::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("bt_rssi")),
-                    },
+                    BluetoothMeasurementConfigurationBtRssi::decode(reader)
+                        .map_err(in_field("bt_rssi"))?,
                 )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -3154,23 +3046,19 @@ pub mod s1_ap_ies {
             writer.bit(self.bluetooth_meas_config_name_list.is_some());
             writer.bit(self.bt_rssi.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.bluetooth_meas_config.encode(writer) {
-                return Err(error.in_field("bluetooth_meas_config"));
-            }
+            self.bluetooth_meas_config
+                .encode(writer)
+                .map_err(in_field("bluetooth_meas_config"))?;
             if let Some(value) = &self.bluetooth_meas_config_name_list {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("bluetooth_meas_config_name_list"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("bluetooth_meas_config_name_list"))?;
             }
             if let Some(value) = &self.bt_rssi {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("bt_rssi"));
-                }
+                value.encode(writer).map_err(in_field("bt_rssi"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -3207,17 +3095,26 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let bluetooth_meas_config =
-                reading.member(&members, 0, BluetoothMeasConfig::from_tree)?;
-            let bluetooth_meas_config_name_list =
-                reading.optional(&members, 1, BluetoothMeasConfigNameList::from_tree)?;
+            let bluetooth_meas_config = reading.member(
+                &members,
+                "bluetoothMeasConfig",
+                BluetoothMeasConfig::from_tree,
+            )?;
+            let bluetooth_meas_config_name_list = reading.optional(
+                &members,
+                "bluetoothMeasConfigNameList",
+                BluetoothMeasConfigNameList::from_tree,
+            )?;
             let bt_rssi = reading.optional(
                 &members,
-                2,
+                "bt-rssi",
                 BluetoothMeasurementConfigurationBtRssi::from_tree,
             )?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 bluetooth_meas_config,
                 bluetooth_meas_config_name_list,
@@ -3670,32 +3567,18 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let lac = match LAC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("lac")),
-            };
-            let ci = match CI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ci")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let lac = LAC::decode(reader).map_err(in_field("lac"))?;
+            let ci = CI::decode(reader).map_err(in_field("ci"))?;
             let rac = if present & 2 != 0 {
-                Some(match RAC::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("rac")),
-                })
+                Some(RAC::decode(reader).map_err(in_field("rac"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -3718,24 +3601,16 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.rac.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.lac.encode(writer) {
-                return Err(error.in_field("lac"));
-            }
-            if let Err(error) = self.ci.encode(writer) {
-                return Err(error.in_field("ci"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.lac.encode(writer).map_err(in_field("lac"))?;
+            self.ci.encode(writer).map_err(in_field("ci"))?;
             if let Some(value) = &self.rac {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("rac"));
-                }
+                value.encode(writer).map_err(in_field("rac"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -3760,12 +3635,16 @@ pub mod s1_ap_ies {
                 value,
                 &["pLMNidentity", "lAC", "cI", "rAC", "iE-Extensions"],
             )?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let lac = reading.member(&members, 1, LAC::from_tree)?;
-            let ci = reading.member(&members, 2, CI::from_tree)?;
-            let rac = reading.optional(&members, 3, RAC::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
+            let lac = reading.member(&members, "lAC", LAC::from_tree)?;
+            let ci = reading.member(&members, "cI", CI::from_tree)?;
+            let rac = reading.optional(&members, "rAC", RAC::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 lac,
@@ -4005,20 +3884,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let cn_type = match CNType::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cn_type")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let cn_type = CNType::decode(reader).map_err(in_field("cn_type"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -4038,16 +3909,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.cn_type.encode(writer) {
-                return Err(error.in_field("cn_type"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.cn_type.encode(writer).map_err(in_field("cn_type"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -4067,10 +3934,14 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMN-Identity", "cNType", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let cn_type = reading.member(&members, 1, CNType::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMN-Identity", PLMNidentity::from_tree)?;
+            let cn_type = reading.member(&members, "cNType", CNType::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 cn_type,
@@ -4107,20 +3978,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let pdcp_sn_extended = match PDCPSNExtended::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("pdcp_sn_extended")),
-            };
-            let hfn_modified = match HFNModified::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("hfn_modified")),
-            };
+            let pdcp_sn_extended =
+                PDCPSNExtended::decode(reader).map_err(in_field("pdcp_sn_extended"))?;
+            let hfn_modified = HFNModified::decode(reader).map_err(in_field("hfn_modified"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -4140,16 +4004,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.pdcp_sn_extended.encode(writer) {
-                return Err(error.in_field("pdcp_sn_extended"));
-            }
-            if let Err(error) = self.hfn_modified.encode(writer) {
-                return Err(error.in_field("hfn_modified"));
-            }
+            self.pdcp_sn_extended
+                .encode(writer)
+                .map_err(in_field("pdcp_sn_extended"))?;
+            self.hfn_modified
+                .encode(writer)
+                .map_err(in_field("hfn_modified"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -4170,10 +4032,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pDCP-SNExtended", "hFNModified", "iE-Extensions"])?;
-            let pdcp_sn_extended = reading.member(&members, 0, PDCPSNExtended::from_tree)?;
-            let hfn_modified = reading.member(&members, 1, HFNModified::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let pdcp_sn_extended =
+                reading.member(&members, "pDCP-SNExtended", PDCPSNExtended::from_tree)?;
+            let hfn_modified = reading.member(&members, "hFNModified", HFNModified::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 pdcp_sn_extended,
                 hfn_modified,
@@ -4210,20 +4076,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let pdcp_sn = match PDCPSN::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("pdcp_sn")),
-            };
-            let hfn = match HFN::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("hfn")),
-            };
+            let pdcp_sn = PDCPSN::decode(reader).map_err(in_field("pdcp_sn"))?;
+            let hfn = HFN::decode(reader).map_err(in_field("hfn"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -4243,16 +4101,10 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.pdcp_sn.encode(writer) {
-                return Err(error.in_field("pdcp_sn"));
-            }
-            if let Err(error) = self.hfn.encode(writer) {
-                return Err(error.in_field("hfn"));
-            }
+            self.pdcp_sn.encode(writer).map_err(in_field("pdcp_sn"))?;
+            self.hfn.encode(writer).map_err(in_field("hfn"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -4272,10 +4124,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pDCP-SN", "hFN", "iE-Extensions"])?;
-            let pdcp_sn = reading.member(&members, 0, PDCPSN::from_tree)?;
-            let hfn = reading.member(&members, 1, HFN::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let pdcp_sn = reading.member(&members, "pDCP-SN", PDCPSN::from_tree)?;
+            let hfn = reading.member(&members, "hFN", HFN::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 pdcp_sn,
                 hfn,
@@ -4312,20 +4167,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let pdcp_sn_length18 = match PDCPSNlength18::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("pdcp_sn_length18")),
-            };
-            let hfn_for_pdcp_sn_length18 = match HFNforPDCPSNlength18::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("hfn_for_pdcp_sn_length18")),
-            };
+            let pdcp_sn_length18 =
+                PDCPSNlength18::decode(reader).map_err(in_field("pdcp_sn_length18"))?;
+            let hfn_for_pdcp_sn_length18 = HFNforPDCPSNlength18::decode(reader)
+                .map_err(in_field("hfn_for_pdcp_sn_length18"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -4345,16 +4194,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.pdcp_sn_length18.encode(writer) {
-                return Err(error.in_field("pdcp_sn_length18"));
-            }
-            if let Err(error) = self.hfn_for_pdcp_sn_length18.encode(writer) {
-                return Err(error.in_field("hfn_for_pdcp_sn_length18"));
-            }
+            self.pdcp_sn_length18
+                .encode(writer)
+                .map_err(in_field("pdcp_sn_length18"))?;
+            self.hfn_for_pdcp_sn_length18
+                .encode(writer)
+                .map_err(in_field("hfn_for_pdcp_sn_length18"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -4380,11 +4227,18 @@ pub mod s1_ap_ies {
                 value,
                 &["pDCP-SNlength18", "hFNforPDCP-SNlength18", "iE-Extensions"],
             )?;
-            let pdcp_sn_length18 = reading.member(&members, 0, PDCPSNlength18::from_tree)?;
-            let hfn_for_pdcp_sn_length18 =
-                reading.member(&members, 1, HFNforPDCPSNlength18::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let pdcp_sn_length18 =
+                reading.member(&members, "pDCP-SNlength18", PDCPSNlength18::from_tree)?;
+            let hfn_for_pdcp_sn_length18 = reading.member(
+                &members,
+                "hFNforPDCP-SNlength18",
+                HFNforPDCPSNlength18::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 pdcp_sn_length18,
                 hfn_for_pdcp_sn_length18,
@@ -4571,16 +4425,11 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let csg_id = match CSGId::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("csg_id")),
-            };
+            let csg_id = CSGId::decode(reader).map_err(in_field("csg_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -4599,13 +4448,9 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.csg_id.encode(writer) {
-                return Err(error.in_field("csg_id"));
-            }
+            self.csg_id.encode(writer).map_err(in_field("csg_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -4624,9 +4469,12 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["cSG-Id", "iE-Extensions"])?;
-            let csg_id = reading.member(&members, 0, CSGId::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let csg_id = reading.member(&members, "cSG-Id", CSGId::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 csg_id,
                 ie_extensions,
@@ -4760,20 +4608,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ecgi = match EUTRANCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ecgi")),
-            };
-            let number_of_broadcasts = match NumberOfBroadcasts::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("number_of_broadcasts")),
-            };
+            let ecgi = EUTRANCGI::decode(reader).map_err(in_field("ecgi"))?;
+            let number_of_broadcasts =
+                NumberOfBroadcasts::decode(reader).map_err(in_field("number_of_broadcasts"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -4793,16 +4634,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ecgi.encode(writer) {
-                return Err(error.in_field("ecgi"));
-            }
-            if let Err(error) = self.number_of_broadcasts.encode(writer) {
-                return Err(error.in_field("number_of_broadcasts"));
-            }
+            self.ecgi.encode(writer).map_err(in_field("ecgi"))?;
+            self.number_of_broadcasts
+                .encode(writer)
+                .map_err(in_field("number_of_broadcasts"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -4823,11 +4660,17 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["eCGI", "numberOfBroadcasts", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
-            let number_of_broadcasts =
-                reading.member(&members, 1, NumberOfBroadcasts::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
+            let number_of_broadcasts = reading.member(
+                &members,
+                "numberOfBroadcasts",
+                NumberOfBroadcasts::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ecgi,
                 number_of_broadcasts,
@@ -4916,20 +4759,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ecgi = match EUTRANCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ecgi")),
-            };
-            let number_of_broadcasts = match NumberOfBroadcasts::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("number_of_broadcasts")),
-            };
+            let ecgi = EUTRANCGI::decode(reader).map_err(in_field("ecgi"))?;
+            let number_of_broadcasts =
+                NumberOfBroadcasts::decode(reader).map_err(in_field("number_of_broadcasts"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -4949,16 +4785,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ecgi.encode(writer) {
-                return Err(error.in_field("ecgi"));
-            }
-            if let Err(error) = self.number_of_broadcasts.encode(writer) {
-                return Err(error.in_field("number_of_broadcasts"));
-            }
+            self.ecgi.encode(writer).map_err(in_field("ecgi"))?;
+            self.number_of_broadcasts
+                .encode(writer)
+                .map_err(in_field("number_of_broadcasts"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -4979,11 +4811,17 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["eCGI", "numberOfBroadcasts", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
-            let number_of_broadcasts =
-                reading.member(&members, 1, NumberOfBroadcasts::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
+            let number_of_broadcasts = reading.member(
+                &members,
+                "numberOfBroadcasts",
+                NumberOfBroadcasts::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ecgi,
                 number_of_broadcasts,
@@ -5912,24 +5750,16 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let cdma2000_one_xmeid = match Cdma2000OneXMEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cdma2000_one_xmeid")),
-            };
-            let cdma2000_one_xmsi = match Cdma2000OneXMSI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cdma2000_one_xmsi")),
-            };
-            let cdma2000_one_x_pilot = match Cdma2000OneXPilot::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cdma2000_one_x_pilot")),
-            };
+            let cdma2000_one_xmeid =
+                Cdma2000OneXMEID::decode(reader).map_err(in_field("cdma2000_one_xmeid"))?;
+            let cdma2000_one_xmsi =
+                Cdma2000OneXMSI::decode(reader).map_err(in_field("cdma2000_one_xmsi"))?;
+            let cdma2000_one_x_pilot =
+                Cdma2000OneXPilot::decode(reader).map_err(in_field("cdma2000_one_x_pilot"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -5950,19 +5780,17 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.cdma2000_one_xmeid.encode(writer) {
-                return Err(error.in_field("cdma2000_one_xmeid"));
-            }
-            if let Err(error) = self.cdma2000_one_xmsi.encode(writer) {
-                return Err(error.in_field("cdma2000_one_xmsi"));
-            }
-            if let Err(error) = self.cdma2000_one_x_pilot.encode(writer) {
-                return Err(error.in_field("cdma2000_one_x_pilot"));
-            }
+            self.cdma2000_one_xmeid
+                .encode(writer)
+                .map_err(in_field("cdma2000_one_xmeid"))?;
+            self.cdma2000_one_xmsi
+                .encode(writer)
+                .map_err(in_field("cdma2000_one_xmsi"))?;
+            self.cdma2000_one_x_pilot
+                .encode(writer)
+                .map_err(in_field("cdma2000_one_x_pilot"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -5991,11 +5819,17 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let cdma2000_one_xmeid = reading.member(&members, 0, Cdma2000OneXMEID::from_tree)?;
-            let cdma2000_one_xmsi = reading.member(&members, 1, Cdma2000OneXMSI::from_tree)?;
-            let cdma2000_one_x_pilot = reading.member(&members, 2, Cdma2000OneXPilot::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let cdma2000_one_xmeid =
+                reading.member(&members, "cdma2000OneXMEID", Cdma2000OneXMEID::from_tree)?;
+            let cdma2000_one_xmsi =
+                reading.member(&members, "cdma2000OneXMSI", Cdma2000OneXMSI::from_tree)?;
+            let cdma2000_one_x_pilot =
+                reading.member(&members, "cdma2000OneXPilot", Cdma2000OneXPilot::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 cdma2000_one_xmeid,
                 cdma2000_one_xmsi,
@@ -6293,16 +6127,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let cell_id_listfor_mdt = match CellIdListforMDT::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cell_id_listfor_mdt")),
-            };
+            let cell_id_listfor_mdt =
+                CellIdListforMDT::decode(reader).map_err(in_field("cell_id_listfor_mdt"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -6321,13 +6151,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.cell_id_listfor_mdt.encode(writer) {
-                return Err(error.in_field("cell_id_listfor_mdt"));
-            }
+            self.cell_id_listfor_mdt
+                .encode(writer)
+                .map_err(in_field("cell_id_listfor_mdt"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -6346,9 +6174,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["cellIdListforMDT", "iE-Extensions"])?;
-            let cell_id_listfor_mdt = reading.member(&members, 0, CellIdListforMDT::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let cell_id_listfor_mdt =
+                reading.member(&members, "cellIdListforMDT", CellIdListforMDT::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 cell_id_listfor_mdt,
                 ie_extensions,
@@ -6381,16 +6213,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let cell_id_listfor_qmc = match CellIdListforQMC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cell_id_listfor_qmc")),
-            };
+            let cell_id_listfor_qmc =
+                CellIdListforQMC::decode(reader).map_err(in_field("cell_id_listfor_qmc"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -6409,13 +6237,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.cell_id_listfor_qmc.encode(writer) {
-                return Err(error.in_field("cell_id_listfor_qmc"));
-            }
+            self.cell_id_listfor_qmc
+                .encode(writer)
+                .map_err(in_field("cell_id_listfor_qmc"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -6434,9 +6260,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["cellIdListforQMC", "iE-Extensions"])?;
-            let cell_id_listfor_qmc = reading.member(&members, 0, CellIdListforQMC::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let cell_id_listfor_qmc =
+                reading.member(&members, "cellIdListforQMC", CellIdListforQMC::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 cell_id_listfor_qmc,
                 ie_extensions,
@@ -6521,16 +6351,11 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ecgi = match EUTRANCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ecgi")),
-            };
+            let ecgi = EUTRANCGI::decode(reader).map_err(in_field("ecgi"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -6549,13 +6374,9 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ecgi.encode(writer) {
-                return Err(error.in_field("ecgi"));
-            }
+            self.ecgi.encode(writer).map_err(in_field("ecgi"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -6574,9 +6395,12 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["eCGI", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ecgi,
                 ie_extensions,
@@ -6664,20 +6488,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ecgi = match EUTRANCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ecgi")),
-            };
-            let number_of_broadcasts = match NumberOfBroadcasts::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("number_of_broadcasts")),
-            };
+            let ecgi = EUTRANCGI::decode(reader).map_err(in_field("ecgi"))?;
+            let number_of_broadcasts =
+                NumberOfBroadcasts::decode(reader).map_err(in_field("number_of_broadcasts"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -6697,16 +6514,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ecgi.encode(writer) {
-                return Err(error.in_field("ecgi"));
-            }
-            if let Err(error) = self.number_of_broadcasts.encode(writer) {
-                return Err(error.in_field("number_of_broadcasts"));
-            }
+            self.ecgi.encode(writer).map_err(in_field("ecgi"))?;
+            self.number_of_broadcasts
+                .encode(writer)
+                .map_err(in_field("number_of_broadcasts"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -6727,11 +6540,17 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["eCGI", "numberOfBroadcasts", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
-            let number_of_broadcasts =
-                reading.member(&members, 1, NumberOfBroadcasts::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
+            let number_of_broadcasts = reading.member(
+                &members,
+                "numberOfBroadcasts",
+                NumberOfBroadcasts::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ecgi,
                 number_of_broadcasts,
@@ -6881,20 +6700,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let global_cell_id = match EUTRANCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("global_cell_id")),
-            };
-            let ce_level = match CELevel::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ce_level")),
-            };
+            let global_cell_id = EUTRANCGI::decode(reader).map_err(in_field("global_cell_id"))?;
+            let ce_level = CELevel::decode(reader).map_err(in_field("ce_level"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -6914,16 +6725,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.global_cell_id.encode(writer) {
-                return Err(error.in_field("global_cell_id"));
-            }
-            if let Err(error) = self.ce_level.encode(writer) {
-                return Err(error.in_field("ce_level"));
-            }
+            self.global_cell_id
+                .encode(writer)
+                .map_err(in_field("global_cell_id"))?;
+            self.ce_level.encode(writer).map_err(in_field("ce_level"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -6944,10 +6751,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["global-Cell-ID", "cELevel", "iE-Extensions"])?;
-            let global_cell_id = reading.member(&members, 0, EUTRANCGI::from_tree)?;
-            let ce_level = reading.member(&members, 1, CELevel::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let global_cell_id =
+                reading.member(&members, "global-Cell-ID", EUTRANCGI::from_tree)?;
+            let ce_level = reading.member(&members, "cELevel", CELevel::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 global_cell_id,
                 ce_level,
@@ -7034,16 +6845,11 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let cell_size = match CellSize::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cell_size")),
-            };
+            let cell_size = CellSize::decode(reader).map_err(in_field("cell_size"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -7062,13 +6868,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.cell_size.encode(writer) {
-                return Err(error.in_field("cell_size"));
-            }
+            self.cell_size
+                .encode(writer)
+                .map_err(in_field("cell_size"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -7087,9 +6891,12 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["cell-Size", "iE-Extensions"])?;
-            let cell_size = reading.member(&members, 0, CellSize::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let cell_size = reading.member(&members, "cell-Size", CellSize::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 cell_size,
                 ie_extensions,
@@ -7280,16 +7087,11 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ecgi = match EUTRANCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ecgi")),
-            };
+            let ecgi = EUTRANCGI::decode(reader).map_err(in_field("ecgi"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -7308,13 +7110,9 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ecgi.encode(writer) {
-                return Err(error.in_field("ecgi"));
-            }
+            self.ecgi.encode(writer).map_err(in_field("ecgi"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -7333,9 +7131,12 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["eCGI", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ecgi,
                 ie_extensions,
@@ -7420,16 +7221,11 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ecgi = match EUTRANCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ecgi")),
-            };
+            let ecgi = EUTRANCGI::decode(reader).map_err(in_field("ecgi"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -7448,13 +7244,9 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ecgi.encode(writer) {
-                return Err(error.in_field("ecgi"));
-            }
+            self.ecgi.encode(writer).map_err(in_field("ecgi"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -7473,9 +7265,12 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["eCGI", "iE-Extensions"])?;
-            let ecgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ecgi,
                 ie_extensions,
@@ -7565,20 +7360,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let en_gnb_id = match EnGNBID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("en_gnb_id")),
-            };
-            let supported_tas = match SupportedTAs::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("supported_tas")),
-            };
+            let en_gnb_id = EnGNBID::decode(reader).map_err(in_field("en_gnb_id"))?;
+            let supported_tas = SupportedTAs::decode(reader).map_err(in_field("supported_tas"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -7598,16 +7385,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.en_gnb_id.encode(writer) {
-                return Err(error.in_field("en_gnb_id"));
-            }
-            if let Err(error) = self.supported_tas.encode(writer) {
-                return Err(error.in_field("supported_tas"));
-            }
+            self.en_gnb_id
+                .encode(writer)
+                .map_err(in_field("en_gnb_id"))?;
+            self.supported_tas
+                .encode(writer)
+                .map_err(in_field("supported_tas"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -7628,10 +7413,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["en-gNB-ID", "supportedTAs", "iE-Extensions"])?;
-            let en_gnb_id = reading.member(&members, 0, EnGNBID::from_tree)?;
-            let supported_tas = reading.member(&members, 1, SupportedTAs::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let en_gnb_id = reading.member(&members, "en-gNB-ID", EnGNBID::from_tree)?;
+            let supported_tas =
+                reading.member(&members, "supportedTAs", SupportedTAs::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 en_gnb_id,
                 supported_tas,
@@ -7727,20 +7516,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let source_ng_ran_node_id = match GlobalRANNODEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("source_ng_ran_node_id")),
-            };
-            let ran_ue_ngap_id = match RANUENGAPID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ran_ue_ngap_id")),
-            };
+            let source_ng_ran_node_id =
+                GlobalRANNODEID::decode(reader).map_err(in_field("source_ng_ran_node_id"))?;
+            let ran_ue_ngap_id = RANUENGAPID::decode(reader).map_err(in_field("ran_ue_ngap_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -7760,16 +7542,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.source_ng_ran_node_id.encode(writer) {
-                return Err(error.in_field("source_ng_ran_node_id"));
-            }
-            if let Err(error) = self.ran_ue_ngap_id.encode(writer) {
-                return Err(error.in_field("ran_ue_ngap_id"));
-            }
+            self.source_ng_ran_node_id
+                .encode(writer)
+                .map_err(in_field("source_ng_ran_node_id"))?;
+            self.ran_ue_ngap_id
+                .encode(writer)
+                .map_err(in_field("ran_ue_ngap_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -7792,10 +7572,15 @@ pub mod s1_ap_ies {
                 value,
                 &["sourceNG-RAN-node-ID", "rAN-UE-NGAP-ID", "iE-Extensions"],
             )?;
-            let source_ng_ran_node_id = reading.member(&members, 0, GlobalRANNODEID::from_tree)?;
-            let ran_ue_ngap_id = reading.member(&members, 1, RANUENGAPID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let source_ng_ran_node_id =
+                reading.member(&members, "sourceNG-RAN-node-ID", GlobalRANNODEID::from_tree)?;
+            let ran_ue_ngap_id =
+                reading.member(&members, "rAN-UE-NGAP-ID", RANUENGAPID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 source_ng_ran_node_id,
                 ran_ue_ngap_id,
@@ -7940,43 +7725,32 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(5)?;
             let procedure_code = if present & 16 != 0 {
-                Some(match ProcedureCode::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("procedure_code")),
-                })
+                Some(ProcedureCode::decode(reader).map_err(in_field("procedure_code"))?)
             } else {
                 None
             };
             let triggering_message = if present & 8 != 0 {
-                Some(match TriggeringMessage::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("triggering_message")),
-                })
+                Some(TriggeringMessage::decode(reader).map_err(in_field("triggering_message"))?)
             } else {
                 None
             };
             let procedure_criticality = if present & 4 != 0 {
-                Some(match Criticality::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("procedure_criticality")),
-                })
+                Some(Criticality::decode(reader).map_err(in_field("procedure_criticality"))?)
             } else {
                 None
             };
             let ies_criticality_diagnostics = if present & 2 != 0 {
-                Some(match CriticalityDiagnosticsIEList::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ies_criticality_diagnostics")),
-                })
+                Some(
+                    CriticalityDiagnosticsIEList::decode(reader)
+                        .map_err(in_field("ies_criticality_diagnostics"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -8003,29 +7777,25 @@ pub mod s1_ap_ies {
             writer.bit(self.ies_criticality_diagnostics.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.procedure_code {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("procedure_code"));
-                }
+                value.encode(writer).map_err(in_field("procedure_code"))?;
             }
             if let Some(value) = &self.triggering_message {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("triggering_message"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("triggering_message"))?;
             }
             if let Some(value) = &self.procedure_criticality {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("procedure_criticality"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("procedure_criticality"))?;
             }
             if let Some(value) = &self.ies_criticality_diagnostics {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ies_criticality_diagnostics"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("ies_criticality_diagnostics"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -8074,13 +7844,22 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let procedure_code = reading.optional(&members, 0, ProcedureCode::from_tree)?;
-            let triggering_message = reading.optional(&members, 1, TriggeringMessage::from_tree)?;
-            let procedure_criticality = reading.optional(&members, 2, Criticality::from_tree)?;
-            let ies_criticality_diagnostics =
-                reading.optional(&members, 3, CriticalityDiagnosticsIEList::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let procedure_code =
+                reading.optional(&members, "procedureCode", ProcedureCode::from_tree)?;
+            let triggering_message =
+                reading.optional(&members, "triggeringMessage", TriggeringMessage::from_tree)?;
+            let procedure_criticality =
+                reading.optional(&members, "procedureCriticality", Criticality::from_tree)?;
+            let ies_criticality_diagnostics = reading.optional(
+                &members,
+                "iEsCriticalityDiagnostics",
+                CriticalityDiagnosticsIEList::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 procedure_code,
                 triggering_message,
@@ -8122,24 +7901,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ie_criticality = match Criticality::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ie_criticality")),
-            };
-            let ie_id = match ProtocolIEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ie_id")),
-            };
-            let type_of_error = match TypeOfError::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("type_of_error")),
-            };
+            let ie_criticality = Criticality::decode(reader).map_err(in_field("ie_criticality"))?;
+            let ie_id = ProtocolIEID::decode(reader).map_err(in_field("ie_id"))?;
+            let type_of_error = TypeOfError::decode(reader).map_err(in_field("type_of_error"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -8160,19 +7928,15 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ie_criticality.encode(writer) {
-                return Err(error.in_field("ie_criticality"));
-            }
-            if let Err(error) = self.ie_id.encode(writer) {
-                return Err(error.in_field("ie_id"));
-            }
-            if let Err(error) = self.type_of_error.encode(writer) {
-                return Err(error.in_field("type_of_error"));
-            }
+            self.ie_criticality
+                .encode(writer)
+                .map_err(in_field("ie_criticality"))?;
+            self.ie_id.encode(writer).map_err(in_field("ie_id"))?;
+            self.type_of_error
+                .encode(writer)
+                .map_err(in_field("type_of_error"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -8196,11 +7960,15 @@ pub mod s1_ap_ies {
                 value,
                 &["iECriticality", "iE-ID", "typeOfError", "iE-Extensions"],
             )?;
-            let ie_criticality = reading.member(&members, 0, Criticality::from_tree)?;
-            let ie_id = reading.member(&members, 1, ProtocolIEID::from_tree)?;
-            let type_of_error = reading.member(&members, 2, TypeOfError::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let ie_criticality =
+                reading.member(&members, "iECriticality", Criticality::from_tree)?;
+            let ie_id = reading.member(&members, "iE-ID", ProtocolIEID::from_tree)?;
+            let type_of_error = reading.member(&members, "typeOfError", TypeOfError::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ie_criticality,
                 ie_id,
@@ -8335,16 +8103,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let daps_indicator = match DAPSRequestInfoDAPSIndicator::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("daps_indicator")),
-            };
+            let daps_indicator =
+                DAPSRequestInfoDAPSIndicator::decode(reader).map_err(in_field("daps_indicator"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -8363,13 +8127,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.daps_indicator.encode(writer) {
-                return Err(error.in_field("daps_indicator"));
-            }
+            self.daps_indicator
+                .encode(writer)
+                .map_err(in_field("daps_indicator"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -8388,10 +8150,16 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["dAPSIndicator", "iE-Extensions"])?;
-            let daps_indicator =
-                reading.member(&members, 0, DAPSRequestInfoDAPSIndicator::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let daps_indicator = reading.member(
+                &members,
+                "dAPSIndicator",
+                DAPSRequestInfoDAPSIndicator::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 daps_indicator,
                 ie_extensions,
@@ -8471,17 +8239,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let dapsresponseindicator = match DAPSResponseInfoDapsresponseindicator::decode(reader)
-            {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("dapsresponseindicator")),
-            };
+            let dapsresponseindicator = DAPSResponseInfoDapsresponseindicator::decode(reader)
+                .map_err(in_field("dapsresponseindicator"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -8500,13 +8263,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.dapsresponseindicator.encode(writer) {
-                return Err(error.in_field("dapsresponseindicator"));
-            }
+            self.dapsresponseindicator
+                .encode(writer)
+                .map_err(in_field("dapsresponseindicator"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -8530,11 +8291,14 @@ pub mod s1_ap_ies {
             let members = reading.members(value, &["dapsresponseindicator", "iE-Extensions"])?;
             let dapsresponseindicator = reading.member(
                 &members,
-                0,
+                "dapsresponseindicator",
                 DAPSResponseInfoDapsresponseindicator::from_tree,
             )?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 dapsresponseindicator,
                 ie_extensions,
@@ -8570,20 +8334,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let daps_response_info = match DAPSResponseInfo::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("daps_response_info")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let daps_response_info =
+                DAPSResponseInfo::decode(reader).map_err(in_field("daps_response_info"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -8603,16 +8360,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.daps_response_info.encode(writer) {
-                return Err(error.in_field("daps_response_info"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.daps_response_info
+                .encode(writer)
+                .map_err(in_field("daps_response_info"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -8633,10 +8386,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["e-RAB-ID", "dAPSResponseInfo", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let daps_response_info = reading.member(&members, 1, DAPSResponseInfo::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let daps_response_info =
+                reading.member(&members, "dAPSResponseInfo", DAPSResponseInfo::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 daps_response_info,
@@ -8775,16 +8532,11 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let dl_nas_mac = match DLNASMAC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("dl_nas_mac")),
-            };
+            let dl_nas_mac = DLNASMAC::decode(reader).map_err(in_field("dl_nas_mac"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -8803,13 +8555,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.dl_nas_mac.encode(writer) {
-                return Err(error.in_field("dl_nas_mac"));
-            }
+            self.dl_nas_mac
+                .encode(writer)
+                .map_err(in_field("dl_nas_mac"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -8828,9 +8578,12 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["dl-NAS-MAC", "iE-Extensions"])?;
-            let dl_nas_mac = reading.member(&members, 0, DLNASMAC::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let dl_nas_mac = reading.member(&members, "dl-NAS-MAC", DLNASMAC::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 dl_nas_mac,
                 ie_extensions,
@@ -9499,24 +9252,16 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
             let dl_forwarding = if present & 2 != 0 {
-                Some(match DLForwarding::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("dl_forwarding")),
-                })
+                Some(DLForwarding::decode(reader).map_err(in_field("dl_forwarding"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -9537,18 +9282,12 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.dl_forwarding.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
             if let Some(value) = &self.dl_forwarding {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("dl_forwarding"));
-                }
+                value.encode(writer).map_err(in_field("dl_forwarding"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -9572,10 +9311,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["e-RAB-ID", "dL-Forwarding", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let dl_forwarding = reading.optional(&members, 1, DLForwarding::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let dl_forwarding =
+                reading.optional(&members, "dL-Forwarding", DLForwarding::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 dl_forwarding,
@@ -9612,20 +9355,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let cause = match Cause::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cause")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let cause = Cause::decode(reader).map_err(in_field("cause"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -9645,16 +9380,10 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.cause.encode(writer) {
-                return Err(error.in_field("cause"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.cause.encode(writer).map_err(in_field("cause"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -9674,10 +9403,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "cause", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let cause = reading.member(&members, 1, Cause::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let cause = reading.member(&members, "cause", Cause::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 cause,
@@ -9717,29 +9449,18 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let qci = match QCI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("qci")),
-            };
-            let allocation_retention_priority = match AllocationAndRetentionPriority::decode(reader)
-            {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("allocation_retention_priority")),
-            };
+            let qci = QCI::decode(reader).map_err(in_field("qci"))?;
+            let allocation_retention_priority = AllocationAndRetentionPriority::decode(reader)
+                .map_err(in_field("allocation_retention_priority"))?;
             let gbr_qos_information = if present & 2 != 0 {
-                Some(match GBRQosInformation::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("gbr_qos_information")),
-                })
+                Some(GBRQosInformation::decode(reader).map_err(in_field("gbr_qos_information"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -9761,21 +9482,17 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.gbr_qos_information.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.qci.encode(writer) {
-                return Err(error.in_field("qci"));
-            }
-            if let Err(error) = self.allocation_retention_priority.encode(writer) {
-                return Err(error.in_field("allocation_retention_priority"));
-            }
+            self.qci.encode(writer).map_err(in_field("qci"))?;
+            self.allocation_retention_priority
+                .encode(writer)
+                .map_err(in_field("allocation_retention_priority"))?;
             if let Some(value) = &self.gbr_qos_information {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("gbr_qos_information"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("gbr_qos_information"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -9812,13 +9529,19 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let qci = reading.member(&members, 0, QCI::from_tree)?;
-            let allocation_retention_priority =
-                reading.member(&members, 1, AllocationAndRetentionPriority::from_tree)?;
+            let qci = reading.member(&members, "qCI", QCI::from_tree)?;
+            let allocation_retention_priority = reading.member(
+                &members,
+                "allocationRetentionPriority",
+                AllocationAndRetentionPriority::from_tree,
+            )?;
             let gbr_qos_information =
-                reading.optional(&members, 2, GBRQosInformation::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+                reading.optional(&members, "gbrQosInformation", GBRQosInformation::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 qci,
                 allocation_retention_priority,
@@ -9915,20 +9638,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let security_result = match SecurityResult::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("security_result")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let security_result =
+                SecurityResult::decode(reader).map_err(in_field("security_result"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -9948,16 +9664,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.security_result.encode(writer) {
-                return Err(error.in_field("security_result"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.security_result
+                .encode(writer)
+                .map_err(in_field("security_result"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -9978,10 +9690,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["e-RAB-ID", "securityResult", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let security_result = reading.member(&members, 1, SecurityResult::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let security_result =
+                reading.member(&members, "securityResult", SecurityResult::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 security_result,
@@ -10083,28 +9799,22 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let start_timestamp = match reader.octet_array::<4>() {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("start_timestamp")),
-            };
-            let end_timestamp = match reader.octet_array::<4>() {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("end_timestamp")),
-            };
-            let usage_count_ul = match reader.unsigned(0, 18446744073709551615) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("usage_count_ul")),
-            };
-            let usage_count_dl = match reader.unsigned(0, 18446744073709551615) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("usage_count_dl")),
-            };
+            let start_timestamp = reader
+                .octet_array::<4>()
+                .map_err(in_field("start_timestamp"))?;
+            let end_timestamp = reader
+                .octet_array::<4>()
+                .map_err(in_field("end_timestamp"))?;
+            let usage_count_ul = reader
+                .unsigned(0, 18446744073709551615)
+                .map_err(in_field("usage_count_ul"))?;
+            let usage_count_dl = reader
+                .unsigned(0, 18446744073709551615)
+                .map_err(in_field("usage_count_dl"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -10128,16 +9838,14 @@ pub mod s1_ap_ies {
             writer.bit(self.ie_extensions.is_some());
             writer.octet_array(&self.start_timestamp);
             writer.octet_array(&self.end_timestamp);
-            if let Err(error) = writer.unsigned(self.usage_count_ul, 0, 18446744073709551615) {
-                return Err(error.in_field("usage_count_ul"));
-            }
-            if let Err(error) = writer.unsigned(self.usage_count_dl, 0, 18446744073709551615) {
-                return Err(error.in_field("usage_count_dl"));
-            }
+            writer
+                .unsigned(self.usage_count_ul, 0, 18446744073709551615)
+                .map_err(in_field("usage_count_ul"))?;
+            writer
+                .unsigned(self.usage_count_dl, 0, 18446744073709551615)
+                .map_err(in_field("usage_count_dl"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -10168,20 +9876,24 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let start_timestamp = reading.member(&members, 0, |value, reading| {
+            let start_timestamp =
+                reading.member(&members, "startTimestamp", |value, reading| {
+                    reading.octet_array::<4>(value)
+                })?;
+            let end_timestamp = reading.member(&members, "endTimestamp", |value, reading| {
                 reading.octet_array::<4>(value)
             })?;
-            let end_timestamp = reading.member(&members, 1, |value, reading| {
-                reading.octet_array::<4>(value)
-            })?;
-            let usage_count_ul = reading.member(&members, 2, |value, reading| {
+            let usage_count_ul = reading.member(&members, "usageCountUL", |value, reading| {
                 reading.unsigned(value, 0, 18446744073709551615)
             })?;
-            let usage_count_dl = reading.member(&members, 3, |value, reading| {
+            let usage_count_dl = reading.member(&members, "usageCountDL", |value, reading| {
                 reading.unsigned(value, 0, 18446744073709551615)
             })?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 start_timestamp,
                 end_timestamp,
@@ -10591,28 +10303,22 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let transfertype = match ENDCSONTransferType::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transfertype")),
-            };
-            let son_information = match SONInformation::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("son_information")),
-            };
+            let transfertype =
+                ENDCSONTransferType::decode(reader).map_err(in_field("transfertype"))?;
+            let son_information =
+                SONInformation::decode(reader).map_err(in_field("son_information"))?;
             let x2_tnl_config_info = if present & 2 != 0 {
-                Some(match X2TNLConfigurationInfo::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("x2_tnl_config_info")),
-                })
+                Some(
+                    X2TNLConfigurationInfo::decode(reader)
+                        .map_err(in_field("x2_tnl_config_info"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -10634,21 +10340,19 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.x2_tnl_config_info.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.transfertype.encode(writer) {
-                return Err(error.in_field("transfertype"));
-            }
-            if let Err(error) = self.son_information.encode(writer) {
-                return Err(error.in_field("son_information"));
-            }
+            self.transfertype
+                .encode(writer)
+                .map_err(in_field("transfertype"))?;
+            self.son_information
+                .encode(writer)
+                .map_err(in_field("son_information"))?;
             if let Some(value) = &self.x2_tnl_config_info {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("x2_tnl_config_info"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("x2_tnl_config_info"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -10682,12 +10386,20 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let transfertype = reading.member(&members, 0, ENDCSONTransferType::from_tree)?;
-            let son_information = reading.member(&members, 1, SONInformation::from_tree)?;
-            let x2_tnl_config_info =
-                reading.optional(&members, 2, X2TNLConfigurationInfo::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let transfertype =
+                reading.member(&members, "transfertype", ENDCSONTransferType::from_tree)?;
+            let son_information =
+                reading.member(&members, "sONInformation", SONInformation::from_tree)?;
+            let x2_tnl_config_info = reading.optional(
+                &members,
+                "x2TNLConfigInfo",
+                X2TNLConfigurationInfo::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 transfertype,
                 son_information,
@@ -10803,20 +10515,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let global_enb_id = match GlobalENBID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("global_enb_id")),
-            };
-            let selected_tai = match TAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("selected_tai")),
-            };
+            let global_enb_id = GlobalENBID::decode(reader).map_err(in_field("global_enb_id"))?;
+            let selected_tai = TAI::decode(reader).map_err(in_field("selected_tai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -10836,16 +10540,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.global_enb_id.encode(writer) {
-                return Err(error.in_field("global_enb_id"));
-            }
-            if let Err(error) = self.selected_tai.encode(writer) {
-                return Err(error.in_field("selected_tai"));
-            }
+            self.global_enb_id
+                .encode(writer)
+                .map_err(in_field("global_enb_id"))?;
+            self.selected_tai
+                .encode(writer)
+                .map_err(in_field("selected_tai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -10866,10 +10568,13 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["globaleNBID", "selectedTAI", "iE-Extensions"])?;
-            let global_enb_id = reading.member(&members, 0, GlobalENBID::from_tree)?;
-            let selected_tai = reading.member(&members, 1, TAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let global_enb_id = reading.member(&members, "globaleNBID", GlobalENBID::from_tree)?;
+            let selected_tai = reading.member(&members, "selectedTAI", TAI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 global_enb_id,
                 selected_tai,
@@ -10915,20 +10620,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let globalen_gnb_id = match GlobalEnGNBID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("globalen_gnb_id")),
-            };
-            let selected_tai = match TAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("selected_tai")),
-            };
+            let globalen_gnb_id =
+                GlobalEnGNBID::decode(reader).map_err(in_field("globalen_gnb_id"))?;
+            let selected_tai = TAI::decode(reader).map_err(in_field("selected_tai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -10948,16 +10646,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.globalen_gnb_id.encode(writer) {
-                return Err(error.in_field("globalen_gnb_id"));
-            }
-            if let Err(error) = self.selected_tai.encode(writer) {
-                return Err(error.in_field("selected_tai"));
-            }
+            self.globalen_gnb_id
+                .encode(writer)
+                .map_err(in_field("globalen_gnb_id"))?;
+            self.selected_tai
+                .encode(writer)
+                .map_err(in_field("selected_tai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -10978,10 +10674,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["globalengNBID", "selectedTAI", "iE-Extensions"])?;
-            let globalen_gnb_id = reading.member(&members, 0, GlobalEnGNBID::from_tree)?;
-            let selected_tai = reading.member(&members, 1, TAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let globalen_gnb_id =
+                reading.member(&members, "globalengNBID", GlobalEnGNBID::from_tree)?;
+            let selected_tai = reading.member(&members, "selectedTAI", TAI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 globalen_gnb_id,
                 selected_tai,
@@ -11027,20 +10727,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let source_en_gnb = match ENDCSONengNBIdentification::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("source_en_gnb")),
-            };
-            let target_enb = match ENDCSONeNBIdentification::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("target_enb")),
-            };
+            let source_en_gnb =
+                ENDCSONengNBIdentification::decode(reader).map_err(in_field("source_en_gnb"))?;
+            let target_enb =
+                ENDCSONeNBIdentification::decode(reader).map_err(in_field("target_enb"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -11060,16 +10754,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.source_en_gnb.encode(writer) {
-                return Err(error.in_field("source_en_gnb"));
-            }
-            if let Err(error) = self.target_enb.encode(writer) {
-                return Err(error.in_field("target_enb"));
-            }
+            self.source_en_gnb
+                .encode(writer)
+                .map_err(in_field("source_en_gnb"))?;
+            self.target_enb
+                .encode(writer)
+                .map_err(in_field("target_enb"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -11089,11 +10781,18 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["sourceengNB", "targeteNB", "iE-Extensions"])?;
-            let source_en_gnb =
-                reading.member(&members, 0, ENDCSONengNBIdentification::from_tree)?;
-            let target_enb = reading.member(&members, 1, ENDCSONeNBIdentification::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let source_en_gnb = reading.member(
+                &members,
+                "sourceengNB",
+                ENDCSONengNBIdentification::from_tree,
+            )?;
+            let target_enb =
+                reading.member(&members, "targeteNB", ENDCSONeNBIdentification::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 source_en_gnb,
                 target_enb,
@@ -11151,44 +10850,29 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(4)?;
-            let source_enb = match ENDCSONeNBIdentification::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("source_enb")),
-            };
-            let target_en_gnb = match ENDCSONengNBIdentification::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("target_en_gnb")),
-            };
+            let source_enb =
+                ENDCSONeNBIdentification::decode(reader).map_err(in_field("source_enb"))?;
+            let target_en_gnb =
+                ENDCSONengNBIdentification::decode(reader).map_err(in_field("target_en_gnb"))?;
             let target_enb = if present & 8 != 0 {
-                Some(match ENDCSONeNBIdentification::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("target_enb")),
-                })
+                Some(ENDCSONeNBIdentification::decode(reader).map_err(in_field("target_enb"))?)
             } else {
                 None
             };
             let associated_tai = if present & 4 != 0 {
-                Some(match TAI::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("associated_tai")),
-                })
+                Some(TAI::decode(reader).map_err(in_field("associated_tai"))?)
             } else {
                 None
             };
             let broadcast_5gs_tai = if present & 2 != 0 {
-                Some(match FiveGSTAI::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("broadcast_5gs_tai")),
-                })
+                Some(FiveGSTAI::decode(reader).map_err(in_field("broadcast_5gs_tai"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -11214,31 +10898,25 @@ pub mod s1_ap_ies {
             writer.bit(self.associated_tai.is_some());
             writer.bit(self.broadcast_5gs_tai.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.source_enb.encode(writer) {
-                return Err(error.in_field("source_enb"));
-            }
-            if let Err(error) = self.target_en_gnb.encode(writer) {
-                return Err(error.in_field("target_en_gnb"));
-            }
+            self.source_enb
+                .encode(writer)
+                .map_err(in_field("source_enb"))?;
+            self.target_en_gnb
+                .encode(writer)
+                .map_err(in_field("target_en_gnb"))?;
             if let Some(value) = &self.target_enb {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("target_enb"));
-                }
+                value.encode(writer).map_err(in_field("target_enb"))?;
             }
             if let Some(value) = &self.associated_tai {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("associated_tai"));
-                }
+                value.encode(writer).map_err(in_field("associated_tai"))?;
             }
             if let Some(value) = &self.broadcast_5gs_tai {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("broadcast_5gs_tai"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("broadcast_5gs_tai"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -11280,14 +10958,23 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let source_enb = reading.member(&members, 0, ENDCSONeNBIdentification::from_tree)?;
-            let target_en_gnb =
-                reading.member(&members, 1, ENDCSONengNBIdentification::from_tree)?;
-            let target_enb = reading.optional(&members, 2, ENDCSONeNBIdentification::from_tree)?;
-            let associated_tai = reading.optional(&members, 3, TAI::from_tree)?;
-            let broadcast_5gs_tai = reading.optional(&members, 4, FiveGSTAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
+            let source_enb =
+                reading.member(&members, "sourceeNB", ENDCSONeNBIdentification::from_tree)?;
+            let target_en_gnb = reading.member(
+                &members,
+                "targetengNB",
+                ENDCSONengNBIdentification::from_tree,
+            )?;
+            let target_enb =
+                reading.optional(&members, "targeteNB", ENDCSONeNBIdentification::from_tree)?;
+            let associated_tai = reading.optional(&members, "associatedTAI", TAI::from_tree)?;
+            let broadcast_5gs_tai =
+                reading.optional(&members, "broadcast5GSTAI", FiveGSTAI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 source_enb,
                 target_en_gnb,
@@ -11338,18 +11025,12 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
             let bearers_subject_to_early_status_transfer_list =
-                match BearersSubjectToEarlyStatusTransferList::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => {
-                        return Err(error.in_field("bearers_subject_to_early_status_transfer_list"));
-                    }
-                };
+                BearersSubjectToEarlyStatusTransferList::decode(reader)
+                    .map_err(in_field("bearers_subject_to_early_status_transfer_list"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -11368,16 +11049,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self
-                .bearers_subject_to_early_status_transfer_list
+            self.bearers_subject_to_early_status_transfer_list
                 .encode(writer)
-            {
-                return Err(error.in_field("bearers_subject_to_early_status_transfer_list"));
-            }
+                .map_err(in_field("bearers_subject_to_early_status_transfer_list"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -11404,11 +11080,14 @@ pub mod s1_ap_ies {
             )?;
             let bearers_subject_to_early_status_transfer_list = reading.member(
                 &members,
-                0,
+                "bearers-SubjectToEarlyStatusTransferList",
                 BearersSubjectToEarlyStatusTransferList::from_tree,
             )?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 bearers_subject_to_early_status_transfer_list,
                 ie_extensions,
@@ -11564,18 +11243,12 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
             let bearers_subject_to_status_transfer_list =
-                match BearersSubjectToStatusTransferList::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => {
-                        return Err(error.in_field("bearers_subject_to_status_transfer_list"));
-                    }
-                };
+                BearersSubjectToStatusTransferList::decode(reader)
+                    .map_err(in_field("bearers_subject_to_status_transfer_list"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -11594,13 +11267,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.bearers_subject_to_status_transfer_list.encode(writer) {
-                return Err(error.in_field("bearers_subject_to_status_transfer_list"));
-            }
+            self.bearers_subject_to_status_transfer_list
+                .encode(writer)
+                .map_err(in_field("bearers_subject_to_status_transfer_list"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -11625,10 +11296,16 @@ pub mod s1_ap_ies {
                 value,
                 &["bearers-SubjectToStatusTransferList", "iE-Extensions"],
             )?;
-            let bearers_subject_to_status_transfer_list =
-                reading.member(&members, 0, BearersSubjectToStatusTransferList::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let bearers_subject_to_status_transfer_list = reading.member(
+                &members,
+                "bearers-SubjectToStatusTransferList",
+                BearersSubjectToStatusTransferList::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 bearers_subject_to_status_transfer_list,
                 ie_extensions,
@@ -11783,27 +11460,19 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
             let ipsec_tla = if present & 4 != 0 {
-                Some(match TransportLayerAddress::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ipsec_tla")),
-                })
+                Some(TransportLayerAddress::decode(reader).map_err(in_field("ipsec_tla"))?)
             } else {
                 None
             };
             let gtp_tlaa = if present & 2 != 0 {
-                Some(match ENBX2GTPTLAs::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("gtp_tlaa")),
-                })
+                Some(ENBX2GTPTLAs::decode(reader).map_err(in_field("gtp_tlaa"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -11826,19 +11495,13 @@ pub mod s1_ap_ies {
             writer.bit(self.gtp_tlaa.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.ipsec_tla {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ipsec_tla"));
-                }
+                value.encode(writer).map_err(in_field("ipsec_tla"))?;
             }
             if let Some(value) = &self.gtp_tlaa {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("gtp_tlaa"));
-                }
+                value.encode(writer).map_err(in_field("gtp_tlaa"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -11864,10 +11527,14 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["iPsecTLA", "gTPTLAa", "iE-Extensions"])?;
-            let ipsec_tla = reading.optional(&members, 0, TransportLayerAddress::from_tree)?;
-            let gtp_tlaa = reading.optional(&members, 1, ENBX2GTPTLAs::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let ipsec_tla =
+                reading.optional(&members, "iPsecTLA", TransportLayerAddress::from_tree)?;
+            let gtp_tlaa = reading.optional(&members, "gTPTLAa", ENBX2GTPTLAs::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ipsec_tla,
                 gtp_tlaa,
@@ -12197,20 +11864,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let cell_id = match CellIdentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cell_id")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let cell_id = CellIdentity::decode(reader).map_err(in_field("cell_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -12230,16 +11889,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.cell_id.encode(writer) {
-                return Err(error.in_field("cell_id"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.cell_id.encode(writer).map_err(in_field("cell_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -12259,10 +11914,14 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMNidentity", "cell-ID", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let cell_id = reading.member(&members, 1, CellIdentity::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
+            let cell_id = reading.member(&members, "cell-ID", CellIdentity::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 cell_id,
@@ -12454,20 +12113,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let emergency_area_id = match EmergencyAreaID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("emergency_area_id")),
-            };
-            let completed_cellin_eai = match CompletedCellinEAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("completed_cellin_eai")),
-            };
+            let emergency_area_id =
+                EmergencyAreaID::decode(reader).map_err(in_field("emergency_area_id"))?;
+            let completed_cellin_eai =
+                CompletedCellinEAI::decode(reader).map_err(in_field("completed_cellin_eai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -12487,16 +12140,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.emergency_area_id.encode(writer) {
-                return Err(error.in_field("emergency_area_id"));
-            }
-            if let Err(error) = self.completed_cellin_eai.encode(writer) {
-                return Err(error.in_field("completed_cellin_eai"));
-            }
+            self.emergency_area_id
+                .encode(writer)
+                .map_err(in_field("emergency_area_id"))?;
+            self.completed_cellin_eai
+                .encode(writer)
+                .map_err(in_field("completed_cellin_eai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -12519,11 +12170,18 @@ pub mod s1_ap_ies {
                 value,
                 &["emergencyAreaID", "completedCellinEAI", "iE-Extensions"],
             )?;
-            let emergency_area_id = reading.member(&members, 0, EmergencyAreaID::from_tree)?;
-            let completed_cellin_eai =
-                reading.member(&members, 1, CompletedCellinEAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let emergency_area_id =
+                reading.member(&members, "emergencyAreaID", EmergencyAreaID::from_tree)?;
+            let completed_cellin_eai = reading.member(
+                &members,
+                "completedCellinEAI",
+                CompletedCellinEAI::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 emergency_area_id,
                 completed_cellin_eai,
@@ -12614,20 +12272,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let emergency_area_id = match EmergencyAreaID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("emergency_area_id")),
-            };
-            let cancelled_cellin_eai = match CancelledCellinEAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cancelled_cellin_eai")),
-            };
+            let emergency_area_id =
+                EmergencyAreaID::decode(reader).map_err(in_field("emergency_area_id"))?;
+            let cancelled_cellin_eai =
+                CancelledCellinEAI::decode(reader).map_err(in_field("cancelled_cellin_eai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -12647,16 +12299,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.emergency_area_id.encode(writer) {
-                return Err(error.in_field("emergency_area_id"));
-            }
-            if let Err(error) = self.cancelled_cellin_eai.encode(writer) {
-                return Err(error.in_field("cancelled_cellin_eai"));
-            }
+            self.emergency_area_id
+                .encode(writer)
+                .map_err(in_field("emergency_area_id"))?;
+            self.cancelled_cellin_eai
+                .encode(writer)
+                .map_err(in_field("cancelled_cellin_eai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -12679,11 +12329,18 @@ pub mod s1_ap_ies {
                 value,
                 &["emergencyAreaID", "cancelledCellinEAI", "iE-Extensions"],
             )?;
-            let emergency_area_id = reading.member(&members, 0, EmergencyAreaID::from_tree)?;
-            let cancelled_cellin_eai =
-                reading.member(&members, 1, CancelledCellinEAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let emergency_area_id =
+                reading.member(&members, "emergencyAreaID", EmergencyAreaID::from_tree)?;
+            let cancelled_cellin_eai = reading.member(
+                &members,
+                "cancelledCellinEAI",
+                CancelledCellinEAI::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 emergency_area_id,
                 cancelled_cellin_eai,
@@ -13112,24 +12769,15 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let l1_threshold = match MeasurementThresholdL1LoggedMDT::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("l1_threshold")),
-            };
-            let hysteresis = match Hysteresis::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("hysteresis")),
-            };
-            let time_to_trigger = match TimeToTrigger::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("time_to_trigger")),
-            };
+            let l1_threshold = MeasurementThresholdL1LoggedMDT::decode(reader)
+                .map_err(in_field("l1_threshold"))?;
+            let hysteresis = Hysteresis::decode(reader).map_err(in_field("hysteresis"))?;
+            let time_to_trigger =
+                TimeToTrigger::decode(reader).map_err(in_field("time_to_trigger"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -13150,19 +12798,17 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.l1_threshold.encode(writer) {
-                return Err(error.in_field("l1_threshold"));
-            }
-            if let Err(error) = self.hysteresis.encode(writer) {
-                return Err(error.in_field("hysteresis"));
-            }
-            if let Err(error) = self.time_to_trigger.encode(writer) {
-                return Err(error.in_field("time_to_trigger"));
-            }
+            self.l1_threshold
+                .encode(writer)
+                .map_err(in_field("l1_threshold"))?;
+            self.hysteresis
+                .encode(writer)
+                .map_err(in_field("hysteresis"))?;
+            self.time_to_trigger
+                .encode(writer)
+                .map_err(in_field("time_to_trigger"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -13191,12 +12837,19 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let l1_threshold =
-                reading.member(&members, 0, MeasurementThresholdL1LoggedMDT::from_tree)?;
-            let hysteresis = reading.member(&members, 1, Hysteresis::from_tree)?;
-            let time_to_trigger = reading.member(&members, 2, TimeToTrigger::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let l1_threshold = reading.member(
+                &members,
+                "l1Threshold",
+                MeasurementThresholdL1LoggedMDT::from_tree,
+            )?;
+            let hysteresis = reading.member(&members, "hysteresis", Hysteresis::from_tree)?;
+            let time_to_trigger =
+                reading.member(&members, "timeToTrigger", TimeToTrigger::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 l1_threshold,
                 hysteresis,
@@ -13592,39 +13245,30 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(4)?;
             let expected_activity_period = if present & 8 != 0 {
-                Some(match ExpectedActivityPeriod::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("expected_activity_period")),
-                })
+                Some(
+                    ExpectedActivityPeriod::decode(reader)
+                        .map_err(in_field("expected_activity_period"))?,
+                )
             } else {
                 None
             };
             let expected_idle_period = if present & 4 != 0 {
-                Some(match ExpectedIdlePeriod::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("expected_idle_period")),
-                })
+                Some(ExpectedIdlePeriod::decode(reader).map_err(in_field("expected_idle_period"))?)
             } else {
                 None
             };
             let sourceof_ue_activity_behaviour_information = if present & 2 != 0 {
                 Some(
-                    match SourceOfUEActivityBehaviourInformation::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => {
-                            return Err(error.in_field("sourceof_ue_activity_behaviour_information"));
-                        }
-                    },
+                    SourceOfUEActivityBehaviourInformation::decode(reader)
+                        .map_err(in_field("sourceof_ue_activity_behaviour_information"))?,
                 )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -13649,24 +13293,22 @@ pub mod s1_ap_ies {
             writer.bit(self.sourceof_ue_activity_behaviour_information.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.expected_activity_period {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("expected_activity_period"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("expected_activity_period"))?;
             }
             if let Some(value) = &self.expected_idle_period {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("expected_idle_period"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("expected_idle_period"))?;
             }
             if let Some(value) = &self.sourceof_ue_activity_behaviour_information {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("sourceof_ue_activity_behaviour_information"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("sourceof_ue_activity_behaviour_information"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -13710,17 +13352,26 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let expected_activity_period =
-                reading.optional(&members, 0, ExpectedActivityPeriod::from_tree)?;
-            let expected_idle_period =
-                reading.optional(&members, 1, ExpectedIdlePeriod::from_tree)?;
+            let expected_activity_period = reading.optional(
+                &members,
+                "expectedActivityPeriod",
+                ExpectedActivityPeriod::from_tree,
+            )?;
+            let expected_idle_period = reading.optional(
+                &members,
+                "expectedIdlePeriod",
+                ExpectedIdlePeriod::from_tree,
+            )?;
             let sourceof_ue_activity_behaviour_information = reading.optional(
                 &members,
-                2,
+                "sourceofUEActivityBehaviourInformation",
                 SourceOfUEActivityBehaviourInformation::from_tree,
             )?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 expected_activity_period,
                 expected_idle_period,
@@ -13759,27 +13410,22 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
             let expected_activity = if present & 4 != 0 {
-                Some(match ExpectedUEActivityBehaviour::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("expected_activity")),
-                })
+                Some(
+                    ExpectedUEActivityBehaviour::decode(reader)
+                        .map_err(in_field("expected_activity"))?,
+                )
             } else {
                 None
             };
             let expected_ho_interval = if present & 2 != 0 {
-                Some(match ExpectedHOInterval::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("expected_ho_interval")),
-                })
+                Some(ExpectedHOInterval::decode(reader).map_err(in_field("expected_ho_interval"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -13802,19 +13448,17 @@ pub mod s1_ap_ies {
             writer.bit(self.expected_ho_interval.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.expected_activity {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("expected_activity"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("expected_activity"))?;
             }
             if let Some(value) = &self.expected_ho_interval {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("expected_ho_interval"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("expected_ho_interval"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -13845,12 +13489,21 @@ pub mod s1_ap_ies {
                 value,
                 &["expectedActivity", "expectedHOInterval", "iE-Extensions"],
             )?;
-            let expected_activity =
-                reading.optional(&members, 0, ExpectedUEActivityBehaviour::from_tree)?;
-            let expected_ho_interval =
-                reading.optional(&members, 1, ExpectedHOInterval::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let expected_activity = reading.optional(
+                &members,
+                "expectedActivity",
+                ExpectedUEActivityBehaviour::from_tree,
+            )?;
+            let expected_ho_interval = reading.optional(
+                &members,
+                "expectedHOInterval",
+                ExpectedHOInterval::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 expected_activity,
                 expected_ho_interval,
@@ -14131,20 +13784,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let five_gs_tac = match FiveGSTAC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("five_gs_tac")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let five_gs_tac = FiveGSTAC::decode(reader).map_err(in_field("five_gs_tac"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -14164,16 +13809,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.five_gs_tac.encode(writer) {
-                return Err(error.in_field("five_gs_tac"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.five_gs_tac
+                .encode(writer)
+                .map_err(in_field("five_gs_tac"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -14194,10 +13837,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pLMNidentity", "fiveGSTAC", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let five_gs_tac = reading.member(&members, 1, FiveGSTAC::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
+            let five_gs_tac = reading.member(&members, "fiveGSTAC", FiveGSTAC::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 five_gs_tac,
@@ -14445,20 +14092,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let forbidden_lacs = match ForbiddenLACs::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("forbidden_lacs")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let forbidden_lacs =
+                ForbiddenLACs::decode(reader).map_err(in_field("forbidden_lacs"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -14478,16 +14118,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.forbidden_lacs.encode(writer) {
-                return Err(error.in_field("forbidden_lacs"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.forbidden_lacs
+                .encode(writer)
+                .map_err(in_field("forbidden_lacs"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -14508,10 +14146,15 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pLMN-Identity", "forbiddenLACs", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let forbidden_lacs = reading.member(&members, 1, ForbiddenLACs::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMN-Identity", PLMNidentity::from_tree)?;
+            let forbidden_lacs =
+                reading.member(&members, "forbiddenLACs", ForbiddenLACs::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 forbidden_lacs,
@@ -14652,20 +14295,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let forbidden_tacs = match ForbiddenTACs::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("forbidden_tacs")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let forbidden_tacs =
+                ForbiddenTACs::decode(reader).map_err(in_field("forbidden_tacs"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -14685,16 +14321,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.forbidden_tacs.encode(writer) {
-                return Err(error.in_field("forbidden_tacs"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.forbidden_tacs
+                .encode(writer)
+                .map_err(in_field("forbidden_tacs"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -14715,10 +14349,15 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pLMN-Identity", "forbiddenTACs", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let forbidden_tacs = reading.member(&members, 1, ForbiddenTACs::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMN-Identity", PLMNidentity::from_tree)?;
+            let forbidden_tacs =
+                reading.member(&members, "forbiddenTACs", ForbiddenTACs::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 forbidden_tacs,
@@ -14761,28 +14400,18 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_maximum_bitrate_dl = match BitRate::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_maximum_bitrate_dl")),
-            };
-            let e_rab_maximum_bitrate_ul = match BitRate::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_maximum_bitrate_ul")),
-            };
-            let e_rab_guaranteed_bitrate_dl = match BitRate::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_guaranteed_bitrate_dl")),
-            };
-            let e_rab_guaranteed_bitrate_ul = match BitRate::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_guaranteed_bitrate_ul")),
-            };
+            let e_rab_maximum_bitrate_dl =
+                BitRate::decode(reader).map_err(in_field("e_rab_maximum_bitrate_dl"))?;
+            let e_rab_maximum_bitrate_ul =
+                BitRate::decode(reader).map_err(in_field("e_rab_maximum_bitrate_ul"))?;
+            let e_rab_guaranteed_bitrate_dl =
+                BitRate::decode(reader).map_err(in_field("e_rab_guaranteed_bitrate_dl"))?;
+            let e_rab_guaranteed_bitrate_ul =
+                BitRate::decode(reader).map_err(in_field("e_rab_guaranteed_bitrate_ul"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -14804,22 +14433,20 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_maximum_bitrate_dl.encode(writer) {
-                return Err(error.in_field("e_rab_maximum_bitrate_dl"));
-            }
-            if let Err(error) = self.e_rab_maximum_bitrate_ul.encode(writer) {
-                return Err(error.in_field("e_rab_maximum_bitrate_ul"));
-            }
-            if let Err(error) = self.e_rab_guaranteed_bitrate_dl.encode(writer) {
-                return Err(error.in_field("e_rab_guaranteed_bitrate_dl"));
-            }
-            if let Err(error) = self.e_rab_guaranteed_bitrate_ul.encode(writer) {
-                return Err(error.in_field("e_rab_guaranteed_bitrate_ul"));
-            }
+            self.e_rab_maximum_bitrate_dl
+                .encode(writer)
+                .map_err(in_field("e_rab_maximum_bitrate_dl"))?;
+            self.e_rab_maximum_bitrate_ul
+                .encode(writer)
+                .map_err(in_field("e_rab_maximum_bitrate_ul"))?;
+            self.e_rab_guaranteed_bitrate_dl
+                .encode(writer)
+                .map_err(in_field("e_rab_guaranteed_bitrate_dl"))?;
+            self.e_rab_guaranteed_bitrate_ul
+                .encode(writer)
+                .map_err(in_field("e_rab_guaranteed_bitrate_ul"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -14862,12 +14489,19 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_maximum_bitrate_dl = reading.member(&members, 0, BitRate::from_tree)?;
-            let e_rab_maximum_bitrate_ul = reading.member(&members, 1, BitRate::from_tree)?;
-            let e_rab_guaranteed_bitrate_dl = reading.member(&members, 2, BitRate::from_tree)?;
-            let e_rab_guaranteed_bitrate_ul = reading.member(&members, 3, BitRate::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_maximum_bitrate_dl =
+                reading.member(&members, "e-RAB-MaximumBitrateDL", BitRate::from_tree)?;
+            let e_rab_maximum_bitrate_ul =
+                reading.member(&members, "e-RAB-MaximumBitrateUL", BitRate::from_tree)?;
+            let e_rab_guaranteed_bitrate_dl =
+                reading.member(&members, "e-RAB-GuaranteedBitrateDL", BitRate::from_tree)?;
+            let e_rab_guaranteed_bitrate_ul =
+                reading.member(&members, "e-RAB-GuaranteedBitrateUL", BitRate::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_maximum_bitrate_dl,
                 e_rab_maximum_bitrate_ul,
@@ -14909,24 +14543,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let lai = match LAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("lai")),
-            };
-            let rac = match RAC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("rac")),
-            };
-            let ci = match CI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ci")),
-            };
+            let lai = LAI::decode(reader).map_err(in_field("lai"))?;
+            let rac = RAC::decode(reader).map_err(in_field("rac"))?;
+            let ci = CI::decode(reader).map_err(in_field("ci"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -14947,19 +14570,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.lai.encode(writer) {
-                return Err(error.in_field("lai"));
-            }
-            if let Err(error) = self.rac.encode(writer) {
-                return Err(error.in_field("rac"));
-            }
-            if let Err(error) = self.ci.encode(writer) {
-                return Err(error.in_field("ci"));
-            }
+            self.lai.encode(writer).map_err(in_field("lai"))?;
+            self.rac.encode(writer).map_err(in_field("rac"))?;
+            self.ci.encode(writer).map_err(in_field("ci"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -14980,11 +14595,14 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["lAI", "rAC", "cI", "iE-Extensions"])?;
-            let lai = reading.member(&members, 0, LAI::from_tree)?;
-            let rac = reading.member(&members, 1, RAC::from_tree)?;
-            let ci = reading.member(&members, 2, CI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let lai = reading.member(&members, "lAI", LAI::from_tree)?;
+            let rac = reading.member(&members, "rAC", RAC::from_tree)?;
+            let ci = reading.member(&members, "cI", CI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 lai,
                 rac,
@@ -15019,16 +14637,11 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let global_gnb_id = match GlobalGNBID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("global_gnb_id")),
-            };
+            let global_gnb_id = GlobalGNBID::decode(reader).map_err(in_field("global_gnb_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -15047,13 +14660,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.global_gnb_id.encode(writer) {
-                return Err(error.in_field("global_gnb_id"));
-            }
+            self.global_gnb_id
+                .encode(writer)
+                .map_err(in_field("global_gnb_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -15072,9 +14683,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["global-gNB-ID", "iE-Extensions"])?;
-            let global_gnb_id = reading.member(&members, 0, GlobalGNBID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let global_gnb_id =
+                reading.member(&members, "global-gNB-ID", GlobalGNBID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 global_gnb_id,
                 ie_extensions,
@@ -15264,24 +14879,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let mme_group_id = match MMEGroupID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("mme_group_id")),
-            };
-            let mme_code = match MMECode::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("mme_code")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let mme_group_id = MMEGroupID::decode(reader).map_err(in_field("mme_group_id"))?;
+            let mme_code = MMECode::decode(reader).map_err(in_field("mme_code"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -15302,19 +14906,15 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.mme_group_id.encode(writer) {
-                return Err(error.in_field("mme_group_id"));
-            }
-            if let Err(error) = self.mme_code.encode(writer) {
-                return Err(error.in_field("mme_code"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.mme_group_id
+                .encode(writer)
+                .map_err(in_field("mme_group_id"))?;
+            self.mme_code.encode(writer).map_err(in_field("mme_code"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -15338,11 +14938,15 @@ pub mod s1_ap_ies {
                 value,
                 &["pLMN-Identity", "mME-Group-ID", "mME-Code", "iE-Extensions"],
             )?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let mme_group_id = reading.member(&members, 1, MMEGroupID::from_tree)?;
-            let mme_code = reading.member(&members, 2, MMECode::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMN-Identity", PLMNidentity::from_tree)?;
+            let mme_group_id = reading.member(&members, "mME-Group-ID", MMEGroupID::from_tree)?;
+            let mme_code = reading.member(&members, "mME-Code", MMECode::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 mme_group_id,
@@ -15526,20 +15130,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let enb_id = match ENBID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("enb_id")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let enb_id = ENBID::decode(reader).map_err(in_field("enb_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -15559,16 +15155,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.enb_id.encode(writer) {
-                return Err(error.in_field("enb_id"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.enb_id.encode(writer).map_err(in_field("enb_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -15588,10 +15180,14 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMNidentity", "eNB-ID", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let enb_id = reading.member(&members, 1, ENBID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
+            let enb_id = reading.member(&members, "eNB-ID", ENBID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 enb_id,
@@ -15628,20 +15224,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let gnb_id = match GNBIdentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("gnb_id")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let gnb_id = GNBIdentity::decode(reader).map_err(in_field("gnb_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -15661,16 +15249,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.gnb_id.encode(writer) {
-                return Err(error.in_field("gnb_id"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.gnb_id.encode(writer).map_err(in_field("gnb_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -15690,10 +15274,14 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMN-Identity", "gNB-ID", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let gnb_id = reading.member(&members, 1, GNBIdentity::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMN-Identity", PLMNidentity::from_tree)?;
+            let gnb_id = reading.member(&members, "gNB-ID", GNBIdentity::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 gnb_id,
@@ -15801,20 +15389,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let en_gnb_id = match EnGNBID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("en_gnb_id")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let en_gnb_id = EnGNBID::decode(reader).map_err(in_field("en_gnb_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -15834,16 +15414,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.en_gnb_id.encode(writer) {
-                return Err(error.in_field("en_gnb_id"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.en_gnb_id
+                .encode(writer)
+                .map_err(in_field("en_gnb_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -15864,10 +15442,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pLMNidentity", "en-gNB-ID", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let en_gnb_id = reading.member(&members, 1, EnGNBID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
+            let en_gnb_id = reading.member(&members, "en-gNB-ID", EnGNBID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 en_gnb_id,
@@ -16097,48 +15679,31 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(5)?;
-            let serving_plmn = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("serving_plmn")),
-            };
+            let serving_plmn = PLMNidentity::decode(reader).map_err(in_field("serving_plmn"))?;
             let equivalent_plmns = if present & 16 != 0 {
-                Some(match EPLMNs::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("equivalent_plmns")),
-                })
+                Some(EPLMNs::decode(reader).map_err(in_field("equivalent_plmns"))?)
             } else {
                 None
             };
             let forbidden_tas = if present & 8 != 0 {
-                Some(match ForbiddenTAs::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("forbidden_tas")),
-                })
+                Some(ForbiddenTAs::decode(reader).map_err(in_field("forbidden_tas"))?)
             } else {
                 None
             };
             let forbidden_las = if present & 4 != 0 {
-                Some(match ForbiddenLAs::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("forbidden_las")),
-                })
+                Some(ForbiddenLAs::decode(reader).map_err(in_field("forbidden_las"))?)
             } else {
                 None
             };
             let forbidden_inter_rats = if present & 2 != 0 {
-                Some(match ForbiddenInterRATs::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("forbidden_inter_rats")),
-                })
+                Some(ForbiddenInterRATs::decode(reader).map_err(in_field("forbidden_inter_rats"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -16165,33 +15730,25 @@ pub mod s1_ap_ies {
             writer.bit(self.forbidden_las.is_some());
             writer.bit(self.forbidden_inter_rats.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.serving_plmn.encode(writer) {
-                return Err(error.in_field("serving_plmn"));
-            }
+            self.serving_plmn
+                .encode(writer)
+                .map_err(in_field("serving_plmn"))?;
             if let Some(value) = &self.equivalent_plmns {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("equivalent_plmns"));
-                }
+                value.encode(writer).map_err(in_field("equivalent_plmns"))?;
             }
             if let Some(value) = &self.forbidden_tas {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("forbidden_tas"));
-                }
+                value.encode(writer).map_err(in_field("forbidden_tas"))?;
             }
             if let Some(value) = &self.forbidden_las {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("forbidden_las"));
-                }
+                value.encode(writer).map_err(in_field("forbidden_las"))?;
             }
             if let Some(value) = &self.forbidden_inter_rats {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("forbidden_inter_rats"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("forbidden_inter_rats"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -16238,14 +15795,23 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let serving_plmn = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let equivalent_plmns = reading.optional(&members, 1, EPLMNs::from_tree)?;
-            let forbidden_tas = reading.optional(&members, 2, ForbiddenTAs::from_tree)?;
-            let forbidden_las = reading.optional(&members, 3, ForbiddenLAs::from_tree)?;
-            let forbidden_inter_rats =
-                reading.optional(&members, 4, ForbiddenInterRATs::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
+            let serving_plmn = reading.member(&members, "servingPLMN", PLMNidentity::from_tree)?;
+            let equivalent_plmns =
+                reading.optional(&members, "equivalentPLMNs", EPLMNs::from_tree)?;
+            let forbidden_tas =
+                reading.optional(&members, "forbiddenTAs", ForbiddenTAs::from_tree)?;
+            let forbidden_las =
+                reading.optional(&members, "forbiddenLAs", ForbiddenLAs::from_tree)?;
+            let forbidden_inter_rats = reading.optional(
+                &members,
+                "forbiddenInterRATs",
+                ForbiddenInterRATs::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 serving_plmn,
                 equivalent_plmns,
@@ -16741,36 +16307,27 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
-            let measurements_to_activate = match MeasurementsToActivate::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("measurements_to_activate")),
-            };
-            let m1_reporting_trigger = match M1ReportingTrigger::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m1_reporting_trigger")),
-            };
+            let measurements_to_activate = MeasurementsToActivate::decode(reader)
+                .map_err(in_field("measurements_to_activate"))?;
+            let m1_reporting_trigger =
+                M1ReportingTrigger::decode(reader).map_err(in_field("m1_reporting_trigger"))?;
             let m1_thresholdevent_a2 = if present & 4 != 0 {
-                Some(match M1ThresholdEventA2::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("m1_thresholdevent_a2")),
-                })
+                Some(M1ThresholdEventA2::decode(reader).map_err(in_field("m1_thresholdevent_a2"))?)
             } else {
                 None
             };
             let m1_periodic_reporting = if present & 2 != 0 {
-                Some(match M1PeriodicReporting::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("m1_periodic_reporting")),
-                })
+                Some(
+                    M1PeriodicReporting::decode(reader)
+                        .map_err(in_field("m1_periodic_reporting"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -16794,26 +16351,24 @@ pub mod s1_ap_ies {
             writer.bit(self.m1_thresholdevent_a2.is_some());
             writer.bit(self.m1_periodic_reporting.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.measurements_to_activate.encode(writer) {
-                return Err(error.in_field("measurements_to_activate"));
-            }
-            if let Err(error) = self.m1_reporting_trigger.encode(writer) {
-                return Err(error.in_field("m1_reporting_trigger"));
-            }
+            self.measurements_to_activate
+                .encode(writer)
+                .map_err(in_field("measurements_to_activate"))?;
+            self.m1_reporting_trigger
+                .encode(writer)
+                .map_err(in_field("m1_reporting_trigger"))?;
             if let Some(value) = &self.m1_thresholdevent_a2 {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("m1_thresholdevent_a2"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("m1_thresholdevent_a2"))?;
             }
             if let Some(value) = &self.m1_periodic_reporting {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("m1_periodic_reporting"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("m1_periodic_reporting"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -16857,16 +16412,31 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let measurements_to_activate =
-                reading.member(&members, 0, MeasurementsToActivate::from_tree)?;
-            let m1_reporting_trigger =
-                reading.member(&members, 1, M1ReportingTrigger::from_tree)?;
-            let m1_thresholdevent_a2 =
-                reading.optional(&members, 2, M1ThresholdEventA2::from_tree)?;
-            let m1_periodic_reporting =
-                reading.optional(&members, 3, M1PeriodicReporting::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let measurements_to_activate = reading.member(
+                &members,
+                "measurementsToActivate",
+                MeasurementsToActivate::from_tree,
+            )?;
+            let m1_reporting_trigger = reading.member(
+                &members,
+                "m1reportingTrigger",
+                M1ReportingTrigger::from_tree,
+            )?;
+            let m1_thresholdevent_a2 = reading.optional(
+                &members,
+                "m1thresholdeventA2",
+                M1ThresholdEventA2::from_tree,
+            )?;
+            let m1_periodic_reporting = reading.optional(
+                &members,
+                "m1periodicReporting",
+                M1PeriodicReporting::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 measurements_to_activate,
                 m1_reporting_trigger,
@@ -16914,20 +16484,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let recommended_cells_for_paging = match RecommendedCellsForPaging::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("recommended_cells_for_paging")),
-            };
-            let recommend_enbs_for_paging = match RecommendedENBsForPaging::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("recommend_enbs_for_paging")),
-            };
+            let recommended_cells_for_paging = RecommendedCellsForPaging::decode(reader)
+                .map_err(in_field("recommended_cells_for_paging"))?;
+            let recommend_enbs_for_paging = RecommendedENBsForPaging::decode(reader)
+                .map_err(in_field("recommend_enbs_for_paging"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -16947,16 +16511,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.recommended_cells_for_paging.encode(writer) {
-                return Err(error.in_field("recommended_cells_for_paging"));
-            }
-            if let Err(error) = self.recommend_enbs_for_paging.encode(writer) {
-                return Err(error.in_field("recommend_enbs_for_paging"));
-            }
+            self.recommended_cells_for_paging
+                .encode(writer)
+                .map_err(in_field("recommended_cells_for_paging"))?;
+            self.recommend_enbs_for_paging
+                .encode(writer)
+                .map_err(in_field("recommend_enbs_for_paging"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -16989,12 +16551,21 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let recommended_cells_for_paging =
-                reading.member(&members, 0, RecommendedCellsForPaging::from_tree)?;
-            let recommend_enbs_for_paging =
-                reading.member(&members, 1, RecommendedENBsForPaging::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let recommended_cells_for_paging = reading.member(
+                &members,
+                "recommendedCellsForPaging",
+                RecommendedCellsForPaging::from_tree,
+            )?;
+            let recommend_enbs_for_paging = reading.member(
+                &members,
+                "recommendENBsForPaging",
+                RecommendedENBsForPaging::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 recommended_cells_for_paging,
                 recommend_enbs_for_paging,
@@ -17322,81 +16893,83 @@ pub mod s1_ap_ies {
     impl<'a> Decode<'a> for InterSystemMeasurementItem<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let present = reader.bits(8)?;
-            let freq_band_indicator_nr = match reader.unsigned(1, 1024) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("freq_band_indicator_nr")),
-            } as u16;
-            let ssb_frequencies = match reader.unsigned(0, 3279165) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ssb_frequencies")),
-            } as u32;
+            let freq_band_indicator_nr = reader
+                .unsigned(1, 1024)
+                .map_err(in_field("freq_band_indicator_nr"))?
+                as u16;
+            let ssb_frequencies = reader
+                .unsigned(0, 3279165)
+                .map_err(in_field("ssb_frequencies"))? as u32;
             let subcarrier_spacing_ssb =
-                match InterSystemMeasurementItemSubcarrierSpacingSSB::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("subcarrier_spacing_ssb")),
-                };
+                InterSystemMeasurementItemSubcarrierSpacingSSB::decode(reader)
+                    .map_err(in_field("subcarrier_spacing_ssb"))?;
             let max_rs_index_cell_qual = if present & 128 != 0 {
-                Some(match reader.unsigned(1, 16) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("max_rs_index_cell_qual")),
-                } as u8)
+                Some(
+                    reader
+                        .unsigned(1, 16)
+                        .map_err(in_field("max_rs_index_cell_qual"))? as u8,
+                )
             } else {
                 None
             };
             let smtc = if present & 64 != 0 {
-                Some(match reader.octet_string(0, UNBOUNDED) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("smtc")),
-                })
+                Some(
+                    reader
+                        .octet_string(0, UNBOUNDED)
+                        .map_err(in_field("smtc"))?,
+                )
             } else {
                 None
             };
             let thresh_rs_index_r15 = if present & 32 != 0 {
-                Some(match reader.octet_string(0, UNBOUNDED) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("thresh_rs_index_r15")),
-                })
+                Some(
+                    reader
+                        .octet_string(0, UNBOUNDED)
+                        .map_err(in_field("thresh_rs_index_r15"))?,
+                )
             } else {
                 None
             };
             let ssb_to_measure = if present & 16 != 0 {
-                Some(match reader.octet_string(0, UNBOUNDED) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ssb_to_measure")),
-                })
+                Some(
+                    reader
+                        .octet_string(0, UNBOUNDED)
+                        .map_err(in_field("ssb_to_measure"))?,
+                )
             } else {
                 None
             };
             let ss_rssi_measurement = if present & 8 != 0 {
-                Some(match reader.octet_string(0, UNBOUNDED) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ss_rssi_measurement")),
-                })
+                Some(
+                    reader
+                        .octet_string(0, UNBOUNDED)
+                        .map_err(in_field("ss_rssi_measurement"))?,
+                )
             } else {
                 None
             };
             let quantity_config_nr_r15 = if present & 4 != 0 {
-                Some(match reader.octet_string(0, UNBOUNDED) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("quantity_config_nr_r15")),
-                })
+                Some(
+                    reader
+                        .octet_string(0, UNBOUNDED)
+                        .map_err(in_field("quantity_config_nr_r15"))?,
+                )
             } else {
                 None
             };
             let excluded_cells_to_add_mod_list = if present & 2 != 0 {
-                Some(match reader.octet_string(0, UNBOUNDED) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("excluded_cells_to_add_mod_list")),
-                })
+                Some(
+                    reader
+                        .octet_string(0, UNBOUNDED)
+                        .map_err(in_field("excluded_cells_to_add_mod_list"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -17427,54 +17000,52 @@ pub mod s1_ap_ies {
             writer.bit(self.quantity_config_nr_r15.is_some());
             writer.bit(self.excluded_cells_to_add_mod_list.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = writer.unsigned(u64::from(self.freq_band_indicator_nr), 1, 1024) {
-                return Err(error.in_field("freq_band_indicator_nr"));
-            }
-            if let Err(error) = writer.unsigned(u64::from(self.ssb_frequencies), 0, 3279165) {
-                return Err(error.in_field("ssb_frequencies"));
-            }
-            if let Err(error) = self.subcarrier_spacing_ssb.encode(writer) {
-                return Err(error.in_field("subcarrier_spacing_ssb"));
-            }
+            writer
+                .unsigned(u64::from(self.freq_band_indicator_nr), 1, 1024)
+                .map_err(in_field("freq_band_indicator_nr"))?;
+            writer
+                .unsigned(u64::from(self.ssb_frequencies), 0, 3279165)
+                .map_err(in_field("ssb_frequencies"))?;
+            self.subcarrier_spacing_ssb
+                .encode(writer)
+                .map_err(in_field("subcarrier_spacing_ssb"))?;
             if let Some(value) = &self.max_rs_index_cell_qual {
-                if let Err(error) = writer.unsigned(u64::from(*value), 1, 16) {
-                    return Err(error.in_field("max_rs_index_cell_qual"));
-                }
+                writer
+                    .unsigned(u64::from(*value), 1, 16)
+                    .map_err(in_field("max_rs_index_cell_qual"))?;
             }
             if let Some(value) = &self.smtc {
-                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
-                    return Err(error.in_field("smtc"));
-                }
+                writer
+                    .octet_string(value, 0, UNBOUNDED)
+                    .map_err(in_field("smtc"))?;
             }
             if let Some(value) = &self.thresh_rs_index_r15 {
-                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
-                    return Err(error.in_field("thresh_rs_index_r15"));
-                }
+                writer
+                    .octet_string(value, 0, UNBOUNDED)
+                    .map_err(in_field("thresh_rs_index_r15"))?;
             }
             if let Some(value) = &self.ssb_to_measure {
-                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
-                    return Err(error.in_field("ssb_to_measure"));
-                }
+                writer
+                    .octet_string(value, 0, UNBOUNDED)
+                    .map_err(in_field("ssb_to_measure"))?;
             }
             if let Some(value) = &self.ss_rssi_measurement {
-                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
-                    return Err(error.in_field("ss_rssi_measurement"));
-                }
+                writer
+                    .octet_string(value, 0, UNBOUNDED)
+                    .map_err(in_field("ss_rssi_measurement"))?;
             }
             if let Some(value) = &self.quantity_config_nr_r15 {
-                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
-                    return Err(error.in_field("quantity_config_nr_r15"));
-                }
+                writer
+                    .octet_string(value, 0, UNBOUNDED)
+                    .map_err(in_field("quantity_config_nr_r15"))?;
             }
             if let Some(value) = &self.excluded_cells_to_add_mod_list {
-                if let Err(error) = writer.octet_string(value, 0, UNBOUNDED) {
-                    return Err(error.in_field("excluded_cells_to_add_mod_list"));
-                }
+                writer
+                    .octet_string(value, 0, UNBOUNDED)
+                    .map_err(in_field("excluded_cells_to_add_mod_list"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -17556,43 +17127,52 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let freq_band_indicator_nr = reading.member(&members, 0, |value, reading| {
-                reading.unsigned(value, 1, 1024).map(|number| number as u16)
-            })?;
-            let ssb_frequencies = reading.member(&members, 1, |value, reading| {
-                reading
-                    .unsigned(value, 0, 3279165)
-                    .map(|number| number as u32)
-            })?;
+            let freq_band_indicator_nr =
+                reading.member(&members, "freqBandIndicatorNR", |value, reading| {
+                    reading.unsigned(value, 1, 1024).map(|number| number as u16)
+                })?;
+            let ssb_frequencies =
+                reading.member(&members, "sSBfrequencies", |value, reading| {
+                    reading
+                        .unsigned(value, 0, 3279165)
+                        .map(|number| number as u32)
+                })?;
             let subcarrier_spacing_ssb = reading.member(
                 &members,
-                2,
+                "subcarrierSpacingSSB",
                 InterSystemMeasurementItemSubcarrierSpacingSSB::from_tree,
             )?;
-            let max_rs_index_cell_qual = reading.optional(&members, 3, |value, reading| {
-                reading.unsigned(value, 1, 16).map(|number| number as u8)
-            })?;
-            let smtc = reading.optional(&members, 4, |value, reading| {
+            let max_rs_index_cell_qual =
+                reading.optional(&members, "maxRSIndexCellQual", |value, reading| {
+                    reading.unsigned(value, 1, 16).map(|number| number as u8)
+                })?;
+            let smtc = reading.optional(&members, "sMTC", |value, reading| {
                 json::read_octets(reading, value)
             })?;
-            let thresh_rs_index_r15 = reading.optional(&members, 5, |value, reading| {
-                json::read_octets(reading, value)
-            })?;
-            let ssb_to_measure = reading.optional(&members, 6, |value, reading| {
-                json::read_octets(reading, value)
-            })?;
-            let ss_rssi_measurement = reading.optional(&members, 7, |value, reading| {
-                json::read_octets(reading, value)
-            })?;
-            let quantity_config_nr_r15 = reading.optional(&members, 8, |value, reading| {
-                json::read_octets(reading, value)
-            })?;
-            let excluded_cells_to_add_mod_list =
-                reading.optional(&members, 9, |value, reading| {
+            let thresh_rs_index_r15 =
+                reading.optional(&members, "threshRS-Index-r15", |value, reading| {
                     json::read_octets(reading, value)
                 })?;
-            let ie_extensions =
-                reading.optional(&members, 10, ProtocolExtensionContainer::from_tree)?;
+            let ssb_to_measure = reading.optional(&members, "sSBToMeasure", |value, reading| {
+                json::read_octets(reading, value)
+            })?;
+            let ss_rssi_measurement =
+                reading.optional(&members, "sSRSSIMeasurement", |value, reading| {
+                    json::read_octets(reading, value)
+                })?;
+            let quantity_config_nr_r15 =
+                reading.optional(&members, "quantityConfigNR-R15", |value, reading| {
+                    json::read_octets(reading, value)
+                })?;
+            let excluded_cells_to_add_mod_list =
+                reading.optional(&members, "excludedCellsToAddModList", |value, reading| {
+                    json::read_octets(reading, value)
+                })?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 freq_band_indicator_nr,
                 ssb_frequencies,
@@ -17709,24 +17289,22 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let measurement_duration = match reader.unsigned(1, 100) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("measurement_duration")),
-            } as u8;
+            let measurement_duration = reader
+                .unsigned(1, 100)
+                .map_err(in_field("measurement_duration"))?
+                as u8;
             let inter_system_measurement_list = if present & 2 != 0 {
-                Some(match InterSystemMeasurementList::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("inter_system_measurement_list")),
-                })
+                Some(
+                    InterSystemMeasurementList::decode(reader)
+                        .map_err(in_field("inter_system_measurement_list"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -17747,18 +17325,16 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.inter_system_measurement_list.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = writer.unsigned(u64::from(self.measurement_duration), 1, 100) {
-                return Err(error.in_field("measurement_duration"));
-            }
+            writer
+                .unsigned(u64::from(self.measurement_duration), 1, 100)
+                .map_err(in_field("measurement_duration"))?;
             if let Some(value) = &self.inter_system_measurement_list {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("inter_system_measurement_list"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("inter_system_measurement_list"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -17793,13 +17369,20 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let measurement_duration = reading.member(&members, 0, |value, reading| {
-                reading.unsigned(value, 1, 100).map(|number| number as u8)
-            })?;
-            let inter_system_measurement_list =
-                reading.optional(&members, 1, InterSystemMeasurementList::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let measurement_duration =
+                reading.member(&members, "measurementDuration", |value, reading| {
+                    reading.unsigned(value, 1, 100).map(|number| number as u8)
+                })?;
+            let inter_system_measurement_list = reading.optional(
+                &members,
+                "interSystemMeasurementList",
+                InterSystemMeasurementList::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 measurement_duration,
                 inter_system_measurement_list,
@@ -17908,40 +17491,27 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(4)?;
             let rsrp = if present & 8 != 0 {
-                Some(match reader.unsigned(0, 127) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("rsrp")),
-                } as u8)
+                Some(reader.unsigned(0, 127).map_err(in_field("rsrp"))? as u8)
             } else {
                 None
             };
             let rsrq = if present & 4 != 0 {
-                Some(match reader.unsigned(0, 127) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("rsrq")),
-                } as u8)
+                Some(reader.unsigned(0, 127).map_err(in_field("rsrq"))? as u8)
             } else {
                 None
             };
             let sinr = if present & 2 != 0 {
-                Some(match reader.unsigned(0, 127) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("sinr")),
-                } as u8)
+                Some(reader.unsigned(0, 127).map_err(in_field("sinr"))? as u8)
             } else {
                 None
             };
             let inter_system_measurement_parameters =
-                match InterSystemMeasurementParameters::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("inter_system_measurement_parameters")),
-                };
+                InterSystemMeasurementParameters::decode(reader)
+                    .map_err(in_field("inter_system_measurement_parameters"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -17967,27 +17537,25 @@ pub mod s1_ap_ies {
             writer.bit(self.sinr.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.rsrp {
-                if let Err(error) = writer.unsigned(u64::from(*value), 0, 127) {
-                    return Err(error.in_field("rsrp"));
-                }
+                writer
+                    .unsigned(u64::from(*value), 0, 127)
+                    .map_err(in_field("rsrp"))?;
             }
             if let Some(value) = &self.rsrq {
-                if let Err(error) = writer.unsigned(u64::from(*value), 0, 127) {
-                    return Err(error.in_field("rsrq"));
-                }
+                writer
+                    .unsigned(u64::from(*value), 0, 127)
+                    .map_err(in_field("rsrq"))?;
             }
             if let Some(value) = &self.sinr {
-                if let Err(error) = writer.unsigned(u64::from(*value), 0, 127) {
-                    return Err(error.in_field("sinr"));
-                }
+                writer
+                    .unsigned(u64::from(*value), 0, 127)
+                    .map_err(in_field("sinr"))?;
             }
-            if let Err(error) = self.inter_system_measurement_parameters.encode(writer) {
-                return Err(error.in_field("inter_system_measurement_parameters"));
-            }
+            self.inter_system_measurement_parameters
+                .encode(writer)
+                .map_err(in_field("inter_system_measurement_parameters"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -18036,19 +17604,25 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let rsrp = reading.optional(&members, 0, |value, reading| {
+            let rsrp = reading.optional(&members, "rSRP", |value, reading| {
                 reading.unsigned(value, 0, 127).map(|number| number as u8)
             })?;
-            let rsrq = reading.optional(&members, 1, |value, reading| {
+            let rsrq = reading.optional(&members, "rSRQ", |value, reading| {
                 reading.unsigned(value, 0, 127).map(|number| number as u8)
             })?;
-            let sinr = reading.optional(&members, 2, |value, reading| {
+            let sinr = reading.optional(&members, "sINR", |value, reading| {
                 reading.unsigned(value, 0, 127).map(|number| number as u8)
             })?;
-            let inter_system_measurement_parameters =
-                reading.member(&members, 3, InterSystemMeasurementParameters::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let inter_system_measurement_parameters = reading.member(
+                &members,
+                "interSystemMeasurementParameters",
+                InterSystemMeasurementParameters::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 rsrp,
                 rsrq,
@@ -18308,20 +17882,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let lac = match LAC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("lac")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let lac = LAC::decode(reader).map_err(in_field("lac"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -18341,16 +17907,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.lac.encode(writer) {
-                return Err(error.in_field("lac"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.lac.encode(writer).map_err(in_field("lac"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -18370,10 +17932,14 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMNidentity", "lAC", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let lac = reading.member(&members, 1, LAC::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
+            let lac = reading.member(&members, "lAC", LAC::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 lac,
@@ -18580,28 +18146,18 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let serving_plmn = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("serving_plmn")),
-            };
-            let tac_list_in_lte_ntn = match TACListInLTENTN::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("tac_list_in_lte_ntn")),
-            };
+            let serving_plmn = PLMNidentity::decode(reader).map_err(in_field("serving_plmn"))?;
+            let tac_list_in_lte_ntn =
+                TACListInLTENTN::decode(reader).map_err(in_field("tac_list_in_lte_ntn"))?;
             let ue_location_derived_tac = if present & 2 != 0 {
-                Some(match TAC::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ue_location_derived_tac")),
-                })
+                Some(TAC::decode(reader).map_err(in_field("ue_location_derived_tac"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -18623,21 +18179,19 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.ue_location_derived_tac.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.serving_plmn.encode(writer) {
-                return Err(error.in_field("serving_plmn"));
-            }
-            if let Err(error) = self.tac_list_in_lte_ntn.encode(writer) {
-                return Err(error.in_field("tac_list_in_lte_ntn"));
-            }
+            self.serving_plmn
+                .encode(writer)
+                .map_err(in_field("serving_plmn"))?;
+            self.tac_list_in_lte_ntn
+                .encode(writer)
+                .map_err(in_field("tac_list_in_lte_ntn"))?;
             if let Some(value) = &self.ue_location_derived_tac {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ue_location_derived_tac"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("ue_location_derived_tac"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -18671,11 +18225,16 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let serving_plmn = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let tac_list_in_lte_ntn = reading.member(&members, 1, TACListInLTENTN::from_tree)?;
-            let ue_location_derived_tac = reading.optional(&members, 2, TAC::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let serving_plmn = reading.member(&members, "servingPLMN", PLMNidentity::from_tree)?;
+            let tac_list_in_lte_ntn =
+                reading.member(&members, "tACList-In-LTE-NTN", TACListInLTENTN::from_tree)?;
+            let ue_location_derived_tac =
+                reading.optional(&members, "uE-Location-Derived-TAC", TAC::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 serving_plmn,
                 tac_list_in_lte_ntn,
@@ -18850,24 +18409,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let global_cell_id = match EUTRANCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("global_cell_id")),
-            };
-            let cell_type = match CellType::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cell_type")),
-            };
-            let time_ue_stayed_in_cell = match TimeUEStayedInCell::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("time_ue_stayed_in_cell")),
-            };
+            let global_cell_id = EUTRANCGI::decode(reader).map_err(in_field("global_cell_id"))?;
+            let cell_type = CellType::decode(reader).map_err(in_field("cell_type"))?;
+            let time_ue_stayed_in_cell =
+                TimeUEStayedInCell::decode(reader).map_err(in_field("time_ue_stayed_in_cell"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -18888,19 +18437,17 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.global_cell_id.encode(writer) {
-                return Err(error.in_field("global_cell_id"));
-            }
-            if let Err(error) = self.cell_type.encode(writer) {
-                return Err(error.in_field("cell_type"));
-            }
-            if let Err(error) = self.time_ue_stayed_in_cell.encode(writer) {
-                return Err(error.in_field("time_ue_stayed_in_cell"));
-            }
+            self.global_cell_id
+                .encode(writer)
+                .map_err(in_field("global_cell_id"))?;
+            self.cell_type
+                .encode(writer)
+                .map_err(in_field("cell_type"))?;
+            self.time_ue_stayed_in_cell
+                .encode(writer)
+                .map_err(in_field("time_ue_stayed_in_cell"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -18932,12 +18479,19 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let global_cell_id = reading.member(&members, 0, EUTRANCGI::from_tree)?;
-            let cell_type = reading.member(&members, 1, CellType::from_tree)?;
-            let time_ue_stayed_in_cell =
-                reading.member(&members, 2, TimeUEStayedInCell::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let global_cell_id =
+                reading.member(&members, "global-Cell-ID", EUTRANCGI::from_tree)?;
+            let cell_type = reading.member(&members, "cellType", CellType::from_tree)?;
+            let time_ue_stayed_in_cell = reading.member(
+                &members,
+                "time-UE-StayedInCell",
+                TimeUEStayedInCell::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 global_cell_id,
                 cell_type,
@@ -19090,23 +18644,15 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
             let ps_cell_id = if present & 2 != 0 {
-                Some(match PSCellInformation::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ps_cell_id")),
-                })
+                Some(PSCellInformation::decode(reader).map_err(in_field("ps_cell_id"))?)
             } else {
                 None
             };
-            let time_stay = match reader.unsigned(0, 40950) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("time_stay")),
-            } as u16;
+            let time_stay = reader.unsigned(0, 40950).map_err(in_field("time_stay"))? as u16;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -19128,17 +18674,13 @@ pub mod s1_ap_ies {
             writer.bit(self.ps_cell_id.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.ps_cell_id {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ps_cell_id"));
-                }
+                value.encode(writer).map_err(in_field("ps_cell_id"))?;
             }
-            if let Err(error) = writer.unsigned(u64::from(self.time_stay), 0, 40950) {
-                return Err(error.in_field("time_stay"));
-            }
+            writer
+                .unsigned(u64::from(self.time_stay), 0, 40950)
+                .map_err(in_field("time_stay"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -19161,14 +18703,18 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pSCellID", "timeStay", "iE-Extensions"])?;
-            let ps_cell_id = reading.optional(&members, 0, PSCellInformation::from_tree)?;
-            let time_stay = reading.member(&members, 1, |value, reading| {
+            let ps_cell_id =
+                reading.optional(&members, "pSCellID", PSCellInformation::from_tree)?;
+            let time_stay = reading.member(&members, "timeStay", |value, reading| {
                 reading
                     .unsigned(value, 0, 40950)
                     .map(|number| number as u16)
             })?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ps_cell_id,
                 time_stay,
@@ -19417,20 +18963,15 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let pattern_period = match ListeningSubframePatternPatternPeriod::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("pattern_period")),
-            };
-            let pattern_offset = match reader.unsigned_extensible(0, 10239) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("pattern_offset")),
-            };
+            let pattern_period = ListeningSubframePatternPatternPeriod::decode(reader)
+                .map_err(in_field("pattern_period"))?;
+            let pattern_offset = reader
+                .unsigned_extensible(0, 10239)
+                .map_err(in_field("pattern_offset"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -19450,16 +18991,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.pattern_period.encode(writer) {
-                return Err(error.in_field("pattern_period"));
-            }
-            if let Err(error) = writer.unsigned_extensible(self.pattern_offset, 0, 10239) {
-                return Err(error.in_field("pattern_offset"));
-            }
+            self.pattern_period
+                .encode(writer)
+                .map_err(in_field("pattern_period"))?;
+            writer
+                .unsigned_extensible(self.pattern_offset, 0, 10239)
+                .map_err(in_field("pattern_offset"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -19484,14 +19023,17 @@ pub mod s1_ap_ies {
             )?;
             let pattern_period = reading.member(
                 &members,
-                0,
+                "pattern-period",
                 ListeningSubframePatternPatternPeriod::from_tree,
             )?;
-            let pattern_offset = reading.member(&members, 1, |value, reading| {
+            let pattern_offset = reading.member(&members, "pattern-offset", |value, reading| {
                 reading.unsigned(value, u64::MIN, u64::MAX)
             })?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 pattern_period,
                 pattern_offset,
@@ -19531,28 +19073,19 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let logging_interval = match LoggingInterval::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("logging_interval")),
-            };
-            let logging_duration = match LoggingDuration::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("logging_duration")),
-            };
+            let logging_interval =
+                LoggingInterval::decode(reader).map_err(in_field("logging_interval"))?;
+            let logging_duration =
+                LoggingDuration::decode(reader).map_err(in_field("logging_duration"))?;
             let mbsfn_result_to_log = if present & 2 != 0 {
-                Some(match MBSFNResultToLog::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("mbsfn_result_to_log")),
-                })
+                Some(MBSFNResultToLog::decode(reader).map_err(in_field("mbsfn_result_to_log"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -19574,21 +19107,19 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.mbsfn_result_to_log.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.logging_interval.encode(writer) {
-                return Err(error.in_field("logging_interval"));
-            }
-            if let Err(error) = self.logging_duration.encode(writer) {
-                return Err(error.in_field("logging_duration"));
-            }
+            self.logging_interval
+                .encode(writer)
+                .map_err(in_field("logging_interval"))?;
+            self.logging_duration
+                .encode(writer)
+                .map_err(in_field("logging_duration"))?;
             if let Some(value) = &self.mbsfn_result_to_log {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("mbsfn_result_to_log"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("mbsfn_result_to_log"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -19622,11 +19153,17 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let logging_interval = reading.member(&members, 0, LoggingInterval::from_tree)?;
-            let logging_duration = reading.member(&members, 1, LoggingDuration::from_tree)?;
-            let mbsfn_result_to_log = reading.optional(&members, 2, MBSFNResultToLog::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let logging_interval =
+                reading.member(&members, "loggingInterval", LoggingInterval::from_tree)?;
+            let logging_duration =
+                reading.member(&members, "loggingDuration", LoggingDuration::from_tree)?;
+            let mbsfn_result_to_log =
+                reading.optional(&members, "mBSFN-ResultToLog", MBSFNResultToLog::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 logging_interval,
                 logging_duration,
@@ -19664,20 +19201,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let logging_interval = match LoggingInterval::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("logging_interval")),
-            };
-            let logging_duration = match LoggingDuration::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("logging_duration")),
-            };
+            let logging_interval =
+                LoggingInterval::decode(reader).map_err(in_field("logging_interval"))?;
+            let logging_duration =
+                LoggingDuration::decode(reader).map_err(in_field("logging_duration"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -19697,16 +19228,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.logging_interval.encode(writer) {
-                return Err(error.in_field("logging_interval"));
-            }
-            if let Err(error) = self.logging_duration.encode(writer) {
-                return Err(error.in_field("logging_duration"));
-            }
+            self.logging_interval
+                .encode(writer)
+                .map_err(in_field("logging_interval"))?;
+            self.logging_duration
+                .encode(writer)
+                .map_err(in_field("logging_duration"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -19729,10 +19258,15 @@ pub mod s1_ap_ies {
                 value,
                 &["loggingInterval", "loggingDuration", "iE-Extensions"],
             )?;
-            let logging_interval = reading.member(&members, 0, LoggingInterval::from_tree)?;
-            let logging_duration = reading.member(&members, 1, LoggingDuration::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let logging_interval =
+                reading.member(&members, "loggingInterval", LoggingInterval::from_tree)?;
+            let logging_duration =
+                reading.member(&members, "loggingDuration", LoggingDuration::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 logging_interval,
                 logging_duration,
@@ -20012,20 +19546,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let report_interval = match ReportIntervalMDT::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("report_interval")),
-            };
-            let report_amount = match ReportAmountMDT::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("report_amount")),
-            };
+            let report_interval =
+                ReportIntervalMDT::decode(reader).map_err(in_field("report_interval"))?;
+            let report_amount =
+                ReportAmountMDT::decode(reader).map_err(in_field("report_amount"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -20045,16 +19573,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.report_interval.encode(writer) {
-                return Err(error.in_field("report_interval"));
-            }
-            if let Err(error) = self.report_amount.encode(writer) {
-                return Err(error.in_field("report_amount"));
-            }
+            self.report_interval
+                .encode(writer)
+                .map_err(in_field("report_interval"))?;
+            self.report_amount
+                .encode(writer)
+                .map_err(in_field("report_amount"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -20075,10 +19601,15 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["reportInterval", "reportAmount", "iE-Extensions"])?;
-            let report_interval = reading.member(&members, 0, ReportIntervalMDT::from_tree)?;
-            let report_amount = reading.member(&members, 1, ReportAmountMDT::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let report_interval =
+                reading.member(&members, "reportInterval", ReportIntervalMDT::from_tree)?;
+            let report_amount =
+                reading.member(&members, "reportAmount", ReportAmountMDT::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 report_interval,
                 report_amount,
@@ -20166,16 +19697,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let measurement_threshold = match MeasurementThresholdA2::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("measurement_threshold")),
-            };
+            let measurement_threshold = MeasurementThresholdA2::decode(reader)
+                .map_err(in_field("measurement_threshold"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -20194,13 +19721,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.measurement_threshold.encode(writer) {
-                return Err(error.in_field("measurement_threshold"));
-            }
+            self.measurement_threshold
+                .encode(writer)
+                .map_err(in_field("measurement_threshold"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -20219,10 +19744,16 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["measurementThreshold", "iE-Extensions"])?;
-            let measurement_threshold =
-                reading.member(&members, 0, MeasurementThresholdA2::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let measurement_threshold = reading.member(
+                &members,
+                "measurementThreshold",
+                MeasurementThresholdA2::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 measurement_threshold,
                 ie_extensions,
@@ -20255,16 +19786,11 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let m3_period = match M3period::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m3_period")),
-            };
+            let m3_period = M3period::decode(reader).map_err(in_field("m3_period"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -20283,13 +19809,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.m3_period.encode(writer) {
-                return Err(error.in_field("m3_period"));
-            }
+            self.m3_period
+                .encode(writer)
+                .map_err(in_field("m3_period"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -20308,9 +19832,12 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["m3period", "iE-Extensions"])?;
-            let m3_period = reading.member(&members, 0, M3period::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let m3_period = reading.member(&members, "m3period", M3period::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 m3_period,
                 ie_extensions,
@@ -20415,20 +19942,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let m4_period = match M4period::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m4_period")),
-            };
-            let m4_links_to_log = match LinksToLog::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m4_links_to_log")),
-            };
+            let m4_period = M4period::decode(reader).map_err(in_field("m4_period"))?;
+            let m4_links_to_log =
+                LinksToLog::decode(reader).map_err(in_field("m4_links_to_log"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -20448,16 +19968,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.m4_period.encode(writer) {
-                return Err(error.in_field("m4_period"));
-            }
-            if let Err(error) = self.m4_links_to_log.encode(writer) {
-                return Err(error.in_field("m4_links_to_log"));
-            }
+            self.m4_period
+                .encode(writer)
+                .map_err(in_field("m4_period"))?;
+            self.m4_links_to_log
+                .encode(writer)
+                .map_err(in_field("m4_links_to_log"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -20478,10 +19996,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["m4period", "m4-links-to-log", "iE-Extensions"])?;
-            let m4_period = reading.member(&members, 0, M4period::from_tree)?;
-            let m4_links_to_log = reading.member(&members, 1, LinksToLog::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let m4_period = reading.member(&members, "m4period", M4period::from_tree)?;
+            let m4_links_to_log =
+                reading.member(&members, "m4-links-to-log", LinksToLog::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 m4_period,
                 m4_links_to_log,
@@ -20638,20 +20160,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let m5_period = match M5period::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m5_period")),
-            };
-            let m5_links_to_log = match LinksToLog::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m5_links_to_log")),
-            };
+            let m5_period = M5period::decode(reader).map_err(in_field("m5_period"))?;
+            let m5_links_to_log =
+                LinksToLog::decode(reader).map_err(in_field("m5_links_to_log"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -20671,16 +20186,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.m5_period.encode(writer) {
-                return Err(error.in_field("m5_period"));
-            }
-            if let Err(error) = self.m5_links_to_log.encode(writer) {
-                return Err(error.in_field("m5_links_to_log"));
-            }
+            self.m5_period
+                .encode(writer)
+                .map_err(in_field("m5_period"))?;
+            self.m5_links_to_log
+                .encode(writer)
+                .map_err(in_field("m5_links_to_log"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -20701,10 +20214,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["m5period", "m5-links-to-log", "iE-Extensions"])?;
-            let m5_period = reading.member(&members, 0, M5period::from_tree)?;
-            let m5_links_to_log = reading.member(&members, 1, LinksToLog::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let m5_period = reading.member(&members, "m5period", M5period::from_tree)?;
+            let m5_links_to_log =
+                reading.member(&members, "m5-links-to-log", LinksToLog::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 m5_period,
                 m5_links_to_log,
@@ -20864,28 +20381,19 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let m6_report_interval = match M6reportInterval::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m6_report_interval")),
-            };
+            let m6_report_interval =
+                M6reportInterval::decode(reader).map_err(in_field("m6_report_interval"))?;
             let m6_delay_threshold = if present & 2 != 0 {
-                Some(match M6delayThreshold::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("m6_delay_threshold")),
-                })
+                Some(M6delayThreshold::decode(reader).map_err(in_field("m6_delay_threshold"))?)
             } else {
                 None
             };
-            let m6_links_to_log = match LinksToLog::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m6_links_to_log")),
-            };
+            let m6_links_to_log =
+                LinksToLog::decode(reader).map_err(in_field("m6_links_to_log"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -20907,21 +20415,19 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.m6_delay_threshold.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.m6_report_interval.encode(writer) {
-                return Err(error.in_field("m6_report_interval"));
-            }
+            self.m6_report_interval
+                .encode(writer)
+                .map_err(in_field("m6_report_interval"))?;
             if let Some(value) = &self.m6_delay_threshold {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("m6_delay_threshold"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("m6_delay_threshold"))?;
             }
-            if let Err(error) = self.m6_links_to_log.encode(writer) {
-                return Err(error.in_field("m6_links_to_log"));
-            }
+            self.m6_links_to_log
+                .encode(writer)
+                .map_err(in_field("m6_links_to_log"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -20955,11 +20461,17 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let m6_report_interval = reading.member(&members, 0, M6reportInterval::from_tree)?;
-            let m6_delay_threshold = reading.optional(&members, 1, M6delayThreshold::from_tree)?;
-            let m6_links_to_log = reading.member(&members, 2, LinksToLog::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let m6_report_interval =
+                reading.member(&members, "m6report-Interval", M6reportInterval::from_tree)?;
+            let m6_delay_threshold =
+                reading.optional(&members, "m6delay-threshold", M6delayThreshold::from_tree)?;
+            let m6_links_to_log =
+                reading.member(&members, "m6-links-to-log", LinksToLog::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 m6_report_interval,
                 m6_delay_threshold,
@@ -21183,20 +20695,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let m7_period = match M7period::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m7_period")),
-            };
-            let m7_links_to_log = match LinksToLog::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m7_links_to_log")),
-            };
+            let m7_period = M7period::decode(reader).map_err(in_field("m7_period"))?;
+            let m7_links_to_log =
+                LinksToLog::decode(reader).map_err(in_field("m7_links_to_log"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -21216,16 +20721,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.m7_period.encode(writer) {
-                return Err(error.in_field("m7_period"));
-            }
-            if let Err(error) = self.m7_links_to_log.encode(writer) {
-                return Err(error.in_field("m7_links_to_log"));
-            }
+            self.m7_period
+                .encode(writer)
+                .map_err(in_field("m7_period"))?;
+            self.m7_links_to_log
+                .encode(writer)
+                .map_err(in_field("m7_links_to_log"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -21246,10 +20749,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["m7period", "m7-links-to-log", "iE-Extensions"])?;
-            let m7_period = reading.member(&members, 0, M7period::from_tree)?;
-            let m7_links_to_log = reading.member(&members, 1, LinksToLog::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let m7_period = reading.member(&members, "m7period", M7period::from_tree)?;
+            let m7_links_to_log =
+                reading.member(&members, "m7-links-to-log", LinksToLog::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 m7_period,
                 m7_links_to_log,
@@ -21444,23 +20951,15 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
             let mbsfn_area_id = if present & 2 != 0 {
-                Some(match reader.unsigned(0, 255) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("mbsfn_area_id")),
-                } as u8)
+                Some(reader.unsigned(0, 255).map_err(in_field("mbsfn_area_id"))? as u8)
             } else {
                 None
             };
-            let carrier_freq = match EARFCN::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("carrier_freq")),
-            };
+            let carrier_freq = EARFCN::decode(reader).map_err(in_field("carrier_freq"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -21482,17 +20981,15 @@ pub mod s1_ap_ies {
             writer.bit(self.mbsfn_area_id.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.mbsfn_area_id {
-                if let Err(error) = writer.unsigned(u64::from(*value), 0, 255) {
-                    return Err(error.in_field("mbsfn_area_id"));
-                }
+                writer
+                    .unsigned(u64::from(*value), 0, 255)
+                    .map_err(in_field("mbsfn_area_id"))?;
             }
-            if let Err(error) = self.carrier_freq.encode(writer) {
-                return Err(error.in_field("carrier_freq"));
-            }
+            self.carrier_freq
+                .encode(writer)
+                .map_err(in_field("carrier_freq"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -21518,12 +21015,15 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["mBSFN-AreaId", "carrierFreq", "iE-Extensions"])?;
-            let mbsfn_area_id = reading.optional(&members, 0, |value, reading| {
+            let mbsfn_area_id = reading.optional(&members, "mBSFN-AreaId", |value, reading| {
                 reading.unsigned(value, 0, 255).map(|number| number as u8)
             })?;
-            let carrier_freq = reading.member(&members, 1, EARFCN::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let carrier_freq = reading.member(&members, "carrierFreq", EARFCN::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 mbsfn_area_id,
                 carrier_freq,
@@ -21632,24 +21132,15 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let mdt_activation = match MDTActivation::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("mdt_activation")),
-            };
-            let area_scope_of_mdt = match AreaScopeOfMDT::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("area_scope_of_mdt")),
-            };
-            let mdt_mode = match MDTMode::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("mdt_mode")),
-            };
+            let mdt_activation =
+                MDTActivation::decode(reader).map_err(in_field("mdt_activation"))?;
+            let area_scope_of_mdt =
+                AreaScopeOfMDT::decode(reader).map_err(in_field("area_scope_of_mdt"))?;
+            let mdt_mode = MDTMode::decode(reader).map_err(in_field("mdt_mode"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -21670,19 +21161,15 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.mdt_activation.encode(writer) {
-                return Err(error.in_field("mdt_activation"));
-            }
-            if let Err(error) = self.area_scope_of_mdt.encode(writer) {
-                return Err(error.in_field("area_scope_of_mdt"));
-            }
-            if let Err(error) = self.mdt_mode.encode(writer) {
-                return Err(error.in_field("mdt_mode"));
-            }
+            self.mdt_activation
+                .encode(writer)
+                .map_err(in_field("mdt_activation"))?;
+            self.area_scope_of_mdt
+                .encode(writer)
+                .map_err(in_field("area_scope_of_mdt"))?;
+            self.mdt_mode.encode(writer).map_err(in_field("mdt_mode"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -21711,11 +21198,16 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let mdt_activation = reading.member(&members, 0, MDTActivation::from_tree)?;
-            let area_scope_of_mdt = reading.member(&members, 1, AreaScopeOfMDT::from_tree)?;
-            let mdt_mode = reading.member(&members, 2, MDTMode::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let mdt_activation =
+                reading.member(&members, "mdt-Activation", MDTActivation::from_tree)?;
+            let area_scope_of_mdt =
+                reading.member(&members, "areaScopeOfMDT", AreaScopeOfMDT::from_tree)?;
+            let mdt_mode = reading.member(&members, "mDTMode", MDTMode::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 mdt_activation,
                 area_scope_of_mdt,
@@ -23007,25 +22499,21 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let muting_pattern_period =
-                match MutingPatternInformationMutingPatternPeriod::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("muting_pattern_period")),
-                };
+            let muting_pattern_period = MutingPatternInformationMutingPatternPeriod::decode(reader)
+                .map_err(in_field("muting_pattern_period"))?;
             let muting_pattern_offset = if present & 2 != 0 {
-                Some(match reader.unsigned_extensible(0, 10239) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("muting_pattern_offset")),
-                })
+                Some(
+                    reader
+                        .unsigned_extensible(0, 10239)
+                        .map_err(in_field("muting_pattern_offset"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -23046,18 +22534,16 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.muting_pattern_offset.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.muting_pattern_period.encode(writer) {
-                return Err(error.in_field("muting_pattern_period"));
-            }
+            self.muting_pattern_period
+                .encode(writer)
+                .map_err(in_field("muting_pattern_period"))?;
             if let Some(value) = &self.muting_pattern_offset {
-                if let Err(error) = writer.unsigned_extensible(*value, 0, 10239) {
-                    return Err(error.in_field("muting_pattern_offset"));
-                }
+                writer
+                    .unsigned_extensible(*value, 0, 10239)
+                    .map_err(in_field("muting_pattern_offset"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -23094,14 +22580,18 @@ pub mod s1_ap_ies {
             )?;
             let muting_pattern_period = reading.member(
                 &members,
-                0,
+                "muting-pattern-period",
                 MutingPatternInformationMutingPatternPeriod::from_tree,
             )?;
-            let muting_pattern_offset = reading.optional(&members, 1, |value, reading| {
-                reading.unsigned(value, u64::MIN, u64::MAX)
-            })?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let muting_pattern_offset =
+                reading.optional(&members, "muting-pattern-offset", |value, reading| {
+                    reading.unsigned(value, u64::MIN, u64::MAX)
+                })?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 muting_pattern_period,
                 muting_pattern_offset,
@@ -23444,24 +22934,20 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let nb_iot_paging_edrx_cycle = match NBIoTPagingEDRXCycle::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("nb_iot_paging_edrx_cycle")),
-            };
+            let nb_iot_paging_edrx_cycle = NBIoTPagingEDRXCycle::decode(reader)
+                .map_err(in_field("nb_iot_paging_edrx_cycle"))?;
             let nb_iot_paging_time_window = if present & 2 != 0 {
-                Some(match NBIoTPagingTimeWindow::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("nb_iot_paging_time_window")),
-                })
+                Some(
+                    NBIoTPagingTimeWindow::decode(reader)
+                        .map_err(in_field("nb_iot_paging_time_window"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -23482,18 +22968,16 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.nb_iot_paging_time_window.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.nb_iot_paging_edrx_cycle.encode(writer) {
-                return Err(error.in_field("nb_iot_paging_edrx_cycle"));
-            }
+            self.nb_iot_paging_edrx_cycle
+                .encode(writer)
+                .map_err(in_field("nb_iot_paging_edrx_cycle"))?;
             if let Some(value) = &self.nb_iot_paging_time_window {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("nb_iot_paging_time_window"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("nb_iot_paging_time_window"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -23528,12 +23012,21 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let nb_iot_paging_edrx_cycle =
-                reading.member(&members, 0, NBIoTPagingEDRXCycle::from_tree)?;
-            let nb_iot_paging_time_window =
-                reading.optional(&members, 1, NBIoTPagingTimeWindow::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let nb_iot_paging_edrx_cycle = reading.member(
+                &members,
+                "nB-IoT-paging-eDRX-Cycle",
+                NBIoTPagingEDRXCycle::from_tree,
+            )?;
+            let nb_iot_paging_time_window = reading.optional(
+                &members,
+                "nB-IoT-pagingTimeWindow",
+                NBIoTPagingTimeWindow::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 nb_iot_paging_edrx_cycle,
                 nb_iot_paging_time_window,
@@ -23818,16 +23311,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let global_ng_enb_id = match GlobalENBID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("global_ng_enb_id")),
-            };
+            let global_ng_enb_id =
+                GlobalENBID::decode(reader).map_err(in_field("global_ng_enb_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -23846,13 +23335,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.global_ng_enb_id.encode(writer) {
-                return Err(error.in_field("global_ng_enb_id"));
-            }
+            self.global_ng_enb_id
+                .encode(writer)
+                .map_err(in_field("global_ng_enb_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -23871,9 +23358,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["global-ng-eNB-ID", "iE-Extensions"])?;
-            let global_ng_enb_id = reading.member(&members, 0, GlobalENBID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let global_ng_enb_id =
+                reading.member(&members, "global-ng-eNB-ID", GlobalENBID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 global_ng_enb_id,
                 ie_extensions,
@@ -23909,20 +23400,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let nr_cell_identity = match NRCellIdentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("nr_cell_identity")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let nr_cell_identity =
+                NRCellIdentity::decode(reader).map_err(in_field("nr_cell_identity"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -23942,16 +23426,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.nr_cell_identity.encode(writer) {
-                return Err(error.in_field("nr_cell_identity"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.nr_cell_identity
+                .encode(writer)
+                .map_err(in_field("nr_cell_identity"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -23972,10 +23454,15 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pLMNIdentity", "nRCellIdentity", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let nr_cell_identity = reading.member(&members, 1, NRCellIdentity::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMNIdentity", PLMNidentity::from_tree)?;
+            let nr_cell_identity =
+                reading.member(&members, "nRCellIdentity", NRCellIdentity::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 nr_cell_identity,
@@ -24076,21 +23563,15 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let nr_encryption_algorithms = match NRencryptionAlgorithms::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("nr_encryption_algorithms")),
-            };
+            let nr_encryption_algorithms = NRencryptionAlgorithms::decode(reader)
+                .map_err(in_field("nr_encryption_algorithms"))?;
             let nr_integrity_protection_algorithms =
-                match NRintegrityProtectionAlgorithms::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("nr_integrity_protection_algorithms")),
-                };
+                NRintegrityProtectionAlgorithms::decode(reader)
+                    .map_err(in_field("nr_integrity_protection_algorithms"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -24110,16 +23591,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.nr_encryption_algorithms.encode(writer) {
-                return Err(error.in_field("nr_encryption_algorithms"));
-            }
-            if let Err(error) = self.nr_integrity_protection_algorithms.encode(writer) {
-                return Err(error.in_field("nr_integrity_protection_algorithms"));
-            }
+            self.nr_encryption_algorithms
+                .encode(writer)
+                .map_err(in_field("nr_encryption_algorithms"))?;
+            self.nr_integrity_protection_algorithms
+                .encode(writer)
+                .map_err(in_field("nr_integrity_protection_algorithms"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -24152,12 +23631,21 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let nr_encryption_algorithms =
-                reading.member(&members, 0, NRencryptionAlgorithms::from_tree)?;
-            let nr_integrity_protection_algorithms =
-                reading.member(&members, 1, NRintegrityProtectionAlgorithms::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let nr_encryption_algorithms = reading.member(
+                &members,
+                "nRencryptionAlgorithms",
+                NRencryptionAlgorithms::from_tree,
+            )?;
+            let nr_integrity_protection_algorithms = reading.member(
+                &members,
+                "nRintegrityProtectionAlgorithms",
+                NRintegrityProtectionAlgorithms::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 nr_encryption_algorithms,
                 nr_integrity_protection_algorithms,
@@ -24191,16 +23679,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ue_aggregate_maximum_bit_rate = match BitRate::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ue_aggregate_maximum_bit_rate")),
-            };
+            let ue_aggregate_maximum_bit_rate =
+                BitRate::decode(reader).map_err(in_field("ue_aggregate_maximum_bit_rate"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -24219,13 +23703,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ue_aggregate_maximum_bit_rate.encode(writer) {
-                return Err(error.in_field("ue_aggregate_maximum_bit_rate"));
-            }
+            self.ue_aggregate_maximum_bit_rate
+                .encode(writer)
+                .map_err(in_field("ue_aggregate_maximum_bit_rate"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -24248,9 +23730,13 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["uEaggregateMaximumBitRate", "iE-Extensions"])?;
-            let ue_aggregate_maximum_bit_rate = reading.member(&members, 0, BitRate::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let ue_aggregate_maximum_bit_rate =
+                reading.member(&members, "uEaggregateMaximumBitRate", BitRate::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ue_aggregate_maximum_bit_rate,
                 ie_extensions,
@@ -24287,27 +23773,19 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
             let vehicle_ue = if present & 4 != 0 {
-                Some(match VehicleUE::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("vehicle_ue")),
-                })
+                Some(VehicleUE::decode(reader).map_err(in_field("vehicle_ue"))?)
             } else {
                 None
             };
             let pedestrian_ue = if present & 2 != 0 {
-                Some(match PedestrianUE::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("pedestrian_ue")),
-                })
+                Some(PedestrianUE::decode(reader).map_err(in_field("pedestrian_ue"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -24330,19 +23808,13 @@ pub mod s1_ap_ies {
             writer.bit(self.pedestrian_ue.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.vehicle_ue {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("vehicle_ue"));
-                }
+                value.encode(writer).map_err(in_field("vehicle_ue"))?;
             }
             if let Some(value) = &self.pedestrian_ue {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("pedestrian_ue"));
-                }
+                value.encode(writer).map_err(in_field("pedestrian_ue"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -24369,10 +23841,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["vehicleUE", "pedestrianUE", "iE-Extensions"])?;
-            let vehicle_ue = reading.optional(&members, 0, VehicleUE::from_tree)?;
-            let pedestrian_ue = reading.optional(&members, 1, PedestrianUE::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let vehicle_ue = reading.optional(&members, "vehicleUE", VehicleUE::from_tree)?;
+            let pedestrian_ue =
+                reading.optional(&members, "pedestrianUE", PedestrianUE::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 vehicle_ue,
                 pedestrian_ue,
@@ -24965,20 +24441,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let guaranteed_flow_bit_rate = match BitRate::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("guaranteed_flow_bit_rate")),
-            };
-            let maximum_flow_bit_rate = match BitRate::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("maximum_flow_bit_rate")),
-            };
+            let guaranteed_flow_bit_rate =
+                BitRate::decode(reader).map_err(in_field("guaranteed_flow_bit_rate"))?;
+            let maximum_flow_bit_rate =
+                BitRate::decode(reader).map_err(in_field("maximum_flow_bit_rate"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -24998,16 +24468,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.guaranteed_flow_bit_rate.encode(writer) {
-                return Err(error.in_field("guaranteed_flow_bit_rate"));
-            }
-            if let Err(error) = self.maximum_flow_bit_rate.encode(writer) {
-                return Err(error.in_field("maximum_flow_bit_rate"));
-            }
+            self.guaranteed_flow_bit_rate
+                .encode(writer)
+                .map_err(in_field("guaranteed_flow_bit_rate"))?;
+            self.maximum_flow_bit_rate
+                .encode(writer)
+                .map_err(in_field("maximum_flow_bit_rate"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -25037,10 +24505,15 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let guaranteed_flow_bit_rate = reading.member(&members, 0, BitRate::from_tree)?;
-            let maximum_flow_bit_rate = reading.member(&members, 1, BitRate::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let guaranteed_flow_bit_rate =
+                reading.member(&members, "guaranteedFlowBitRate", BitRate::from_tree)?;
+            let maximum_flow_bit_rate =
+                reading.member(&members, "maximumFlowBitRate", BitRate::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 guaranteed_flow_bit_rate,
                 maximum_flow_bit_rate,
@@ -25080,32 +24553,21 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
-            let pqi = match FiveQI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("pqi")),
-            };
+            let pqi = FiveQI::decode(reader).map_err(in_field("pqi"))?;
             let pc5_flow_bit_rates = if present & 4 != 0 {
-                Some(match PC5FlowBitRates::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("pc5_flow_bit_rates")),
-                })
+                Some(PC5FlowBitRates::decode(reader).map_err(in_field("pc5_flow_bit_rates"))?)
             } else {
                 None
             };
             let range = if present & 2 != 0 {
-                Some(match Range::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("range")),
-                })
+                Some(Range::decode(reader).map_err(in_field("range"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -25128,23 +24590,17 @@ pub mod s1_ap_ies {
             writer.bit(self.pc5_flow_bit_rates.is_some());
             writer.bit(self.range.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.pqi.encode(writer) {
-                return Err(error.in_field("pqi"));
-            }
+            self.pqi.encode(writer).map_err(in_field("pqi"))?;
             if let Some(value) = &self.pc5_flow_bit_rates {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("pc5_flow_bit_rates"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("pc5_flow_bit_rates"))?;
             }
             if let Some(value) = &self.range {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("range"));
-                }
+                value.encode(writer).map_err(in_field("range"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -25171,11 +24627,15 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pQI", "pc5FlowBitRates", "range", "iE-Extensions"])?;
-            let pqi = reading.member(&members, 0, FiveQI::from_tree)?;
-            let pc5_flow_bit_rates = reading.optional(&members, 1, PC5FlowBitRates::from_tree)?;
-            let range = reading.optional(&members, 2, Range::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let pqi = reading.member(&members, "pQI", FiveQI::from_tree)?;
+            let pc5_flow_bit_rates =
+                reading.optional(&members, "pc5FlowBitRates", PC5FlowBitRates::from_tree)?;
+            let range = reading.optional(&members, "range", Range::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 pqi,
                 pc5_flow_bit_rates,
@@ -25265,24 +24725,17 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let pc5_qos_flow_list = match PC5QoSFlowList::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("pc5_qos_flow_list")),
-            };
+            let pc5_qos_flow_list =
+                PC5QoSFlowList::decode(reader).map_err(in_field("pc5_qos_flow_list"))?;
             let pc5_link_aggregated_bit_rates = if present & 2 != 0 {
-                Some(match BitRate::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("pc5_link_aggregated_bit_rates")),
-                })
+                Some(BitRate::decode(reader).map_err(in_field("pc5_link_aggregated_bit_rates"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -25303,18 +24756,16 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.pc5_link_aggregated_bit_rates.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.pc5_qos_flow_list.encode(writer) {
-                return Err(error.in_field("pc5_qos_flow_list"));
-            }
+            self.pc5_qos_flow_list
+                .encode(writer)
+                .map_err(in_field("pc5_qos_flow_list"))?;
             if let Some(value) = &self.pc5_link_aggregated_bit_rates {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("pc5_link_aggregated_bit_rates"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("pc5_link_aggregated_bit_rates"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -25346,11 +24797,15 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let pc5_qos_flow_list = reading.member(&members, 0, PC5QoSFlowList::from_tree)?;
+            let pc5_qos_flow_list =
+                reading.member(&members, "pc5QoSFlowList", PC5QoSFlowList::from_tree)?;
             let pc5_link_aggregated_bit_rates =
-                reading.optional(&members, 1, BitRate::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+                reading.optional(&members, "pc5LinkAggregatedBitRates", BitRate::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 pc5_qos_flow_list,
                 pc5_link_aggregated_bit_rates,
@@ -25522,16 +24977,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_listfor_qmc = match PLMNListforQMC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_listfor_qmc")),
-            };
+            let plmn_listfor_qmc =
+                PLMNListforQMC::decode(reader).map_err(in_field("plmn_listfor_qmc"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -25550,13 +25001,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_listfor_qmc.encode(writer) {
-                return Err(error.in_field("plmn_listfor_qmc"));
-            }
+            self.plmn_listfor_qmc
+                .encode(writer)
+                .map_err(in_field("plmn_listfor_qmc"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -25575,9 +25024,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["plmnListforQMC", "iE-Extensions"])?;
-            let plmn_listfor_qmc = reading.member(&members, 0, PLMNListforQMC::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let plmn_listfor_qmc =
+                reading.member(&members, "plmnListforQMC", PLMNListforQMC::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_listfor_qmc,
                 ie_extensions,
@@ -25782,16 +25235,11 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ncgi = match NRCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ncgi")),
-            };
+            let ncgi = NRCGI::decode(reader).map_err(in_field("ncgi"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -25810,13 +25258,9 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ncgi.encode(writer) {
-                return Err(error.in_field("ncgi"));
-            }
+            self.ncgi.encode(writer).map_err(in_field("ncgi"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -25835,9 +25279,12 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["nCGI", "iE-Extensions"])?;
-            let ncgi = reading.member(&members, 0, NRCGI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let ncgi = reading.member(&members, "nCGI", NRCGI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ncgi,
                 ie_extensions,
@@ -26048,24 +25495,17 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let paging_edrx_cycle = match PagingEDRXCycle::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("paging_edrx_cycle")),
-            };
+            let paging_edrx_cycle =
+                PagingEDRXCycle::decode(reader).map_err(in_field("paging_edrx_cycle"))?;
             let paging_time_window = if present & 2 != 0 {
-                Some(match PagingTimeWindow::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("paging_time_window")),
-                })
+                Some(PagingTimeWindow::decode(reader).map_err(in_field("paging_time_window"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -26086,18 +25526,16 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.paging_time_window.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.paging_edrx_cycle.encode(writer) {
-                return Err(error.in_field("paging_edrx_cycle"));
-            }
+            self.paging_edrx_cycle
+                .encode(writer)
+                .map_err(in_field("paging_edrx_cycle"))?;
             if let Some(value) = &self.paging_time_window {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("paging_time_window"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("paging_time_window"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -26125,10 +25563,15 @@ pub mod s1_ap_ies {
                 value,
                 &["paging-eDRX-Cycle", "pagingTimeWindow", "iE-Extensions"],
             )?;
-            let paging_edrx_cycle = reading.member(&members, 0, PagingEDRXCycle::from_tree)?;
-            let paging_time_window = reading.optional(&members, 1, PagingTimeWindow::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let paging_edrx_cycle =
+                reading.member(&members, "paging-eDRX-Cycle", PagingEDRXCycle::from_tree)?;
+            let paging_time_window =
+                reading.optional(&members, "pagingTimeWindow", PagingTimeWindow::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 paging_edrx_cycle,
                 paging_time_window,
@@ -26210,29 +25653,22 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let paging_attempt_count = match PagingAttemptCount::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("paging_attempt_count")),
-            };
-            let intended_number_of_paging_attempts =
-                match IntendedNumberOfPagingAttempts::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("intended_number_of_paging_attempts")),
-                };
+            let paging_attempt_count =
+                PagingAttemptCount::decode(reader).map_err(in_field("paging_attempt_count"))?;
+            let intended_number_of_paging_attempts = IntendedNumberOfPagingAttempts::decode(reader)
+                .map_err(in_field("intended_number_of_paging_attempts"))?;
             let next_paging_area_scope = if present & 2 != 0 {
-                Some(match NextPagingAreaScope::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("next_paging_area_scope")),
-                })
+                Some(
+                    NextPagingAreaScope::decode(reader)
+                        .map_err(in_field("next_paging_area_scope"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -26254,21 +25690,19 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.next_paging_area_scope.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.paging_attempt_count.encode(writer) {
-                return Err(error.in_field("paging_attempt_count"));
-            }
-            if let Err(error) = self.intended_number_of_paging_attempts.encode(writer) {
-                return Err(error.in_field("intended_number_of_paging_attempts"));
-            }
+            self.paging_attempt_count
+                .encode(writer)
+                .map_err(in_field("paging_attempt_count"))?;
+            self.intended_number_of_paging_attempts
+                .encode(writer)
+                .map_err(in_field("intended_number_of_paging_attempts"))?;
             if let Some(value) = &self.next_paging_area_scope {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("next_paging_area_scope"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("next_paging_area_scope"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -26305,14 +25739,26 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let paging_attempt_count =
-                reading.member(&members, 0, PagingAttemptCount::from_tree)?;
-            let intended_number_of_paging_attempts =
-                reading.member(&members, 1, IntendedNumberOfPagingAttempts::from_tree)?;
-            let next_paging_area_scope =
-                reading.optional(&members, 2, NextPagingAreaScope::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let paging_attempt_count = reading.member(
+                &members,
+                "pagingAttemptCount",
+                PagingAttemptCount::from_tree,
+            )?;
+            let intended_number_of_paging_attempts = reading.member(
+                &members,
+                "intendedNumberOfPagingAttempts",
+                IntendedNumberOfPagingAttempts::from_tree,
+            )?;
+            let next_paging_area_scope = reading.optional(
+                &members,
+                "nextPagingAreaScope",
+                NextPagingAreaScope::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 paging_attempt_count,
                 intended_number_of_paging_attempts,
@@ -27025,27 +26471,25 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
             let prose_direct_discovery = if present & 4 != 0 {
-                Some(match ProSeDirectDiscovery::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("prose_direct_discovery")),
-                })
+                Some(
+                    ProSeDirectDiscovery::decode(reader)
+                        .map_err(in_field("prose_direct_discovery"))?,
+                )
             } else {
                 None
             };
             let prose_direct_communication = if present & 2 != 0 {
-                Some(match ProSeDirectCommunication::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("prose_direct_communication")),
-                })
+                Some(
+                    ProSeDirectCommunication::decode(reader)
+                        .map_err(in_field("prose_direct_communication"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -27068,19 +26512,17 @@ pub mod s1_ap_ies {
             writer.bit(self.prose_direct_communication.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.prose_direct_discovery {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("prose_direct_discovery"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("prose_direct_discovery"))?;
             }
             if let Some(value) = &self.prose_direct_communication {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("prose_direct_communication"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("prose_direct_communication"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -27117,12 +26559,21 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let prose_direct_discovery =
-                reading.optional(&members, 0, ProSeDirectDiscovery::from_tree)?;
-            let prose_direct_communication =
-                reading.optional(&members, 1, ProSeDirectCommunication::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let prose_direct_discovery = reading.optional(
+                &members,
+                "proSeDirectDiscovery",
+                ProSeDirectDiscovery::from_tree,
+            )?;
+            let prose_direct_communication = reading.optional(
+                &members,
+                "proSeDirectCommunication",
+                ProSeDirectCommunication::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 prose_direct_discovery,
                 prose_direct_communication,
@@ -27560,20 +27011,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let rat_restriction_information = match reader.bit_string_extensible(8, 8) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("rat_restriction_information")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let rat_restriction_information = reader
+                .bit_string_extensible(8, 8)
+                .map_err(in_field("rat_restriction_information"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -27593,18 +27038,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) =
-                writer.bit_string_extensible(&self.rat_restriction_information, 8, 8)
-            {
-                return Err(error.in_field("rat_restriction_information"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            writer
+                .bit_string_extensible(&self.rat_restriction_information, 8, 8)
+                .map_err(in_field("rat_restriction_information"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -27634,12 +27075,17 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let rat_restriction_information = reading.member(&members, 1, |value, reading| {
-                json::read_bit_string(reading, value, 8, 8, true)
-            })?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
+            let rat_restriction_information =
+                reading.member(&members, "rAT-RestrictionInformation", |value, reading| {
+                    json::read_bit_string(reading, value, 8, 8, true)
+                })?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 rat_restriction_information,
@@ -27921,24 +27367,17 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let rim_information = match RIMInformation::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("rim_information")),
-            };
+            let rim_information =
+                RIMInformation::decode(reader).map_err(in_field("rim_information"))?;
             let rim_routing_address = if present & 2 != 0 {
-                Some(match RIMRoutingAddress::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("rim_routing_address")),
-                })
+                Some(RIMRoutingAddress::decode(reader).map_err(in_field("rim_routing_address"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -27959,18 +27398,16 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.rim_routing_address.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.rim_information.encode(writer) {
-                return Err(error.in_field("rim_information"));
-            }
+            self.rim_information
+                .encode(writer)
+                .map_err(in_field("rim_information"))?;
             if let Some(value) = &self.rim_routing_address {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("rim_routing_address"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("rim_routing_address"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -27998,11 +27435,15 @@ pub mod s1_ap_ies {
                 value,
                 &["rIMInformation", "rIMRoutingAddress", "iE-Extensions"],
             )?;
-            let rim_information = reading.member(&members, 0, RIMInformation::from_tree)?;
+            let rim_information =
+                reading.member(&members, "rIMInformation", RIMInformation::from_tree)?;
             let rim_routing_address =
-                reading.optional(&members, 1, RIMRoutingAddress::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+                reading.optional(&members, "rIMRoutingAddress", RIMRoutingAddress::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 rim_information,
                 rim_routing_address,
@@ -28053,26 +27494,20 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let ue_rlf_report_container = match UERLFReportContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ue_rlf_report_container")),
-            };
+            let ue_rlf_report_container = UERLFReportContainer::decode(reader)
+                .map_err(in_field("ue_rlf_report_container"))?;
             let ue_rlf_report_container_for_extended_bands = if present & 2 != 0 {
-                Some(match UERLFReportContainerForExtendedBands::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => {
-                        return Err(error.in_field("ue_rlf_report_container_for_extended_bands"));
-                    }
-                })
+                Some(
+                    UERLFReportContainerForExtendedBands::decode(reader)
+                        .map_err(in_field("ue_rlf_report_container_for_extended_bands"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -28093,18 +27528,16 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.ue_rlf_report_container_for_extended_bands.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ue_rlf_report_container.encode(writer) {
-                return Err(error.in_field("ue_rlf_report_container"));
-            }
+            self.ue_rlf_report_container
+                .encode(writer)
+                .map_err(in_field("ue_rlf_report_container"))?;
             if let Some(value) = &self.ue_rlf_report_container_for_extended_bands {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ue_rlf_report_container_for_extended_bands"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("ue_rlf_report_container_for_extended_bands"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -28139,12 +27572,21 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let ue_rlf_report_container =
-                reading.member(&members, 0, UERLFReportContainer::from_tree)?;
-            let ue_rlf_report_container_for_extended_bands =
-                reading.optional(&members, 1, UERLFReportContainerForExtendedBands::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let ue_rlf_report_container = reading.member(
+                &members,
+                "uE-RLF-Report-Container",
+                UERLFReportContainer::from_tree,
+            )?;
+            let ue_rlf_report_container_for_extended_bands = reading.optional(
+                &members,
+                "uE-RLF-Report-Container-for-extended-bands",
+                UERLFReportContainerForExtendedBands::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ue_rlf_report_container,
                 ue_rlf_report_container_for_extended_bands,
@@ -28587,24 +28029,20 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let eutran_cgi = match EUTRANCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("eutran_cgi")),
-            };
+            let eutran_cgi = EUTRANCGI::decode(reader).map_err(in_field("eutran_cgi"))?;
             let time_stayed_in_cell = if present & 2 != 0 {
-                Some(match reader.unsigned(0, 4095) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("time_stayed_in_cell")),
-                } as u16)
+                Some(
+                    reader
+                        .unsigned(0, 4095)
+                        .map_err(in_field("time_stayed_in_cell"))? as u16,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -28625,18 +28063,16 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.time_stayed_in_cell.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.eutran_cgi.encode(writer) {
-                return Err(error.in_field("eutran_cgi"));
-            }
+            self.eutran_cgi
+                .encode(writer)
+                .map_err(in_field("eutran_cgi"))?;
             if let Some(value) = &self.time_stayed_in_cell {
-                if let Err(error) = writer.unsigned(u64::from(*value), 0, 4095) {
-                    return Err(error.in_field("time_stayed_in_cell"));
-                }
+                writer
+                    .unsigned(u64::from(*value), 0, 4095)
+                    .map_err(in_field("time_stayed_in_cell"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -28662,12 +28098,16 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["eUTRAN-CGI", "timeStayedInCell", "iE-Extensions"])?;
-            let eutran_cgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
-            let time_stayed_in_cell = reading.optional(&members, 1, |value, reading| {
-                reading.unsigned(value, 0, 4095).map(|number| number as u16)
-            })?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let eutran_cgi = reading.member(&members, "eUTRAN-CGI", EUTRANCGI::from_tree)?;
+            let time_stayed_in_cell =
+                reading.optional(&members, "timeStayedInCell", |value, reading| {
+                    reading.unsigned(value, 0, 4095).map(|number| number as u16)
+                })?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 eutran_cgi,
                 time_stayed_in_cell,
@@ -28768,16 +28208,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let recommended_cell_list = match RecommendedCellList::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("recommended_cell_list")),
-            };
+            let recommended_cell_list =
+                RecommendedCellList::decode(reader).map_err(in_field("recommended_cell_list"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -28796,13 +28232,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.recommended_cell_list.encode(writer) {
-                return Err(error.in_field("recommended_cell_list"));
-            }
+            self.recommended_cell_list
+                .encode(writer)
+                .map_err(in_field("recommended_cell_list"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -28821,10 +28255,16 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["recommendedCellList", "iE-Extensions"])?;
-            let recommended_cell_list =
-                reading.member(&members, 0, RecommendedCellList::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let recommended_cell_list = reading.member(
+                &members,
+                "recommendedCellList",
+                RecommendedCellList::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 recommended_cell_list,
                 ie_extensions,
@@ -28857,16 +28297,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let mme_paging_target = match MMEPagingTarget::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("mme_paging_target")),
-            };
+            let mme_paging_target =
+                MMEPagingTarget::decode(reader).map_err(in_field("mme_paging_target"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -28885,13 +28321,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.mme_paging_target.encode(writer) {
-                return Err(error.in_field("mme_paging_target"));
-            }
+            self.mme_paging_target
+                .encode(writer)
+                .map_err(in_field("mme_paging_target"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -28910,9 +28344,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["mMEPagingTarget", "iE-Extensions"])?;
-            let mme_paging_target = reading.member(&members, 0, MMEPagingTarget::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let mme_paging_target =
+                reading.member(&members, "mMEPagingTarget", MMEPagingTarget::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 mme_paging_target,
                 ie_extensions,
@@ -29012,16 +28450,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let recommended_enb_list = match RecommendedENBList::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("recommended_enb_list")),
-            };
+            let recommended_enb_list =
+                RecommendedENBList::decode(reader).map_err(in_field("recommended_enb_list"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -29040,13 +28474,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.recommended_enb_list.encode(writer) {
-                return Err(error.in_field("recommended_enb_list"));
-            }
+            self.recommended_enb_list
+                .encode(writer)
+                .map_err(in_field("recommended_enb_list"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -29065,10 +28497,16 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["recommendedENBList", "iE-Extensions"])?;
-            let recommended_enb_list =
-                reading.member(&members, 0, RecommendedENBList::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let recommended_enb_list = reading.member(
+                &members,
+                "recommendedENBList",
+                RecommendedENBList::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 recommended_enb_list,
                 ie_extensions,
@@ -29422,20 +28860,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let event_type = match EventType::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("event_type")),
-            };
-            let report_area = match ReportArea::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("report_area")),
-            };
+            let event_type = EventType::decode(reader).map_err(in_field("event_type"))?;
+            let report_area = ReportArea::decode(reader).map_err(in_field("report_area"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -29455,16 +28885,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.event_type.encode(writer) {
-                return Err(error.in_field("event_type"));
-            }
-            if let Err(error) = self.report_area.encode(writer) {
-                return Err(error.in_field("report_area"));
-            }
+            self.event_type
+                .encode(writer)
+                .map_err(in_field("event_type"))?;
+            self.report_area
+                .encode(writer)
+                .map_err(in_field("report_area"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -29484,10 +28912,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["eventType", "reportArea", "iE-Extensions"])?;
-            let event_type = reading.member(&members, 0, EventType::from_tree)?;
-            let report_area = reading.member(&members, 1, ReportArea::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let event_type = reading.member(&members, "eventType", EventType::from_tree)?;
+            let report_area = reading.member(&members, "reportArea", ReportArea::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 event_type,
                 report_area,
@@ -29567,16 +28998,11 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -29595,13 +29021,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -29620,9 +29044,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMNidentity", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 ie_extensions,
@@ -29702,20 +29130,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let mmec = match MMECode::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("mmec")),
-            };
-            let m_tmsi = match MTMSI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("m_tmsi")),
-            };
+            let mmec = MMECode::decode(reader).map_err(in_field("mmec"))?;
+            let m_tmsi = MTMSI::decode(reader).map_err(in_field("m_tmsi"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -29735,16 +29155,10 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.mmec.encode(writer) {
-                return Err(error.in_field("mmec"));
-            }
-            if let Err(error) = self.m_tmsi.encode(writer) {
-                return Err(error.in_field("m_tmsi"));
-            }
+            self.mmec.encode(writer).map_err(in_field("mmec"))?;
+            self.m_tmsi.encode(writer).map_err(in_field("m_tmsi"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -29764,10 +29178,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["mMEC", "m-TMSI", "iE-Extensions"])?;
-            let mmec = reading.member(&members, 0, MMECode::from_tree)?;
-            let m_tmsi = reading.member(&members, 1, MTMSI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let mmec = reading.member(&members, "mMEC", MMECode::from_tree)?;
+            let m_tmsi = reading.member(&members, "m-TMSI", MTMSI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 mmec,
                 m_tmsi,
@@ -29817,24 +29234,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let target_enb_id = match TargeteNBID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("target_enb_id")),
-            };
-            let source_enb_id = match SourceeNBID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("source_enb_id")),
-            };
-            let son_information = match SONInformation::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("son_information")),
-            };
+            let target_enb_id = TargeteNBID::decode(reader).map_err(in_field("target_enb_id"))?;
+            let source_enb_id = SourceeNBID::decode(reader).map_err(in_field("source_enb_id"))?;
+            let son_information =
+                SONInformation::decode(reader).map_err(in_field("son_information"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -29855,19 +29262,17 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.target_enb_id.encode(writer) {
-                return Err(error.in_field("target_enb_id"));
-            }
-            if let Err(error) = self.source_enb_id.encode(writer) {
-                return Err(error.in_field("source_enb_id"));
-            }
-            if let Err(error) = self.son_information.encode(writer) {
-                return Err(error.in_field("son_information"));
-            }
+            self.target_enb_id
+                .encode(writer)
+                .map_err(in_field("target_enb_id"))?;
+            self.source_enb_id
+                .encode(writer)
+                .map_err(in_field("source_enb_id"))?;
+            self.son_information
+                .encode(writer)
+                .map_err(in_field("son_information"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -29896,11 +29301,15 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let target_enb_id = reading.member(&members, 0, TargeteNBID::from_tree)?;
-            let source_enb_id = reading.member(&members, 1, SourceeNBID::from_tree)?;
-            let son_information = reading.member(&members, 2, SONInformation::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let target_enb_id = reading.member(&members, "targeteNB-ID", TargeteNBID::from_tree)?;
+            let source_enb_id = reading.member(&members, "sourceeNB-ID", SourceeNBID::from_tree)?;
+            let son_information =
+                reading.member(&members, "sONInformation", SONInformation::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 target_enb_id,
                 source_enb_id,
@@ -30076,19 +29485,17 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
             let x2_tnl_configuration_info = if present & 2 != 0 {
-                Some(match X2TNLConfigurationInfo::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("x2_tnl_configuration_info")),
-                })
+                Some(
+                    X2TNLConfigurationInfo::decode(reader)
+                        .map_err(in_field("x2_tnl_configuration_info"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -30109,14 +29516,12 @@ pub mod s1_ap_ies {
             writer.bit(self.x2_tnl_configuration_info.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.x2_tnl_configuration_info {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("x2_tnl_configuration_info"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("x2_tnl_configuration_info"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -30140,10 +29545,16 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["x2TNLConfigurationInfo", "iE-Extensions"])?;
-            let x2_tnl_configuration_info =
-                reading.optional(&members, 0, X2TNLConfigurationInfo::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let x2_tnl_configuration_info = reading.optional(
+                &members,
+                "x2TNLConfigurationInfo",
+                X2TNLConfigurationInfo::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 x2_tnl_configuration_info,
                 ie_extensions,
@@ -30449,35 +29860,32 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(4)?;
             let dayof_week = if present & 8 != 0 {
-                Some(match reader.bits_sized(7, 7) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("dayof_week")),
-                })
+                Some(reader.bits_sized(7, 7).map_err(in_field("dayof_week"))?)
             } else {
                 None
             };
             let timeof_day_start = if present & 4 != 0 {
-                Some(match reader.unsigned_extensible(0, 86399) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("timeof_day_start")),
-                })
+                Some(
+                    reader
+                        .unsigned_extensible(0, 86399)
+                        .map_err(in_field("timeof_day_start"))?,
+                )
             } else {
                 None
             };
             let timeof_day_end = if present & 2 != 0 {
-                Some(match reader.unsigned_extensible(0, 86399) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("timeof_day_end")),
-                })
+                Some(
+                    reader
+                        .unsigned_extensible(0, 86399)
+                        .map_err(in_field("timeof_day_end"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -30502,24 +29910,22 @@ pub mod s1_ap_ies {
             writer.bit(self.timeof_day_end.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.dayof_week {
-                if let Err(error) = writer.bits_sized(*value, 7, 7) {
-                    return Err(error.in_field("dayof_week"));
-                }
+                writer
+                    .bits_sized(*value, 7, 7)
+                    .map_err(in_field("dayof_week"))?;
             }
             if let Some(value) = &self.timeof_day_start {
-                if let Err(error) = writer.unsigned_extensible(*value, 0, 86399) {
-                    return Err(error.in_field("timeof_day_start"));
-                }
+                writer
+                    .unsigned_extensible(*value, 0, 86399)
+                    .map_err(in_field("timeof_day_start"))?;
             }
             if let Some(value) = &self.timeof_day_end {
-                if let Err(error) = writer.unsigned_extensible(*value, 0, 86399) {
-                    return Err(error.in_field("timeof_day_end"));
-                }
+                writer
+                    .unsigned_extensible(*value, 0, 86399)
+                    .map_err(in_field("timeof_day_end"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -30563,17 +29969,21 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let dayof_week = reading.optional(&members, 0, |value, reading| {
+            let dayof_week = reading.optional(&members, "dayofWeek", |value, reading| {
                 json::read_bits(reading, value, 7, 7)
             })?;
-            let timeof_day_start = reading.optional(&members, 1, |value, reading| {
+            let timeof_day_start =
+                reading.optional(&members, "timeofDayStart", |value, reading| {
+                    reading.unsigned(value, u64::MIN, u64::MAX)
+                })?;
+            let timeof_day_end = reading.optional(&members, "timeofDayEnd", |value, reading| {
                 reading.unsigned(value, u64::MIN, u64::MAX)
             })?;
-            let timeof_day_end = reading.optional(&members, 2, |value, reading| {
-                reading.unsigned(value, u64::MIN, u64::MAX)
-            })?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 dayof_week,
                 timeof_day_start,
@@ -30624,24 +30034,15 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let secondary_rat_type = match SecondaryRATType::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("secondary_rat_type")),
-            };
-            let e_rab_usage_report_list = match ERABUsageReportList::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_usage_report_list")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let secondary_rat_type =
+                SecondaryRATType::decode(reader).map_err(in_field("secondary_rat_type"))?;
+            let e_rab_usage_report_list =
+                ERABUsageReportList::decode(reader).map_err(in_field("e_rab_usage_report_list"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -30662,19 +30063,15 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.secondary_rat_type.encode(writer) {
-                return Err(error.in_field("secondary_rat_type"));
-            }
-            if let Err(error) = self.e_rab_usage_report_list.encode(writer) {
-                return Err(error.in_field("e_rab_usage_report_list"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.secondary_rat_type
+                .encode(writer)
+                .map_err(in_field("secondary_rat_type"))?;
+            self.e_rab_usage_report_list
+                .encode(writer)
+                .map_err(in_field("e_rab_usage_report_list"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -30706,12 +30103,19 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let secondary_rat_type = reading.member(&members, 1, SecondaryRATType::from_tree)?;
-            let e_rab_usage_report_list =
-                reading.member(&members, 2, ERABUsageReportList::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let secondary_rat_type =
+                reading.member(&members, "secondaryRATType", SecondaryRATType::from_tree)?;
+            let e_rab_usage_report_list = reading.member(
+                &members,
+                "e-RABUsageReportList",
+                ERABUsageReportList::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 secondary_rat_type,
@@ -30914,20 +30318,16 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let next_hop_chaining_count = match reader.unsigned(0, 7) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("next_hop_chaining_count")),
-            } as u8;
-            let next_hop_parameter = match SecurityKey::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("next_hop_parameter")),
-            };
+            let next_hop_chaining_count = reader
+                .unsigned(0, 7)
+                .map_err(in_field("next_hop_chaining_count"))?
+                as u8;
+            let next_hop_parameter =
+                SecurityKey::decode(reader).map_err(in_field("next_hop_parameter"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -30947,16 +30347,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = writer.unsigned(u64::from(self.next_hop_chaining_count), 0, 7) {
-                return Err(error.in_field("next_hop_chaining_count"));
-            }
-            if let Err(error) = self.next_hop_parameter.encode(writer) {
-                return Err(error.in_field("next_hop_parameter"));
-            }
+            writer
+                .unsigned(u64::from(self.next_hop_chaining_count), 0, 7)
+                .map_err(in_field("next_hop_chaining_count"))?;
+            self.next_hop_parameter
+                .encode(writer)
+                .map_err(in_field("next_hop_parameter"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -30982,12 +30380,17 @@ pub mod s1_ap_ies {
                 value,
                 &["nextHopChainingCount", "nextHopParameter", "iE-Extensions"],
             )?;
-            let next_hop_chaining_count = reading.member(&members, 0, |value, reading| {
-                reading.unsigned(value, 0, 7).map(|number| number as u8)
-            })?;
-            let next_hop_parameter = reading.member(&members, 1, SecurityKey::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let next_hop_chaining_count =
+                reading.member(&members, "nextHopChainingCount", |value, reading| {
+                    reading.unsigned(value, 0, 7).map(|number| number as u8)
+                })?;
+            let next_hop_parameter =
+                reading.member(&members, "nextHopParameter", SecurityKey::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 next_hop_chaining_count,
                 next_hop_parameter,
@@ -31021,17 +30424,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let integrity_protection_indication =
-                match IntegrityProtectionIndication::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("integrity_protection_indication")),
-                };
+            let integrity_protection_indication = IntegrityProtectionIndication::decode(reader)
+                .map_err(in_field("integrity_protection_indication"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -31050,13 +30448,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.integrity_protection_indication.encode(writer) {
-                return Err(error.in_field("integrity_protection_indication"));
-            }
+            self.integrity_protection_indication
+                .encode(writer)
+                .map_err(in_field("integrity_protection_indication"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -31079,10 +30475,16 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["integrityProtectionIndication", "iE-Extensions"])?;
-            let integrity_protection_indication =
-                reading.member(&members, 0, IntegrityProtectionIndication::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let integrity_protection_indication = reading.member(
+                &members,
+                "integrityProtectionIndication",
+                IntegrityProtectionIndication::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 integrity_protection_indication,
                 ie_extensions,
@@ -31177,16 +30579,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let integrity_protection_result = match IntegrityProtectionResult::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("integrity_protection_result")),
-            };
+            let integrity_protection_result = IntegrityProtectionResult::decode(reader)
+                .map_err(in_field("integrity_protection_result"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -31205,13 +30603,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.integrity_protection_result.encode(writer) {
-                return Err(error.in_field("integrity_protection_result"));
-            }
+            self.integrity_protection_result
+                .encode(writer)
+                .map_err(in_field("integrity_protection_result"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -31234,10 +30630,16 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["integrityProtectionResult", "iE-Extensions"])?;
-            let integrity_protection_result =
-                reading.member(&members, 0, IntegrityProtectionResult::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let integrity_protection_result = reading.member(
+                &members,
+                "integrityProtectionResult",
+                IntegrityProtectionResult::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 integrity_protection_result,
                 ie_extensions,
@@ -31316,16 +30718,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let sensor_name_config = match SensorNameConfig::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("sensor_name_config")),
-            };
+            let sensor_name_config =
+                SensorNameConfig::decode(reader).map_err(in_field("sensor_name_config"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -31344,13 +30742,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.sensor_name_config.encode(writer) {
-                return Err(error.in_field("sensor_name_config"));
-            }
+            self.sensor_name_config
+                .encode(writer)
+                .map_err(in_field("sensor_name_config"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -31369,9 +30765,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["sensorNameConfig", "iE-Extensions"])?;
-            let sensor_name_config = reading.member(&members, 0, SensorNameConfig::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let sensor_name_config =
+                reading.member(&members, "sensorNameConfig", SensorNameConfig::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 sensor_name_config,
                 ie_extensions,
@@ -31459,24 +30859,20 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let sensor_meas_config = match SensorMeasConfig::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("sensor_meas_config")),
-            };
+            let sensor_meas_config =
+                SensorMeasConfig::decode(reader).map_err(in_field("sensor_meas_config"))?;
             let sensor_meas_config_name_list = if present & 2 != 0 {
-                Some(match SensorMeasConfigNameList::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("sensor_meas_config_name_list")),
-                })
+                Some(
+                    SensorMeasConfigNameList::decode(reader)
+                        .map_err(in_field("sensor_meas_config_name_list"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -31497,18 +30893,16 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.sensor_meas_config_name_list.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.sensor_meas_config.encode(writer) {
-                return Err(error.in_field("sensor_meas_config"));
-            }
+            self.sensor_meas_config
+                .encode(writer)
+                .map_err(in_field("sensor_meas_config"))?;
             if let Some(value) = &self.sensor_meas_config_name_list {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("sensor_meas_config_name_list"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("sensor_meas_config_name_list"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -31540,11 +30934,18 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let sensor_meas_config = reading.member(&members, 0, SensorMeasConfig::from_tree)?;
-            let sensor_meas_config_name_list =
-                reading.optional(&members, 1, SensorMeasConfigNameList::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let sensor_meas_config =
+                reading.member(&members, "sensorMeasConfig", SensorMeasConfig::from_tree)?;
+            let sensor_meas_config_name_list = reading.optional(
+                &members,
+                "sensorMeasConfigNameList",
+                SensorMeasConfigNameList::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 sensor_meas_config,
                 sensor_meas_config_name_list,
@@ -31811,20 +31212,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let dcn_id = match DCNID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("dcn_id")),
-            };
-            let relative_dcn_capacity = match RelativeMMECapacity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("relative_dcn_capacity")),
-            };
+            let dcn_id = DCNID::decode(reader).map_err(in_field("dcn_id"))?;
+            let relative_dcn_capacity =
+                RelativeMMECapacity::decode(reader).map_err(in_field("relative_dcn_capacity"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -31844,16 +31238,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.dcn_id.encode(writer) {
-                return Err(error.in_field("dcn_id"));
-            }
-            if let Err(error) = self.relative_dcn_capacity.encode(writer) {
-                return Err(error.in_field("relative_dcn_capacity"));
-            }
+            self.dcn_id.encode(writer).map_err(in_field("dcn_id"))?;
+            self.relative_dcn_capacity
+                .encode(writer)
+                .map_err(in_field("relative_dcn_capacity"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -31874,11 +31264,17 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["dCN-ID", "relativeDCNCapacity", "iE-Extensions"])?;
-            let dcn_id = reading.member(&members, 0, DCNID::from_tree)?;
-            let relative_dcn_capacity =
-                reading.member(&members, 1, RelativeMMECapacity::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let dcn_id = reading.member(&members, "dCN-ID", DCNID::from_tree)?;
+            let relative_dcn_capacity = reading.member(
+                &members,
+                "relativeDCNCapacity",
+                RelativeMMECapacity::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 dcn_id,
                 relative_dcn_capacity,
@@ -31971,24 +31367,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let served_plmns = match ServedPLMNs::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("served_plmns")),
-            };
-            let served_group_ids = match ServedGroupIDs::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("served_group_ids")),
-            };
-            let served_mmecs = match ServedMMECs::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("served_mmecs")),
-            };
+            let served_plmns = ServedPLMNs::decode(reader).map_err(in_field("served_plmns"))?;
+            let served_group_ids =
+                ServedGroupIDs::decode(reader).map_err(in_field("served_group_ids"))?;
+            let served_mmecs = ServedMMECs::decode(reader).map_err(in_field("served_mmecs"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -32009,19 +31395,17 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.served_plmns.encode(writer) {
-                return Err(error.in_field("served_plmns"));
-            }
-            if let Err(error) = self.served_group_ids.encode(writer) {
-                return Err(error.in_field("served_group_ids"));
-            }
-            if let Err(error) = self.served_mmecs.encode(writer) {
-                return Err(error.in_field("served_mmecs"));
-            }
+            self.served_plmns
+                .encode(writer)
+                .map_err(in_field("served_plmns"))?;
+            self.served_group_ids
+                .encode(writer)
+                .map_err(in_field("served_group_ids"))?;
+            self.served_mmecs
+                .encode(writer)
+                .map_err(in_field("served_mmecs"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -32050,11 +31434,15 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let served_plmns = reading.member(&members, 0, ServedPLMNs::from_tree)?;
-            let served_group_ids = reading.member(&members, 1, ServedGroupIDs::from_tree)?;
-            let served_mmecs = reading.member(&members, 2, ServedMMECs::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let served_plmns = reading.member(&members, "servedPLMNs", ServedPLMNs::from_tree)?;
+            let served_group_ids =
+                reading.member(&members, "servedGroupIDs", ServedGroupIDs::from_tree)?;
+            let served_mmecs = reading.member(&members, "servedMMECs", ServedMMECs::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 served_plmns,
                 served_group_ids,
@@ -32421,20 +31809,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let global_ran_node_id = match GlobalRANNODEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("global_ran_node_id")),
-            };
-            let selected_tai = match FiveGSTAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("selected_tai")),
-            };
+            let global_ran_node_id =
+                GlobalRANNODEID::decode(reader).map_err(in_field("global_ran_node_id"))?;
+            let selected_tai = FiveGSTAI::decode(reader).map_err(in_field("selected_tai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -32454,16 +31835,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.global_ran_node_id.encode(writer) {
-                return Err(error.in_field("global_ran_node_id"));
-            }
-            if let Err(error) = self.selected_tai.encode(writer) {
-                return Err(error.in_field("selected_tai"));
-            }
+            self.global_ran_node_id
+                .encode(writer)
+                .map_err(in_field("global_ran_node_id"))?;
+            self.selected_tai
+                .encode(writer)
+                .map_err(in_field("selected_tai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -32486,10 +31865,14 @@ pub mod s1_ap_ies {
                 value,
                 &["global-RAN-NODE-ID", "selected-TAI", "iE-Extensions"],
             )?;
-            let global_ran_node_id = reading.member(&members, 0, GlobalRANNODEID::from_tree)?;
-            let selected_tai = reading.member(&members, 1, FiveGSTAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let global_ran_node_id =
+                reading.member(&members, "global-RAN-NODE-ID", GlobalRANNODEID::from_tree)?;
+            let selected_tai = reading.member(&members, "selected-TAI", FiveGSTAI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 global_ran_node_id,
                 selected_tai,
@@ -32784,20 +32167,12 @@ pub mod s1_ap_ies {
     impl<'a> Decode<'a> for SourceeNBID {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let present = reader.bits(1)?;
-            let global_enb_id = match GlobalENBID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("global_enb_id")),
-            };
-            let selected_tai = match TAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("selected_tai")),
-            };
+            let global_enb_id = GlobalENBID::decode(reader).map_err(in_field("global_enb_id"))?;
+            let selected_tai = TAI::decode(reader).map_err(in_field("selected_tai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -32813,16 +32188,14 @@ pub mod s1_ap_ies {
     impl Encode for SourceeNBID {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.global_enb_id.encode(writer) {
-                return Err(error.in_field("global_enb_id"));
-            }
-            if let Err(error) = self.selected_tai.encode(writer) {
-                return Err(error.in_field("selected_tai"));
-            }
+            self.global_enb_id
+                .encode(writer)
+                .map_err(in_field("global_enb_id"))?;
+            self.selected_tai
+                .encode(writer)
+                .map_err(in_field("selected_tai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -32843,10 +32216,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["global-ENB-ID", "selected-TAI", "iE-Extensions"])?;
-            let global_enb_id = reading.member(&members, 0, GlobalENBID::from_tree)?;
-            let selected_tai = reading.member(&members, 1, TAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let global_enb_id =
+                reading.member(&members, "global-ENB-ID", GlobalENBID::from_tree)?;
+            let selected_tai = reading.member(&members, "selected-TAI", TAI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 global_enb_id,
                 selected_tai,
@@ -32904,40 +32281,30 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
-            let rrc_container = match RRCContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("rrc_container")),
-            };
+            let rrc_container = RRCContainer::decode(reader).map_err(in_field("rrc_container"))?;
             let e_rab_information_list = if present & 4 != 0 {
-                Some(match ERABInformationList::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("e_rab_information_list")),
-                })
+                Some(
+                    ERABInformationList::decode(reader)
+                        .map_err(in_field("e_rab_information_list"))?,
+                )
             } else {
                 None
             };
-            let target_cell_id = match EUTRANCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("target_cell_id")),
-            };
+            let target_cell_id = EUTRANCGI::decode(reader).map_err(in_field("target_cell_id"))?;
             let subscriber_profile_id_for_rfp = if present & 2 != 0 {
-                Some(match SubscriberProfileIDforRFP::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("subscriber_profile_id_for_rfp")),
-                })
+                Some(
+                    SubscriberProfileIDforRFP::decode(reader)
+                        .map_err(in_field("subscriber_profile_id_for_rfp"))?,
+                )
             } else {
                 None
             };
-            let ue_history_information = match UEHistoryInformation::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ue_history_information")),
-            };
+            let ue_history_information =
+                UEHistoryInformation::decode(reader).map_err(in_field("ue_history_information"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -32962,29 +32329,27 @@ pub mod s1_ap_ies {
             writer.bit(self.e_rab_information_list.is_some());
             writer.bit(self.subscriber_profile_id_for_rfp.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.rrc_container.encode(writer) {
-                return Err(error.in_field("rrc_container"));
-            }
+            self.rrc_container
+                .encode(writer)
+                .map_err(in_field("rrc_container"))?;
             if let Some(value) = &self.e_rab_information_list {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("e_rab_information_list"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("e_rab_information_list"))?;
             }
-            if let Err(error) = self.target_cell_id.encode(writer) {
-                return Err(error.in_field("target_cell_id"));
-            }
+            self.target_cell_id
+                .encode(writer)
+                .map_err(in_field("target_cell_id"))?;
             if let Some(value) = &self.subscriber_profile_id_for_rfp {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("subscriber_profile_id_for_rfp"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("subscriber_profile_id_for_rfp"))?;
             }
-            if let Err(error) = self.ue_history_information.encode(writer) {
-                return Err(error.in_field("ue_history_information"));
-            }
+            self.ue_history_information
+                .encode(writer)
+                .map_err(in_field("ue_history_information"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -33030,16 +32395,29 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let rrc_container = reading.member(&members, 0, RRCContainer::from_tree)?;
-            let e_rab_information_list =
-                reading.optional(&members, 1, ERABInformationList::from_tree)?;
-            let target_cell_id = reading.member(&members, 2, EUTRANCGI::from_tree)?;
-            let subscriber_profile_id_for_rfp =
-                reading.optional(&members, 3, SubscriberProfileIDforRFP::from_tree)?;
-            let ue_history_information =
-                reading.member(&members, 4, UEHistoryInformation::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
+            let rrc_container =
+                reading.member(&members, "rRC-Container", RRCContainer::from_tree)?;
+            let e_rab_information_list = reading.optional(
+                &members,
+                "e-RABInformationList",
+                ERABInformationList::from_tree,
+            )?;
+            let target_cell_id = reading.member(&members, "targetCell-ID", EUTRANCGI::from_tree)?;
+            let subscriber_profile_id_for_rfp = reading.optional(
+                &members,
+                "subscriberProfileIDforRFP",
+                SubscriberProfileIDforRFP::from_tree,
+            )?;
+            let ue_history_information = reading.member(
+                &members,
+                "uE-HistoryInformation",
+                UEHistoryInformation::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 rrc_container,
                 e_rab_information_list,
@@ -33392,63 +32770,60 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(7)?;
             let periodic_communication_indicator = if present & 64 != 0 {
-                Some(match SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator::decode(reader) { Ok(value) => value, Err(error) => return Err(error.in_field("periodic_communication_indicator")) })
+                Some(
+                    SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator::decode(
+                        reader,
+                    )
+                    .map_err(in_field("periodic_communication_indicator"))?,
+                )
             } else {
                 None
             };
             let periodic_time = if present & 32 != 0 {
-                Some(match reader.unsigned_extensible(1, 3600) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("periodic_time")),
-                })
+                Some(
+                    reader
+                        .unsigned_extensible(1, 3600)
+                        .map_err(in_field("periodic_time"))?,
+                )
             } else {
                 None
             };
             let scheduled_communication_time = if present & 16 != 0 {
-                Some(match ScheduledCommunicationTime::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("scheduled_communication_time")),
-                })
+                Some(
+                    ScheduledCommunicationTime::decode(reader)
+                        .map_err(in_field("scheduled_communication_time"))?,
+                )
             } else {
                 None
             };
             let stationary_indication = if present & 8 != 0 {
                 Some(
-                    match SubscriptionBasedUEDifferentiationInfoStationaryIndication::decode(reader)
-                    {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("stationary_indication")),
-                    },
+                    SubscriptionBasedUEDifferentiationInfoStationaryIndication::decode(reader)
+                        .map_err(in_field("stationary_indication"))?,
                 )
             } else {
                 None
             };
             let traffic_profile = if present & 4 != 0 {
                 Some(
-                    match SubscriptionBasedUEDifferentiationInfoTrafficProfile::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("traffic_profile")),
-                    },
+                    SubscriptionBasedUEDifferentiationInfoTrafficProfile::decode(reader)
+                        .map_err(in_field("traffic_profile"))?,
                 )
             } else {
                 None
             };
             let battery_indication = if present & 2 != 0 {
                 Some(
-                    match SubscriptionBasedUEDifferentiationInfoBatteryIndication::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("battery_indication")),
-                    },
+                    SubscriptionBasedUEDifferentiationInfoBatteryIndication::decode(reader)
+                        .map_err(in_field("battery_indication"))?,
                 )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -33479,39 +32854,35 @@ pub mod s1_ap_ies {
             writer.bit(self.battery_indication.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.periodic_communication_indicator {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("periodic_communication_indicator"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("periodic_communication_indicator"))?;
             }
             if let Some(value) = &self.periodic_time {
-                if let Err(error) = writer.unsigned_extensible(*value, 1, 3600) {
-                    return Err(error.in_field("periodic_time"));
-                }
+                writer
+                    .unsigned_extensible(*value, 1, 3600)
+                    .map_err(in_field("periodic_time"))?;
             }
             if let Some(value) = &self.scheduled_communication_time {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("scheduled_communication_time"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("scheduled_communication_time"))?;
             }
             if let Some(value) = &self.stationary_indication {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("stationary_indication"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("stationary_indication"))?;
             }
             if let Some(value) = &self.traffic_profile {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("traffic_profile"));
-                }
+                value.encode(writer).map_err(in_field("traffic_profile"))?;
             }
             if let Some(value) = &self.battery_indication {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("battery_indication"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("battery_indication"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -33576,31 +32947,37 @@ pub mod s1_ap_ies {
             )?;
             let periodic_communication_indicator = reading.optional(
                 &members,
-                0,
+                "periodicCommunicationIndicator",
                 SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator::from_tree,
             )?;
-            let periodic_time = reading.optional(&members, 1, |value, reading| {
+            let periodic_time = reading.optional(&members, "periodicTime", |value, reading| {
                 reading.unsigned(value, u64::MIN, u64::MAX)
             })?;
-            let scheduled_communication_time =
-                reading.optional(&members, 2, ScheduledCommunicationTime::from_tree)?;
+            let scheduled_communication_time = reading.optional(
+                &members,
+                "scheduledCommunicationTime",
+                ScheduledCommunicationTime::from_tree,
+            )?;
             let stationary_indication = reading.optional(
                 &members,
-                3,
+                "stationaryIndication",
                 SubscriptionBasedUEDifferentiationInfoStationaryIndication::from_tree,
             )?;
             let traffic_profile = reading.optional(
                 &members,
-                4,
+                "trafficProfile",
                 SubscriptionBasedUEDifferentiationInfoTrafficProfile::from_tree,
             )?;
             let battery_indication = reading.optional(
                 &members,
-                5,
+                "batteryIndication",
                 SubscriptionBasedUEDifferentiationInfoBatteryIndication::from_tree,
             )?;
-            let ie_extensions =
-                reading.optional(&members, 6, ProtocolExtensionContainer::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 periodic_communication_indicator,
                 periodic_time,
@@ -33693,20 +33070,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let tac = match TAC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("tac")),
-            };
-            let broadcast_plmns = match BPLMNs::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("broadcast_plmns")),
-            };
+            let tac = TAC::decode(reader).map_err(in_field("tac"))?;
+            let broadcast_plmns = BPLMNs::decode(reader).map_err(in_field("broadcast_plmns"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -33726,16 +33095,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.tac.encode(writer) {
-                return Err(error.in_field("tac"));
-            }
-            if let Err(error) = self.broadcast_plmns.encode(writer) {
-                return Err(error.in_field("broadcast_plmns"));
-            }
+            self.tac.encode(writer).map_err(in_field("tac"))?;
+            self.broadcast_plmns
+                .encode(writer)
+                .map_err(in_field("broadcast_plmns"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -33755,10 +33120,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAC", "broadcastPLMNs", "iE-Extensions"])?;
-            let tac = reading.member(&members, 0, TAC::from_tree)?;
-            let broadcast_plmns = reading.member(&members, 1, BPLMNs::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let tac = reading.member(&members, "tAC", TAC::from_tree)?;
+            let broadcast_plmns = reading.member(&members, "broadcastPLMNs", BPLMNs::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 tac,
                 broadcast_plmns,
@@ -33799,35 +33167,27 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(4)?;
             let source_stratum_level = if present & 8 != 0 {
-                Some(match StratumLevel::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("source_stratum_level")),
-                })
+                Some(StratumLevel::decode(reader).map_err(in_field("source_stratum_level"))?)
             } else {
                 None
             };
             let listening_subframe_pattern = if present & 4 != 0 {
-                Some(match ListeningSubframePattern::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("listening_subframe_pattern")),
-                })
+                Some(
+                    ListeningSubframePattern::decode(reader)
+                        .map_err(in_field("listening_subframe_pattern"))?,
+                )
             } else {
                 None
             };
             let aggressor_ecgi_list = if present & 2 != 0 {
-                Some(match ECGI_List::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("aggressor_ecgi_list")),
-                })
+                Some(ECGI_List::decode(reader).map_err(in_field("aggressor_ecgi_list"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -33852,24 +33212,22 @@ pub mod s1_ap_ies {
             writer.bit(self.aggressor_ecgi_list.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.source_stratum_level {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("source_stratum_level"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("source_stratum_level"))?;
             }
             if let Some(value) = &self.listening_subframe_pattern {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("listening_subframe_pattern"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("listening_subframe_pattern"))?;
             }
             if let Some(value) = &self.aggressor_ecgi_list {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("aggressor_ecgi_list"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("aggressor_ecgi_list"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -33913,12 +33271,20 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let source_stratum_level = reading.optional(&members, 0, StratumLevel::from_tree)?;
-            let listening_subframe_pattern =
-                reading.optional(&members, 1, ListeningSubframePattern::from_tree)?;
-            let aggressor_ecgi_list = reading.optional(&members, 2, ECGI_List::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let source_stratum_level =
+                reading.optional(&members, "sourceStratumLevel", StratumLevel::from_tree)?;
+            let listening_subframe_pattern = reading.optional(
+                &members,
+                "listeningSubframePattern",
+                ListeningSubframePattern::from_tree,
+            )?;
+            let aggressor_ecgi_list =
+                reading.optional(&members, "aggressoreCGI-List", ECGI_List::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 source_stratum_level,
                 listening_subframe_pattern,
@@ -34000,16 +33366,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ta_listfor_mdt = match TAListforMDT::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ta_listfor_mdt")),
-            };
+            let ta_listfor_mdt =
+                TAListforMDT::decode(reader).map_err(in_field("ta_listfor_mdt"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -34028,13 +33390,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ta_listfor_mdt.encode(writer) {
-                return Err(error.in_field("ta_listfor_mdt"));
-            }
+            self.ta_listfor_mdt
+                .encode(writer)
+                .map_err(in_field("ta_listfor_mdt"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -34053,9 +33413,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAListforMDT", "iE-Extensions"])?;
-            let ta_listfor_mdt = reading.member(&members, 0, TAListforMDT::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let ta_listfor_mdt =
+                reading.member(&members, "tAListforMDT", TAListforMDT::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ta_listfor_mdt,
                 ie_extensions,
@@ -34088,16 +33452,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ta_listfor_qmc = match TAListforQMC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ta_listfor_qmc")),
-            };
+            let ta_listfor_qmc =
+                TAListforQMC::decode(reader).map_err(in_field("ta_listfor_qmc"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -34116,13 +33476,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ta_listfor_qmc.encode(writer) {
-                return Err(error.in_field("ta_listfor_qmc"));
-            }
+            self.ta_listfor_qmc
+                .encode(writer)
+                .map_err(in_field("ta_listfor_qmc"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -34141,9 +33499,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAListforQMC", "iE-Extensions"])?;
-            let ta_listfor_qmc = reading.member(&members, 0, TAListforQMC::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let ta_listfor_qmc =
+                reading.member(&members, "tAListforQMC", TAListforQMC::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ta_listfor_qmc,
                 ie_extensions,
@@ -34287,20 +33649,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let plmn_identity = match PLMNidentity::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("plmn_identity")),
-            };
-            let tac = match TAC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("tac")),
-            };
+            let plmn_identity = PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?;
+            let tac = TAC::decode(reader).map_err(in_field("tac"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -34320,16 +33674,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.plmn_identity.encode(writer) {
-                return Err(error.in_field("plmn_identity"));
-            }
-            if let Err(error) = self.tac.encode(writer) {
-                return Err(error.in_field("tac"));
-            }
+            self.plmn_identity
+                .encode(writer)
+                .map_err(in_field("plmn_identity"))?;
+            self.tac.encode(writer).map_err(in_field("tac"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -34349,10 +33699,14 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["pLMNidentity", "tAC", "iE-Extensions"])?;
-            let plmn_identity = reading.member(&members, 0, PLMNidentity::from_tree)?;
-            let tac = reading.member(&members, 1, TAC::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let plmn_identity =
+                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
+            let tac = reading.member(&members, "tAC", TAC::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 plmn_identity,
                 tac,
@@ -34441,20 +33795,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let tai = match TAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("tai")),
-            };
-            let completed_cellin_tai = match CompletedCellinTAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("completed_cellin_tai")),
-            };
+            let tai = TAI::decode(reader).map_err(in_field("tai"))?;
+            let completed_cellin_tai =
+                CompletedCellinTAI::decode(reader).map_err(in_field("completed_cellin_tai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -34474,16 +33821,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.tai.encode(writer) {
-                return Err(error.in_field("tai"));
-            }
-            if let Err(error) = self.completed_cellin_tai.encode(writer) {
-                return Err(error.in_field("completed_cellin_tai"));
-            }
+            self.tai.encode(writer).map_err(in_field("tai"))?;
+            self.completed_cellin_tai
+                .encode(writer)
+                .map_err(in_field("completed_cellin_tai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -34504,11 +33847,17 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["tAI", "completedCellinTAI", "iE-Extensions"])?;
-            let tai = reading.member(&members, 0, TAI::from_tree)?;
-            let completed_cellin_tai =
-                reading.member(&members, 1, CompletedCellinTAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let tai = reading.member(&members, "tAI", TAI::from_tree)?;
+            let completed_cellin_tai = reading.member(
+                &members,
+                "completedCellinTAI",
+                CompletedCellinTAI::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 tai,
                 completed_cellin_tai,
@@ -34597,20 +33946,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let tai = match TAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("tai")),
-            };
-            let cancelled_cellin_tai = match CancelledCellinTAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cancelled_cellin_tai")),
-            };
+            let tai = TAI::decode(reader).map_err(in_field("tai"))?;
+            let cancelled_cellin_tai =
+                CancelledCellinTAI::decode(reader).map_err(in_field("cancelled_cellin_tai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -34630,16 +33972,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.tai.encode(writer) {
-                return Err(error.in_field("tai"));
-            }
-            if let Err(error) = self.cancelled_cellin_tai.encode(writer) {
-                return Err(error.in_field("cancelled_cellin_tai"));
-            }
+            self.tai.encode(writer).map_err(in_field("tai"))?;
+            self.cancelled_cellin_tai
+                .encode(writer)
+                .map_err(in_field("cancelled_cellin_tai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -34660,11 +33998,17 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["tAI", "cancelledCellinTAI", "iE-Extensions"])?;
-            let tai = reading.member(&members, 0, TAI::from_tree)?;
-            let cancelled_cellin_tai =
-                reading.member(&members, 1, CancelledCellinTAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let tai = reading.member(&members, "tAI", TAI::from_tree)?;
+            let cancelled_cellin_tai = reading.member(
+                &members,
+                "cancelledCellinTAI",
+                CancelledCellinTAI::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 tai,
                 cancelled_cellin_tai,
@@ -34698,16 +34042,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let tai_listfor_mdt = match TAIListforMDT::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("tai_listfor_mdt")),
-            };
+            let tai_listfor_mdt =
+                TAIListforMDT::decode(reader).map_err(in_field("tai_listfor_mdt"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -34726,13 +34066,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.tai_listfor_mdt.encode(writer) {
-                return Err(error.in_field("tai_listfor_mdt"));
-            }
+            self.tai_listfor_mdt
+                .encode(writer)
+                .map_err(in_field("tai_listfor_mdt"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -34751,9 +34089,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAIListforMDT", "iE-Extensions"])?;
-            let tai_listfor_mdt = reading.member(&members, 0, TAIListforMDT::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let tai_listfor_mdt =
+                reading.member(&members, "tAIListforMDT", TAIListforMDT::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 tai_listfor_mdt,
                 ie_extensions,
@@ -34786,16 +34128,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let tai_listfor_qmc = match TAIListforQMC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("tai_listfor_qmc")),
-            };
+            let tai_listfor_qmc =
+                TAIListforQMC::decode(reader).map_err(in_field("tai_listfor_qmc"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -34814,13 +34152,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.tai_listfor_qmc.encode(writer) {
-                return Err(error.in_field("tai_listfor_qmc"));
-            }
+            self.tai_listfor_qmc
+                .encode(writer)
+                .map_err(in_field("tai_listfor_qmc"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -34839,9 +34175,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAIListforQMC", "iE-Extensions"])?;
-            let tai_listfor_qmc = reading.member(&members, 0, TAIListforQMC::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let tai_listfor_qmc =
+                reading.member(&members, "tAIListforQMC", TAIListforQMC::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 tai_listfor_qmc,
                 ie_extensions,
@@ -35478,20 +34818,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let global_ran_node_id = match GlobalRANNODEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("global_ran_node_id")),
-            };
-            let selected_tai = match FiveGSTAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("selected_tai")),
-            };
+            let global_ran_node_id =
+                GlobalRANNODEID::decode(reader).map_err(in_field("global_ran_node_id"))?;
+            let selected_tai = FiveGSTAI::decode(reader).map_err(in_field("selected_tai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -35511,16 +34844,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.global_ran_node_id.encode(writer) {
-                return Err(error.in_field("global_ran_node_id"));
-            }
-            if let Err(error) = self.selected_tai.encode(writer) {
-                return Err(error.in_field("selected_tai"));
-            }
+            self.global_ran_node_id
+                .encode(writer)
+                .map_err(in_field("global_ran_node_id"))?;
+            self.selected_tai
+                .encode(writer)
+                .map_err(in_field("selected_tai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -35543,10 +34874,14 @@ pub mod s1_ap_ies {
                 value,
                 &["global-RAN-NODE-ID", "selected-TAI", "iE-Extensions"],
             )?;
-            let global_ran_node_id = reading.member(&members, 0, GlobalRANNODEID::from_tree)?;
-            let selected_tai = reading.member(&members, 1, FiveGSTAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let global_ran_node_id =
+                reading.member(&members, "global-RAN-NODE-ID", GlobalRANNODEID::from_tree)?;
+            let selected_tai = reading.member(&members, "selected-TAI", FiveGSTAI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 global_ran_node_id,
                 selected_tai,
@@ -35652,36 +34987,22 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
-            let lai = match LAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("lai")),
-            };
+            let lai = LAI::decode(reader).map_err(in_field("lai"))?;
             let rac = if present & 4 != 0 {
-                Some(match RAC::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("rac")),
-                })
+                Some(RAC::decode(reader).map_err(in_field("rac"))?)
             } else {
                 None
             };
-            let rnc_id = match RNCID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("rnc_id")),
-            };
+            let rnc_id = RNCID::decode(reader).map_err(in_field("rnc_id"))?;
             let extended_rnc_id = if present & 2 != 0 {
-                Some(match ExtendedRNCID::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("extended_rnc_id")),
-                })
+                Some(ExtendedRNCID::decode(reader).map_err(in_field("extended_rnc_id"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -35705,26 +35026,16 @@ pub mod s1_ap_ies {
             writer.bit(self.rac.is_some());
             writer.bit(self.extended_rnc_id.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.lai.encode(writer) {
-                return Err(error.in_field("lai"));
-            }
+            self.lai.encode(writer).map_err(in_field("lai"))?;
             if let Some(value) = &self.rac {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("rac"));
-                }
+                value.encode(writer).map_err(in_field("rac"))?;
             }
-            if let Err(error) = self.rnc_id.encode(writer) {
-                return Err(error.in_field("rnc_id"));
-            }
+            self.rnc_id.encode(writer).map_err(in_field("rnc_id"))?;
             if let Some(value) = &self.extended_rnc_id {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("extended_rnc_id"));
-                }
+                value.encode(writer).map_err(in_field("extended_rnc_id"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -35752,12 +35063,16 @@ pub mod s1_ap_ies {
                 value,
                 &["lAI", "rAC", "rNC-ID", "extendedRNC-ID", "iE-Extensions"],
             )?;
-            let lai = reading.member(&members, 0, LAI::from_tree)?;
-            let rac = reading.optional(&members, 1, RAC::from_tree)?;
-            let rnc_id = reading.member(&members, 2, RNCID::from_tree)?;
-            let extended_rnc_id = reading.optional(&members, 3, ExtendedRNCID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let lai = reading.member(&members, "lAI", LAI::from_tree)?;
+            let rac = reading.optional(&members, "rAC", RAC::from_tree)?;
+            let rnc_id = reading.member(&members, "rNC-ID", RNCID::from_tree)?;
+            let extended_rnc_id =
+                reading.optional(&members, "extendedRNC-ID", ExtendedRNCID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 lai,
                 rac,
@@ -35860,20 +35175,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let global_enb_id = match GlobalENBID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("global_enb_id")),
-            };
-            let selected_tai = match TAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("selected_tai")),
-            };
+            let global_enb_id = GlobalENBID::decode(reader).map_err(in_field("global_enb_id"))?;
+            let selected_tai = TAI::decode(reader).map_err(in_field("selected_tai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -35893,16 +35200,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.global_enb_id.encode(writer) {
-                return Err(error.in_field("global_enb_id"));
-            }
-            if let Err(error) = self.selected_tai.encode(writer) {
-                return Err(error.in_field("selected_tai"));
-            }
+            self.global_enb_id
+                .encode(writer)
+                .map_err(in_field("global_enb_id"))?;
+            self.selected_tai
+                .encode(writer)
+                .map_err(in_field("selected_tai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -35923,10 +35228,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["global-ENB-ID", "selected-TAI", "iE-Extensions"])?;
-            let global_enb_id = reading.member(&members, 0, GlobalENBID::from_tree)?;
-            let selected_tai = reading.member(&members, 1, TAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let global_enb_id =
+                reading.member(&members, "global-ENB-ID", GlobalENBID::from_tree)?;
+            let selected_tai = reading.member(&members, "selected-TAI", TAI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 global_enb_id,
                 selected_tai,
@@ -35968,16 +35277,11 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let rrc_container = match RRCContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("rrc_container")),
-            };
+            let rrc_container = RRCContainer::decode(reader).map_err(in_field("rrc_container"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -35996,13 +35300,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.rrc_container.encode(writer) {
-                return Err(error.in_field("rrc_container"));
-            }
+            self.rrc_container
+                .encode(writer)
+                .map_err(in_field("rrc_container"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -36021,9 +35323,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["rRC-Container", "iE-Extensions"])?;
-            let rrc_container = reading.member(&members, 0, RRCContainer::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let rrc_container =
+                reading.member(&members, "rRC-Container", RRCContainer::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 rrc_container,
                 ie_extensions,
@@ -36239,20 +35545,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ho_window_start = match HandoverWindowStart::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ho_window_start")),
-            };
-            let ho_window_duration = match HandoverWindowDuration::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ho_window_duration")),
-            };
+            let ho_window_start =
+                HandoverWindowStart::decode(reader).map_err(in_field("ho_window_start"))?;
+            let ho_window_duration =
+                HandoverWindowDuration::decode(reader).map_err(in_field("ho_window_duration"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -36272,16 +35572,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ho_window_start.encode(writer) {
-                return Err(error.in_field("ho_window_start"));
-            }
-            if let Err(error) = self.ho_window_duration.encode(writer) {
-                return Err(error.in_field("ho_window_duration"));
-            }
+            self.ho_window_start
+                .encode(writer)
+                .map_err(in_field("ho_window_start"))?;
+            self.ho_window_duration
+                .encode(writer)
+                .map_err(in_field("ho_window_duration"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -36304,11 +35602,18 @@ pub mod s1_ap_ies {
                 value,
                 &["hOWindowStart", "hOWindowDuration", "iE-Extensions"],
             )?;
-            let ho_window_start = reading.member(&members, 0, HandoverWindowStart::from_tree)?;
-            let ho_window_duration =
-                reading.member(&members, 1, HandoverWindowDuration::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let ho_window_start =
+                reading.member(&members, "hOWindowStart", HandoverWindowStart::from_tree)?;
+            let ho_window_duration = reading.member(
+                &members,
+                "hOWindowDuration",
+                HandoverWindowDuration::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ho_window_start,
                 ho_window_duration,
@@ -36446,20 +35751,13 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let stratum_level = match StratumLevel::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("stratum_level")),
-            };
-            let synchronisation_status = match SynchronisationStatus::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("synchronisation_status")),
-            };
+            let stratum_level = StratumLevel::decode(reader).map_err(in_field("stratum_level"))?;
+            let synchronisation_status = SynchronisationStatus::decode(reader)
+                .map_err(in_field("synchronisation_status"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -36479,16 +35777,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.stratum_level.encode(writer) {
-                return Err(error.in_field("stratum_level"));
-            }
-            if let Err(error) = self.synchronisation_status.encode(writer) {
-                return Err(error.in_field("synchronisation_status"));
-            }
+            self.stratum_level
+                .encode(writer)
+                .map_err(in_field("stratum_level"))?;
+            self.synchronisation_status
+                .encode(writer)
+                .map_err(in_field("synchronisation_status"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -36514,11 +35810,18 @@ pub mod s1_ap_ies {
                 value,
                 &["stratumLevel", "synchronisationStatus", "iE-Extensions"],
             )?;
-            let stratum_level = reading.member(&members, 0, StratumLevel::from_tree)?;
-            let synchronisation_status =
-                reading.member(&members, 1, SynchronisationStatus::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let stratum_level =
+                reading.member(&members, "stratumLevel", StratumLevel::from_tree)?;
+            let synchronisation_status = reading.member(
+                &members,
+                "synchronisationStatus",
+                SynchronisationStatus::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 stratum_level,
                 synchronisation_status,
@@ -36712,28 +36015,17 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_utran_trace_id = match EUTRANTraceID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_utran_trace_id")),
-            };
-            let interfaces_to_trace = match InterfacesToTrace::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("interfaces_to_trace")),
-            };
-            let trace_depth = match TraceDepth::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("trace_depth")),
-            };
-            let trace_collection_entity_ip_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("trace_collection_entity_ip_address")),
-            };
+            let e_utran_trace_id =
+                EUTRANTraceID::decode(reader).map_err(in_field("e_utran_trace_id"))?;
+            let interfaces_to_trace =
+                InterfacesToTrace::decode(reader).map_err(in_field("interfaces_to_trace"))?;
+            let trace_depth = TraceDepth::decode(reader).map_err(in_field("trace_depth"))?;
+            let trace_collection_entity_ip_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("trace_collection_entity_ip_address"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -36755,22 +36047,20 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_utran_trace_id.encode(writer) {
-                return Err(error.in_field("e_utran_trace_id"));
-            }
-            if let Err(error) = self.interfaces_to_trace.encode(writer) {
-                return Err(error.in_field("interfaces_to_trace"));
-            }
-            if let Err(error) = self.trace_depth.encode(writer) {
-                return Err(error.in_field("trace_depth"));
-            }
-            if let Err(error) = self.trace_collection_entity_ip_address.encode(writer) {
-                return Err(error.in_field("trace_collection_entity_ip_address"));
-            }
+            self.e_utran_trace_id
+                .encode(writer)
+                .map_err(in_field("e_utran_trace_id"))?;
+            self.interfaces_to_trace
+                .encode(writer)
+                .map_err(in_field("interfaces_to_trace"))?;
+            self.trace_depth
+                .encode(writer)
+                .map_err(in_field("trace_depth"))?;
+            self.trace_collection_entity_ip_address
+                .encode(writer)
+                .map_err(in_field("trace_collection_entity_ip_address"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -36804,13 +36094,21 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let e_utran_trace_id = reading.member(&members, 0, EUTRANTraceID::from_tree)?;
-            let interfaces_to_trace = reading.member(&members, 1, InterfacesToTrace::from_tree)?;
-            let trace_depth = reading.member(&members, 2, TraceDepth::from_tree)?;
-            let trace_collection_entity_ip_address =
-                reading.member(&members, 3, TransportLayerAddress::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let e_utran_trace_id =
+                reading.member(&members, "e-UTRAN-Trace-ID", EUTRANTraceID::from_tree)?;
+            let interfaces_to_trace =
+                reading.member(&members, "interfacesToTrace", InterfacesToTrace::from_tree)?;
+            let trace_depth = reading.member(&members, "traceDepth", TraceDepth::from_tree)?;
+            let trace_collection_entity_ip_address = reading.member(
+                &members,
+                "traceCollectionEntityIPAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_utran_trace_id,
                 interfaces_to_trace,
@@ -36962,14 +36260,9 @@ pub mod s1_ap_ies {
     impl<'a> Decode<'a> for TransportInformation<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
-            let ul_gtp_teid = match GTPTEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ul_gtp_teid")),
-            };
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
+            let ul_gtp_teid = GTPTEID::decode(reader).map_err(in_field("ul_gtp_teid"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -36982,12 +36275,12 @@ pub mod s1_ap_ies {
     impl Encode for TransportInformation<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
-            if let Err(error) = self.ul_gtp_teid.encode(writer) {
-                return Err(error.in_field("ul_gtp_teid"));
-            }
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
+            self.ul_gtp_teid
+                .encode(writer)
+                .map_err(in_field("ul_gtp_teid"))?;
             Ok(())
         }
     }
@@ -37005,9 +36298,12 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["transportLayerAddress", "uL-GTP-TEID"])?;
-            let transport_layer_address =
-                reading.member(&members, 0, TransportLayerAddress::from_tree)?;
-            let ul_gtp_teid = reading.member(&members, 1, GTPTEID::from_tree)?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let ul_gtp_teid = reading.member(&members, "uL-GTP-TEID", GTPTEID::from_tree)?;
             Ok(Self {
                 transport_layer_address,
                 ul_gtp_teid,
@@ -37103,24 +36399,17 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
             let udp_port_number = if present & 2 != 0 {
-                Some(match PortNumber::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("udp_port_number")),
-                })
+                Some(PortNumber::decode(reader).map_err(in_field("udp_port_number"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -37141,18 +36430,14 @@ pub mod s1_ap_ies {
             writer.bit(false);
             writer.bit(self.udp_port_number.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
             if let Some(value) = &self.udp_port_number {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("udp_port_number"));
-                }
+                value.encode(writer).map_err(in_field("udp_port_number"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -37181,11 +36466,18 @@ pub mod s1_ap_ies {
                 value,
                 &["transportLayerAddress", "uDP-Port-Number", "iE-Extensions"],
             )?;
-            let transport_layer_address =
-                reading.member(&members, 0, TransportLayerAddress::from_tree)?;
-            let udp_port_number = reading.optional(&members, 1, PortNumber::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let udp_port_number =
+                reading.optional(&members, "uDP-Port-Number", PortNumber::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 transport_layer_address,
                 udp_port_number,
@@ -37608,20 +36900,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let mme_ue_s1ap_id = match MMEUES1APID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("mme_ue_s1ap_id")),
-            };
-            let enb_ue_s1ap_id = match ENBUES1APID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("enb_ue_s1ap_id")),
-            };
+            let mme_ue_s1ap_id = MMEUES1APID::decode(reader).map_err(in_field("mme_ue_s1ap_id"))?;
+            let enb_ue_s1ap_id = ENBUES1APID::decode(reader).map_err(in_field("enb_ue_s1ap_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -37641,16 +36925,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.mme_ue_s1ap_id.encode(writer) {
-                return Err(error.in_field("mme_ue_s1ap_id"));
-            }
-            if let Err(error) = self.enb_ue_s1ap_id.encode(writer) {
-                return Err(error.in_field("enb_ue_s1ap_id"));
-            }
+            self.mme_ue_s1ap_id
+                .encode(writer)
+                .map_err(in_field("mme_ue_s1ap_id"))?;
+            self.enb_ue_s1ap_id
+                .encode(writer)
+                .map_err(in_field("enb_ue_s1ap_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -37673,10 +36955,15 @@ pub mod s1_ap_ies {
                 value,
                 &["mME-UE-S1AP-ID", "eNB-UE-S1AP-ID", "iE-Extensions"],
             )?;
-            let mme_ue_s1ap_id = reading.member(&members, 0, MMEUES1APID::from_tree)?;
-            let enb_ue_s1ap_id = reading.member(&members, 1, ENBUES1APID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let mme_ue_s1ap_id =
+                reading.member(&members, "mME-UE-S1AP-ID", MMEUES1APID::from_tree)?;
+            let enb_ue_s1ap_id =
+                reading.member(&members, "eNB-UE-S1AP-ID", ENBUES1APID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 mme_ue_s1ap_id,
                 enb_ue_s1ap_id,
@@ -37831,27 +37118,19 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
             let mme_ue_s1ap_id = if present & 4 != 0 {
-                Some(match MMEUES1APID::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("mme_ue_s1ap_id")),
-                })
+                Some(MMEUES1APID::decode(reader).map_err(in_field("mme_ue_s1ap_id"))?)
             } else {
                 None
             };
             let enb_ue_s1ap_id = if present & 2 != 0 {
-                Some(match ENBUES1APID::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("enb_ue_s1ap_id")),
-                })
+                Some(ENBUES1APID::decode(reader).map_err(in_field("enb_ue_s1ap_id"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -37874,19 +37153,13 @@ pub mod s1_ap_ies {
             writer.bit(self.enb_ue_s1ap_id.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.mme_ue_s1ap_id {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("mme_ue_s1ap_id"));
-                }
+                value.encode(writer).map_err(in_field("mme_ue_s1ap_id"))?;
             }
             if let Some(value) = &self.enb_ue_s1ap_id {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("enb_ue_s1ap_id"));
-                }
+                value.encode(writer).map_err(in_field("enb_ue_s1ap_id"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -37915,10 +37188,15 @@ pub mod s1_ap_ies {
                 value,
                 &["mME-UE-S1AP-ID", "eNB-UE-S1AP-ID", "iE-Extensions"],
             )?;
-            let mme_ue_s1ap_id = reading.optional(&members, 0, MMEUES1APID::from_tree)?;
-            let enb_ue_s1ap_id = reading.optional(&members, 1, ENBUES1APID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let mme_ue_s1ap_id =
+                reading.optional(&members, "mME-UE-S1AP-ID", MMEUES1APID::from_tree)?;
+            let enb_ue_s1ap_id =
+                reading.optional(&members, "eNB-UE-S1AP-ID", ENBUES1APID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 mme_ue_s1ap_id,
                 enb_ue_s1ap_id,
@@ -37955,20 +37233,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ue_aggregate_maximum_bit_rate_dl = match BitRate::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ue_aggregate_maximum_bit_rate_dl")),
-            };
-            let ue_aggregate_maximum_bit_rate_ul = match BitRate::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ue_aggregate_maximum_bit_rate_ul")),
-            };
+            let ue_aggregate_maximum_bit_rate_dl =
+                BitRate::decode(reader).map_err(in_field("ue_aggregate_maximum_bit_rate_dl"))?;
+            let ue_aggregate_maximum_bit_rate_ul =
+                BitRate::decode(reader).map_err(in_field("ue_aggregate_maximum_bit_rate_ul"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -37988,16 +37260,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ue_aggregate_maximum_bit_rate_dl.encode(writer) {
-                return Err(error.in_field("ue_aggregate_maximum_bit_rate_dl"));
-            }
-            if let Err(error) = self.ue_aggregate_maximum_bit_rate_ul.encode(writer) {
-                return Err(error.in_field("ue_aggregate_maximum_bit_rate_ul"));
-            }
+            self.ue_aggregate_maximum_bit_rate_dl
+                .encode(writer)
+                .map_err(in_field("ue_aggregate_maximum_bit_rate_dl"))?;
+            self.ue_aggregate_maximum_bit_rate_ul
+                .encode(writer)
+                .map_err(in_field("ue_aggregate_maximum_bit_rate_ul"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -38031,11 +37301,14 @@ pub mod s1_ap_ies {
                 ],
             )?;
             let ue_aggregate_maximum_bit_rate_dl =
-                reading.member(&members, 0, BitRate::from_tree)?;
+                reading.member(&members, "uEaggregateMaximumBitRateDL", BitRate::from_tree)?;
             let ue_aggregate_maximum_bit_rate_ul =
-                reading.member(&members, 1, BitRate::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+                reading.member(&members, "uEaggregateMaximumBitRateUL", BitRate::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ue_aggregate_maximum_bit_rate_dl,
                 ue_aggregate_maximum_bit_rate_ul,
@@ -38083,20 +37356,15 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let container_for_app_layer_meas_config = match reader.octet_string(1, 1000) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("container_for_app_layer_meas_config")),
-            };
-            let area_scope_of_qmc = match AreaScopeOfQMC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("area_scope_of_qmc")),
-            };
+            let container_for_app_layer_meas_config = reader
+                .octet_string(1, 1000)
+                .map_err(in_field("container_for_app_layer_meas_config"))?;
+            let area_scope_of_qmc =
+                AreaScopeOfQMC::decode(reader).map_err(in_field("area_scope_of_qmc"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -38116,18 +37384,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) =
-                writer.octet_string(&self.container_for_app_layer_meas_config, 1, 1000)
-            {
-                return Err(error.in_field("container_for_app_layer_meas_config"));
-            }
-            if let Err(error) = self.area_scope_of_qmc.encode(writer) {
-                return Err(error.in_field("area_scope_of_qmc"));
-            }
+            writer
+                .octet_string(&self.container_for_app_layer_meas_config, 1, 1000)
+                .map_err(in_field("container_for_app_layer_meas_config"))?;
+            self.area_scope_of_qmc
+                .encode(writer)
+                .map_err(in_field("area_scope_of_qmc"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -38157,13 +37421,18 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let container_for_app_layer_meas_config =
-                reading.member(&members, 0, |value, reading| {
-                    json::read_octets(reading, value)
-                })?;
-            let area_scope_of_qmc = reading.member(&members, 1, AreaScopeOfQMC::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let container_for_app_layer_meas_config = reading.member(
+                &members,
+                "containerForAppLayerMeasConfig",
+                |value, reading| json::read_octets(reading, value),
+            )?;
+            let area_scope_of_qmc =
+                reading.member(&members, "areaScopeOfQMC", AreaScopeOfQMC::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 container_for_app_layer_meas_config,
                 area_scope_of_qmc,
@@ -38559,21 +37828,14 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let encryption_algorithms = match EncryptionAlgorithms::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("encryption_algorithms")),
-            };
-            let integrity_protection_algorithms =
-                match IntegrityProtectionAlgorithms::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("integrity_protection_algorithms")),
-                };
+            let encryption_algorithms =
+                EncryptionAlgorithms::decode(reader).map_err(in_field("encryption_algorithms"))?;
+            let integrity_protection_algorithms = IntegrityProtectionAlgorithms::decode(reader)
+                .map_err(in_field("integrity_protection_algorithms"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -38593,16 +37855,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.encryption_algorithms.encode(writer) {
-                return Err(error.in_field("encryption_algorithms"));
-            }
-            if let Err(error) = self.integrity_protection_algorithms.encode(writer) {
-                return Err(error.in_field("integrity_protection_algorithms"));
-            }
+            self.encryption_algorithms
+                .encode(writer)
+                .map_err(in_field("encryption_algorithms"))?;
+            self.integrity_protection_algorithms
+                .encode(writer)
+                .map_err(in_field("integrity_protection_algorithms"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -38632,12 +37892,21 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let encryption_algorithms =
-                reading.member(&members, 0, EncryptionAlgorithms::from_tree)?;
-            let integrity_protection_algorithms =
-                reading.member(&members, 1, IntegrityProtectionAlgorithms::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let encryption_algorithms = reading.member(
+                &members,
+                "encryptionAlgorithms",
+                EncryptionAlgorithms::from_tree,
+            )?;
+            let integrity_protection_algorithms = reading.member(
+                &members,
+                "integrityProtectionAlgorithms",
+                IntegrityProtectionAlgorithms::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 encryption_algorithms,
                 integrity_protection_algorithms,
@@ -38671,16 +37940,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ue_sidelink_aggregate_maximum_bit_rate = match BitRate::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ue_sidelink_aggregate_maximum_bit_rate")),
-            };
+            let ue_sidelink_aggregate_maximum_bit_rate = BitRate::decode(reader)
+                .map_err(in_field("ue_sidelink_aggregate_maximum_bit_rate"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -38699,13 +37964,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ue_sidelink_aggregate_maximum_bit_rate.encode(writer) {
-                return Err(error.in_field("ue_sidelink_aggregate_maximum_bit_rate"));
-            }
+            self.ue_sidelink_aggregate_maximum_bit_rate
+                .encode(writer)
+                .map_err(in_field("ue_sidelink_aggregate_maximum_bit_rate"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -38730,10 +37993,16 @@ pub mod s1_ap_ies {
                 value,
                 &["uESidelinkAggregateMaximumBitRate", "iE-Extensions"],
             )?;
-            let ue_sidelink_aggregate_maximum_bit_rate =
-                reading.member(&members, 0, BitRate::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let ue_sidelink_aggregate_maximum_bit_rate = reading.member(
+                &members,
+                "uESidelinkAggregateMaximumBitRate",
+                BitRate::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ue_sidelink_aggregate_maximum_bit_rate,
                 ie_extensions,
@@ -38815,20 +38084,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let ul_nas_mac = match ULNASMAC::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ul_nas_mac")),
-            };
-            let ul_nas_count = match ULNASCount::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("ul_nas_count")),
-            };
+            let ul_nas_mac = ULNASMAC::decode(reader).map_err(in_field("ul_nas_mac"))?;
+            let ul_nas_count = ULNASCount::decode(reader).map_err(in_field("ul_nas_count"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -38848,16 +38109,14 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.ul_nas_mac.encode(writer) {
-                return Err(error.in_field("ul_nas_mac"));
-            }
-            if let Err(error) = self.ul_nas_count.encode(writer) {
-                return Err(error.in_field("ul_nas_count"));
-            }
+            self.ul_nas_mac
+                .encode(writer)
+                .map_err(in_field("ul_nas_mac"))?;
+            self.ul_nas_count
+                .encode(writer)
+                .map_err(in_field("ul_nas_count"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -38878,10 +38137,13 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["ul-NAS-MAC", "ul-NAS-Count", "iE-Extensions"])?;
-            let ul_nas_mac = reading.member(&members, 0, ULNASMAC::from_tree)?;
-            let ul_nas_count = reading.member(&members, 1, ULNASCount::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let ul_nas_mac = reading.member(&members, "ul-NAS-MAC", ULNASMAC::from_tree)?;
+            let ul_nas_count = reading.member(&members, "ul-NAS-Count", ULNASCount::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 ul_nas_mac,
                 ul_nas_count,
@@ -39133,20 +38395,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let eutran_cgi = match EUTRANCGI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("eutran_cgi")),
-            };
-            let tai = match TAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("tai")),
-            };
+            let eutran_cgi = EUTRANCGI::decode(reader).map_err(in_field("eutran_cgi"))?;
+            let tai = TAI::decode(reader).map_err(in_field("tai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -39166,16 +38420,12 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.eutran_cgi.encode(writer) {
-                return Err(error.in_field("eutran_cgi"));
-            }
-            if let Err(error) = self.tai.encode(writer) {
-                return Err(error.in_field("tai"));
-            }
+            self.eutran_cgi
+                .encode(writer)
+                .map_err(in_field("eutran_cgi"))?;
+            self.tai.encode(writer).map_err(in_field("tai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -39195,10 +38445,13 @@ pub mod s1_ap_ies {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["eutran-cgi", "tai", "iE-Extensions"])?;
-            let eutran_cgi = reading.member(&members, 0, EUTRANCGI::from_tree)?;
-            let tai = reading.member(&members, 1, TAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let eutran_cgi = reading.member(&members, "eutran-cgi", EUTRANCGI::from_tree)?;
+            let tai = reading.member(&members, "tai", TAI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 eutran_cgi,
                 tai,
@@ -39236,27 +38489,19 @@ pub mod s1_ap_ies {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
             let vehicle_ue = if present & 4 != 0 {
-                Some(match VehicleUE::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("vehicle_ue")),
-                })
+                Some(VehicleUE::decode(reader).map_err(in_field("vehicle_ue"))?)
             } else {
                 None
             };
             let pedestrian_ue = if present & 2 != 0 {
-                Some(match PedestrianUE::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("pedestrian_ue")),
-                })
+                Some(PedestrianUE::decode(reader).map_err(in_field("pedestrian_ue"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -39279,19 +38524,13 @@ pub mod s1_ap_ies {
             writer.bit(self.pedestrian_ue.is_some());
             writer.bit(self.ie_extensions.is_some());
             if let Some(value) = &self.vehicle_ue {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("vehicle_ue"));
-                }
+                value.encode(writer).map_err(in_field("vehicle_ue"))?;
             }
             if let Some(value) = &self.pedestrian_ue {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("pedestrian_ue"));
-                }
+                value.encode(writer).map_err(in_field("pedestrian_ue"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -39318,10 +38557,14 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["vehicleUE", "pedestrianUE", "iE-Extensions"])?;
-            let vehicle_ue = reading.optional(&members, 0, VehicleUE::from_tree)?;
-            let pedestrian_ue = reading.optional(&members, 1, PedestrianUE::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let vehicle_ue = reading.optional(&members, "vehicleUE", VehicleUE::from_tree)?;
+            let pedestrian_ue =
+                reading.optional(&members, "pedestrianUE", PedestrianUE::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 vehicle_ue,
                 pedestrian_ue,
@@ -39669,40 +38912,36 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(4)?;
-            let wlan_meas_config = match WLANMeasConfig::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("wlan_meas_config")),
-            };
+            let wlan_meas_config =
+                WLANMeasConfig::decode(reader).map_err(in_field("wlan_meas_config"))?;
             let wlan_meas_config_name_list = if present & 8 != 0 {
-                Some(match WLANMeasConfigNameList::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("wlan_meas_config_name_list")),
-                })
+                Some(
+                    WLANMeasConfigNameList::decode(reader)
+                        .map_err(in_field("wlan_meas_config_name_list"))?,
+                )
             } else {
                 None
             };
             let wlan_rssi = if present & 4 != 0 {
-                Some(match WLANMeasurementConfigurationWlanRssi::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("wlan_rssi")),
-                })
+                Some(
+                    WLANMeasurementConfigurationWlanRssi::decode(reader)
+                        .map_err(in_field("wlan_rssi"))?,
+                )
             } else {
                 None
             };
             let wlan_rtt = if present & 2 != 0 {
-                Some(match WLANMeasurementConfigurationWlanRtt::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("wlan_rtt")),
-                })
+                Some(
+                    WLANMeasurementConfigurationWlanRtt::decode(reader)
+                        .map_err(in_field("wlan_rtt"))?,
+                )
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -39727,28 +38966,22 @@ pub mod s1_ap_ies {
             writer.bit(self.wlan_rssi.is_some());
             writer.bit(self.wlan_rtt.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.wlan_meas_config.encode(writer) {
-                return Err(error.in_field("wlan_meas_config"));
-            }
+            self.wlan_meas_config
+                .encode(writer)
+                .map_err(in_field("wlan_meas_config"))?;
             if let Some(value) = &self.wlan_meas_config_name_list {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("wlan_meas_config_name_list"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("wlan_meas_config_name_list"))?;
             }
             if let Some(value) = &self.wlan_rssi {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("wlan_rssi"));
-                }
+                value.encode(writer).map_err(in_field("wlan_rssi"))?;
             }
             if let Some(value) = &self.wlan_rtt {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("wlan_rtt"));
-                }
+                value.encode(writer).map_err(in_field("wlan_rtt"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -39790,15 +39023,28 @@ pub mod s1_ap_ies {
                     "iE-Extensions",
                 ],
             )?;
-            let wlan_meas_config = reading.member(&members, 0, WLANMeasConfig::from_tree)?;
-            let wlan_meas_config_name_list =
-                reading.optional(&members, 1, WLANMeasConfigNameList::from_tree)?;
-            let wlan_rssi =
-                reading.optional(&members, 2, WLANMeasurementConfigurationWlanRssi::from_tree)?;
-            let wlan_rtt =
-                reading.optional(&members, 3, WLANMeasurementConfigurationWlanRtt::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let wlan_meas_config =
+                reading.member(&members, "wlanMeasConfig", WLANMeasConfig::from_tree)?;
+            let wlan_meas_config_name_list = reading.optional(
+                &members,
+                "wlanMeasConfigNameList",
+                WLANMeasConfigNameList::from_tree,
+            )?;
+            let wlan_rssi = reading.optional(
+                &members,
+                "wlan-rssi",
+                WLANMeasurementConfigurationWlanRssi::from_tree,
+            )?;
+            let wlan_rtt = reading.optional(
+                &members,
+                "wlan-rtt",
+                WLANMeasurementConfigurationWlanRtt::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 wlan_meas_config,
                 wlan_meas_config_name_list,
@@ -39894,17 +39140,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let paging_probability_information = match PagingProbabilityInformation::decode(reader)
-            {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("paging_probability_information")),
-            };
+            let paging_probability_information = PagingProbabilityInformation::decode(reader)
+                .map_err(in_field("paging_probability_information"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -39923,13 +39164,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.paging_probability_information.encode(writer) {
-                return Err(error.in_field("paging_probability_information"));
-            }
+            self.paging_probability_information
+                .encode(writer)
+                .map_err(in_field("paging_probability_information"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -39952,10 +39191,16 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["pagingProbabilityInformation", "iE-Extensions"])?;
-            let paging_probability_information =
-                reading.member(&members, 0, PagingProbabilityInformation::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let paging_probability_information = reading.member(
+                &members,
+                "pagingProbabilityInformation",
+                PagingProbabilityInformation::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 paging_probability_information,
                 ie_extensions,
@@ -40322,16 +39567,12 @@ pub mod s1_ap_ies {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let enb_x2_transport_layer_addresses = match ENBX2TLAs::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("enb_x2_transport_layer_addresses")),
-            };
+            let enb_x2_transport_layer_addresses =
+                ENBX2TLAs::decode(reader).map_err(in_field("enb_x2_transport_layer_addresses"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -40350,13 +39591,11 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.enb_x2_transport_layer_addresses.encode(writer) {
-                return Err(error.in_field("enb_x2_transport_layer_addresses"));
-            }
+            self.enb_x2_transport_layer_addresses
+                .encode(writer)
+                .map_err(in_field("enb_x2_transport_layer_addresses"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -40379,10 +39618,16 @@ pub mod s1_ap_ies {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["eNBX2TransportLayerAddresses", "iE-Extensions"])?;
-            let enb_x2_transport_layer_addresses =
-                reading.member(&members, 0, ENBX2TLAs::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let enb_x2_transport_layer_addresses = reading.member(
+                &members,
+                "eNBX2TransportLayerAddresses",
+                ENBX2TLAs::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 enb_x2_transport_layer_addresses,
                 ie_extensions,
@@ -40408,7 +39653,7 @@ pub mod s1_ap_pdu_contents {
     use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
-        UNBOUNDED, Writer,
+        UNBOUNDED, Writer, in_field,
     };
     /// `CSGMembershipInfo ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -40443,36 +39688,23 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(3)?;
-            let csg_membership_status = match CSGMembershipStatus::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("csg_membership_status")),
-            };
-            let csg_id = match CSGId::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("csg_id")),
-            };
+            let csg_membership_status =
+                CSGMembershipStatus::decode(reader).map_err(in_field("csg_membership_status"))?;
+            let csg_id = CSGId::decode(reader).map_err(in_field("csg_id"))?;
             let cell_access_mode = if present & 4 != 0 {
-                Some(match CellAccessMode::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("cell_access_mode")),
-                })
+                Some(CellAccessMode::decode(reader).map_err(in_field("cell_access_mode"))?)
             } else {
                 None
             };
             let plmn_identity = if present & 2 != 0 {
-                Some(match PLMNidentity::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("plmn_identity")),
-                })
+                Some(PLMNidentity::decode(reader).map_err(in_field("plmn_identity"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -40496,26 +39728,18 @@ pub mod s1_ap_pdu_contents {
             writer.bit(self.cell_access_mode.is_some());
             writer.bit(self.plmn_identity.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.csg_membership_status.encode(writer) {
-                return Err(error.in_field("csg_membership_status"));
-            }
-            if let Err(error) = self.csg_id.encode(writer) {
-                return Err(error.in_field("csg_id"));
-            }
+            self.csg_membership_status
+                .encode(writer)
+                .map_err(in_field("csg_membership_status"))?;
+            self.csg_id.encode(writer).map_err(in_field("csg_id"))?;
             if let Some(value) = &self.cell_access_mode {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("cell_access_mode"));
-                }
+                value.encode(writer).map_err(in_field("cell_access_mode"))?;
             }
             if let Some(value) = &self.plmn_identity {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("plmn_identity"));
-                }
+                value.encode(writer).map_err(in_field("plmn_identity"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -40552,13 +39776,21 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let csg_membership_status =
-                reading.member(&members, 0, CSGMembershipStatus::from_tree)?;
-            let csg_id = reading.member(&members, 1, CSGId::from_tree)?;
-            let cell_access_mode = reading.optional(&members, 2, CellAccessMode::from_tree)?;
-            let plmn_identity = reading.optional(&members, 3, PLMNidentity::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let csg_membership_status = reading.member(
+                &members,
+                "cSGMembershipStatus",
+                CSGMembershipStatus::from_tree,
+            )?;
+            let csg_id = reading.member(&members, "cSG-Id", CSGId::from_tree)?;
+            let cell_access_mode =
+                reading.optional(&members, "cellAccessMode", CellAccessMode::from_tree)?;
+            let plmn_identity =
+                reading.optional(&members, "pLMNidentity", PLMNidentity::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 csg_membership_status,
                 csg_id,
@@ -40593,10 +39825,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for CellTrafficTrace<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -40606,9 +39836,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for CellTrafficTrace<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -40622,7 +39852,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -40651,10 +39882,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ConnectionEstablishmentIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -40664,9 +39893,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ConnectionEstablishmentIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -40680,7 +39909,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -40709,10 +39939,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for DeactivateTrace<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -40722,9 +39950,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for DeactivateTrace<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -40738,7 +39966,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -40767,10 +39996,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for DownlinkNASTransport<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -40780,9 +40007,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for DownlinkNASTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -40796,7 +40023,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -40825,10 +40053,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for DownlinkNonUEAssociatedLPPaTransport<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -40838,9 +40064,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for DownlinkNonUEAssociatedLPPaTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -40854,7 +40080,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -40883,10 +40110,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for DownlinkS1cdma2000tunnelling<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -40896,9 +40121,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for DownlinkS1cdma2000tunnelling<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -40912,7 +40137,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -40941,10 +40167,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for DownlinkUEAssociatedLPPaTransport<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -40954,9 +40178,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for DownlinkUEAssociatedLPPaTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -40970,7 +40194,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -41036,56 +40261,40 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(5)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
-            let gtp_teid = match GTPTEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("gtp_teid")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
+            let gtp_teid = GTPTEID::decode(reader).map_err(in_field("gtp_teid"))?;
             let dl_transport_layer_address = if present & 16 != 0 {
-                Some(match TransportLayerAddress::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("dl_transport_layer_address")),
-                })
+                Some(
+                    TransportLayerAddress::decode(reader)
+                        .map_err(in_field("dl_transport_layer_address"))?,
+                )
             } else {
                 None
             };
             let dl_gtp_teid = if present & 8 != 0 {
-                Some(match GTPTEID::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("dl_gtp_teid")),
-                })
+                Some(GTPTEID::decode(reader).map_err(in_field("dl_gtp_teid"))?)
             } else {
                 None
             };
             let ul_transport_layer_address = if present & 4 != 0 {
-                Some(match TransportLayerAddress::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ul_transport_layer_address")),
-                })
+                Some(
+                    TransportLayerAddress::decode(reader)
+                        .map_err(in_field("ul_transport_layer_address"))?,
+                )
             } else {
                 None
             };
             let ul_gtp_teid = if present & 2 != 0 {
-                Some(match GTPTEID::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ul_gtp_teid")),
-                })
+                Some(GTPTEID::decode(reader).map_err(in_field("ul_gtp_teid"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -41114,39 +40323,29 @@ pub mod s1_ap_pdu_contents {
             writer.bit(self.ul_transport_layer_address.is_some());
             writer.bit(self.ul_gtp_teid.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
-            if let Err(error) = self.gtp_teid.encode(writer) {
-                return Err(error.in_field("gtp_teid"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
+            self.gtp_teid.encode(writer).map_err(in_field("gtp_teid"))?;
             if let Some(value) = &self.dl_transport_layer_address {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("dl_transport_layer_address"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("dl_transport_layer_address"))?;
             }
             if let Some(value) = &self.dl_gtp_teid {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("dl_gtp_teid"));
-                }
+                value.encode(writer).map_err(in_field("dl_gtp_teid"))?;
             }
             if let Some(value) = &self.ul_transport_layer_address {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ul_transport_layer_address"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("ul_transport_layer_address"))?;
             }
             if let Some(value) = &self.ul_gtp_teid {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ul_gtp_teid"));
-                }
+                value.encode(writer).map_err(in_field("ul_gtp_teid"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -41202,18 +40401,30 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
-            let dl_transport_layer_address =
-                reading.optional(&members, 3, TransportLayerAddress::from_tree)?;
-            let dl_gtp_teid = reading.optional(&members, 4, GTPTEID::from_tree)?;
-            let ul_transport_layer_address =
-                reading.optional(&members, 5, TransportLayerAddress::from_tree)?;
-            let ul_gtp_teid = reading.optional(&members, 6, GTPTEID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 7, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
+            let dl_transport_layer_address = reading.optional(
+                &members,
+                "dL-transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let dl_gtp_teid = reading.optional(&members, "dL-gTP-TEID", GTPTEID::from_tree)?;
+            let ul_transport_layer_address = reading.optional(
+                &members,
+                "uL-TransportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let ul_gtp_teid = reading.optional(&members, "uL-GTP-TEID", GTPTEID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -41339,48 +40550,37 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(5)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
             let dl_transport_layer_address = if present & 16 != 0 {
-                Some(match TransportLayerAddress::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("dl_transport_layer_address")),
-                })
+                Some(
+                    TransportLayerAddress::decode(reader)
+                        .map_err(in_field("dl_transport_layer_address"))?,
+                )
             } else {
                 None
             };
             let dl_gtp_teid = if present & 8 != 0 {
-                Some(match GTPTEID::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("dl_gtp_teid")),
-                })
+                Some(GTPTEID::decode(reader).map_err(in_field("dl_gtp_teid"))?)
             } else {
                 None
             };
             let ul_transport_layer_address = if present & 4 != 0 {
-                Some(match TransportLayerAddress::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ul_transport_layer_address")),
-                })
+                Some(
+                    TransportLayerAddress::decode(reader)
+                        .map_err(in_field("ul_transport_layer_address"))?,
+                )
             } else {
                 None
             };
             let ul_gtp_teid = if present & 2 != 0 {
-                Some(match GTPTEID::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("ul_gtp_teid")),
-                })
+                Some(GTPTEID::decode(reader).map_err(in_field("ul_gtp_teid"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -41407,33 +40607,25 @@ pub mod s1_ap_pdu_contents {
             writer.bit(self.ul_transport_layer_address.is_some());
             writer.bit(self.ul_gtp_teid.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
             if let Some(value) = &self.dl_transport_layer_address {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("dl_transport_layer_address"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("dl_transport_layer_address"))?;
             }
             if let Some(value) = &self.dl_gtp_teid {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("dl_gtp_teid"));
-                }
+                value.encode(writer).map_err(in_field("dl_gtp_teid"))?;
             }
             if let Some(value) = &self.ul_transport_layer_address {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ul_transport_layer_address"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("ul_transport_layer_address"))?;
             }
             if let Some(value) = &self.ul_gtp_teid {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ul_gtp_teid"));
-                }
+                value.encode(writer).map_err(in_field("ul_gtp_teid"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -41482,15 +40674,24 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let dl_transport_layer_address =
-                reading.optional(&members, 1, TransportLayerAddress::from_tree)?;
-            let dl_gtp_teid = reading.optional(&members, 2, GTPTEID::from_tree)?;
-            let ul_transport_layer_address =
-                reading.optional(&members, 3, TransportLayerAddress::from_tree)?;
-            let ul_gtp_teid = reading.optional(&members, 4, GTPTEID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let dl_transport_layer_address = reading.optional(
+                &members,
+                "dL-transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let dl_gtp_teid = reading.optional(&members, "dL-gTP-TEID", GTPTEID::from_tree)?;
+            let ul_transport_layer_address = reading.optional(
+                &members,
+                "uL-TransportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let ul_gtp_teid = reading.optional(&members, "uL-GTP-TEID", GTPTEID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 dl_transport_layer_address,
@@ -41530,20 +40731,12 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let cause = match Cause::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cause")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let cause = Cause::decode(reader).map_err(in_field("cause"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -41563,16 +40756,10 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.cause.encode(writer) {
-                return Err(error.in_field("cause"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.cause.encode(writer).map_err(in_field("cause"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -41592,10 +40779,13 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "cause", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let cause = reading.member(&members, 1, Cause::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let cause = reading.member(&members, "cause", Cause::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 cause,
@@ -41632,20 +40822,12 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let cause = match Cause::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cause")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let cause = Cause::decode(reader).map_err(in_field("cause"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -41665,16 +40847,10 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.cause.encode(writer) {
-                return Err(error.in_field("cause"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.cause.encode(writer).map_err(in_field("cause"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -41694,10 +40870,13 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "cause", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let cause = reading.member(&members, 1, Cause::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let cause = reading.member(&members, "cause", Cause::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 cause,
@@ -41860,20 +41039,12 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let cause = match Cause::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("cause")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let cause = Cause::decode(reader).map_err(in_field("cause"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -41893,16 +41064,10 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.cause.encode(writer) {
-                return Err(error.in_field("cause"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.cause.encode(writer).map_err(in_field("cause"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -41922,10 +41087,13 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "cause", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let cause = reading.member(&members, 1, Cause::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let cause = reading.member(&members, "cause", Cause::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 cause,
@@ -42021,10 +41189,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ERABModificationConfirm<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -42034,9 +41200,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABModificationConfirm<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -42050,7 +41216,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -42079,10 +41246,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ERABModificationIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -42092,9 +41257,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABModificationIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -42108,7 +41273,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -42138,16 +41304,11 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -42166,13 +41327,9 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -42191,9 +41348,12 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 ie_extensions,
@@ -42226,16 +41386,11 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -42254,13 +41409,9 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -42279,9 +41430,12 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 ie_extensions,
@@ -42435,10 +41589,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ERABModifyRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -42448,9 +41600,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABModifyRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -42464,7 +41616,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -42493,10 +41646,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ERABModifyResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -42506,9 +41657,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABModifyResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -42522,7 +41673,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -42568,24 +41720,14 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
-            let dl_gtp_teid = match GTPTEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("dl_gtp_teid")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
+            let dl_gtp_teid = GTPTEID::decode(reader).map_err(in_field("dl_gtp_teid"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -42606,19 +41748,15 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
-            if let Err(error) = self.dl_gtp_teid.encode(writer) {
-                return Err(error.in_field("dl_gtp_teid"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
+            self.dl_gtp_teid
+                .encode(writer)
+                .map_err(in_field("dl_gtp_teid"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -42650,12 +41788,18 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
-            let dl_gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let dl_gtp_teid = reading.member(&members, "dL-GTP-TEID", GTPTEID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -42752,10 +41896,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ERABReleaseCommand<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -42765,9 +41907,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABReleaseCommand<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -42781,7 +41923,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -42810,10 +41953,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ERABReleaseIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -42823,9 +41964,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABReleaseIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -42839,7 +41980,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -42869,16 +42011,11 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -42897,13 +42034,9 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -42922,9 +42055,12 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["e-RAB-ID", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 ie_extensions,
@@ -43017,10 +42153,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ERABReleaseResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -43030,9 +42164,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABReleaseResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -43046,7 +42180,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -43092,24 +42227,14 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
-            let gtp_teid = match GTPTEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("gtp_teid")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
+            let gtp_teid = GTPTEID::decode(reader).map_err(in_field("gtp_teid"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -43130,19 +42255,13 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
-            if let Err(error) = self.gtp_teid.encode(writer) {
-                return Err(error.in_field("gtp_teid"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
+            self.gtp_teid.encode(writer).map_err(in_field("gtp_teid"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -43174,12 +42293,18 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -43230,24 +42355,14 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
-            let gtp_teid = match GTPTEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("gtp_teid")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
+            let gtp_teid = GTPTEID::decode(reader).map_err(in_field("gtp_teid"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -43268,19 +42383,13 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
-            if let Err(error) = self.gtp_teid.encode(writer) {
-                return Err(error.in_field("gtp_teid"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
+            self.gtp_teid.encode(writer).map_err(in_field("gtp_teid"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -43312,12 +42421,18 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -43471,10 +42586,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ERABSetupRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -43484,9 +42597,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABSetupRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -43500,7 +42613,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -43529,10 +42643,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ERABSetupResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -43542,9 +42654,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ERABSetupResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -43558,7 +42670,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -43667,24 +42780,14 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
-            let dl_gtp_teid = match GTPTEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("dl_gtp_teid")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
+            let dl_gtp_teid = GTPTEID::decode(reader).map_err(in_field("dl_gtp_teid"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -43705,19 +42808,15 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
-            if let Err(error) = self.dl_gtp_teid.encode(writer) {
-                return Err(error.in_field("dl_gtp_teid"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
+            self.dl_gtp_teid
+                .encode(writer)
+                .map_err(in_field("dl_gtp_teid"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -43749,12 +42848,18 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
-            let dl_gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let dl_gtp_teid = reading.member(&members, "dL-GTP-TEID", GTPTEID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -43805,24 +42910,14 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let e_rab_level_qos_parameters = match ERABLevelQoSParameters::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_level_qos_parameters")),
-            };
-            let nas_pdu = match NASPDU::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("nas_pdu")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let e_rab_level_qos_parameters = ERABLevelQoSParameters::decode(reader)
+                .map_err(in_field("e_rab_level_qos_parameters"))?;
+            let nas_pdu = NASPDU::decode(reader).map_err(in_field("nas_pdu"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -43843,19 +42938,13 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.e_rab_level_qos_parameters.encode(writer) {
-                return Err(error.in_field("e_rab_level_qos_parameters"));
-            }
-            if let Err(error) = self.nas_pdu.encode(writer) {
-                return Err(error.in_field("nas_pdu"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.e_rab_level_qos_parameters
+                .encode(writer)
+                .map_err(in_field("e_rab_level_qos_parameters"))?;
+            self.nas_pdu.encode(writer).map_err(in_field("nas_pdu"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -43887,12 +42976,18 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let e_rab_level_qos_parameters =
-                reading.member(&members, 1, ERABLevelQoSParameters::from_tree)?;
-            let nas_pdu = reading.member(&members, 2, NASPDU::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let e_rab_level_qos_parameters = reading.member(
+                &members,
+                "e-RABLevelQoSParameters",
+                ERABLevelQoSParameters::from_tree,
+            )?;
+            let nas_pdu = reading.member(&members, "nAS-PDU", NASPDU::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 e_rab_level_qos_parameters,
@@ -44077,32 +43172,17 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let e_rab_level_qos_parameters = match ERABLevelQoSParameters::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_level_qos_parameters")),
-            };
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
-            let gtp_teid = match GTPTEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("gtp_teid")),
-            };
-            let nas_pdu = match NASPDU::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("nas_pdu")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let e_rab_level_qos_parameters = ERABLevelQoSParameters::decode(reader)
+                .map_err(in_field("e_rab_level_qos_parameters"))?;
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
+            let gtp_teid = GTPTEID::decode(reader).map_err(in_field("gtp_teid"))?;
+            let nas_pdu = NASPDU::decode(reader).map_err(in_field("nas_pdu"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -44125,25 +43205,17 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.e_rab_level_qos_parameters.encode(writer) {
-                return Err(error.in_field("e_rab_level_qos_parameters"));
-            }
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
-            if let Err(error) = self.gtp_teid.encode(writer) {
-                return Err(error.in_field("gtp_teid"));
-            }
-            if let Err(error) = self.nas_pdu.encode(writer) {
-                return Err(error.in_field("nas_pdu"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.e_rab_level_qos_parameters
+                .encode(writer)
+                .map_err(in_field("e_rab_level_qos_parameters"))?;
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
+            self.gtp_teid.encode(writer).map_err(in_field("gtp_teid"))?;
+            self.nas_pdu.encode(writer).map_err(in_field("nas_pdu"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -44182,15 +43254,24 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let e_rab_level_qos_parameters =
-                reading.member(&members, 1, ERABLevelQoSParameters::from_tree)?;
-            let transport_layer_address =
-                reading.member(&members, 2, TransportLayerAddress::from_tree)?;
-            let gtp_teid = reading.member(&members, 3, GTPTEID::from_tree)?;
-            let nas_pdu = reading.member(&members, 4, NASPDU::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let e_rab_level_qos_parameters = reading.member(
+                &members,
+                "e-RABlevelQoSParameters",
+                ERABLevelQoSParameters::from_tree,
+            )?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
+            let nas_pdu = reading.member(&members, "nAS-PDU", NASPDU::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 e_rab_level_qos_parameters,
@@ -44281,36 +43362,21 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let e_rab_level_qos_parameters = match ERABLevelQoSParameters::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_level_qos_parameters")),
-            };
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
-            let gtp_teid = match GTPTEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("gtp_teid")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let e_rab_level_qos_parameters = ERABLevelQoSParameters::decode(reader)
+                .map_err(in_field("e_rab_level_qos_parameters"))?;
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
+            let gtp_teid = GTPTEID::decode(reader).map_err(in_field("gtp_teid"))?;
             let nas_pdu = if present & 2 != 0 {
-                Some(match NASPDU::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("nas_pdu")),
-                })
+                Some(NASPDU::decode(reader).map_err(in_field("nas_pdu"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -44334,27 +43400,19 @@ pub mod s1_ap_pdu_contents {
             writer.bit(false);
             writer.bit(self.nas_pdu.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.e_rab_level_qos_parameters.encode(writer) {
-                return Err(error.in_field("e_rab_level_qos_parameters"));
-            }
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
-            if let Err(error) = self.gtp_teid.encode(writer) {
-                return Err(error.in_field("gtp_teid"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.e_rab_level_qos_parameters
+                .encode(writer)
+                .map_err(in_field("e_rab_level_qos_parameters"))?;
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
+            self.gtp_teid.encode(writer).map_err(in_field("gtp_teid"))?;
             if let Some(value) = &self.nas_pdu {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("nas_pdu"));
-                }
+                value.encode(writer).map_err(in_field("nas_pdu"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -44396,15 +43454,24 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let e_rab_level_qos_parameters =
-                reading.member(&members, 1, ERABLevelQoSParameters::from_tree)?;
-            let transport_layer_address =
-                reading.member(&members, 2, TransportLayerAddress::from_tree)?;
-            let gtp_teid = reading.member(&members, 3, GTPTEID::from_tree)?;
-            let nas_pdu = reading.optional(&members, 4, NASPDU::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 5, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let e_rab_level_qos_parameters = reading.member(
+                &members,
+                "e-RABlevelQoSParameters",
+                ERABLevelQoSParameters::from_tree,
+            )?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
+            let nas_pdu = reading.optional(&members, "nAS-PDU", NASPDU::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 e_rab_level_qos_parameters,
@@ -44461,28 +43528,16 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
-            let gtp_teid = match GTPTEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("gtp_teid")),
-            };
-            let e_rab_level_qos_parameters = match ERABLevelQoSParameters::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_level_qos_parameters")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
+            let gtp_teid = GTPTEID::decode(reader).map_err(in_field("gtp_teid"))?;
+            let e_rab_level_qos_parameters = ERABLevelQoSParameters::decode(reader)
+                .map_err(in_field("e_rab_level_qos_parameters"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -44504,22 +43559,16 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
-            if let Err(error) = self.gtp_teid.encode(writer) {
-                return Err(error.in_field("gtp_teid"));
-            }
-            if let Err(error) = self.e_rab_level_qos_parameters.encode(writer) {
-                return Err(error.in_field("e_rab_level_qos_parameters"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
+            self.gtp_teid.encode(writer).map_err(in_field("gtp_teid"))?;
+            self.e_rab_level_qos_parameters
+                .encode(writer)
+                .map_err(in_field("e_rab_level_qos_parameters"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -44556,14 +43605,23 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
-            let e_rab_level_qos_parameters =
-                reading.member(&members, 3, ERABLevelQoSParameters::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 4, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
+            let e_rab_level_qos_parameters = reading.member(
+                &members,
+                "e-RABlevelQosParameters",
+                ERABLevelQoSParameters::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -44796,24 +43854,14 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
-            let gtp_teid = match GTPTEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("gtp_teid")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
+            let gtp_teid = GTPTEID::decode(reader).map_err(in_field("gtp_teid"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -44834,19 +43882,13 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
-            if let Err(error) = self.gtp_teid.encode(writer) {
-                return Err(error.in_field("gtp_teid"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
+            self.gtp_teid.encode(writer).map_err(in_field("gtp_teid"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -44878,12 +43920,18 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -44993,24 +44041,14 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
-            let transport_layer_address = match TransportLayerAddress::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("transport_layer_address")),
-            };
-            let gtp_teid = match GTPTEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("gtp_teid")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
+            let transport_layer_address = TransportLayerAddress::decode(reader)
+                .map_err(in_field("transport_layer_address"))?;
+            let gtp_teid = GTPTEID::decode(reader).map_err(in_field("gtp_teid"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -45031,19 +44069,13 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
-            if let Err(error) = self.transport_layer_address.encode(writer) {
-                return Err(error.in_field("transport_layer_address"));
-            }
-            if let Err(error) = self.gtp_teid.encode(writer) {
-                return Err(error.in_field("gtp_teid"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
+            self.transport_layer_address
+                .encode(writer)
+                .map_err(in_field("transport_layer_address"))?;
+            self.gtp_teid.encode(writer).map_err(in_field("gtp_teid"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -45075,12 +44107,18 @@ pub mod s1_ap_pdu_contents {
                     "iE-Extensions",
                 ],
             )?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let transport_layer_address =
-                reading.member(&members, 1, TransportLayerAddress::from_tree)?;
-            let gtp_teid = reading.member(&members, 2, GTPTEID::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 3, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let transport_layer_address = reading.member(
+                &members,
+                "transportLayerAddress",
+                TransportLayerAddress::from_tree,
+            )?;
+            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 transport_layer_address,
@@ -45177,24 +44215,16 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(2)?;
-            let e_rab_id = match ERABID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("e_rab_id")),
-            };
+            let e_rab_id = ERABID::decode(reader).map_err(in_field("e_rab_id"))?;
             let security_indication = if present & 2 != 0 {
-                Some(match SecurityIndication::decode(reader) {
-                    Ok(value) => value,
-                    Err(error) => return Err(error.in_field("security_indication")),
-                })
+                Some(SecurityIndication::decode(reader).map_err(in_field("security_indication"))?)
             } else {
                 None
             };
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -45215,18 +44245,14 @@ pub mod s1_ap_pdu_contents {
             writer.bit(false);
             writer.bit(self.security_indication.is_some());
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.e_rab_id.encode(writer) {
-                return Err(error.in_field("e_rab_id"));
-            }
+            self.e_rab_id.encode(writer).map_err(in_field("e_rab_id"))?;
             if let Some(value) = &self.security_indication {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("security_indication"));
-                }
+                value
+                    .encode(writer)
+                    .map_err(in_field("security_indication"))?;
             }
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -45252,11 +44278,17 @@ pub mod s1_ap_pdu_contents {
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members =
                 reading.members(value, &["e-RAB-ID", "securityIndication", "iE-Extensions"])?;
-            let e_rab_id = reading.member(&members, 0, ERABID::from_tree)?;
-            let security_indication =
-                reading.optional(&members, 1, SecurityIndication::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 2, ProtocolExtensionContainer::from_tree)?;
+            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
+            let security_indication = reading.optional(
+                &members,
+                "securityIndication",
+                SecurityIndication::from_tree,
+            )?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self {
                 e_rab_id,
                 security_indication,
@@ -45348,10 +44380,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ENBCPRelocationIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45361,9 +44391,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBCPRelocationIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -45377,7 +44407,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -45406,10 +44437,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ENBConfigurationTransfer<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45419,9 +44448,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBConfigurationTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -45435,7 +44464,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -45464,10 +44494,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ENBConfigurationUpdate<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45477,9 +44505,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBConfigurationUpdate<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -45493,7 +44521,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -45522,10 +44551,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ENBConfigurationUpdateAcknowledge<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45535,9 +44562,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBConfigurationUpdateAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -45551,7 +44578,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -45580,10 +44608,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ENBConfigurationUpdateFailure<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45593,9 +44619,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBConfigurationUpdateFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -45609,7 +44635,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -45638,10 +44665,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ENBDirectInformationTransfer<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45651,9 +44676,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBDirectInformationTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -45667,7 +44692,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -45696,10 +44722,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ENBEarlyStatusTransfer<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45709,9 +44733,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBEarlyStatusTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -45725,7 +44749,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -45754,10 +44779,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ENBStatusTransfer<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45767,9 +44790,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ENBStatusTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -45783,7 +44806,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -45812,10 +44836,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ErrorIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45825,9 +44847,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ErrorIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -45841,7 +44863,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -45870,10 +44893,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for HandoverCancel<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45883,9 +44904,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverCancel<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -45899,7 +44920,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -45928,10 +44950,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for HandoverCancelAcknowledge<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45941,9 +44961,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverCancelAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -45957,7 +44977,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -45986,10 +45007,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for HandoverCommand<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -45999,9 +45018,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverCommand<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46015,7 +45034,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46044,10 +45064,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for HandoverFailure<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46057,9 +45075,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46073,7 +45091,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46102,10 +45121,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for HandoverNotify<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46115,9 +45132,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverNotify<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46131,7 +45148,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46160,10 +45178,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for HandoverPreparationFailure<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46173,9 +45189,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverPreparationFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46189,7 +45205,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46218,10 +45235,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for HandoverRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46231,9 +45246,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46247,7 +45262,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46276,10 +45292,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for HandoverRequestAcknowledge<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46289,9 +45303,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverRequestAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46305,7 +45319,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46334,10 +45349,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for HandoverRequired<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46347,9 +45360,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverRequired<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46363,7 +45376,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46392,10 +45406,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for HandoverSuccess<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46405,9 +45417,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for HandoverSuccess<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46421,7 +45433,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46450,10 +45463,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for InitialContextSetupFailure<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46463,9 +45474,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for InitialContextSetupFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46479,7 +45490,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46508,10 +45520,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for InitialContextSetupRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46521,9 +45531,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for InitialContextSetupRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46537,7 +45547,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46566,10 +45577,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for InitialContextSetupResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46579,9 +45588,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for InitialContextSetupResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46595,7 +45604,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46624,10 +45634,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for InitialUEMessage<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46637,9 +45645,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for InitialUEMessage<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46653,7 +45661,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46748,10 +45757,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for KillRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46761,9 +45768,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for KillRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46777,7 +45784,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46806,10 +45814,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for KillResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46819,9 +45825,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for KillResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46835,7 +45841,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46864,10 +45871,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for LocationReport<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46877,9 +45882,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for LocationReport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46893,7 +45898,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46922,10 +45928,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for LocationReportingControl<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46935,9 +45939,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for LocationReportingControl<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -46951,7 +45955,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -46980,10 +45985,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for LocationReportingFailureIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -46993,9 +45996,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for LocationReportingFailureIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47009,7 +46012,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47038,10 +46042,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for MMECPRelocationIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47051,9 +46053,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMECPRelocationIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47067,7 +46069,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47096,10 +46099,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for MMEConfigurationTransfer<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47109,9 +46110,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEConfigurationTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47125,7 +46126,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47154,10 +46156,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for MMEConfigurationUpdate<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47167,9 +46167,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEConfigurationUpdate<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47183,7 +46183,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47212,10 +46213,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for MMEConfigurationUpdateAcknowledge<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47225,9 +46224,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEConfigurationUpdateAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47241,7 +46240,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47270,10 +46270,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for MMEConfigurationUpdateFailure<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47283,9 +46281,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEConfigurationUpdateFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47299,7 +46297,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47328,10 +46327,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for MMEDirectInformationTransfer<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47341,9 +46338,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEDirectInformationTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47357,7 +46354,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47386,10 +46384,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for MMEEarlyStatusTransfer<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47399,9 +46395,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEEarlyStatusTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47415,7 +46411,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47444,10 +46441,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for MMEStatusTransfer<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47457,9 +46452,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for MMEStatusTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47473,7 +46468,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47502,10 +46498,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for NASDeliveryIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47515,9 +46509,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for NASDeliveryIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47531,7 +46525,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47560,10 +46555,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for NASNonDeliveryIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47573,9 +46566,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for NASNonDeliveryIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47589,7 +46582,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47618,10 +46612,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for OverloadStart<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47631,9 +46623,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for OverloadStart<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47647,7 +46639,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47676,10 +46669,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for OverloadStop<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47689,9 +46680,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for OverloadStop<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47705,7 +46696,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47734,10 +46726,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for PWSFailureIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47747,9 +46737,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PWSFailureIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47763,7 +46753,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47792,10 +46783,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for PWSRestartIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47805,9 +46794,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PWSRestartIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47821,7 +46810,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47850,10 +46840,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for Paging<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47863,9 +46851,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for Paging<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47879,7 +46867,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47908,10 +46897,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for PathSwitchRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47921,9 +46908,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PathSwitchRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47937,7 +46924,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -47966,10 +46954,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for PathSwitchRequestAcknowledge<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -47979,9 +46965,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PathSwitchRequestAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -47995,7 +46981,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -48024,10 +47011,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for PathSwitchRequestFailure<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48037,9 +47022,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PathSwitchRequestFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -48053,7 +47038,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -48089,18 +47075,9 @@ pub mod s1_ap_pdu_contents {
     }
     impl<'a> Decode<'a> for AnonymousPrivateMessagePrivateIEs<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
-            let id = match PrivateIEID::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("id")),
-            };
-            let criticality = match Criticality::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("criticality")),
-            };
-            let value = match reader.open_type() {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("value")),
-            };
+            let id = PrivateIEID::decode(reader).map_err(in_field("id"))?;
+            let criticality = Criticality::decode(reader).map_err(in_field("criticality"))?;
+            let value = reader.open_type().map_err(in_field("value"))?;
             Ok(Self {
                 id,
                 criticality,
@@ -48110,12 +47087,10 @@ pub mod s1_ap_pdu_contents {
     }
     impl Encode for AnonymousPrivateMessagePrivateIEs<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            if let Err(error) = self.id.encode(writer) {
-                return Err(error.in_field("id"));
-            }
-            if let Err(error) = self.criticality.encode(writer) {
-                return Err(error.in_field("criticality"));
-            }
+            self.id.encode(writer).map_err(in_field("id"))?;
+            self.criticality
+                .encode(writer)
+                .map_err(in_field("criticality"))?;
             writer.open_type(&self.value);
             Ok(())
         }
@@ -48132,9 +47107,9 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["id", "criticality", "value"])?;
-            let id = reading.member(&members, 0, PrivateIEID::from_tree)?;
-            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
-            let value = reading.member(&members, 2, |value, reading| {
+            let id = reading.member(&members, "id", PrivateIEID::from_tree)?;
+            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
+            let value = reading.member(&members, "value", |value, reading| {
                 json::read_octets(reading, value)
             })?;
             Ok(Self {
@@ -48230,10 +47205,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for PrivateMessage<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let private_ies = match PrivateMessagePrivateIEs::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("private_ies")),
-            };
+            let private_ies =
+                PrivateMessagePrivateIEs::decode(reader).map_err(in_field("private_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48243,9 +47216,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for PrivateMessage<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.private_ies.encode(writer) {
-                return Err(error.in_field("private_ies"));
-            }
+            self.private_ies
+                .encode(writer)
+                .map_err(in_field("private_ies"))?;
             Ok(())
         }
     }
@@ -48259,7 +47232,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["privateIEs"])?;
-            let private_ies = reading.member(&members, 0, PrivateMessagePrivateIEs::from_tree)?;
+            let private_ies =
+                reading.member(&members, "privateIEs", PrivateMessagePrivateIEs::from_tree)?;
             Ok(Self { private_ies })
         }
     }
@@ -48288,10 +47262,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for RerouteNASRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48301,9 +47273,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for RerouteNASRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -48317,7 +47289,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -48346,10 +47319,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for Reset<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48359,9 +47330,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for Reset<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -48375,7 +47346,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -48404,10 +47376,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for ResetAcknowledge<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48417,9 +47387,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for ResetAcknowledge<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -48433,7 +47403,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -48595,10 +47566,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for RetrieveUEInformation<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48608,9 +47577,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for RetrieveUEInformation<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -48624,7 +47593,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -48653,10 +47623,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for S1RemovalFailure<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48666,9 +47634,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1RemovalFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -48682,7 +47650,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -48711,10 +47680,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for S1RemovalRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48724,9 +47691,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1RemovalRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -48740,7 +47707,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -48769,10 +47737,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for S1RemovalResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48782,9 +47748,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1RemovalResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -48798,7 +47764,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -48827,10 +47794,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for S1SetupFailure<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48840,9 +47805,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1SetupFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -48856,7 +47821,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -48885,10 +47851,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for S1SetupRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48898,9 +47862,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1SetupRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -48914,7 +47878,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -48943,10 +47908,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for S1SetupResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -48956,9 +47919,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for S1SetupResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -48972,7 +47935,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49001,10 +47965,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for SecondaryRATDataUsageReport<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49014,9 +47976,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for SecondaryRATDataUsageReport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49030,7 +47992,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49054,16 +48017,11 @@ pub mod s1_ap_pdu_contents {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
             let present = reader.bits(1)?;
-            let tai = match TAI::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("tai")),
-            };
+            let tai = TAI::decode(reader).map_err(in_field("tai"))?;
             let ie_extensions = if present & 1 != 0 {
                 Some(
-                    (match ProtocolExtensionContainer::decode(reader) {
-                        Ok(value) => value,
-                        Err(error) => return Err(error.in_field("ie_extensions")),
-                    })
+                    (ProtocolExtensionContainer::decode(reader)
+                        .map_err(in_field("ie_extensions"))?)
                     .into_owned(),
                 )
             } else {
@@ -49079,13 +48037,9 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
             writer.bit(self.ie_extensions.is_some());
-            if let Err(error) = self.tai.encode(writer) {
-                return Err(error.in_field("tai"));
-            }
+            self.tai.encode(writer).map_err(in_field("tai"))?;
             if let Some(value) = &self.ie_extensions {
-                if let Err(error) = value.encode(writer) {
-                    return Err(error.in_field("ie_extensions"));
-                }
+                value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
         }
@@ -49104,9 +48058,12 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["tAI", "iE-Extensions"])?;
-            let tai = reading.member(&members, 0, TAI::from_tree)?;
-            let ie_extensions =
-                reading.optional(&members, 1, ProtocolExtensionContainer::from_tree)?;
+            let tai = reading.member(&members, "tAI", TAI::from_tree)?;
+            let ie_extensions = reading.optional(
+                &members,
+                "iE-Extensions",
+                ProtocolExtensionContainer::from_tree,
+            )?;
             Ok(Self { tai, ie_extensions })
         }
     }
@@ -49194,10 +48151,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for TraceFailureIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49207,9 +48162,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for TraceFailureIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49223,7 +48178,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49252,10 +48208,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for TraceStart<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49265,9 +48219,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for TraceStart<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49281,7 +48235,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49436,10 +48391,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UECapabilityInfoIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49449,9 +48402,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UECapabilityInfoIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49465,7 +48418,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49494,10 +48448,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextModificationConfirm<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49507,9 +48459,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextModificationConfirm<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49523,7 +48475,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49552,10 +48505,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextModificationFailure<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49565,9 +48516,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextModificationFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49581,7 +48532,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49610,10 +48562,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextModificationIndication<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49623,9 +48573,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextModificationIndication<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49639,7 +48589,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49668,10 +48619,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextModificationRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49681,9 +48630,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextModificationRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49697,7 +48646,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49726,10 +48676,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextModificationResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49739,9 +48687,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextModificationResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49755,7 +48703,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49784,10 +48733,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextReleaseCommand<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49797,9 +48744,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextReleaseCommand<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49813,7 +48760,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49842,10 +48790,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextReleaseComplete<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49855,9 +48801,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextReleaseComplete<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49871,7 +48817,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49900,10 +48847,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextReleaseRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49913,9 +48858,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextReleaseRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49929,7 +48874,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -49958,10 +48904,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextResumeFailure<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -49971,9 +48915,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextResumeFailure<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -49987,7 +48931,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50016,10 +48961,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextResumeRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50029,9 +48972,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextResumeRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50045,7 +48988,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50074,10 +49018,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextResumeResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50087,9 +49029,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextResumeResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50103,7 +49045,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50132,10 +49075,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextSuspendRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50145,9 +49086,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextSuspendRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50161,7 +49102,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50190,10 +49132,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEContextSuspendResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50203,9 +49143,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEContextSuspendResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50219,7 +49159,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50248,10 +49189,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UEInformationTransfer<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50261,9 +49200,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UEInformationTransfer<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50277,7 +49216,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50306,10 +49246,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UERadioCapabilityIDMappingRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50319,9 +49257,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UERadioCapabilityIDMappingRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50335,7 +49273,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50364,10 +49303,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UERadioCapabilityIDMappingResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50377,9 +49314,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UERadioCapabilityIDMappingResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50393,7 +49330,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50422,10 +49360,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UERadioCapabilityMatchRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50435,9 +49371,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UERadioCapabilityMatchRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50451,7 +49387,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50480,10 +49417,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UERadioCapabilityMatchResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50493,9 +49428,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UERadioCapabilityMatchResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50509,7 +49444,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50538,10 +49474,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UplinkNASTransport<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50551,9 +49485,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UplinkNASTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50567,7 +49501,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50596,10 +49531,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UplinkNonUEAssociatedLPPaTransport<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50609,9 +49542,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UplinkNonUEAssociatedLPPaTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50625,7 +49558,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50654,10 +49588,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UplinkS1cdma2000tunnelling<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50667,9 +49599,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UplinkS1cdma2000tunnelling<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50683,7 +49615,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50712,10 +49645,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for UplinkUEAssociatedLPPaTransport<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50725,9 +49656,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for UplinkUEAssociatedLPPaTransport<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50741,7 +49672,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50770,10 +49702,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for WriteReplaceWarningRequest<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50783,9 +49713,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for WriteReplaceWarningRequest<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50799,7 +49729,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50828,10 +49759,8 @@ pub mod s1_ap_pdu_contents {
     impl<'a> Decode<'a> for WriteReplaceWarningResponse<'a> {
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
             let extended = reader.bit()?;
-            let protocol_ies = match ProtocolIEContainer::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("protocol_ies")),
-            };
+            let protocol_ies =
+                ProtocolIEContainer::decode(reader).map_err(in_field("protocol_ies"))?;
             if extended {
                 reader.skip_additions()?;
             }
@@ -50841,9 +49770,9 @@ pub mod s1_ap_pdu_contents {
     impl Encode for WriteReplaceWarningResponse<'_> {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit(false);
-            if let Err(error) = self.protocol_ies.encode(writer) {
-                return Err(error.in_field("protocol_ies"));
-            }
+            self.protocol_ies
+                .encode(writer)
+                .map_err(in_field("protocol_ies"))?;
             Ok(())
         }
     }
@@ -50857,7 +49786,8 @@ pub mod s1_ap_pdu_contents {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["protocolIEs"])?;
-            let protocol_ies = reading.member(&members, 0, ProtocolIEContainer::from_tree)?;
+            let protocol_ies =
+                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
             Ok(Self { protocol_ies })
         }
     }
@@ -50880,12 +49810,12 @@ pub mod s1_ap_pdu_descriptions {
     use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
-        UNBOUNDED, Writer,
+        UNBOUNDED, Writer, in_field,
     };
     impl core::fmt::Debug for InitiatingMessage<'_> {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             let holds_key = oxirush_aper::protocol::holds_key::<crate::S1ap>(
-                "InitiatingMessage",
+                oxirush_aper::Direction::Initiating,
                 self.procedure_code.0,
             );
             let mut shown = formatter.debug_struct("InitiatingMessage");
@@ -50934,18 +49864,10 @@ pub mod s1_ap_pdu_descriptions {
     impl<'a> Decode<'a> for InitiatingMessage<'a> {
         #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
-            let procedure_code = match ProcedureCode::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("procedure_code")),
-            };
-            let criticality = match Criticality::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("criticality")),
-            };
-            let value = match reader.open_type() {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("value")),
-            };
+            let procedure_code =
+                ProcedureCode::decode(reader).map_err(in_field("procedure_code"))?;
+            let criticality = Criticality::decode(reader).map_err(in_field("criticality"))?;
+            let value = reader.open_type().map_err(in_field("value"))?;
             Ok(Self {
                 procedure_code,
                 criticality,
@@ -50956,12 +49878,12 @@ pub mod s1_ap_pdu_descriptions {
     impl Encode for InitiatingMessage<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            if let Err(error) = self.procedure_code.encode(writer) {
-                return Err(error.in_field("procedure_code"));
-            }
-            if let Err(error) = self.criticality.encode(writer) {
-                return Err(error.in_field("criticality"));
-            }
+            self.procedure_code
+                .encode(writer)
+                .map_err(in_field("procedure_code"))?;
+            self.criticality
+                .encode(writer)
+                .map_err(in_field("criticality"))?;
             writer.open_type(&self.value);
             Ok(())
         }
@@ -50978,9 +49900,10 @@ pub mod s1_ap_pdu_descriptions {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["procedureCode", "criticality", "value"])?;
-            let procedure_code = reading.member(&members, 0, ProcedureCode::from_tree)?;
-            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
-            let value = reading.member(&members, 2, |value, reading| {
+            let procedure_code =
+                reading.member(&members, "procedureCode", ProcedureCode::from_tree)?;
+            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
+            let value = reading.member(&members, "value", |value, reading| {
                 json::read_octets(reading, value)
             })?;
             Ok(Self {
@@ -51109,7 +50032,7 @@ pub mod s1_ap_pdu_descriptions {
     impl core::fmt::Debug for SuccessfulOutcome<'_> {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             let holds_key = oxirush_aper::protocol::holds_key::<crate::S1ap>(
-                "SuccessfulOutcome",
+                oxirush_aper::Direction::Successful,
                 self.procedure_code.0,
             );
             let mut shown = formatter.debug_struct("SuccessfulOutcome");
@@ -51158,18 +50081,10 @@ pub mod s1_ap_pdu_descriptions {
     impl<'a> Decode<'a> for SuccessfulOutcome<'a> {
         #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
-            let procedure_code = match ProcedureCode::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("procedure_code")),
-            };
-            let criticality = match Criticality::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("criticality")),
-            };
-            let value = match reader.open_type() {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("value")),
-            };
+            let procedure_code =
+                ProcedureCode::decode(reader).map_err(in_field("procedure_code"))?;
+            let criticality = Criticality::decode(reader).map_err(in_field("criticality"))?;
+            let value = reader.open_type().map_err(in_field("value"))?;
             Ok(Self {
                 procedure_code,
                 criticality,
@@ -51180,12 +50095,12 @@ pub mod s1_ap_pdu_descriptions {
     impl Encode for SuccessfulOutcome<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            if let Err(error) = self.procedure_code.encode(writer) {
-                return Err(error.in_field("procedure_code"));
-            }
-            if let Err(error) = self.criticality.encode(writer) {
-                return Err(error.in_field("criticality"));
-            }
+            self.procedure_code
+                .encode(writer)
+                .map_err(in_field("procedure_code"))?;
+            self.criticality
+                .encode(writer)
+                .map_err(in_field("criticality"))?;
             writer.open_type(&self.value);
             Ok(())
         }
@@ -51202,9 +50117,10 @@ pub mod s1_ap_pdu_descriptions {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["procedureCode", "criticality", "value"])?;
-            let procedure_code = reading.member(&members, 0, ProcedureCode::from_tree)?;
-            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
-            let value = reading.member(&members, 2, |value, reading| {
+            let procedure_code =
+                reading.member(&members, "procedureCode", ProcedureCode::from_tree)?;
+            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
+            let value = reading.member(&members, "value", |value, reading| {
                 json::read_octets(reading, value)
             })?;
             Ok(Self {
@@ -51219,7 +50135,7 @@ pub mod s1_ap_pdu_descriptions {
     impl core::fmt::Debug for UnsuccessfulOutcome<'_> {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             let holds_key = oxirush_aper::protocol::holds_key::<crate::S1ap>(
-                "UnsuccessfulOutcome",
+                oxirush_aper::Direction::Unsuccessful,
                 self.procedure_code.0,
             );
             let mut shown = formatter.debug_struct("UnsuccessfulOutcome");
@@ -51268,18 +50184,10 @@ pub mod s1_ap_pdu_descriptions {
     impl<'a> Decode<'a> for UnsuccessfulOutcome<'a> {
         #[inline]
         fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
-            let procedure_code = match ProcedureCode::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("procedure_code")),
-            };
-            let criticality = match Criticality::decode(reader) {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("criticality")),
-            };
-            let value = match reader.open_type() {
-                Ok(value) => value,
-                Err(error) => return Err(error.in_field("value")),
-            };
+            let procedure_code =
+                ProcedureCode::decode(reader).map_err(in_field("procedure_code"))?;
+            let criticality = Criticality::decode(reader).map_err(in_field("criticality"))?;
+            let value = reader.open_type().map_err(in_field("value"))?;
             Ok(Self {
                 procedure_code,
                 criticality,
@@ -51290,12 +50198,12 @@ pub mod s1_ap_pdu_descriptions {
     impl Encode for UnsuccessfulOutcome<'_> {
         #[inline]
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            if let Err(error) = self.procedure_code.encode(writer) {
-                return Err(error.in_field("procedure_code"));
-            }
-            if let Err(error) = self.criticality.encode(writer) {
-                return Err(error.in_field("criticality"));
-            }
+            self.procedure_code
+                .encode(writer)
+                .map_err(in_field("procedure_code"))?;
+            self.criticality
+                .encode(writer)
+                .map_err(in_field("criticality"))?;
             writer.open_type(&self.value);
             Ok(())
         }
@@ -51312,9 +50220,10 @@ pub mod s1_ap_pdu_descriptions {
         }
         fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
             let members = reading.members(value, &["procedureCode", "criticality", "value"])?;
-            let procedure_code = reading.member(&members, 0, ProcedureCode::from_tree)?;
-            let criticality = reading.member(&members, 1, Criticality::from_tree)?;
-            let value = reading.member(&members, 2, |value, reading| {
+            let procedure_code =
+                reading.member(&members, "procedureCode", ProcedureCode::from_tree)?;
+            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
+            let value = reading.member(&members, "value", |value, reading| {
                 json::read_octets(reading, value)
             })?;
             Ok(Self {
@@ -51369,11 +50278,11 @@ impl S1APPDU<'static> {
     /// peer.
     ///
     /// ```
-    /// use oxirush_s1ap::{ErrorKind, s1ap::S1AP_PDU};
+    /// use oxirush_s1ap::{Direction, ErrorKind, s1ap::S1AP_PDU};
     ///
     /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
     /// let pdu = S1AP_PDU::decode(&octets)?;
-    /// assert_eq!((pdu.direction(), pdu.procedure_name()), ("InitiatingMessage", "UEContextReleaseRequest"));
+    /// assert_eq!((pdu.direction(), pdu.procedure_name()), (Direction::Initiating, "UEContextReleaseRequest"));
     ///
     /// // The octets of a PDU that end early
     /// let error = S1AP_PDU::decode(&octets[..octets.len() - 1]).unwrap_err();
@@ -51442,7 +50351,7 @@ impl<'a> S1APPDU<'a> {
         if alternative & 0x80 != 0 || alternative >> 5 > 2 {
             return None;
         }
-        let criticality = *Criticality::VALUES.get(usize::from(criticality >> 6))?;
+        let criticality = *Criticality::ALL.get(usize::from(criticality >> 6))?;
         // The length of the message in one octet or in two, and no fragment.
         let message = match *rest {
             [length @ 1..=0x7f, ref message @ ..] if message.len() == usize::from(length) => {
@@ -51618,25 +50527,14 @@ impl<'a> S1APPDU<'a> {
             S1APPDU::unsuccessfulOutcome(message) => message.procedure_code.0,
         }
     }
-    /// Return the PDU direction as a human-readable string.
-    pub fn direction(&self) -> &'static str {
+    /// The direction of this PDU: an initiating message, a successful outcome or an
+    /// unsuccessful outcome.
+    pub fn direction(&self) -> oxirush_aper::Direction {
         match self {
-            S1APPDU::initiatingMessage(_) => "InitiatingMessage",
-            S1APPDU::successfulOutcome(_) => "SuccessfulOutcome",
-            S1APPDU::unsuccessfulOutcome(_) => "UnsuccessfulOutcome",
+            S1APPDU::initiatingMessage(_) => oxirush_aper::Direction::Initiating,
+            S1APPDU::successfulOutcome(_) => oxirush_aper::Direction::Successful,
+            S1APPDU::unsuccessfulOutcome(_) => oxirush_aper::Direction::Unsuccessful,
         }
-    }
-    /// Returns `true` for an initiating message.
-    pub fn is_initiating(&self) -> bool {
-        matches!(self, S1APPDU::initiatingMessage(_))
-    }
-    /// Returns `true` for a successful outcome.
-    pub fn is_successful(&self) -> bool {
-        matches!(self, S1APPDU::successfulOutcome(_))
-    }
-    /// Returns `true` for an unsuccessful outcome.
-    pub fn is_unsuccessful(&self) -> bool {
-        matches!(self, S1APPDU::unsuccessfulOutcome(_))
     }
 }
 /// The name of the message, its procedure code and its direction, then the identifiers of

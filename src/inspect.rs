@@ -647,13 +647,14 @@ impl S1APPDU<'_> {
     ///
     /// ```
     /// use oxirush_s1ap::s1ap::S1AP_PDU;
+    /// use oxirush_s1ap::tree;
     ///
     /// // A UE CONTEXT RELEASE REQUEST
     /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
     /// let pdu = S1AP_PDU::decode(&octets)?;
     /// let tree = pdu.to_tree();
-    /// assert_eq!(tree["message"], "UEContextReleaseRequest");
-    /// assert_eq!(tree["ies"][2]["Cause"]["radioNetwork"], "user-inactivity");
+    /// assert_eq!(tree["message"], tree!("UEContextReleaseRequest"));
+    /// assert_eq!(tree["ies"][2]["Cause"]["radioNetwork"], tree!("user-inactivity"));
     ///
     /// // The tree is a PDU again, of the same octets
     /// assert_eq!(S1AP_PDU::from_tree(&tree)?.encode()?, octets);
@@ -697,7 +698,7 @@ impl S1APPDU<'_> {
     /// `octets` in the place of its IEs: `{"message": "PrivateMessage", "octets": "…"}`.
     pub fn to_tree(&self) -> Value {
         let (direction, code) = (self.direction(), self.procedure_code());
-        let criticality = json::to_value(&self.criticality());
+        let criticality = self.criticality().to_tree();
         shared::tree(&TABLES, direction, code, criticality, self.value())
     }
 
@@ -744,12 +745,12 @@ impl S1APPDU<'_> {
     fn of_parts(parts: Parts) -> Result<S1AP_PDU, Error> {
         let criticality = json::from_value(&parts.criticality)?;
         let value = Octets::owned(parts.message);
-        S1AP_PDU::of(parts.direction, parts.code, criticality, value).ok_or_else(|| {
-            Error::form(
-                "the direction of a view is InitiatingMessage, SuccessfulOutcome or \
-                 UnsuccessfulOutcome",
-            )
-        })
+        Ok(S1AP_PDU::of(
+            parts.direction,
+            parts.code,
+            criticality,
+            value,
+        ))
     }
 
     /// The view of this PDU: its `procedure_code`, its `direction`, its `criticality` and
@@ -778,13 +779,13 @@ impl S1APPDU<'_> {
     /// // A UE CONTEXT RELEASE REQUEST
     /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
     /// let view = S1AP_PDU::decode(&octets)?.to_view()?;
-    /// assert_eq!(view["procedure_code"], 18);
+    /// assert_eq!(view["procedure_code"], tree!(18));
     /// assert_eq!(inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/value")?, [&tree!(7)]);
     /// # Ok::<(), oxirush_s1ap::Error>(())
     /// ```
     pub fn to_view(&self) -> Result<Value, Error> {
         let (direction, code) = (self.direction(), self.procedure_code());
-        let criticality = json::to_value(&self.criticality());
+        let criticality = self.criticality().to_tree();
         shared::view(&TABLES, direction, code, criticality, self.value())
     }
 

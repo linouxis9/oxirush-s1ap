@@ -47,7 +47,7 @@ fn opened(pdu: &S1AP_PDU) -> Value {
     let mut view = pdu.to_view().unwrap();
     for (ie, carried) in CARRIED {
         let ies = view["message"]["protocolIEs"].as_array();
-        if ies.is_some_and(|ies| ies.iter().any(|entry| entry["_ie_name"] == ie)) {
+        if ies.is_some_and(|ies| ies.iter().any(|entry| entry["_ie_name"] == tree!(ie))) {
             inspect::open(&mut view, &format!("/s1ap/{ie}/{carried}")).unwrap();
         }
     }

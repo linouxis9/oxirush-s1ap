@@ -37,17 +37,17 @@ fn main() {
     let ies = vec![
         ProtocolIEField::new(
             ID_MMENAME,
-            Criticality::ignore,
+            Criticality::Ignore,
             encode_open_type(&mme_name).expect("encode MME name"),
         ),
         ProtocolIEField::new(
             ID_SERVED_GUMMEIS,
-            Criticality::reject,
+            Criticality::Reject,
             encode_open_type(&served_gummeis).expect("encode served GUMMEIs"),
         ),
         ProtocolIEField::new(
             ID_RELATIVE_MMECAPACITY,
-            Criticality::ignore,
+            Criticality::Ignore,
             encode_open_type(&RelativeMMECapacity(255)).expect("encode MME capacity"),
         ),
     ];
@@ -57,7 +57,7 @@ fn main() {
     // ASN.1-derived procedure code.
     let pdu = S1AP_PDU::successfulOutcome(SuccessfulOutcome::new(
         ID_S1_SETUP,
-        Criticality::reject,
+        Criticality::Reject,
         encode_open_type(&response).expect("encode S1 Setup Response"),
     ));
 

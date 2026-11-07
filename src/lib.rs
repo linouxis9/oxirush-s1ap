@@ -18,13 +18,13 @@
 //! A codec for S1AP, the S1 Application Protocol of 3GPP TS 36.413, in aligned PER.
 //!
 //! ```rust
-//! use oxirush_s1ap::{build_s1ap, extract_s1ap_ies, s1ap::*};
+//! use oxirush_s1ap::{Direction, build_s1ap, extract_s1ap_ies, s1ap::*};
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Decode a UE CONTEXT RELEASE REQUEST
 //!     let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
 //!     let pdu = S1AP_PDU::decode(&bytes)?;
-//!     assert_eq!((pdu.procedure_code(), pdu.is_initiating()), (18, true));
+//!     assert_eq!((pdu.procedure_code(), pdu.direction()), (18, Direction::Initiating));
 //!     println!("{}", pdu.procedure_name());
 //!     # assert_eq!(pdu.procedure_name(), "UEContextReleaseRequest");
 //!
@@ -240,11 +240,7 @@
 //!
 //! The list of the abbreviations is `ABBREVIATIONS` of `generator/src/names.rs` in
 //! oxirush-aper, with the identifiers that the specifications write otherwise than
-//! their others, as `parentTImeSource`. `build/fields.tsv` of the repository has each
-//! field of each type with the name that rasn-compiler gives it, which the fields had
-//! before this rule and have in 0.2.0 for every field of a type that 0.2.0 has but one,
-//! the `excludedCellsToAddModList` of `InterSystemMeasurementItem`. The JSON forms keep
-//! the identifiers of ASN.1.
+//! their others, as `parentTImeSource`. The JSON forms keep the identifiers of ASN.1.
 //!
 //! A `SEQUENCE` is a struct that a literal builds, and its `new` takes the members in
 //! their order. An extensible `CHOICE` or `ENUMERATED` is `#[non_exhaustive]`: a later
@@ -347,7 +343,7 @@ pub use oxirush_utils::tree;
 
 pub use oxirush_aper::protocol::Message;
 pub use oxirush_aper::{
-    AsnType, BitString, Bits, Decode, Encode, Error, ErrorKind, Fault, Faults, Octets,
+    AsnType, BitString, Bits, Decode, Direction, Encode, Error, ErrorKind, Fault, Faults, Octets,
 };
 /// ```
 /// use oxirush_s1ap::{Deviation, build_s1ap, s1ap::*};

@@ -146,24 +146,24 @@ fn main() -> Result<(), Error> {
     //       ProtocolIEContainer(vec![
     //           ProtocolIEField::new(
     //               ProtocolIEID(0),
-    //               Criticality::ignore,
+    //               Criticality::Ignore,
     //               encode_open_type(&MMEUES1APID(1))?,
     //           ),
     //           ProtocolIEField::new(
     //               ProtocolIEID(8),
-    //               Criticality::ignore,
+    //               Criticality::Ignore,
     //               encode_open_type(&ENBUES1APID(0))?,
     //           ),
     //           ProtocolIEField::new(
     //               ProtocolIEID(51),
-    //               Criticality::ignore,
+    //               Criticality::Ignore,
     //               encode_open_type(&erab_setup_list())?,
     //           ),
     //       ]),
     //   );
     //   let pdu = S1AP_PDU::successfulOutcome(SuccessfulOutcome::new(
     //       ProcedureCode(9),
-    //       Criticality::reject,
+    //       Criticality::Reject,
     //       encode_open_type(&response)?,
     //   ));
     Ok(())
@@ -180,7 +180,7 @@ fn erab_setup_list() -> ERABSetupListCtxtSURes<'static> {
     // An item of the list is an IE itself, alone in its container.
     ERABSetupListCtxtSURes(vec![ProtocolIEField::new(
         ID_E_RABSETUP_ITEM_CTXT_SURES.0,
-        Criticality::ignore,
+        Criticality::Ignore,
         encode_open_type(&item).expect("encode E-RAB setup item"),
     )])
 }
@@ -199,7 +199,7 @@ fn erab_admitted_list() -> ERABAdmittedList<'static> {
 
     ERABAdmittedList(vec![ProtocolIEField::new(
         ID_E_RABADMITTED_ITEM.0,
-        Criticality::ignore,
+        Criticality::Ignore,
         encode_open_type(&item).expect("encode admitted E-RAB item"),
     )])
 }
@@ -228,7 +228,7 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq<'static> {
 
     ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField::new(
         ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ.0,
-        Criticality::reject,
+        Criticality::Reject,
         encode_open_type(&item).expect("encode E-RAB item"),
     )])
 }

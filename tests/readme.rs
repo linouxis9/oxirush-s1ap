@@ -290,7 +290,7 @@ fn block_4() {
             eNB_UE_S1AP_ID(7u32),
             NAS_PDU(vec![0x07, 0x41, 0x71]),
         )?;
-        println!("{:?} {}", pdu.criticality(), hex::encode(pdu.encode()?));
+        println!("{} {}", pdu.criticality(), hex::encode(pdu.encode()?));
 
         // The PDU of a message you already have
         let message: InitialUEMessage = pdu.decode_value()?;

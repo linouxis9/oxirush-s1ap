@@ -1,6 +1,32 @@
 #![cfg(feature = "inspect")]
 
-use oxirush_s1ap::{build_s1ap, inspect, s1ap::*};
+use oxirush_s1ap::tree;
+use oxirush_s1ap::tree::Value;
+use oxirush_s1ap::{Direction, build_s1ap, inspect, s1ap::*};
+
+/// The value at a JSON pointer of a view, as `/message/protocolIEs/0/value`.
+trait Pointer {
+    fn pointer(&self, pointer: &str) -> Option<&Value>;
+    fn pointer_mut(&mut self, pointer: &str) -> Option<&mut Value>;
+}
+
+impl Pointer for Value {
+    fn pointer(&self, pointer: &str) -> Option<&Value> {
+        let mut steps = pointer.split('/').skip(1);
+        steps.try_fold(self, |value, step| match value {
+            Value::Array(items) => items.get(step.parse::<usize>().ok()?),
+            _ => value.get(step),
+        })
+    }
+
+    fn pointer_mut(&mut self, pointer: &str) -> Option<&mut Value> {
+        let mut steps = pointer.split('/').skip(1);
+        steps.try_fold(self, |value, step| match value {
+            Value::Array(items) => items.get_mut(step.parse::<usize>().ok()?),
+            _ => value.get_mut(step),
+        })
+    }
+}
 
 #[test]
 fn inspect_every_canonical_procedure_and_round_trip() {
@@ -101,7 +127,7 @@ fn the_octets_of_an_ie_are_replaced_or_added_as_its_raw_value_without_value() {
     let other = release_request(9).to_view().unwrap();
     let mut view = release_request(7).to_view().unwrap();
     let ie = view.pointer_mut("/message/protocolIEs/1").unwrap();
-    ie.as_object_mut().unwrap().remove("value");
+    ie.as_object_mut().unwrap().shift_remove("value");
     ie["_raw_value"] = other["message"]["protocolIEs"][1]["_raw_value"].clone();
     let ies = view.pointer_mut("/message/protocolIEs").unwrap();
     ies.as_array_mut()
@@ -188,12 +214,12 @@ fn a_new_ie_whose_value_is_a_string_is_typed_too() {
 fn an_ie_that_does_not_decode_is_edited_as_its_octets() {
     let request = UEContextReleaseRequest::new(ProtocolIEContainer(vec![ProtocolIEField::new(
         ProtocolIEID(60000),
-        Criticality::ignore,
+        Criticality::Ignore,
         vec![0xC0, 0xFF, 0xEE].into(),
     )]));
     let pdu = S1AP_PDU::initiatingMessage(InitiatingMessage::new(
         ProcedureCode(18),
-        Criticality::ignore,
+        Criticality::Ignore,
         encode_open_type(&request).unwrap(),
     ));
     let mut view = pdu.to_view().unwrap();
@@ -240,7 +266,7 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
         let shown = S1AP_PDU::decode(&wire).unwrap().to_tree();
         // A private message has no IEs of the protocol to name: its octets.
         if shown.get("ies").is_none() {
-            assert_eq!(shown["message"], "PrivateMessage");
+            assert_eq!(shown["message"], tree!("PrivateMessage"));
             assert!(shown["octets"].is_string());
             assert_eq!(S1AP_PDU::from_tree(&shown).unwrap().encode().unwrap(), wire);
             continue;
@@ -272,14 +298,14 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
     let pdu = S1AP_PDU::from_tree(&request).unwrap();
     assert_eq!(inspect::message_name(&pdu), Some("UEContextReleaseRequest"));
     let view = pdu.to_view().unwrap();
-    assert_eq!(view["criticality"], "ignore");
+    assert_eq!(view["criticality"], tree!("ignore"));
     let criticalities = view["message"]["protocolIEs"].as_array().unwrap().iter();
     let criticalities: Vec<_> = criticalities
         .map(|ie| ie["criticality"].as_str().unwrap())
         .collect();
     assert_eq!(criticalities, ["reject", "reject", "ignore", "reject"]);
     let shown = pdu.to_tree();
-    assert_eq!(shown["message"], "UEContextReleaseRequest");
+    assert_eq!(shown["message"], tree!("UEContextReleaseRequest"));
     assert_eq!(shown["ies"][0], oxirush_s1ap::tree!({"MME-UE-S1AP-ID": 1}));
     assert_eq!(
         shown["ies"][3],
@@ -858,7 +884,7 @@ fn fixture(name: &str) -> Vec<u8> {
 /// The entry of the IE `id` of a view.
 fn ie(view: &mut oxirush_s1ap::tree::Value, id: u16) -> &mut oxirush_s1ap::tree::Value {
     let ies = view["message"]["protocolIEs"].as_array_mut().unwrap();
-    ies.iter_mut().find(|ie| ie["id"] == id).unwrap()
+    ies.iter_mut().find(|ie| ie["id"] == tree!(id)).unwrap()
 }
 
 /// The view of a message that has `entries` for IEs, encoded and decoded again.
@@ -1350,7 +1376,7 @@ fn a_message_goes_by_the_name_that_asn1_gives_it() {
     // The view of a message that is written from its name.
     let (direction, procedure_code) = inspect::message_named("ue context release request").unwrap();
     let mut view = tree!({
-        "direction": direction,
+        "direction": direction.name(),
         "procedure_code": procedure_code,
         "criticality": "ignore",
         "message": {"protocolIEs": []},
@@ -1363,7 +1389,7 @@ fn a_message_goes_by_the_name_that_asn1_gives_it() {
     .unwrap();
     let pdu = S1AP_PDU::from_view(&view).unwrap();
     assert_eq!(inspect::message_name(&pdu), Some("UEContextReleaseRequest"));
-    assert!(pdu.is_initiating());
+    assert_eq!(pdu.direction(), Direction::Initiating);
 }
 
 #[test]
@@ -1413,7 +1439,7 @@ fn an_edit_changes_what_is_sent_or_is_refused() {
     // The name of an ENUMERATED value of the PDU itself is taken as any other.
     inspect::set(&mut view, "/criticality", tree!("Reject")).unwrap();
     let pdu = S1AP_PDU::from_view(&view).unwrap();
-    assert_eq!(pdu.to_view().unwrap()["criticality"], "reject");
+    assert_eq!(pdu.to_view().unwrap()["criticality"], tree!("reject"));
 }
 
 #[test]
@@ -1643,7 +1669,7 @@ fn the_identifiers_of_the_registry_are_the_constants_of_the_bindings() {
 fn a_kind_that_the_specification_does_not_have_says_the_direction_of_its_pdu() {
     let pdu = S1AP_PDU::unsuccessfulOutcome(UnsuccessfulOutcome::new(
         ProcedureCode(13),
-        Criticality::ignore,
+        Criticality::Ignore,
         oxirush_s1ap::Octets::from(vec![0]),
     ));
     let oxirush_s1ap::S1apPduKind::Other {
@@ -1715,8 +1741,8 @@ fn a_procedure_that_the_specification_does_not_have_has_a_view_of_its_ies() {
     let pdu = S1AP_PDU::decode(&octets).unwrap();
     assert_eq!(pdu.procedure_code(), 200);
     let mut view = pdu.to_view().unwrap();
-    assert_eq!(view["procedure_code"], 200);
-    assert_eq!(view["direction"], "InitiatingMessage");
+    assert_eq!(view["procedure_code"], tree!(200));
+    assert_eq!(view["direction"], tree!("InitiatingMessage"));
     // Each IE is read with the type of its identifier, and has its name.
     let id = inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/value").unwrap();
     assert_eq!(id, [&tree!(7)]);
@@ -1758,7 +1784,7 @@ fn a_procedure_that_the_specification_does_not_have_has_a_view_of_its_ies() {
     assert_eq!(S1AP_PDU::from_tree(&tree).unwrap(), pdu);
     // Without the criticality, which no table has for it, it is refused.
     let mut unsaid = tree.clone();
-    unsaid.as_object_mut().unwrap().remove("criticality");
+    unsaid.as_object_mut().unwrap().shift_remove("criticality");
     let error = S1AP_PDU::from_tree(&unsaid).unwrap_err();
     assert_eq!(error.kind(), ErrorKind::Form);
     // A message that is no container of protocol IEs does not decode, and has no view:
@@ -1892,7 +1918,7 @@ fn a_name_is_its_letters_and_its_digits() {
     assert!(S1AP_PDU::from_view(&edited).is_ok());
     assert_eq!(
         inspect::message_named("ue context-release_REQUEST"),
-        Some(("InitiatingMessage", 18))
+        Some((Direction::Initiating, 18))
     );
 }
 
@@ -2082,7 +2108,7 @@ fn an_ie_is_written_by_its_name_and_its_octets_wherever_a_view_has_ies() {
     assert_eq!(inspect::select(&after, &octets).unwrap(), [&tree!("00")]);
     let mut edited = view.clone();
     let position = (view["message"]["protocolIEs"].as_array().unwrap().iter())
-        .position(|ie| ie["id"] == 24)
+        .position(|ie| ie["id"] == tree!(24))
         .unwrap();
     let raw = format!("/message/protocolIEs/{position}/value/-");
     inspect::insert(&mut edited, &raw, named.clone()).unwrap();
