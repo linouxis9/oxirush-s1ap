@@ -1,0 +1,41 @@
+# The differences between Wireshark and the crate that were triaged, which do not fail the run. A difference
+# that no row explains fails it; the first row that explains one is its verdict.
+#
+# Columns, separated by tabs: octets (`*`, the octets, or `re:` and a regular expression over them), where (a
+# regular expression over the path of the difference; for a row of a class, over the crate's error, Wireshark's
+# errors and what check() found, each error of Wireshark needing a row), what (a regular expression over the
+# kind of difference, or the class of a PDU: crate-refuses, ws-malformed), verdict, reference. A row of a class
+# explains the differences of the PDU too, unless its class is followed by ` alone`: an error after which
+# Wireshark reads on, or whose consequences are differences of their own.
+
+# Wireshark 4.6.4 has the ASN.1 of TS 36.413 V18.3.0, the crate that of V19.2.0
+*	.*	an IE that Wireshark does not know	wireshark-gap	TS 36.413 V19: an IE that V18.3.0 does not have
+*	.*	an extension that Wireshark does not know	wireshark-gap	TS 36.413 V19: an extension that V18.3.0 does not have
+
+# Both find the PDU faulty
+*	does not decode	ws-malformed	both-refuse	an IE that check() finds does not decode, where Wireshark stops
+*	the value is followed by \d+ octets	crate-refuses	several-pdus	a payload of several PDUs: Wireshark reads each, the crate one PDU a buffer, and refuses the octets after it
+*	Not a NAS (5GS|EPS) PD	ws-malformed alone	both-ignore	a NAS-PDU whose octets are no NAS message: the crate keeps them as octets, Wireshark's NAS dissector reports it
+*	All ESM / Test Procedures messages should be integrity protected	ws-malformed alone	both-ignore	a plain ESM message in a NAS-PDU: the crate keeps its octets, Wireshark's NAS dissector holds that it should be integrity protected
+*	Malformed Packet(: \S+| in \S+) after (lte[-_]rrc|nas-eps|gcsna|lppa|a21|ranap|ngap|e212|gsm_a|bssgp)\b|\[after (lte-rrc|nas-eps|gcsna|lppa|a21|ranap|ngap|e212|gsm_a|bssgp)\b	ws-malformed alone	both-ignore	the octets of another protocol in an octet string (an RRC container, a NAS-PDU, a CDMA2000, LPPa, RANAP, NGAP or GERAN value), which the crate keeps as octets: Wireshark's dissector of that protocol throws on, or reports, the octets of a test
+*	Malformed Packet: S1AP after s1ap\.NASSecurityParameterstoE_UTRAN\b	ws-malformed alone	both-ignore	a NAS security parameters to E-UTRAN too short for TS 24.301 §9.9.2.7, which the crate keeps as octets: Wireshark's NAS function throws, and reads no IE after it (W16)
+*	no alternative of the CHOICE	crate-refuses	crate-by-clause	an alternative of S1AP-PDU after its extension marker, which no procedure has (TS 36.413 §10.2): Wireshark notes it undecoded
+*	Missing Mandatory element	ws-malformed alone	both-ignore	a NAS-PDU or a GERAN container cut short: the crate keeps its octets, Wireshark's NAS or BSSGP dissector reports it
+*	/[a-z0-9]+	an IE that the crate keeps as octets, where Wireshark notes nothing \(check\(\): .*padding bits are not zero.*\)	crate-octets	a value not written as its sender writes it (padding bits that are not zero, X.691 §11.1.4): the tree keeps its octets and check() reports it, Wireshark reads the value without a note
+
+# Consequences
+*	.*	what the crate reads after Wireshark threw	consequence	the values of an IE, or the IEs of the message, after an exception of Wireshark, which it does not read: a row of its class explains the exception
+
+# Both leave aside what their version of the type does not have
+*	/[a-z0-9]+	an IE that the crate keeps as octets, where Wireshark notes: unknown sequence extension	both-ignore	an IE with extension additions that neither version of its type has: the crate keeps its octets, to send them as received, and Wireshark reads its root and notes the additions
+*	/privatemessage	a message that the crate keeps as octets	both-ignore	a PrivateMessage (TS 36.413 §9.3.1), whose IEs are of no specification: the crate keeps its octets, Wireshark notes their values as unknown
+*	/[a-z0-9]+	an IE that the crate keeps as octets, where Wireshark notes nothing \(check\(\): .*is not an IE of the message.*\)	crate-by-clause	an IE that the message does not have, so not comprehended in it (TS 36.413 §10.3.4.2), which check() reports: the crate keeps its octets, Wireshark reads it by its identifier
+
+# Wireshark's issues, as Wireshark 4.6.4 shows them
+*	/[a-z0-9]+/(additionalrrmpriorityindex|directforwardingpathavailability|gummeitype|loggedmbsfnmdt)	an IE or extension that Wireshark does not dissect	wireshark-bug	W12: an IE that Wireshark registers in its table of extensions where the ASN.1 has it as an IE, or the reverse, so that it finds no dissector for it there
+*	after s1ap\.private_id \(	ws-malformed alone	wireshark-bug	W13: a private IE of an object identifier, whose value Wireshark skips by as many bits as it has octets, and reads the next IE from inside it
+00000000	/handoverrequired	a message that the crate keeps as octets	wireshark-silent	W14: an open type of no octets (X.691: an encoding has one octet at least, and a HandoverRequired more), which Wireshark skips without a note; check() reports it
+00000000		a fault that only check\(\) finds	wireshark-silent	W14: an open type of no octets, which Wireshark skips without a note
+*	\(something unknown here \[too many extensions\]\)	ws-malformed alone	wireshark-limit	W15: a SEQUENCE of a later version with more than 32 extension additions, which Wireshark does not read
+*	/[a-z0-9]+	an IE that the crate keeps as octets, where Wireshark notes: something unknown here \[too many extensions\]	wireshark-limit	W15: a SEQUENCE of a later version with more than 32 extension additions: the crate keeps the octets of the IE, Wireshark stops
+*	Malformed Packet: S1AP after a21\.	ws-malformed alone	both-ignore	a CDMA2000 sector ID whose octets are not of 3GPP2 A.S0008 (a test): the crate keeps them, Wireshark's A21 function throws, and reads no IE after it (W16)
