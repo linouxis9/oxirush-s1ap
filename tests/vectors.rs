@@ -6,6 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use oxirush_s1ap::S1ap;
 use oxirush_s1ap::inspect;
 use oxirush_s1ap::s1ap::S1AP_PDU;
 use oxirush_s1ap::tree;
@@ -142,7 +143,7 @@ fn the_vectors_hold_each_message_and_each_ie_of_the_registry() {
         }
         found
     };
-    let names: BTreeMap<u16, &str> = inspect::ie_names().iter().copied().collect();
+    let names: BTreeMap<u16, &str> = S1ap::ie_names().iter().copied().collect();
     let (minimal, content) = (held(MESSAGES), held(VECTORS));
     assert_eq!(names.len(), 327);
 
@@ -158,7 +159,7 @@ fn the_vectors_hold_each_message_and_each_ie_of_the_registry() {
     assert_eq!(content.len(), 327);
 
     // Each of the 101 messages is in both files.
-    let messages: BTreeSet<_> = inspect::message_names().map(|(.., name)| name).collect();
+    let messages: BTreeSet<_> = S1ap::object_sets().iter().map(|set| set.name).collect();
     let of = |file| -> BTreeSet<&str> {
         let names = vectors(file).map(|(name, _)| name.split('/').next().unwrap());
         names.collect()

@@ -46,7 +46,7 @@ which `items()` of a PDU walks.
 
 ```
 use oxirush_s1ap::aper::BitString;
-use oxirush_s1ap::{build_s1ap, build_s1ap_ie, ie, s1ap::*};
+use oxirush_s1ap::{build_s1ap, Ie, ie, s1ap::*};
 
 // The default bearer: E-RAB 5 of QCI 9, and the S-GW's end of its tunnel
 let priority = AllocationAndRetentionPriority::new(PriorityLevel(15),
@@ -55,11 +55,11 @@ let priority = AllocationAndRetentionPriority::new(PriorityLevel(15),
 let qos = ERABLevelQoSParameters::new(QCI(9), priority, None, None);
 let bearer = ERABToBeSetupItemCtxtSUReq::new(ERABID(5), qos,
     TransportLayerAddress(BitString::from([10, 0, 0, 1])), GTPTEID([0, 0, 0, 1]), None, None);
-let request = build_s1ap!(InitiatingMessage, InitialContextSetup, InitialContextSetupRequest,
+let request = build_s1ap!(InitialContextSetupRequest,
     MME_UE_S1AP_ID(1u32),
     eNB_UE_S1AP_ID(7u32),
     E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(vec![
-        build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?,
+        ie::E_RABToBeSetupItemCtxtSUReq::field(Criticality::Reject, bearer)?,
     ])),
 )?;
 

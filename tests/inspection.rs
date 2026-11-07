@@ -2,7 +2,12 @@
 
 use oxirush_s1ap::tree;
 use oxirush_s1ap::tree::Value;
-use oxirush_s1ap::{Direction, build_s1ap, inspect, s1ap::*};
+use oxirush_s1ap::{Criticality, Direction, Presence, S1ap, build_s1ap, inspect, s1ap::*};
+
+/// The name that ASN.1 gives the message of a PDU.
+fn name_of(pdu: &S1AP_PDU) -> Option<&'static str> {
+    S1ap::object_set(pdu.direction(), pdu.procedure_code()).map(|set| set.name)
+}
 
 /// The value at a JSON pointer of a view, as `/message/protocolIEs/0/value`.
 trait Pointer {
@@ -100,8 +105,7 @@ fn editing_a_known_ie_cannot_drop_unknown_sequence_additions() {
 }
 
 fn release_request(enb_ue_id: u32) -> S1AP_PDU {
-    build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(enb_ue_id),
     )
@@ -147,8 +151,7 @@ fn the_octets_of_an_ie_are_replaced_or_added_as_its_raw_value_without_value() {
 
 #[test]
 fn a_new_ie_takes_a_typed_value_of_the_type_of_its_identifier() {
-    let with_cause = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let with_cause = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -179,13 +182,11 @@ fn a_new_ie_takes_a_typed_value_of_the_type_of_its_identifier() {
 
 #[test]
 fn a_new_ie_whose_value_is_a_string_is_typed_too() {
-    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
     )
     .unwrap();
-    let typed = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let typed = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         IGNORE RRC_Establishment_Cause(RRCEstablishmentCause::mo_Signalling),
         REJECT NAS_PDU(vec![0x07, 0x6a]),
@@ -296,7 +297,7 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
         ],
     });
     let pdu = S1AP_PDU::from_tree(&request).unwrap();
-    assert_eq!(inspect::message_name(&pdu), Some("UEContextReleaseRequest"));
+    assert_eq!(name_of(&pdu), Some("UEContextReleaseRequest"));
     let view = pdu.to_view().unwrap();
     assert_eq!(view["criticality"], tree!("ignore"));
     let criticalities = view["message"]["protocolIEs"].as_array().unwrap().iter();
@@ -892,10 +893,7 @@ fn sent(
     entries: &[oxirush_s1ap::tree::Value],
 ) -> Result<oxirush_s1ap::tree::Value, oxirush_s1ap::Error> {
     let pdu = build_s1ap!(
-        InitiatingMessage,
-        UEContextReleaseRequest,
-        IGNORE,
-        UEContextReleaseRequest,
+        IGNORE UEContextReleaseRequest,
     )
     .unwrap();
     let mut view = pdu.to_view()?;
@@ -1069,8 +1067,7 @@ fn an_enumerated_value_is_named_whatever_its_case_and_separators() {
 
 /// A UE CONTEXT RELEASE REQUEST: two UE S1AP IDs and a cause.
 fn release_with_cause() -> S1AP_PDU {
-    build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -1183,8 +1180,7 @@ fn short(view: &oxirush_s1ap::tree::Value, path: &str) -> String {
 #[test]
 fn an_ie_that_is_there_twice_goes_by_its_position() {
     use oxirush_s1ap::tree;
-    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         REJECT MME_UE_S1AP_ID(2u32),
@@ -1363,18 +1359,35 @@ fn a_message_goes_by_the_name_that_asn1_gives_it() {
     {
         let fields: Vec<_> = line.split('\t').collect();
         let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
-        assert_eq!(inspect::message_name(&pdu), Some(fields[0]));
+        assert_eq!(name_of(&pdu), Some(fields[0]));
     }
     // A name finds its message again, however it is written, and no other does.
-    for (direction, code, name) in inspect::message_names() {
-        let found = Some((direction, code));
-        assert_eq!(inspect::message_named(name), found, "{name}");
-        assert_eq!(inspect::message_named(&name.to_lowercase()), found);
-        assert_eq!(inspect::message_named(&name.replace('-', "")), found);
+    for set in S1ap::object_sets() {
+        let (name, found) = (set.name, Some((set.direction, set.procedure_code)));
+        assert_eq!(
+            S1ap::object_set_named(name).map(|set| (set.direction, set.procedure_code)),
+            found,
+            "{name}"
+        );
+        assert_eq!(
+            S1ap::object_set_named(&name.to_lowercase())
+                .map(|set| (set.direction, set.procedure_code)),
+            found
+        );
+        assert_eq!(
+            S1ap::object_set_named(&name.replace('-', ""))
+                .map(|set| (set.direction, set.procedure_code)),
+            found
+        );
     }
-    assert_eq!(inspect::message_named("NoSuchMessage"), None);
+    assert_eq!(
+        S1ap::object_set_named("NoSuchMessage").map(|set| (set.direction, set.procedure_code)),
+        None
+    );
     // The view of a message that is written from its name.
-    let (direction, procedure_code) = inspect::message_named("ue context release request").unwrap();
+    let (direction, procedure_code) = S1ap::object_set_named("ue context release request")
+        .map(|set| (set.direction, set.procedure_code))
+        .unwrap();
     let mut view = tree!({
         "direction": direction.name(),
         "procedure_code": procedure_code,
@@ -1388,7 +1401,7 @@ fn a_message_goes_by_the_name_that_asn1_gives_it() {
     )
     .unwrap();
     let pdu = S1AP_PDU::from_view(&view).unwrap();
-    assert_eq!(inspect::message_name(&pdu), Some("UEContextReleaseRequest"));
+    assert_eq!(name_of(&pdu), Some("UEContextReleaseRequest"));
     assert_eq!(pdu.direction(), Direction::Initiating);
 }
 
@@ -1465,77 +1478,73 @@ fn null_takes_an_optional_member_out() {
 }
 
 #[test]
-fn a_message_has_the_ies_of_its_object_set() {
+fn a_message_has_the_ies_and_the_criticalities_of_its_object_set() {
     let id = |name: &str| {
-        let mut names = inspect::ie_names().iter();
+        let mut names = S1ap::ie_names().iter();
         names.find(|(_, known)| *known == name).unwrap().0
     };
-    let ies = inspect::message_ies("InitialContextSetupRequest").unwrap();
-    assert_eq!(ies[0], (id("MME-UE-S1AP-ID"), true));
-    assert!(ies.contains(&(id("E-RABToBeSetupListCtxtSUReq"), true)));
-    assert!(ies.contains(&(id("TraceActivation"), false)));
-    let listed = |name: &str| ies.iter().any(|(ie, _)| *ie == id(name));
-    assert!(!listed("E-RABToBeSetupListBearerSUReq"));
-    // A name is taken as that of a message is, and a message without IEs has none.
+    let request = S1ap::object_set_named("InitialContextSetupRequest").unwrap();
+    assert_eq!(request.criticality, Criticality::Reject);
+    let ies = request.ies.unwrap();
+    let of = |name: &str| {
+        let ie = ies.iter().find(|(ie, ..)| *ie == id(name));
+        ie.map(|(_, criticality, presence)| (*criticality, *presence))
+    };
+    assert_eq!(ies[0].0, id("MME-UE-S1AP-ID"));
     assert_eq!(
-        inspect::message_ies("initial-context-setup-request"),
-        Some(ies)
+        of("MME-UE-S1AP-ID"),
+        Some((Criticality::Reject, Presence::Mandatory))
     );
-    assert_eq!(inspect::message_ies("PrivateMessage"), Some(&[][..]));
-    assert_eq!(inspect::message_ies("NoSuchMessage"), None);
-    // Every message has its IEs in the order of its set, each of them known.
-    for (.., name) in inspect::message_names() {
-        let ies = inspect::message_ies(name).unwrap();
-        assert!(name == "PrivateMessage" || !ies.is_empty(), "{name}");
-        for (ie, _) in ies {
-            assert!(
-                inspect::ie_names().iter().any(|(known, _)| known == ie),
-                "{name} {ie}"
-            );
-        }
-    }
-}
-
-#[test]
-fn a_message_has_the_criticality_that_asn1_assigns() {
-    let id = |name: &str| {
-        let mut names = inspect::ie_names().iter();
-        names.find(|(_, known)| *known == name).unwrap().0
-    };
-    let request = inspect::message_ie_criticalities("InitialContextSetupRequest").unwrap();
-    assert_eq!(request[0], (0, "reject"));
-    assert_eq!(request[0].0, id("MME-UE-S1AP-ID"));
-    assert!(request.contains(&(id("TraceActivation"), "ignore")));
+    assert_eq!(
+        of("E-RABToBeSetupListCtxtSUReq"),
+        Some((Criticality::Reject, Presence::Mandatory))
+    );
+    assert_eq!(
+        of("TraceActivation"),
+        Some((Criticality::Ignore, Presence::Optional))
+    );
+    assert_eq!(of("E-RABToBeSetupListBearerSUReq"), None);
     // An IE has the criticality that the set of each message gives it.
-    let response = inspect::message_ie_criticalities("InitialContextSetupResponse").unwrap();
-    assert_eq!(response[0], (id("MME-UE-S1AP-ID"), "ignore"));
+    let response = S1ap::object_set_named("InitialContextSetupResponse").unwrap();
+    let first = response.ies.unwrap()[0];
+    assert_eq!(
+        first,
+        (
+            id("MME-UE-S1AP-ID"),
+            Criticality::Ignore,
+            Presence::Mandatory
+        )
+    );
     // A name is taken as that of a message is, and a message without IEs has none.
+    let named = S1ap::object_set_named("initial-context-setup-request");
+    assert_eq!(named, Some(request));
+    assert_eq!(S1ap::object_set_named("PrivateMessage").unwrap().ies, None);
+    assert_eq!(S1ap::object_set_named("NoSuchMessage"), None);
+    // The procedure has its own criticality, which is that of each of its messages.
+    let procedure = |name: &str| S1ap::object_set_named(name).map(|set| set.criticality);
     assert_eq!(
-        inspect::message_ie_criticalities("initial-context-setup-request"),
-        Some(request)
+        procedure("initial-context-setup-response"),
+        Some(Criticality::Reject)
     );
-    assert_eq!(
-        inspect::message_ie_criticalities("PrivateMessage"),
-        Some(&[][..])
-    );
-    assert_eq!(inspect::message_ie_criticalities("NoSuchMessage"), None);
-    // The procedure has its own, which is that of each of its messages.
-    let procedure = inspect::message_criticality;
-    assert_eq!(procedure("InitialContextSetupRequest"), Some("reject"));
-    assert_eq!(procedure("initial-context-setup-response"), Some("reject"));
-    assert_eq!(procedure("Paging"), Some("ignore"));
-    assert_eq!(procedure("ErrorIndication"), Some("ignore"));
-    assert_eq!(procedure("NoSuchMessage"), None);
-    // Every message has the IEs of its set in their order, each with a criticality.
-    let known = ["reject", "ignore", "notify"];
-    for (.., name) in inspect::message_names() {
-        let ies = inspect::message_ies(name).unwrap().iter().map(|(ie, _)| ie);
-        let assigned = inspect::message_ie_criticalities(name).unwrap();
-        assert!(ies.eq(assigned.iter().map(|(ie, _)| ie)), "{name}");
-        for (ie, criticality) in assigned {
-            assert!(known.contains(criticality), "{name} {ie}");
+    assert_eq!(procedure("Paging"), Some(Criticality::Ignore));
+    assert_eq!(procedure("ErrorIndication"), Some(Criticality::Ignore));
+    // Every message is found by its direction and its procedure code, and has the IEs of
+    // its set, each of them known.
+    for set in S1ap::object_sets() {
+        assert_eq!(
+            S1ap::object_set(set.direction, set.procedure_code),
+            Some(set)
+        );
+        let ies = set.ies.unwrap_or_default();
+        assert!(
+            set.name == "PrivateMessage" || !ies.is_empty(),
+            "{}",
+            set.name
+        );
+        for (ie, ..) in ies {
+            let known = S1ap::ie_names().iter().any(|(known, _)| known == ie);
+            assert!(known, "{} {ie}", set.name);
         }
-        assert!(known.contains(&procedure(name).unwrap()), "{name}");
     }
 }
 
@@ -1549,15 +1558,24 @@ fn the_messages_of_the_fixtures_have_the_criticality_that_asn1_assigns() {
         let fields: Vec<_> = line.split('\t').collect();
         let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
         let view = pdu.to_view().unwrap();
-        let procedure = inspect::message_criticality(fields[0]);
-        assert_eq!(view["criticality"].as_str(), procedure, "{}", fields[0]);
-        let assigned = inspect::message_ie_criticalities(fields[0]).unwrap();
+        let set = S1ap::object_set_named(fields[0]).unwrap();
+        assert_eq!(
+            view["criticality"].as_str(),
+            Some(set.criticality.name()),
+            "{}",
+            fields[0]
+        );
+        let assigned = set.ies.unwrap_or_default();
         // A private message has no IEs of an object set.
         let entries = view["message"]["protocolIEs"].as_array();
         for ie in entries.into_iter().flatten() {
             let id = ie["id"].as_u64().unwrap();
-            let mut assigned = assigned.iter().filter(|(known, _)| u64::from(*known) == id);
-            let assigned = assigned.next().map(|(_, criticality)| *criticality);
+            let mut assigned = assigned
+                .iter()
+                .filter(|(known, ..)| u64::from(*known) == id);
+            let assigned = assigned
+                .next()
+                .map(|(_, criticality, _)| criticality.name());
             assert_eq!(ie["criticality"].as_str(), assigned, "{}", fields[0]);
             ies += 1;
         }
@@ -1585,23 +1603,26 @@ fn held(value: &oxirush_s1ap::tree::Value, ies: &mut Vec<(u64, String)>) {
 #[test]
 fn an_ie_that_a_value_holds_alone_has_the_criticality_of_its_object_sets() {
     let id = |name: &str| {
-        let mut names = inspect::ie_names().iter();
+        let mut names = S1ap::ie_names().iter();
         names.find(|(_, known)| *known == name).unwrap().0
     };
     // The items of a list of E-RABs, in a request and in its response.
-    let item = |name: &str| inspect::item_criticality(id(name));
-    assert_eq!(inspect::item_criticality(52), Some("reject"));
-    assert_eq!(item("E-RABToBeSetupItemCtxtSUReq"), Some("reject"));
-    assert_eq!(item("E-RABSetupItemCtxtSURes"), Some("ignore"));
+    let item = |name: &str| S1ap::item_criticality(id(name));
+    assert_eq!(S1ap::item_criticality(52), Some(Criticality::Reject));
+    assert_eq!(
+        item("E-RABToBeSetupItemCtxtSUReq"),
+        Some(Criticality::Reject)
+    );
+    assert_eq!(item("E-RABSetupItemCtxtSURes"), Some(Criticality::Ignore));
     // A list that a parameterized type makes of single containers, and the alternative
     // that extends a CHOICE.
-    assert_eq!(item("E-RABToBeSetupItemHOReq"), Some("reject"));
-    assert_eq!(item("LoggedMBSFNMDT"), Some("ignore"));
+    assert_eq!(item("E-RABToBeSetupItemHOReq"), Some(Criticality::Reject));
+    assert_eq!(item("LoggedMBSFNMDT"), Some(Criticality::Ignore));
     // RESET has this item with `reject` and RESET ACKNOWLEDGE with `ignore`.
     assert_eq!(item("UE-associatedLogicalS1-ConnectionItem"), None);
     // The IEs of a message are in no single container.
     assert_eq!(item("MME-UE-S1AP-ID"), None);
-    assert_eq!(inspect::item_criticality(u16::MAX), None);
+    assert_eq!(S1ap::item_criticality(u16::MAX), None);
     // The items of the fixtures have the criticality of their sets.
     let mut items = Vec::new();
     for line in include_str!("fixtures/messages.tsv")
@@ -1618,8 +1639,12 @@ fn an_ie_that_a_value_holds_alone_has_the_criticality_of_its_object_sets() {
     }
     assert!(items.len() > 10, "{}", items.len());
     for (id, criticality) in items {
-        let assigned = inspect::item_criticality(id.try_into().unwrap());
-        assert_eq!(assigned, Some(criticality.as_str()), "{id}");
+        let assigned = S1ap::item_criticality(id.try_into().unwrap());
+        assert_eq!(
+            assigned.map(Criticality::name),
+            Some(criticality.as_str()),
+            "{id}"
+        );
     }
 }
 
@@ -1647,7 +1672,7 @@ fn the_identifiers_of_the_registry_are_the_constants_of_the_bindings() {
         let number = number.trim_start_matches(kind).trim_matches(['(', ')']);
         constants.insert((kind.into(), letters(name)), number.parse().unwrap());
     }
-    for (id, name) in inspect::ie_names() {
+    for (id, name) in S1ap::ie_names() {
         let constant = constants.get(&("ProtocolIEID".into(), letters(name)));
         assert_eq!(constant, Some(&u64::from(*id)), "{name}");
     }
@@ -1917,7 +1942,8 @@ fn a_name_is_its_letters_and_its_digits() {
     assert_eq!(cause, [&tree!({"nas": "detach"})]);
     assert!(S1AP_PDU::from_view(&edited).is_ok());
     assert_eq!(
-        inspect::message_named("ue context-release_REQUEST"),
+        S1ap::object_set_named("ue context-release_REQUEST")
+            .map(|set| (set.direction, set.procedure_code)),
         Some((Direction::Initiating, 18))
     );
 }
@@ -1931,7 +1957,7 @@ fn a_path_is_checked_against_a_message_without_a_view() {
     {
         let wire = hex::decode(line.split('\t').nth(1).unwrap()).unwrap();
         let pdu = S1AP_PDU::decode(&wire).unwrap();
-        let name = inspect::message_name(&pdu).unwrap();
+        let name = name_of(&pdu).unwrap();
         let view = pdu.to_view().unwrap();
         for (path, _) in inspect::paths(&view) {
             let checked = inspect::check_path(name, &path);
@@ -2354,8 +2380,7 @@ fn modification(bits: usize) -> S1AP_PDU {
         IntegrityProtectionAlgorithms(mask(16)),
         None,
     );
-    build_s1ap!(InitiatingMessage, UEContextModification,
-        REJECT, UEContextModificationRequest,
+    build_s1ap!(REJECT UEContextModificationRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(1u32),
         REJECT UESecurityCapabilities(capabilities),

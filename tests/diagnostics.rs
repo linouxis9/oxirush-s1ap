@@ -28,7 +28,7 @@ fn areas() -> Result<SupportedTAs, Error> {
 
 /// An S1 SETUP REQUEST as an eNB sends it, whose last IE is the DefaultPagingDRX.
 fn request() -> Result<Vec<u8>, Error> {
-    build_s1ap!(InitiatingMessage, S1Setup, REJECT, S1SetupRequest,
+    build_s1ap!(REJECT S1SetupRequest,
         REJECT Global_ENB_ID(global_enb_id(plmn("208", "93")?, EnbKind::Macro, 1)?),
         IGNORE eNBname(ENBname("enb-1".into())),
         REJECT SupportedTAs(areas()?),
@@ -39,7 +39,7 @@ fn request() -> Result<Vec<u8>, Error> {
 
 /// The same request without its SupportedTAs.
 fn without_areas() -> Result<Vec<u8>, Error> {
-    build_s1ap!(InitiatingMessage, S1Setup, REJECT, S1SetupRequest,
+    build_s1ap!(REJECT S1SetupRequest,
         REJECT Global_ENB_ID(global_enb_id(plmn("208", "93")?, EnbKind::Macro, 1)?),
         IGNORE eNBname(ENBname("enb-1".into())),
         IGNORE DefaultPagingDRX(PagingDRX::v128),
@@ -103,7 +103,7 @@ fn reported(pdu: &S1AP_PDU) -> Result<(Cause, Vec<CriticalityDiagnosticsIEItem>)
 /// 10.3.5 and 10.3.6 have the procedure rejected.
 fn failure(pdu: &S1AP_PDU) -> Result<S1AP_PDU, Error> {
     let (cause, items) = reported(pdu)?;
-    build_s1ap!(UnsuccessfulOutcome, S1Setup, REJECT, S1SetupFailure,
+    build_s1ap!(REJECT S1SetupFailure,
         IGNORE Cause(cause),
         IGNORE CriticalityDiagnostics(diagnostics(false, items)),
     )
@@ -113,7 +113,7 @@ fn failure(pdu: &S1AP_PDU) -> Result<S1AP_PDU, Error> {
 /// 10.2 has it.
 fn indication(pdu: &S1AP_PDU) -> Result<S1AP_PDU, Error> {
     let (cause, items) = reported(pdu)?;
-    build_s1ap!(InitiatingMessage, ErrorIndication, IGNORE, ErrorIndication,
+    build_s1ap!(IGNORE ErrorIndication,
         IGNORE Cause(cause),
         IGNORE CriticalityDiagnostics(diagnostics(true, items)),
     )
@@ -332,7 +332,7 @@ fn each_deviation_has_the_cause_of_its_clause() -> Result<(), Error> {
     let ie =
         |id: u16, criticality| ProtocolIEField::new(ProtocolIEID(id), criticality, vec![0].into());
     let network = plmn("208", "93")?;
-    let mut pdu = build_s1ap!(InitiatingMessage, uplinkNASTransport, IGNORE, UplinkNASTransport,
+    let mut pdu = build_s1ap!(IGNORE UplinkNASTransport,
         REJECT eNB_UE_S1AP_ID(7u32),
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT NAS_PDU(vec![0x07, 0x5d]),
@@ -397,7 +397,7 @@ fn a_value_outside_the_root_of_an_extensible_constraint_is_reported() -> Result<
             ServedMMECs(vec![MMECode([0x01])]),
             None,
         );
-        build_s1ap!(SuccessfulOutcome, S1Setup, REJECT, S1SetupResponse,
+        build_s1ap!(REJECT S1SetupResponse,
             IGNORE MMEname(MMEname(name.into())),
             REJECT ServedGUMMEIs(ServedGUMMEIs(vec![served])),
             IGNORE RelativeMMECapacity(RelativeMMECapacity(255)),

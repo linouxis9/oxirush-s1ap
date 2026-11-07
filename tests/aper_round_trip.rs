@@ -1,11 +1,10 @@
 use oxirush_s1ap::aper::{Decode, Encode, decode, encode};
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{Bits, Error, ErrorKind, Octets, build_s1ap, extract_s1ap_ies};
+use oxirush_s1ap::{Bits, Error, ErrorKind, Ie, Octets, build_s1ap, extract_s1ap_ies};
 
 #[test]
 fn public_macros_round_trip_typed_open_message() -> Result<(), Error> {
-    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -55,8 +54,7 @@ fn every_constrained_list_encodes_its_length_per_x691() -> Result<(), Error> {
         ])),
         None,
     );
-    let error = build_s1ap!(InitiatingMessage, ErrorIndication,
-        IGNORE, ErrorIndication,
+    let error = build_s1ap!(IGNORE ErrorIndication,
         IGNORE Cause(Cause::protocol(CauseProtocol::abstract_syntax_error_reject)),
         IGNORE CriticalityDiagnostics(diagnostics),
     )?;
@@ -90,8 +88,7 @@ fn e_rab_container_lists_encode_their_size_constraint() -> Result<(), Error> {
         Criticality::Ignore,
         encode_open_type(&item).expect("encode E-RAB admitted item"),
     )]);
-    let acknowledge = build_s1ap!(SuccessfulOutcome, HandoverResourceAllocation,
-        REJECT, HandoverRequestAcknowledge,
+    let acknowledge = build_s1ap!(REJECT HandoverRequestAcknowledge,
         IGNORE MME_UE_S1AP_ID(1u32),
         IGNORE eNB_UE_S1AP_ID(2u32),
         IGNORE E_RABAdmittedList(admitted.clone()),
@@ -135,8 +132,7 @@ fn each_ecgi_list_encodes_its_own_size_constraint() -> Result<(), Error> {
     let cell = eutran_cgi(plmn("208", "93")?, EnbKind::Macro, 0x12345, 1)?;
     // The first bit of the sixteen.
     let identifier = Bits::from(0x8000u16);
-    let request = build_s1ap!(InitiatingMessage, WriteReplaceWarning,
-        REJECT, WriteReplaceWarningRequest,
+    let request = build_s1ap!(REJECT WriteReplaceWarningRequest,
         REJECT MessageIdentifier(MessageIdentifier(identifier)),
         REJECT SerialNumber(SerialNumber(identifier)),
         IGNORE WarningAreaList(WarningAreaList::cellIDList(ECGIList(vec![cell.clone()]))),
@@ -169,7 +165,7 @@ fn each_ecgi_list_encodes_its_own_size_constraint() -> Result<(), Error> {
 fn empty_encoding_in_an_open_type_is_one_zero_octet() -> Result<(), Error> {
     // The first bit of the sixteen.
     let identifier = Bits::from(0x8000u16);
-    let kill = build_s1ap!(InitiatingMessage, Kill, REJECT, KillRequest,
+    let kill = build_s1ap!(REJECT KillRequest,
         REJECT MessageIdentifier(MessageIdentifier(identifier)),
         REJECT SerialNumber(SerialNumber(identifier)),
         REJECT KillAllWarningMessages(KillAllWarningMessages::R_true),
@@ -195,8 +191,7 @@ fn empty_encoding_in_an_open_type_is_one_zero_octet() -> Result<(), Error> {
 #[test]
 fn reroute_nas_request_carries_the_s1_message_ie() -> Result<(), Error> {
     let message = hex::decode("000f40140000020002400131003a40087809000000001a40").unwrap();
-    let reroute = build_s1ap!(InitiatingMessage, RerouteNASRequest,
-        REJECT, RerouteNASRequest,
+    let reroute = build_s1ap!(REJECT RerouteNASRequest,
         REJECT eNB_UE_S1AP_ID(7u32),
         REJECT S1_Message(message.clone()),
         REJECT MME_Group_ID([0x80, 0x01]),
@@ -220,8 +215,7 @@ fn reroute_nas_request_carries_the_s1_message_ie() -> Result<(), Error> {
 /// An extracted field and its binding may share a name.
 #[test]
 fn extraction_binding_may_share_the_field_name() -> Result<(), Error> {
-    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
     )?;
@@ -242,23 +236,21 @@ fn extraction_binding_may_share_the_field_name() -> Result<(), Error> {
 /// take that alias wherever they take `eNB_UE_S1AP_ID`, the name of the IE.
 #[test]
 fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), Error> {
-    use oxirush_s1ap::{build_s1ap_ie, with_s1ap_ie_mut};
+    use oxirush_s1ap::{Ie, ie};
 
     // The alias is the type, and the two names are one entry.
     let id: ENB_UE_S1AP_ID = ENBUES1APID(7);
-    let by_alias = build_s1ap_ie!(UEContextReleaseRequest, REJECT ENB_UE_S1AP_ID(id))?;
-    let by_name = build_s1ap_ie!(UEContextReleaseRequest, REJECT eNB_UE_S1AP_ID(7u32))?;
+    let by_alias = ie::ENB_UE_S1AP_ID::field(Criticality::Reject, id)?;
+    let by_name = ie::eNB_UE_S1AP_ID::field(Criticality::Reject, 7u32)?;
     assert_eq!(by_alias, by_name);
     assert_eq!(by_alias.id, ID_E_NB_UE_S1_AP_ID);
 
     // A PDU that is built by the alias is the octets of one built by the name.
-    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT ENB_UE_S1AP_ID(7u32),
     )?;
-    let named = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let named = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(7u32),
     )?;
@@ -271,7 +263,7 @@ fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), Er
         opt absent: Cause = Cause(cause) => cause,
     );
     assert_eq!((read, absent), (7, None));
-    let renamed = with_s1ap_ie_mut!(request, UEContextReleaseRequest, ENB_UE_S1AP_ID(id) = 9u32);
+    let renamed = request.set_ie::<ie::ENB_UE_S1AP_ID>(9u32);
     assert_eq!(renamed, Ok(true));
     extract_s1ap_ies!(&request, UEContextReleaseRequest,
         req changed: u32 = eNB_UE_S1AP_ID(id),
@@ -282,8 +274,7 @@ fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), Er
 
 /// A message with the identifier that the functions below require, or without it.
 fn release_request(id: Option<u32>) -> UEContextReleaseRequest<'static> {
-    let ie =
-        |id: u32| oxirush_s1ap::build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(id));
+    let ie = |id: u32| oxirush_s1ap::ie::MME_UE_S1AP_ID::field(Criticality::Reject, id);
     let ies = id.map(|id| ie(id).expect("an identifier"));
     UEContextReleaseRequest::new(ProtocolIEContainer(ies.into_iter().collect()))
 }

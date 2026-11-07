@@ -104,9 +104,7 @@ fn main() -> Result<(), Error> {
     // ── Build test PDUs ─────────────────────────────────────────────────────
 
     // 1. UEContextReleaseRequest
-    let release_pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
-
+    let release_pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -114,9 +112,7 @@ fn main() -> Result<(), Error> {
 
     // 2. HandoverRequired
     let cause = Cause::radioNetwork(CauseRadioNetwork::handover_desirable_for_radio_reason);
-    let handover_pdu = build_s1ap!(InitiatingMessage, HandoverPreparation,
-        REJECT, HandoverRequired,
-
+    let handover_pdu = build_s1ap!(REJECT HandoverRequired,
         REJECT MME_UE_S1AP_ID(100u32),
         REJECT eNB_UE_S1AP_ID(50u32),
 
@@ -132,9 +128,7 @@ fn main() -> Result<(), Error> {
     let bit_rate =
         UEAggregateMaximumBitrate::new(BitRate(1_000_000_000), BitRate(500_000_000), None);
     let erabs = erab_to_be_setup_list(vec![0x07, 0x41, 0x00, 0x01]);
-    let ics_pdu = build_s1ap!(InitiatingMessage, InitialContextSetup,
-        REJECT, InitialContextSetupRequest,
-
+    let ics_pdu = build_s1ap!(REJECT InitialContextSetupRequest,
         REJECT MME_UE_S1AP_ID(200u32),
         REJECT eNB_UE_S1AP_ID(10u32),
 

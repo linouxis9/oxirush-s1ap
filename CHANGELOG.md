@@ -17,8 +17,25 @@ All notable changes to `oxirush-s1ap` are recorded here.
   compared with a tree, as `tree!("ignore")`, and no longer with a string or a
   number.
 
+- `build_s1ap!` takes the message alone, and the criticality of the PDU before it
+  where it is not that of its procedure: `build_s1ap!(IGNORE UEContextReleaseRequest,
+  ...)`. A variant of `S1apPduKind` is the name of the type of its message.
+- `message.set_ie::<ie::X>(value)` changes an IE, and `ie::X::field(criticality,
+  value)` and `ie::X::field_of::<Message>(value)` build one, with the trait `Ie`,
+  which the crate re-exports, in scope.
+- `S1ap::object_sets()`, `S1ap::object_set(direction, code)` and
+  `S1ap::object_set_named(name)` give what the ASN.1 says of each message: its
+  direction, its code, its name, the criticality of its procedure and its IEs
+  with their criticalities and their `Presence`. `S1ap::ie_names()` and
+  `S1ap::item_criticality(id)` give the names of the IEs and the criticality of
+  an IE in a single container.
+
 ### Removed
 
+- `with_s1ap_ie_mut!` and `build_s1ap_ie!`.
+- The lookups of `inspect`: `ie_names`, `message_names`, `message_name`,
+  `message_named`, `message_ies`, `message_ie_criticalities`,
+  `message_criticality` and `item_criticality`.
 - `is_initiating()`, `is_successful()` and `is_unsuccessful()`: compare
   `direction()` with a `Direction`.
 - `build/fields.tsv` and the hidden macros `__s1ap_ie_id!` and `__s1ap_proc_code!`.
@@ -32,6 +49,15 @@ All notable changes to `oxirush-s1ap` are recorded here.
 | `pdu.direction() == "SuccessfulOutcome"` | `pdu.direction() == Direction::Successful` |
 | `inspect::message_named(name)` gives `("InitiatingMessage", code)` | it gives `(Direction::Initiating, code)` |
 | `tree["message"] == "..."` | `tree["message"] == tree!("...")` (oxirush-utils 0.2.0) |
+| `build_s1ap!(InitiatingMessage, UEContextReleaseRequest, UEContextReleaseRequest, ...)` | `build_s1ap!(UEContextReleaseRequest, ...)` |
+| `build_s1ap!(SuccessfulOutcome, Proc, IGNORE, Response, ...)` | `build_s1ap!(IGNORE Response, ...)` |
+| `S1apPduKind::Initiating_Proc` | `S1apPduKind::` and the name of the type of the message |
+| `with_s1ap_ie_mut!(m, M, X(id) = v)` | `m.set_ie::<ie::X>(v)` |
+| `build_s1ap_ie!(REJECT X(v))` | `ie::X::field(Criticality::Reject, v)` |
+| `build_s1ap_ie!(Message, X(v))` | `ie::X::field_of::<Message>(v)` |
+| `inspect::message_ies(name)` | `S1ap::object_set_named(name)`, and its `ies` |
+| `inspect::message_names()`, `message_named(name)` | `S1ap::object_sets()`, `S1ap::object_set_named(name)` |
+| `inspect::message_name(&pdu)` | `S1ap::object_set(pdu.direction(), pdu.procedure_code())`, and its `name` |
 
 ### Added
 

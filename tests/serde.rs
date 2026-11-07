@@ -133,7 +133,7 @@ fn a_type_of_the_bindings_is_serialized_as_the_tree_of_a_pdu_shows_it() {
     assert_eq!(written(&other), tree!("ffffff"));
     assert_eq!(read::<PLMNidentity>(&tree!("ffffff")).unwrap(), other);
     // The same value in a tree of a PDU.
-    let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, IGNORE, InitialUEMessage,
+    let pdu = build_s1ap!(IGNORE InitialUEMessage,
         REJECT eNB_UE_S1AP_ID(7u32),
         REJECT NAS_PDU(vec![0x07, 0x41]),
         REJECT TAI(area.clone()),

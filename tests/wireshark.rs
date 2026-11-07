@@ -38,6 +38,7 @@ use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+use oxirush_s1ap::S1ap;
 use oxirush_s1ap::inspect;
 use oxirush_s1ap::s1ap::S1AP_PDU;
 use oxirush_utils::tree::{Map, Value as Tree};
@@ -64,7 +65,7 @@ fn as_tree(value: &Tree) -> Tree {
                 .get("_ie_name")
                 .and_then(Tree::as_str)
                 .or_else(|| {
-                    let names = inspect::ie_names().iter();
+                    let names = S1ap::ie_names().iter();
                     names
                         .copied()
                         .find(|&(of, _)| Some(u64::from(of)) == id)

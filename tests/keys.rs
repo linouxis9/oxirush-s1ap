@@ -38,7 +38,7 @@ fn debug_of_a_key_and_of_what_holds_one_shows_its_length() {
 #[test]
 fn debug_of_a_message_with_a_key_shows_the_length_of_its_octets() -> Result<(), Error> {
     // An INITIAL CONTEXT SETUP REQUEST with K_eNB
-    let pdu = build_s1ap!(InitiatingMessage, InitialContextSetup, REJECT, InitialContextSetupRequest,
+    let pdu = build_s1ap!(REJECT InitialContextSetupRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         REJECT SecurityKey(SecurityKey::from(KENB)),
@@ -90,7 +90,7 @@ fn debug_of_a_message_with_a_key_shows_the_length_of_its_octets() -> Result<(), 
 fn debug_of_a_message_with_a_security_context_shows_no_next_hop() -> Result<(), Error> {
     // A PATH SWITCH REQUEST ACKNOWLEDGE with the next hop NH
     let context = SecurityContext::new(1, SecurityKey::from(NH), None);
-    let pdu = build_s1ap!(SuccessfulOutcome, PathSwitchRequest, REJECT, PathSwitchRequestAcknowledge,
+    let pdu = build_s1ap!(REJECT PathSwitchRequestAcknowledge,
         IGNORE MME_UE_S1AP_ID(1u32),
         IGNORE eNB_UE_S1AP_ID(7u32),
         REJECT SecurityContext(context),
@@ -108,7 +108,7 @@ fn debug_of_a_message_with_a_security_context_shows_no_next_hop() -> Result<(), 
 #[test]
 fn debug_of_a_message_without_a_key_shows_its_octets() -> Result<(), Error> {
     // An UPLINK NAS TRANSPORT: its object set has no IE that holds a key
-    let pdu = build_s1ap!(InitiatingMessage, uplinkNASTransport, IGNORE, UplinkNASTransport,
+    let pdu = build_s1ap!(IGNORE UplinkNASTransport,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         REJECT NAS_PDU(vec![0x7e, 0x00, 0x5d]),
@@ -123,7 +123,7 @@ fn debug_of_a_message_without_a_key_shows_its_octets() -> Result<(), Error> {
 #[cfg(feature = "inspect")]
 #[test]
 fn a_tree_and_a_view_have_the_key() -> Result<(), Error> {
-    let pdu = build_s1ap!(InitiatingMessage, InitialContextSetup, REJECT, InitialContextSetupRequest,
+    let pdu = build_s1ap!(REJECT InitialContextSetupRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         REJECT SecurityKey(SecurityKey::from(KENB)),

@@ -2,7 +2,7 @@
 
 use oxirush_s1ap::Octets;
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{Error, ErrorKind, build_s1ap, build_s1ap_ie};
+use oxirush_s1ap::{Error, ErrorKind, Ie, build_s1ap, ie};
 
 /// The messages of the fixtures, then the vectors with content: the name of each, and
 /// the octets of its PDU.
@@ -44,16 +44,15 @@ fn the_ies_of_every_message_are_read_and_put_back_as_the_same_octets() {
 #[test]
 fn a_message_that_the_macros_built_has_the_ies_that_it_was_built_with() -> Result<(), Error> {
     let cause = || Cause::radioNetwork(CauseRadioNetwork::user_inactivity);
-    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(cause()),
     )?;
     let built = vec![
-        build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(42u32))?,
-        build_s1ap_ie!(UEContextReleaseRequest, REJECT eNB_UE_S1AP_ID(7u32))?,
-        build_s1ap_ie!(UEContextReleaseRequest, IGNORE Cause(cause()))?,
+        ie::MME_UE_S1AP_ID::field(Criticality::Reject, 42u32)?,
+        ie::eNB_UE_S1AP_ID::field(Criticality::Reject, 7u32)?,
+        ie::Cause::field(Criticality::Ignore, cause())?,
     ];
     assert_eq!(pdu.protocol_ies()?.0, built);
 
@@ -74,19 +73,19 @@ fn an_unknown_ie_and_a_repeated_one_are_kept_with_their_criticality() -> Result<
         Criticality::Notify,
         Octets::from(vec![0xc0, 0xff]),
     );
-    let mut again = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(2u32))?;
+    let mut again = ie::MME_UE_S1AP_ID::field(Criticality::Reject, 2u32)?;
     again.criticality = Criticality::Ignore;
     let ies = vec![
-        build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(1u32))?,
+        ie::MME_UE_S1AP_ID::field(Criticality::Reject, 1u32)?,
         unknown,
         again,
-        build_s1ap_ie!(S1SetupFailure, NOTIFY TimeToWait(TimeToWait::v5s))?,
+        ie::TimeToWait::field(Criticality::Notify, TimeToWait::v5s)?,
     ];
 
     // Put into a message that had three other IEs: the PDU is the same but for them.
     let mut pdu = S1AP_PDU::decode(&hex::decode(RELEASE_REQUEST).unwrap())?;
     pdu.set_protocol_ies(ProtocolIEContainer(ies.clone()))?;
-    assert_eq!(pdu.kind(), S1apPduKind::Initiating_UEContextReleaseRequest);
+    assert_eq!(pdu.kind(), S1apPduKind::UEContextReleaseRequest);
     let S1AP_PDU::initiatingMessage(held) = &pdu else {
         panic!("{pdu}");
     };
@@ -176,7 +175,7 @@ fn a_message_without_protocol_ies_and_octets_that_are_none_are_errors() -> Resul
     );
 
     // More IEs than a container has: the PDU is as it was.
-    let ie = build_s1ap_ie!(UEContextReleaseRequest, REJECT eNB_UE_S1AP_ID(7u32))?;
+    let ie = ie::eNB_UE_S1AP_ID::field(Criticality::Reject, 7u32)?;
     let mut pdu = request.clone();
     let error = pdu
         .set_protocol_ies(ProtocolIEContainer(vec![ie; 65536]))
@@ -198,8 +197,7 @@ fn a_message_without_protocol_ies_and_octets_that_are_none_are_errors() -> Resul
 #[test]
 fn a_field_takes_the_value_of_an_ie_as_its_type_or_as_the_value_that_it_names() -> Result<(), Error>
 {
-    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -244,11 +242,11 @@ fn an_item_of_a_list_of_single_containers_is_built_without_the_name_of_a_message
             None,
             None,
         );
-        build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(item))
+        ie::E_RABToBeSetupItemCtxtSUReq::field(Criticality::Reject, item)
     };
     let bearers = ERABToBeSetupListCtxtSUReq(vec![bearer(5)?, bearer(6)?]);
     let rates = UEAggregateMaximumBitrate::new(BitRate(100_000_000), BitRate(50_000_000), None);
-    let pdu = build_s1ap!(InitiatingMessage, InitialContextSetup, REJECT, InitialContextSetupRequest,
+    let pdu = build_s1ap!(REJECT InitialContextSetupRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         REJECT uEaggregateMaximumBitrate(rates),
@@ -277,7 +275,10 @@ fn an_item_of_a_list_of_single_containers_is_built_without_the_name_of_a_message
     assert_eq!(ids, [5, 6]);
 
     // With the name of a message before it, an IE is the same IE.
-    let named = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(42u32))?;
-    assert_eq!(named, build_s1ap_ie!(REJECT MME_UE_S1AP_ID(42u32))?);
+    let named = ie::MME_UE_S1AP_ID::field(Criticality::Reject, 42u32)?;
+    assert_eq!(
+        named,
+        ie::MME_UE_S1AP_ID::field(Criticality::Reject, 42u32)?
+    );
     Ok(())
 }

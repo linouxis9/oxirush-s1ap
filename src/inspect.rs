@@ -292,9 +292,8 @@
 //! "GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
 //! ```
 //!
-//! The functions `message_ies`, `message_ie_criticalities`, `item_criticality`
-//! and the others of this module give what the ASN.1 says of each message, which
-//! `check_path` reads.
+//! [`S1ap::object_set`](crate::S1ap::object_set) gives what the ASN.1 says of each
+//! message, which `check_path` reads.
 //!
 //! ## The container of a handover
 //!
@@ -436,7 +435,8 @@
 //! A name is its letters and its digits, whatever their case and whatever is between
 //! them: `/s1ap/eNB-UE-S1AP-ID`, `/S1AP/enb_ue_s1ap_id` and `/s1ap/enbues1apid` are one
 //! path. The root, the name of an IE, the members of a value, the name of a message
-//! ([`message_named`], [`check_path`]) and the name of an ENUMERATED value are all taken
+//! ([`S1ap::object_set_named`](crate::S1ap::object_set_named), [`check_path`]) and the
+//! name of an ENUMERATED value are all taken
 //! this way, and no two of them that could be taken for each other are the same. A
 //! member that starts with `_` is named as it is.
 //!
@@ -460,7 +460,7 @@
 //!
 //! [`check_path`] says the same of a path without a view: whether it can select
 //! anything in a message of a name, whose IEs are those of its object set
-//! ([`message_ies`]).
+//! ([`S1ap::object_set_named`](crate::S1ap::object_set_named)).
 //!
 //! ## Edits
 //!
@@ -480,8 +480,7 @@
 //! use oxirush_s1ap::{build_s1ap, inspect, s1ap::*};
 //! use oxirush_s1ap::tree;
 //!
-//! let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-//!     IGNORE, UEContextReleaseRequest,
+//! let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
 //!     REJECT MME_UE_S1AP_ID(1u32),
 //!     REJECT eNB_UE_S1AP_ID(7u32),
 //!     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -621,12 +620,7 @@
 // The tables, the paths and the functions of the module, which oxirush-aper writes for
 // both protocols.
 oxirush_aper::__inspect! {
-    bindings s1ap, pdu S1APPDU, hooks oxirush_s1ap_hooks, any crate::s1ap::ErrorIndication<'a>;
-/// The criticality that ASN.1 assigns to the IE `id` where a value holds it alone, in a
-/// `ProtocolIE-SingleContainer`, as an item of a list of E-RABs or the alternative that
-/// extends a CHOICE: `"reject"`, `"ignore"` or `"notify"`. `None` for an IE that no object
-/// set of a single container has, as the IEs of a message, and for one that two of these
-/// sets give two criticalities, as `UE-associatedLogicalS1-ConnectionItem`.
+    bindings s1ap, pdu S1APPDU, hooks oxirush_s1ap_hooks, any crate::s1ap::ErrorIndication<'a>
 }
 
 use crate::s1ap::{S1AP_PDU, S1APPDU};
@@ -680,7 +674,7 @@ impl S1APPDU<'_> {
     /// ```
     ///
     /// The `criticality` of an IE that a value holds alone or as an entry of a list is
-    /// left out when it is the one that [`item_criticality`] gives. That of an IE of an
+    /// left out when it is the one that the single containers gives. That of an IE of an
     /// extension container is always there: the tables have the criticality that an object
     /// set assigns for the messages of the procedures and for the single containers only.
     ///
@@ -719,7 +713,7 @@ impl S1APPDU<'_> {
     /// A value is written as [`to_tree`](Self::to_tree) shows it: a transfer as its
     /// decoded value, or as its `octets`, and each IE that the value holds as its name
     /// with its value. Such an IE says its `criticality` where
-    /// [`to_tree`](Self::to_tree) always shows it, and where [`item_criticality`] has
+    /// [`to_tree`](Self::to_tree) always shows it, and where the single containers has
     /// none for it. A value is also written as [`to_view`](Self::to_view) shows it, with
     /// `decoded` for the value of a transfer and an entry with its `id`, its
     /// `criticality` and its `value` for an IE, and the two forms are taken in one tree.

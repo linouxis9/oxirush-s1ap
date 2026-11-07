@@ -76,7 +76,7 @@ impl<'a> S1APPDU<'a> {
     /// this amends a message of any type:
     ///
     /// ```
-    /// use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
+    /// use oxirush_s1ap::{Ie, ie, s1ap::*};
     ///
     /// // An S1 SETUP FAILURE
     /// let failure = hex::decode("401100080000010002400145").unwrap();
@@ -84,11 +84,11 @@ impl<'a> S1APPDU<'a> {
     ///
     /// // Its IEs, with one more: they are owned, as the PDU is changed
     /// let mut ies = pdu.protocol_ies()?.into_owned();
-    /// let wait = build_s1ap_ie!(S1SetupFailure, IGNORE TimeToWait(TimeToWait::v5s))?;
+    /// let wait = ie::TimeToWait::field(Criticality::Ignore, TimeToWait::v5s)?;
     /// ies.0.push(wait);
     /// pdu.set_protocol_ies(ies)?;
     ///
-    /// assert_eq!(pdu.kind(), S1apPduKind::Unsuccessful_S1Setup);
+    /// assert_eq!(pdu.kind(), S1apPduKind::S1SetupFailure);
     /// let failure: S1SetupFailure = pdu.decode_value()?;
     /// assert_eq!(failure.protocol_ies.0.len(), 2);
     /// # Ok::<(), oxirush_s1ap::Error>(())
@@ -120,7 +120,7 @@ impl<'a> S1APPDU<'a> {
     /// use oxirush_s1ap::{build_s1ap, ie, s1ap::*};
     ///
     /// // A UE CONTEXT RELEASE REQUEST with its eNB-UE-S1AP-ID twice
-    /// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, UEContextReleaseRequest,
+    /// let pdu = build_s1ap!(UEContextReleaseRequest,
     ///     MME_UE_S1AP_ID(42u32),
     ///     eNB_UE_S1AP_ID(7u32),
     ///     eNB_UE_S1AP_ID(8u32),
@@ -175,8 +175,7 @@ impl<'a> S1APPDU<'a> {
     /// use oxirush_s1ap::{build_s1ap, s1ap::*};
     ///
     /// // A message that is at hand, as one that a test changed after it was decoded
-    /// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-    ///     IGNORE, UEContextReleaseRequest,
+    /// let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
     ///     REJECT MME_UE_S1AP_ID(1u32),
     ///     REJECT eNB_UE_S1AP_ID(7u32),
     ///     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -228,8 +227,7 @@ impl<'a> S1APPDU<'a> {
     ///
     /// // A UE CONTEXT RELEASE REQUEST without its Cause, and with its two identifiers
     /// // in the other order
-    /// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-    ///     IGNORE, UEContextReleaseRequest,
+    /// let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
     ///     REJECT eNB_UE_S1AP_ID(7u32),
     ///     REJECT MME_UE_S1AP_ID(42u32),
     /// )?;
@@ -272,7 +270,7 @@ impl<'a> S1APPDU<'a> {
     /// use oxirush_s1ap::{build_s1ap, s1ap::*};
     ///
     /// // A UE CONTEXT RELEASE REQUEST without its Cause
-    /// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, UEContextReleaseRequest,
+    /// let pdu = build_s1ap!(UEContextReleaseRequest,
     ///     MME_UE_S1AP_ID(42u32),
     ///     eNB_UE_S1AP_ID(7u32),
     /// )?;
@@ -304,8 +302,7 @@ impl<'a> S1APPDU<'a> {
     ///
     /// // A UE CONTEXT RELEASE REQUEST without its eNB UE S1AP ID, which is mandatory and
     /// // of the criticality reject: the procedure has no response
-    /// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, IGNORE,
-    ///     UEContextReleaseRequest,
+    /// let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
     ///     REJECT MME_UE_S1AP_ID(42u32),
     ///     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
     /// )?;
@@ -338,7 +335,7 @@ impl<'a> S1APPDU<'a> {
     ///
     /// // An S1 SETUP REQUEST without its Global eNB ID, which is mandatory and of
     /// // the criticality reject: the S1 SETUP FAILURE says so
-    /// let pdu = build_s1ap!(InitiatingMessage, S1Setup, REJECT, S1SetupRequest,
+    /// let pdu = build_s1ap!(REJECT S1SetupRequest,
     ///     IGNORE DefaultPagingDRX(PagingDRX::v128),
     /// )?;
     /// let deviations = pdu.check()?;

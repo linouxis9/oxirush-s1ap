@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("MME UE {mme_id}, eNB UE {enb_id}, cause {cause:?}");
 
     // Build the same message with another cause, and encode it
-    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, UEContextReleaseRequest,
+    let pdu = build_s1ap!(UEContextReleaseRequest,
         MME_UE_S1AP_ID(42u32),
         eNB_UE_S1AP_ID(7u32),
         Cause(Cause::radioNetwork(CauseRadioNetwork::radio_connection_with_ue_lost)),
@@ -74,7 +74,7 @@ context and KeNB. S1AP carries each NAS message as octets, in a NAS-PDU.
 
 ```rust
 use oxirush_s1ap::helpers::*;
-use oxirush_s1ap::{BitString, build_s1ap, build_s1ap_ie, extract_s1ap_ies, s1ap::*};
+use oxirush_s1ap::{BitString, build_s1ap, Ie, ie, extract_s1ap_ies, s1ap::*};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let network = plmn("208", "93")?;
@@ -82,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The eNB: its identity, its name and the tracking area it serves
     let enb = global_enb_id(network, EnbKind::Macro, 0x12345)?;
     let area = SupportedTAsItem::new(TAC([0, 1]), BPLMNs(vec![network]), None);
-    let request = build_s1ap!(InitiatingMessage, S1Setup, S1SetupRequest,
+    let request = build_s1ap!(S1SetupRequest,
         Global_ENB_ID(enb),
         eNBname("enb-1"),
         SupportedTAs(SupportedTAs(vec![area])),
@@ -102,7 +102,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ServedMMECs(vec![MMECode([1])]),
         None,
     );
-    let response = build_s1ap!(SuccessfulOutcome, S1Setup, S1SetupResponse,
+    let response = build_s1ap!(S1SetupResponse,
         MMEname("mme-1"),
         ServedGUMMEIs(ServedGUMMEIs(vec![served])),
         RelativeMMECapacity(RelativeMMECapacity(255)),
@@ -111,7 +111,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // The eNB forwards an ATTACH REQUEST, with the cell the UE is in
     let attach = hex::decode("07410108298039000000001002e0e000040201d031")?;
-    let initial = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+    let initial = build_s1ap!(InitialUEMessage,
         eNB_UE_S1AP_ID(7u32),
         NAS_PDU(attach),
         TAI(tai(network, [0, 1])),
@@ -132,7 +132,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let authentication = hex::decode(
         "07520023553cbe9637a89d218ae64dae47bf3510aa689c648350b9b9a4a8043ac07aa7e0",
     )?;
-    let downlink = build_s1ap!(InitiatingMessage, downlinkNASTransport, DownlinkNASTransport,
+    let downlink = build_s1ap!(DownlinkNASTransport,
         MME_UE_S1AP_ID(1u32),
         eNB_UE_S1AP_ID(enb_id),
         NAS_PDU(authentication),
@@ -156,11 +156,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some(NASPDU::from(accept)),
         None,
     );
-    let bearers = vec![build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?];
+    let bearers = vec![ie::E_RABToBeSetupItemCtxtSUReq::field(Criticality::Reject, bearer)?];
     let rates = UEAggregateMaximumBitrate::new(BitRate(100_000_000), BitRate(50_000_000), None);
     let mut k_enb = [0; 32];
     hex::decode_to_slice("cd49a4ae7001cf3c810a89f47ced1b130f7b3f9b42bc9707431b3fb4e62b20fc", &mut k_enb)?;
-    let setup = build_s1ap!(InitiatingMessage, InitialContextSetup, InitialContextSetupRequest,
+    let setup = build_s1ap!(InitialContextSetupRequest,
         MME_UE_S1AP_ID(1u32),
         eNB_UE_S1AP_ID(enb_id),
         uEaggregateMaximumBitrate(rates),
@@ -201,7 +201,7 @@ fn receive(octets: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     // `decode_borrowed` copies nothing: the PDU borrows from `octets`
     let pdu = S1AP_PDU::decode_borrowed(octets)?;
     match pdu.kind() {
-        S1apPduKind::Initiating_UEContextReleaseRequest => {
+        S1apPduKind::UEContextReleaseRequest => {
             // Only the IEs that a field asks for are decoded
             extract_s1ap_ies!(pdu, UEContextReleaseRequest,
                 req mme_id: u32 = MME_UE_S1AP_ID(id),
@@ -229,7 +229,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```text
 release of MME UE 42, eNB UE 7: Some(radioNetwork(user_inactivity))
-Unsuccessful_S1Setup is not handled here
+S1SetupFailure is not handled here
 ```
 
 | Method | Does |
@@ -254,8 +254,8 @@ decoded value. An error goes to the enclosing function through `?`.
 A `lax` field reads an IE the way TS 36.413 (10.3.4.2) has a receiver treat
 an IE of criticality `ignore`: one that does not decode counts as absent.
 When an IE is repeated, the macro and `ie` take the first, and `ies` gives
-each. `with_s1ap_ie_mut!` changes one IE of a message in place, and
-`build_s1ap_ie!` builds one: their documentation has an example of each.
+each. `message.set_ie::<ie::X>(value)` changes one IE of a message in place,
+and `ie::X::field(criticality, value)` builds one.
 
 ## Build a PDU
 
@@ -276,7 +276,7 @@ use oxirush_s1ap::{Message, build_s1ap, s1ap::*};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The criticalities of the procedure and of the message's object set
-    let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+    let pdu = build_s1ap!(InitialUEMessage,
         eNB_UE_S1AP_ID(7u32),
         NAS_PDU(vec![0x07, 0x41, 0x71]),
     )?;
@@ -288,7 +288,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", again == pdu);
 
     // An IE that the message cannot have has no criticality to take
-    let error = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage,
+    let error = build_s1ap!(InitialUEMessage,
         TimeToWait(TimeToWait::v10s),
     );
     if let Err(error) = error {
@@ -306,14 +306,14 @@ TimeToWait is no IE of the object set of InitialUEMessage, which assigns it no c
 
 ## E-RAB lists and handover containers
 
-An item of an E-RAB list is an IE alone in its container: `build_s1ap_ie!`
+An item of an E-RAB list is an IE alone in its container: `ie::X::field`
 builds it without naming a message, and `items::<L>()` reads each item of a
 list where it is in the PDU. A handover container carries another encoded
 value (TS 36.413, 9.2.1.56): `decode_open_type` reads it as the type you
 name, and `encode_open_type` writes it.
 
 ```rust
-use oxirush_s1ap::{BitString, build_s1ap, build_s1ap_ie, ie, s1ap::*};
+use oxirush_s1ap::{BitString, build_s1ap, Ie, ie, s1ap::*};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // One E-RAB to set up, as the item of its list
@@ -331,8 +331,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         None,
         None,
     );
-    let item = build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?;
-    let pdu = build_s1ap!(InitiatingMessage, InitialContextSetup, InitialContextSetupRequest,
+    let item = ie::E_RABToBeSetupItemCtxtSUReq::field(Criticality::Reject, bearer)?;
+    let pdu = build_s1ap!(InitialContextSetupRequest,
         MME_UE_S1AP_ID(1u32),
         eNB_UE_S1AP_ID(7u32),
         E_RABToBeSetupListCtxtSUReq(vec![item]),
@@ -372,7 +372,7 @@ use oxirush_s1ap::{Deviation, build_s1ap, s1ap::*};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // An S1 SETUP REQUEST with the wrong criticality, an IE it cannot have,
     // and none of its mandatory IEs but the paging DRX
-    let request = build_s1ap!(InitiatingMessage, S1Setup, IGNORE, S1SetupRequest,
+    let request = build_s1ap!(IGNORE S1SetupRequest,
         IGNORE DefaultPagingDRX(PagingDRX::v128),
         REJECT TimeToWait(TimeToWait::v5s),
     )?;
@@ -384,7 +384,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // The MME rejects the procedure, and reports the IEs at fault
     let cause = deviations.iter().find_map(Deviation::cause).ok_or("no cause")?;
-    let failure = build_s1ap!(UnsuccessfulOutcome, S1Setup, S1SetupFailure,
+    let failure = build_s1ap!(S1SetupFailure,
         Cause(Cause::protocol(cause)),
         CriticalityDiagnostics(received.criticality_diagnostics_for_response(&deviations)),
     )?;

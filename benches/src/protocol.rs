@@ -101,7 +101,7 @@ fn initial_context_setup_request() -> Written {
              /e-RABlevelQoSParameters/allocationRetentionPriority/priorityLevel",
             tree!(3),
         ),
-        typed: typed!(InitiatingMessage InitialContextSetup REJECT InitialContextSetupRequest {
+        typed: typed!(REJECT InitialContextSetupRequest {
             REJECT MME_UE_S1AP_ID: MMEUES1APID,
             REJECT eNB_UE_S1AP_ID: ENBUES1APID,
             REJECT uEaggregateMaximumBitrate: UEAggregateMaximumBitrate,
@@ -133,7 +133,7 @@ fn e_rab_setup_request() -> Written {
             "/s1ap/E-RABToBeSetupListBearerSUReq/7/E-RABToBeSetupItemBearerSUReq/gTP-TEID",
             tree!(0x0200_000c),
         ),
-        typed: typed!(InitiatingMessage E_RABSetup REJECT ERABSetupRequest {
+        typed: typed!(REJECT ERABSetupRequest {
             REJECT MME_UE_S1AP_ID: MMEUES1APID,
             REJECT eNB_UE_S1AP_ID: ENBUES1APID,
             REJECT uEaggregateMaximumBitrate: UEAggregateMaximumBitrate,
@@ -181,7 +181,7 @@ fn handover_required() -> Written {
         tree,
         path: "/s1ap/TargetID/targeteNB-ID/selected-TAI/tAC",
         edit: ("/s1ap/TargetID/targeteNB-ID/selected-TAI/tAC", tree!(2)),
-        typed: typed!(InitiatingMessage HandoverPreparation REJECT HandoverRequired {
+        typed: typed!(REJECT HandoverRequired {
             REJECT MME_UE_S1AP_ID: MMEUES1APID,
             REJECT eNB_UE_S1AP_ID: ENBUES1APID,
             REJECT HandoverType: HandoverType,
@@ -210,7 +210,7 @@ fn paging() -> Written {
         tree,
         path: "/s1ap/TAIList/15/TAIItem/tAI/tAC",
         edit: ("/s1ap/TAIList/15/TAIItem/tAI/tAC", tree!(17)),
-        typed: typed!(InitiatingMessage Paging IGNORE Paging {
+        typed: typed!(IGNORE Paging {
             IGNORE UEIdentityIndexValue: UEIdentityIndexValue,
             IGNORE UEPagingID: UEPagingID<'a>,
             IGNORE pagingDRX: PagingDRX,

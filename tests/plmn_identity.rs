@@ -26,7 +26,7 @@
 
 use oxirush_s1ap::helpers::{EnbKind, global_enb_id, plmn, plmn_from};
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{Error, build_s1ap_ie, extract_s1ap_ies};
+use oxirush_s1ap::{Error, Ie, extract_s1ap_ies, ie};
 
 /// An MCC, an MNC and the octets of their PLMN identity, digit by digit from the clause.
 const IDENTITIES: &[(&str, &str, [u8; 3])] = &[
@@ -141,9 +141,9 @@ fn the_identities_of_an_s1_setup_are_those_that_tshark_reads() -> Result<(), Err
     // And write the octets of the message for them.
     assert_eq!(enb, global_enb_id(plmn("310", "410")?, EnbKind::Macro, 1)?);
     assert_eq!(areas, tracking_areas());
-    let written = build_s1ap_ie!(S1SetupRequest, REJECT Global_ENB_ID(enb)).unwrap();
+    let written = ie::Global_ENB_ID::field(Criticality::Reject, enb).unwrap();
     assert_eq!(written, request.protocol_ies.0[0]);
-    let written = build_s1ap_ie!(S1SetupRequest, REJECT SupportedTAs(tracking_areas())).unwrap();
+    let written = ie::SupportedTAs::field(Criticality::Reject, tracking_areas()).unwrap();
     assert_eq!(written, request.protocol_ies.0[1]);
     assert_eq!(hex::encode(pdu.encode().unwrap()), S1_SETUP);
     Ok(())

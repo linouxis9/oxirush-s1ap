@@ -17,8 +17,7 @@
 //! ```
 //! use oxirush_s1ap::{build_s1ap, s1ap::*};
 //!
-//! let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-//!     IGNORE, UEContextReleaseRequest,
+//! let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
 //!     REJECT MME_UE_S1AP_ID(1u32),
 //!     REJECT eNB_UE_S1AP_ID(7u32),
 //!     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -46,7 +45,7 @@
 //! ```
 //! use oxirush_s1ap::{Message, build_s1ap, s1ap::*};
 //!
-//! let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, UEContextReleaseRequest,
+//! let pdu = build_s1ap!(UEContextReleaseRequest,
 //!     MME_UE_S1AP_ID(1u32),
 //!     eNB_UE_S1AP_ID(7u32),
 //!     Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -56,35 +55,20 @@
 //! # Ok::<(), oxirush_s1ap::Error>(())
 //! ```
 //!
-//! ## `build_s1ap_ie!` — build one Protocol IE entry
+//! ## One IE: `Ie::field` and `Ie::field_of`
 //!
-//! This is useful for conditionally included IEs or IEs built separately.
+//! The marker type of an IE builds the entry of a container that holds it, for an IE
+//! that a message has on a condition or that is built apart: with a criticality, or
+//! with the one that the object set of a message or of a transfer assigns it.
 //!
 //! ```
-//! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
+//! use oxirush_s1ap::{Ie, ie, s1ap::*};
 //!
-//! let ie = build_s1ap_ie!(UEContextReleaseRequest,
-//!     REJECT MME_UE_S1AP_ID(1u32)
-//! )?;
+//! let ie = ie::MME_UE_S1AP_ID::field(Criticality::Reject, 1u32)?;
+//! assert_eq!(ie.criticality, Criticality::Reject);
+//! let ie = ie::MME_UE_S1AP_ID::field_of::<UEContextReleaseRequest>(1u32)?;
 //! assert_eq!(ie.criticality, Criticality::Reject);
 //! # Ok::<(), oxirush_s1ap::Error>(())
-//! ```
-//!
-//! Without its criticality the IE has the one that the object set of the message assigns
-//! it. An IE that goes in no message has its criticality written:
-//!
-//! ```
-//! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
-//!
-//! let ie = build_s1ap_ie!(UEContextReleaseRequest, MME_UE_S1AP_ID(1u32))?;
-//! assert_eq!(ie.criticality, Criticality::Reject);
-//! # Ok::<(), oxirush_s1ap::Error>(())
-//! ```
-//!
-//! ```compile_fail
-//! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
-//!
-//! let ie = build_s1ap_ie!(MME_UE_S1AP_ID(1u32));
 //! ```
 //!
 //! IEs are named after their `id-` constant. The name of a type is an alias
@@ -94,18 +78,18 @@
 //! addressed by the IE names.
 //!
 //! ```
-//! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
+//! use oxirush_s1ap::{Ie, ie, s1ap::*};
 //!
 //! fn source(gummei: GUMMEI) -> Result<ProtocolIEField<'static>, oxirush_s1ap::Error> {
-//!     build_s1ap_ie!(PathSwitchRequest, IGNORE SourceMME_GUMMEI(gummei))
+//!     ie::SourceMME_GUMMEI::field(Criticality::Ignore, gummei)
 //! }
 //! ```
 //!
 //! ```compile_fail
-//! use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
+//! use oxirush_s1ap::{Ie, ie, s1ap::*};
 //!
 //! fn source(gummei: GUMMEI) -> Result<ProtocolIEField<'static>, oxirush_s1ap::Error> {
-//!     build_s1ap_ie!(PathSwitchRequest, IGNORE GUMMEI(gummei))
+//!     ie::GUMMEI::field(Criticality::Ignore, gummei)
 //! }
 //! ```
 //!
@@ -151,7 +135,7 @@
 //! `into_owned()`, or copied as the example below copies its NAS-PDU.
 //!
 //! ```
-//! use oxirush_s1ap::{Error, ErrorKind, build_s1ap_ie, extract_s1ap_ies, s1ap::*};
+//! use oxirush_s1ap::{Error, ErrorKind, Ie, extract_s1ap_ies, ie, s1ap::*};
 //!
 //! fn handle(msg: &UplinkNASTransport) -> Result<Vec<u8>, Error> {
 //!     extract_s1ap_ies!(msg, UplinkNASTransport,
@@ -164,8 +148,8 @@
 //! }
 //!
 //! let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
-//!     build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32))?,
-//!     build_s1ap_ie!(UplinkNASTransport, REJECT NAS_PDU(vec![0x07, 0x6a]))?,
+//!     ie::MME_UE_S1AP_ID::field(Criticality::Reject, 1u32)?,
+//!     ie::NAS_PDU::field(Criticality::Reject, vec![0x07, 0x6a])?,
 //! ]));
 //! assert_eq!(handle(&message)?, [0x07, 0x6a]);
 //!
@@ -175,30 +159,23 @@
 //! # Ok::<(), Error>(())
 //! ```
 //!
-//! ## `with_s1ap_ie_mut!` — locate and mutate one decoded S1AP IE
+//! ## `set_ie` — change one IE of a message
 //!
-//! This decodes the matching open type, passes the concrete value into the
-//! expression, then re-encodes it. It gives a `Result<bool, Error>`: what the
-//! expression says, `Ok(false)` for an IE that is not in the message, and an error
-//! for an IE that does not decode (`UndecodableIe`) or a changed value that does
-//! not encode (`Encode`).
-//! The setter form `IeName(binding) = value` expands to `binding.0 = value`.
+//! `set_ie::<T>(value)` of a message or of a transfer makes `value` the value of the IE
+//! `T`, in its place and with its criticality, and says whether the message has it. It
+//! gives an error for a value that does not encode (`Encode`).
 //!
-//! When a message has the same IE twice, both macros use the same one, the first:
-//! `extract_s1ap_ies!` reads it and `with_s1ap_ie_mut!` changes it, and neither decodes
-//! the others. `check()` of the PDU reports the second as `Deviation::RepeatedIe`, and
+//! When a message has the same IE twice, `extract_s1ap_ies!` reads the first and `set_ie`
+//! changes it. `check()` of the PDU reports the second as `Deviation::RepeatedIe`, and
 //! `ies::<T>()` of the message gives every one.
 //!
 //! ```
-//! use oxirush_s1ap::{build_s1ap_ie, s1ap::*, with_s1ap_ie_mut};
+//! use oxirush_s1ap::{Ie, ie, s1ap::*};
 //!
 //! let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
-//!     build_s1ap_ie!(UplinkNASTransport, REJECT MME_UE_S1AP_ID(1u32))?,
+//!     ie::MME_UE_S1AP_ID::field(Criticality::Reject, 1u32)?,
 //! ]));
-//! let updated = with_s1ap_ie_mut!(message, UplinkNASTransport,
-//!     MME_UE_S1AP_ID(id) = 42u32
-//! )?;
-//! assert!(updated);
+//! assert_eq!(message.set_ie::<ie::MME_UE_S1AP_ID>(42u32), Ok(true));
 //! # Ok::<(), oxirush_s1ap::Error>(())
 //! ```
 
@@ -235,7 +212,7 @@
 /// protocol IEs are an error of the kind `Decode`; `lax` fields are then `None`.
 ///
 /// When the message has the IE twice, the field is the first one, which is the one
-/// that `with_s1ap_ie_mut!` changes, and the second is not decoded. `check()` of the PDU
+/// that `set_ie` changes, and the second is not decoded. `check()` of the PDU
 /// reports it as `Deviation::RepeatedIe`, and `ies::<T>()` of the message gives every
 /// one.
 ///
@@ -256,8 +233,7 @@
 ///     Ok((mme, inactive, gateway))
 /// }
 ///
-/// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-///     IGNORE, UEContextReleaseRequest,
+/// let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
 ///     REJECT MME_UE_S1AP_ID(1u32),
 ///     REJECT eNB_UE_S1AP_ID(7u32),
 ///     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -306,64 +282,6 @@ macro_rules! extract_s1ap_ies {
     };
 }
 
-/// Locate, decode, mutate, and re-encode one S1AP protocol IE.
-///
-/// Gives a `Result<bool, Error>`: what the expression says, `Ok(false)` when the IE is
-/// not in the message, and an error when the IE does not decode (`UndecodableIe`) or
-/// the changed value does not encode (`Encode`). The message is as it was after an
-/// error.
-///
-/// When the message has the IE twice, the first one is changed, which is the one that
-/// `extract_s1ap_ies!` reads; the second is not decoded.
-///
-/// `= value` gives the one value that the IE is a name for. After `=>` comes a block
-/// that changes the value of the IE, which it has by the name in parentheses, mutable
-/// and its own, and gives whether it changed it, a `bool`: a value of a CHOICE is
-/// matched by `&mut`, so that what the match finds is changed in place.
-///
-/// ```
-/// use oxirush_s1ap::{Error, build_s1ap, with_s1ap_ie_mut, s1ap::*};
-///
-/// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-///     IGNORE, UEContextReleaseRequest,
-///     REJECT MME_UE_S1AP_ID(1u32),
-///     REJECT eNB_UE_S1AP_ID(7u32),
-///     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
-/// )?;
-/// let mut message: UEContextReleaseRequest = pdu.decode_value()?;
-///
-/// // The one value of an IE
-/// assert!(with_s1ap_ie_mut!(message, UEContextReleaseRequest, eNB_UE_S1AP_ID(id) = 8)?);
-///
-/// // A block that changes the value where it is, and says whether it did
-/// let changed = with_s1ap_ie_mut!(message, UEContextReleaseRequest, Cause(cause) => {
-///     match &mut cause {
-///         Cause::radioNetwork(why) => {
-///             *why = CauseRadioNetwork::unspecified;
-///             true
-///         }
-///         _ => false,
-///     }
-/// })?;
-/// assert!(changed);
-/// assert_eq!(message, {
-///     let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-///         IGNORE, UEContextReleaseRequest,
-///         REJECT MME_UE_S1AP_ID(1u32),
-///         REJECT eNB_UE_S1AP_ID(8u32),
-///         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::unspecified)),
-///     )?;
-///     pdu.decode_value::<UEContextReleaseRequest>()?.into_owned()
-/// });
-/// # Ok::<(), Error>(())
-/// ```
-#[macro_export]
-macro_rules! with_s1ap_ie_mut {
-    ($($arguments:tt)*) => {
-        $crate::aper::__with_ie_mut!($crate, s1ap, $($arguments)*)
-    };
-}
-
 /// Build a complete `S1AP_PDU` from a direction, procedure, message, and IEs.
 ///
 /// Gives a `Result<S1AP_PDU, Error>`: a value that does not encode into its open type,
@@ -377,7 +295,7 @@ macro_rules! with_s1ap_ie_mut {
 ///
 /// // The direction, the procedure and the message, then each IE: the criticalities
 /// // are those of the specification, or written before what they are of
-/// let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, UEContextReleaseRequest,
+/// let pdu = build_s1ap!(UEContextReleaseRequest,
 ///     MME_UE_S1AP_ID(42u32),
 ///     eNB_UE_S1AP_ID(7u32),
 ///     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -392,60 +310,14 @@ macro_rules! build_s1ap {
     };
 }
 
-/// Build one S1AP protocol IE entry. Every message takes the same
-/// `ProtocolIEField`: the name before the comma says where the IE goes, and is the
-/// type of a message. The IE has the criticality that the object set of that message
-/// assigns it, unless the call writes its own.
-///
-/// An IE that goes in no message is built without that name, and with its criticality.
-/// Such is an item of a list of single containers, as `E-RABToBeSetupListCtxtSUReq`,
-/// whose items are each one IE.
-///
-/// ```
-/// use oxirush_s1ap::aper::BitString;
-/// use oxirush_s1ap::{build_s1ap_ie, s1ap::*};
-///
-/// // An IE of a message, of the criticality of its object set
-/// let mme = build_s1ap_ie!(UEContextReleaseRequest, MME_UE_S1AP_ID(1u32))?;
-/// assert_eq!(mme.criticality, Criticality::Reject);
-///
-/// // One of another criticality, which a test of a peer sends
-/// let ignored = build_s1ap_ie!(UEContextReleaseRequest, IGNORE MME_UE_S1AP_ID(1u32))?;
-/// assert_eq!(ignored.criticality, Criticality::Ignore);
-///
-/// // An item of a list of single containers: an E-RAB of QCI 9, and its tunnel
-/// let priority = AllocationAndRetentionPriority::new(PriorityLevel(15),
-///     PreEmptionCapability::shall_not_trigger_pre_emption,
-///     PreEmptionVulnerability::not_pre_emptable, None);
-/// let qos = ERABLevelQoSParameters::new(QCI(9), priority, None, None);
-/// let bearer = ERABToBeSetupItemCtxtSUReq::new(ERABID(5), qos,
-///     TransportLayerAddress(BitString::from([10, 0, 0, 1])), GTPTEID([0, 0, 0, 1]), None, None);
-/// let item = build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?;
-/// let list = build_s1ap_ie!(InitialContextSetupRequest,
-///     E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(vec![item])))?;
-/// assert_eq!(list.criticality, Criticality::Reject);
-/// # Ok::<(), oxirush_s1ap::Error>(())
-/// ```
-///
-/// Gives a `Result<ProtocolIEField, Error>`: a value that does not encode into its
-/// open type is an error of the kind `Encode`, and an IE that the object set does not
-/// have, without its criticality, one of the kind `Argument`.
-#[macro_export]
-macro_rules! build_s1ap_ie {
-    ($($arguments:tt)*) => {
-        $crate::aper::__build_ie!($crate, s1ap, "build_s1ap_ie!", $($arguments)*)
-    };
-}
-
 #[cfg(test)]
 mod tests {
     use crate::s1ap::*;
-    use crate::{Error, ErrorKind};
+    use crate::{Error, ErrorKind, Ie, ie};
 
     #[test]
     fn mutating_macro_updates_newtype_payload() -> Result<(), Error> {
-        let mut pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-            IGNORE, UEContextReleaseRequest,
+        let mut pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
             REJECT MME_UE_S1AP_ID(1u32),
             REJECT eNB_UE_S1AP_ID(7u32),
             IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -458,8 +330,7 @@ mod tests {
             oxirush_aper::decode(&message.value).expect("decode request");
         let mut request = request;
 
-        let changed =
-            with_s1ap_ie_mut!(request, UEContextReleaseRequest, MME_UE_S1AP_ID(id) = 42u32);
+        let changed = request.set_ie::<ie::MME_UE_S1AP_ID>(42u32);
         assert_eq!(changed, Ok(true));
 
         let ie = request
@@ -487,14 +358,13 @@ mod tests {
             let ies = request.protocol_ies.0.iter();
             ies.map(|ie| ie.value.to_vec()).collect()
         };
-        let entry = |id: u32| build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(id));
+        let entry = |id: u32| ie::MME_UE_S1AP_ID::field(Criticality::Reject, id);
         let mut request =
             UEContextReleaseRequest::new(ProtocolIEContainer(vec![entry(1)?, entry(2)?]));
         // The first one is read, and is the one that is changed.
         assert_eq!(id(&request)?, 1);
         let before = ids(&request);
-        let changed =
-            with_s1ap_ie_mut!(request, UEContextReleaseRequest, MME_UE_S1AP_ID(id) = 42u32);
+        let changed = request.set_ie::<ie::MME_UE_S1AP_ID>(42u32);
         assert_eq!(changed, Ok(true));
         assert_eq!(id(&request)?, 42);
         let after = ids(&request);
@@ -511,78 +381,39 @@ mod tests {
             let octets = crate::Octets::from(vec![0xff]);
             ProtocolIEField::new(0u16, Criticality::Reject, octets)
         };
-        let entry = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(1u32))?;
-        // The first one decodes: both macros take it, and decode no other.
+        let entry = ie::MME_UE_S1AP_ID::field(Criticality::Reject, 1u32)?;
+        // The first one decodes: the macro and `set_ie` take it, and decode no other.
         let mut request =
             UEContextReleaseRequest::new(ProtocolIEContainer(vec![entry.clone(), undecodable()]));
         assert_eq!(id(&request)?, 1);
-        let changed =
-            with_s1ap_ie_mut!(request, UEContextReleaseRequest, MME_UE_S1AP_ID(id) = 42u32);
+        let changed = request.set_ie::<ie::MME_UE_S1AP_ID>(42u32);
         assert_eq!(changed, Ok(true));
         assert_eq!(id(&request)?, 42);
-        // The first one does not decode: it is the error of both.
+        // The first one does not decode: it is the error of the macro, and `set_ie`
+        // replaces it, without reading it.
         let mut request =
             UEContextReleaseRequest::new(ProtocolIEContainer(vec![undecodable(), entry.clone()]));
-        let before = request.clone();
         assert_eq!(id(&request).unwrap_err().kind(), ErrorKind::UndecodableIe);
-        let changed =
-            with_s1ap_ie_mut!(request, UEContextReleaseRequest, MME_UE_S1AP_ID(id) = 42u32);
-        assert_eq!(changed.unwrap_err().kind(), ErrorKind::UndecodableIe);
-        // The message is as it was.
-        assert_eq!(request, before);
-        Ok(())
-    }
-
-    #[test]
-    fn a_message_that_is_another_one_each_time_it_is_read_is_no_panic() -> Result<(), Error> {
-        // The macro reads the expression of its message more than once: one that gives
-        // a message with the IE, then one without it, has nowhere to write the IE.
-        struct Each {
-            messages: [UEContextReleaseRequest<'static>; 2],
-            reads: usize,
-        }
-        impl Each {
-            fn next(&mut self) -> &mut UEContextReleaseRequest<'static> {
-                self.reads += 1;
-                &mut self.messages[usize::from(self.reads > 2)]
-            }
-        }
-        let with = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(1u32))?;
-        let mut each = Each {
-            messages: [
-                UEContextReleaseRequest::new(ProtocolIEContainer(vec![with])),
-                UEContextReleaseRequest::new(ProtocolIEContainer(vec![])),
-            ],
-            reads: 0,
-        };
-        let changed = with_s1ap_ie_mut!(
-            each.next(),
-            UEContextReleaseRequest,
-            MME_UE_S1AP_ID(id) = 2u32
-        );
-        assert_eq!(changed, Ok(false));
-        assert_eq!(each.reads, 3);
+        assert_eq!(request.set_ie::<ie::MME_UE_S1AP_ID>(42u32), Ok(true));
+        assert_eq!(id(&request)?, 42);
         Ok(())
     }
 
     #[test]
     fn builder_macros_cover_ie_and_outcome_forms() -> Result<(), Error> {
-        let ie = build_s1ap_ie!(
-            UEContextReleaseRequest,
-            REJECT MME_UE_S1AP_ID(1u32)
-        )?;
+        let ie = ie::MME_UE_S1AP_ID::field(Criticality::Reject, 1u32)?;
         assert_eq!(ie.id.0, 0);
 
         // The direction and the procedure code of a PDU are those of its message.
-        let initiating = build_s1ap!(InitiatingMessage, S1Setup, REJECT, S1SetupRequest,)?;
+        let initiating = build_s1ap!(REJECT S1SetupRequest,)?;
         assert_eq!(initiating.direction(), crate::Direction::Initiating);
         assert_eq!(initiating.procedure_code(), 17);
 
-        let successful = build_s1ap!(SuccessfulOutcome, S1Setup, REJECT, S1SetupResponse,)?;
+        let successful = build_s1ap!(REJECT S1SetupResponse,)?;
         assert_eq!(successful.direction(), crate::Direction::Successful);
         assert_eq!(successful.procedure_code(), 17);
 
-        let unsuccessful = build_s1ap!(UnsuccessfulOutcome, S1Setup, REJECT, S1SetupFailure,)?;
+        let unsuccessful = build_s1ap!(REJECT S1SetupFailure,)?;
         assert_eq!(unsuccessful.direction(), crate::Direction::Unsuccessful);
         assert_eq!(unsuccessful.procedure_code(), 17);
         Ok(())

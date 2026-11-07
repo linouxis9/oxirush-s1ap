@@ -39,11 +39,9 @@
 //!     println!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}");
 //!     # assert_eq!(format!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}"), "MME=Some(42) eNB=Some(7) cause=Some(radioNetwork(user_inactivity))");
 //!
-//!     // Build it with another cause: the direction, the procedure, the criticality
-//!     // of the PDU and the message, then each IE with its criticality
-//!     let rebuilt = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-//!         IGNORE, UEContextReleaseRequest,
-//!
+//!     // Build it with another cause: the message, after the criticality of the PDU
+//!     // where it is not that of its procedure, then each IE with its criticality
+//!     let rebuilt = build_s1ap!(IGNORE UEContextReleaseRequest,
 //!         REJECT MME_UE_S1AP_ID(42u32),
 //!         REJECT eNB_UE_S1AP_ID(7u32),
 //!         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::radio_connection_with_ue_lost)),
@@ -72,10 +70,10 @@
 //!
 //! | Task | Items |
 //! |------|-------|
-//! | Answer an eNB, from S1 SETUP to the INITIAL CONTEXT SETUP | [`build_s1ap!`], [`build_s1ap_ie!`], [`extract_s1ap_ies!`], [`helpers`], [`S1AP_PDU::ie`](s1ap::S1APPDU::ie) |
+//! | Answer an eNB, from S1 SETUP to the INITIAL CONTEXT SETUP | [`build_s1ap!`], [`extract_s1ap_ies!`], [`helpers`], [`S1AP_PDU::ie`](s1ap::S1APPDU::ie) |
 //! | Decode a PDU | [`S1AP_PDU::decode`](s1ap::S1APPDU::decode), [`S1AP_PDU::decode_borrowed`](s1ap::S1APPDU::decode_borrowed), [`S1AP_PDU::kind`](s1ap::S1APPDU::kind), [`S1AP_PDU::decode_value`](s1ap::S1APPDU::decode_value) |
 //! | Build a PDU | [`build_s1ap!`], [`S1AP_PDU::of_message`](s1ap::S1APPDU::of_message) |
-//! | Read the IEs of a message | [`extract_s1ap_ies!`], [`ie`], [`with_s1ap_ie_mut!`], [`build_s1ap_ie!`] |
+//! | Read the IEs of a message | [`extract_s1ap_ies!`], [`ie`], [`Ie::field`], `set_ie` |
 //! | A list of single containers, and a handover container, typed | [`S1AP_PDU::items`](s1ap::S1APPDU::items), [`s1ap::decode_open_type`], [`s1ap::encode_open_type`] |
 //! | Check a message, and answer one that is faulty | [`S1AP_PDU::check`](s1ap::S1APPDU::check), [`S1AP_PDU::check_structure`](s1ap::S1APPDU::check_structure), [`Deviation`], [`S1AP_PDU::criticality_diagnostics_for_response`](s1ap::S1APPDU::criticality_diagnostics_for_response) |
 //! | A PDU as JSON | [`S1AP_PDU::to_tree`](s1ap::S1APPDU::to_tree), [`S1AP_PDU::to_view`](s1ap::S1APPDU::to_view), [`S1AP_PDU::with_view`](s1ap::S1APPDU::with_view), [`inspect`] |
@@ -164,7 +162,7 @@
 //!     Ok(Ue { enb_id, nas: nas.into_owned() })
 //! }
 //!
-//! let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, IGNORE, InitialUEMessage,
+//! let pdu = build_s1ap!(IGNORE InitialUEMessage,
 //!     REJECT eNB_UE_S1AP_ID(7u32),
 //!     REJECT NAS_PDU(vec![0x07, 0x41, 0x71]),
 //! )?;
@@ -197,7 +195,7 @@
 //!     Ok(())
 //! }
 //!
-//! let transport = build_s1ap!(InitiatingMessage, uplinkNASTransport, IGNORE, UplinkNASTransport,
+//! let transport = build_s1ap!(IGNORE UplinkNASTransport,
 //!     REJECT MME_UE_S1AP_ID(1u32),
 //!     REJECT eNB_UE_S1AP_ID(7u32),
 //!     REJECT NAS_PDU(vec![0x07, 0x5e, 0x03]),
@@ -341,15 +339,16 @@ pub use oxirush_utils::identity;
 #[cfg(feature = "inspect")]
 pub use oxirush_utils::tree;
 
-pub use oxirush_aper::protocol::Message;
+pub use oxirush_aper::protocol::{Ie, Message};
 pub use oxirush_aper::{
-    AsnType, BitString, Bits, Decode, Direction, Encode, Error, ErrorKind, Fault, Faults, Octets,
+    AsnType, BitString, Bits, Criticality, Decode, Direction, Encode, Error, ErrorKind, Fault,
+    Faults, ObjectSet, Octets, Presence,
 };
 /// ```
 /// use oxirush_s1ap::{Deviation, build_s1ap, s1ap::*};
 ///
 /// // An INITIAL UE MESSAGE of its first IE alone
-/// let pdu = build_s1ap!(InitiatingMessage, initialUEMessage, InitialUEMessage, eNB_UE_S1AP_ID(7u32))?;
+/// let pdu = build_s1ap!(InitialUEMessage, eNB_UE_S1AP_ID(7u32))?;
 /// let deviations: Vec<Deviation> = pdu.check()?;
 /// assert!(matches!(deviations[0], Deviation::MissingIe { id: 26, .. }));
 /// assert_eq!(deviations[0].to_string(), "NAS-PDU (IE 26) is mandatory, and the message does not have it");

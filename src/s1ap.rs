@@ -14,59 +14,13 @@ pub mod s1_ap_common_data_types {
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
     pub use oxirush_aper::Criticality;
+    pub use oxirush_aper::Presence;
     #[cfg(feature = "inspect")]
     use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer, in_field,
     };
-    /// `Presence ::= ENUMERATED`.
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
-    pub enum Presence {
-        optional = 0,
-        conditional = 1,
-        mandatory = 2,
-    }
-    impl AsnType for Presence {
-        const NAME: &'static str = "Presence";
-    }
-    impl Presence {
-        /// The values in the order of their indexes in PER.
-        pub(crate) const VALUES: [Self; 3] = [Self::optional, Self::conditional, Self::mandatory];
-        /// The names that ASN.1 gives the values, in the same order.
-        #[cfg(feature = "inspect")]
-        pub(crate) const NAMES: [&'static str; 3] = ["optional", "conditional", "mandatory"];
-        /// The index of the value in PER.
-        #[inline]
-        fn index(&self) -> u64 {
-            *self as u64
-        }
-    }
-    impl<'a> Decode<'a> for Presence {
-        #[inline]
-        fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
-            Ok(Self::VALUES[reader.enumerated(3, 0, false)? as usize])
-        }
-    }
-    impl Encode for Presence {
-        #[inline]
-        fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
-            writer.index(self.index(), 3, false);
-            Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for Presence {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(Self::NAMES[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, &Self::NAMES)?])
-        }
-    }
-    #[cfg(feature = "serde")]
-    oxirush_utils::impl_serde!(Presence);
     /// `PrivateIE-ID ::= CHOICE`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum PrivateIEID {
@@ -139,10 +93,10 @@ pub mod s1_ap_common_data_types {
     /// `ProcedureCode ::= INTEGER (0..255)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ProcedureCode(pub u8);
-    impl oxirush_aper::protocol::__Field<u8> for ProcedureCode {
+    impl From<ProcedureCode> for u8 {
         #[inline]
-        fn __field(self) -> u8 {
-            self.0
+        fn from(value: ProcedureCode) -> Self {
+            value.0
         }
     }
     impl From<u8> for ProcedureCode {
@@ -183,10 +137,10 @@ pub mod s1_ap_common_data_types {
     /// `ProtocolExtensionID ::= INTEGER (0..65535)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ProtocolExtensionID(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for ProtocolExtensionID {
+    impl From<ProtocolExtensionID> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: ProtocolExtensionID) -> Self {
+            value.0
         }
     }
     impl From<u16> for ProtocolExtensionID {
@@ -229,10 +183,10 @@ pub mod s1_ap_common_data_types {
     /// `ProtocolIE-ID ::= INTEGER (0..65535)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ProtocolIEID(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for ProtocolIEID {
+    impl From<ProtocolIEID> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: ProtocolIEID) -> Self {
+            value.0
         }
     }
     impl From<u16> for ProtocolIEID {
@@ -925,10 +879,10 @@ pub mod s1_ap_containers {
     #[doc = " `ProtocolIE-Container`: the IEs of a message."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ProtocolIEContainer<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for ProtocolIEContainer<'a> {
+    impl<'a> From<ProtocolIEContainer<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ProtocolIEContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ProtocolIEContainer<'a> {
@@ -1086,12 +1040,10 @@ pub mod s1_ap_containers {
     #[doc = " `ProtocolExtensionContainer`: the `iE-Extensions` of a type."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ProtocolExtensionContainer<'a>(pub Vec<ProtocolExtensionField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolExtensionField<'a>>>
-        for ProtocolExtensionContainer<'a>
-    {
+    impl<'a> From<ProtocolExtensionContainer<'a>> for Vec<ProtocolExtensionField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolExtensionField<'a>> {
-            self.0
+        fn from(value: ProtocolExtensionContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ProtocolExtensionContainer<'a> {
@@ -1304,10 +1256,10 @@ pub mod s1_ap_ies {
     /// `AdditionalRRMPriorityIndex ::= BIT STRING (SIZE (32))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct AdditionalRRMPriorityIndex(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for AdditionalRRMPriorityIndex {
+    impl From<AdditionalRRMPriorityIndex> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: AdditionalRRMPriorityIndex) -> Self {
+            value.0
         }
     }
     impl From<Bits> for AdditionalRRMPriorityIndex {
@@ -2124,10 +2076,10 @@ pub mod s1_ap_ies {
     /// `BPLMNs ::= SEQUENCE (SIZE (1..6)) OF PLMNidentity`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BPLMNs(pub Vec<PLMNidentity>);
-    impl oxirush_aper::protocol::__Field<Vec<PLMNidentity>> for BPLMNs {
+    impl From<BPLMNs> for Vec<PLMNidentity> {
         #[inline]
-        fn __field(self) -> Vec<PLMNidentity> {
-            self.0
+        fn from(value: BPLMNs) -> Self {
+            value.0
         }
     }
     impl From<Vec<PLMNidentity>> for BPLMNs {
@@ -2317,12 +2269,10 @@ pub mod s1_ap_ies {
     /// `Bearers-SubjectToDLDiscardingList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToDLDiscardingList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for BearersSubjectToDLDiscardingList<'a>
-    {
+    impl<'a> From<BearersSubjectToDLDiscardingList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: BearersSubjectToDLDiscardingList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> BearersSubjectToDLDiscardingList<'a> {
@@ -2484,12 +2434,10 @@ pub mod s1_ap_ies {
     /// `Bearers-SubjectToEarlyStatusTransferList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToEarlyStatusTransferList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for BearersSubjectToEarlyStatusTransferList<'a>
-    {
+    impl<'a> From<BearersSubjectToEarlyStatusTransferList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: BearersSubjectToEarlyStatusTransferList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> BearersSubjectToEarlyStatusTransferList<'a> {
@@ -2705,12 +2653,10 @@ pub mod s1_ap_ies {
     /// `Bearers-SubjectToStatusTransferList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToStatusTransferList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for BearersSubjectToStatusTransferList<'a>
-    {
+    impl<'a> From<BearersSubjectToStatusTransferList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: BearersSubjectToStatusTransferList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> BearersSubjectToStatusTransferList<'a> {
@@ -2768,10 +2714,10 @@ pub mod s1_ap_ies {
     /// `BitRate ::= INTEGER (0..10000000000)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct BitRate(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for BitRate {
+    impl From<BitRate> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: BitRate) -> Self {
+            value.0
         }
     }
     impl From<u64> for BitRate {
@@ -2856,12 +2802,10 @@ pub mod s1_ap_ies {
     /// `BluetoothMeasConfigNameList ::= SEQUENCE (SIZE (1..4)) OF BluetoothName`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BluetoothMeasConfigNameList<'a>(pub Vec<BluetoothName<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<BluetoothName<'a>>>
-        for BluetoothMeasConfigNameList<'a>
-    {
+    impl<'a> From<BluetoothMeasConfigNameList<'a>> for Vec<BluetoothName<'a>> {
         #[inline]
-        fn __field(self) -> Vec<BluetoothName<'a>> {
-            self.0
+        fn from(value: BluetoothMeasConfigNameList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> BluetoothMeasConfigNameList<'a> {
@@ -3128,10 +3072,10 @@ pub mod s1_ap_ies {
     /// `BluetoothName ::= OCTET STRING (SIZE (1..248))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BluetoothName<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for BluetoothName<'a> {
+    impl<'a> From<BluetoothName<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: BluetoothName<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> BluetoothName<'a> {
@@ -3477,10 +3421,10 @@ pub mod s1_ap_ies {
     /// `CELevel ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CELevel<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for CELevel<'a> {
+    impl<'a> From<CELevel<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: CELevel<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> CELevel<'a> {
@@ -3672,10 +3616,10 @@ pub mod s1_ap_ies {
     /// `CI ::= OCTET STRING (SIZE (2))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct CI(pub [u8; 2]);
-    impl oxirush_aper::protocol::__Field<[u8; 2]> for CI {
+    impl From<CI> for [u8; 2] {
         #[inline]
-        fn __field(self) -> [u8; 2] {
-            self.0
+        fn from(value: CI) -> Self {
+            value.0
         }
     }
     impl From<[u8; 2]> for CI {
@@ -3808,10 +3752,10 @@ pub mod s1_ap_ies {
     /// `CNTypeRestrictions ::= SEQUENCE (SIZE (1..16)) OF CNTypeRestrictionsItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CNTypeRestrictions(pub Vec<CNTypeRestrictionsItem>);
-    impl oxirush_aper::protocol::__Field<Vec<CNTypeRestrictionsItem>> for CNTypeRestrictions {
+    impl From<CNTypeRestrictions> for Vec<CNTypeRestrictionsItem> {
         #[inline]
-        fn __field(self) -> Vec<CNTypeRestrictionsItem> {
-            self.0
+        fn from(value: CNTypeRestrictions) -> Self {
+            value.0
         }
     }
     impl From<Vec<CNTypeRestrictionsItem>> for CNTypeRestrictions {
@@ -4300,10 +4244,10 @@ pub mod s1_ap_ies {
     /// `CSG-Id ::= BIT STRING (SIZE (27))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct CSGId(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for CSGId {
+    impl From<CSGId> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: CSGId) -> Self {
+            value.0
         }
     }
     impl From<Bits> for CSGId {
@@ -4352,10 +4296,10 @@ pub mod s1_ap_ies {
     /// `CSG-IdList ::= SEQUENCE (SIZE (1..256)) OF CSGIdListItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CSGIdList(pub Vec<CSGIdListItem>);
-    impl oxirush_aper::protocol::__Field<Vec<CSGIdListItem>> for CSGIdList {
+    impl From<CSGIdList> for Vec<CSGIdListItem> {
         #[inline]
-        fn __field(self) -> Vec<CSGIdListItem> {
-            self.0
+        fn from(value: CSGIdList) -> Self {
+            value.0
         }
     }
     impl From<Vec<CSGIdListItem>> for CSGIdList {
@@ -4532,10 +4476,10 @@ pub mod s1_ap_ies {
     /// `CancelledCellinEAI ::= SEQUENCE (SIZE (1..65535)) OF CancelledCellinEAIItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CancelledCellinEAI(pub Vec<CancelledCellinEAIItem>);
-    impl oxirush_aper::protocol::__Field<Vec<CancelledCellinEAIItem>> for CancelledCellinEAI {
+    impl From<CancelledCellinEAI> for Vec<CancelledCellinEAIItem> {
         #[inline]
-        fn __field(self) -> Vec<CancelledCellinEAIItem> {
-            self.0
+        fn from(value: CancelledCellinEAI) -> Self {
+            value.0
         }
     }
     impl From<Vec<CancelledCellinEAIItem>> for CancelledCellinEAI {
@@ -4683,10 +4627,10 @@ pub mod s1_ap_ies {
     /// `CancelledCellinTAI ::= SEQUENCE (SIZE (1..65535)) OF CancelledCellinTAIItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CancelledCellinTAI(pub Vec<CancelledCellinTAIItem>);
-    impl oxirush_aper::protocol::__Field<Vec<CancelledCellinTAIItem>> for CancelledCellinTAI {
+    impl From<CancelledCellinTAI> for Vec<CancelledCellinTAIItem> {
         #[inline]
-        fn __field(self) -> Vec<CancelledCellinTAIItem> {
-            self.0
+        fn from(value: CancelledCellinTAI) -> Self {
+            value.0
         }
     }
     impl From<Vec<CancelledCellinTAIItem>> for CancelledCellinTAI {
@@ -5473,10 +5417,10 @@ pub mod s1_ap_ies {
     /// `Cdma2000OneXMEID ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXMEID<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for Cdma2000OneXMEID<'a> {
+    impl<'a> From<Cdma2000OneXMEID<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: Cdma2000OneXMEID<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> Cdma2000OneXMEID<'a> {
@@ -5533,10 +5477,10 @@ pub mod s1_ap_ies {
     /// `Cdma2000OneXMSI ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXMSI<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for Cdma2000OneXMSI<'a> {
+    impl<'a> From<Cdma2000OneXMSI<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: Cdma2000OneXMSI<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> Cdma2000OneXMSI<'a> {
@@ -5593,10 +5537,10 @@ pub mod s1_ap_ies {
     /// `Cdma2000OneXPilot ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXPilot<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for Cdma2000OneXPilot<'a> {
+    impl<'a> From<Cdma2000OneXPilot<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: Cdma2000OneXPilot<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> Cdma2000OneXPilot<'a> {
@@ -5653,10 +5597,10 @@ pub mod s1_ap_ies {
     /// `Cdma2000OneXRAND ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXRAND<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for Cdma2000OneXRAND<'a> {
+    impl<'a> From<Cdma2000OneXRAND<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: Cdma2000OneXRAND<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> Cdma2000OneXRAND<'a> {
@@ -5843,10 +5787,10 @@ pub mod s1_ap_ies {
     /// `Cdma2000PDU ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000PDU<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for Cdma2000PDU<'a> {
+    impl<'a> From<Cdma2000PDU<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: Cdma2000PDU<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> Cdma2000PDU<'a> {
@@ -5950,10 +5894,10 @@ pub mod s1_ap_ies {
     /// `Cdma2000SectorID ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000SectorID<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for Cdma2000SectorID<'a> {
+    impl<'a> From<Cdma2000SectorID<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: Cdma2000SectorID<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> Cdma2000SectorID<'a> {
@@ -6278,10 +6222,10 @@ pub mod s1_ap_ies {
     /// `CellID-Broadcast ::= SEQUENCE (SIZE (1..65535)) OF CellIDBroadcastItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIDBroadcast(pub Vec<CellIDBroadcastItem>);
-    impl oxirush_aper::protocol::__Field<Vec<CellIDBroadcastItem>> for CellIDBroadcast {
+    impl From<CellIDBroadcast> for Vec<CellIDBroadcastItem> {
         #[inline]
-        fn __field(self) -> Vec<CellIDBroadcastItem> {
-            self.0
+        fn from(value: CellIDBroadcast) -> Self {
+            value.0
         }
     }
     impl From<Vec<CellIDBroadcastItem>> for CellIDBroadcast {
@@ -6412,10 +6356,10 @@ pub mod s1_ap_ies {
     /// `CellID-Cancelled ::= SEQUENCE (SIZE (1..65535)) OF CellIDCancelledItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIDCancelled(pub Vec<CellIDCancelledItem>);
-    impl oxirush_aper::protocol::__Field<Vec<CellIDCancelledItem>> for CellIDCancelled {
+    impl From<CellIDCancelled> for Vec<CellIDCancelledItem> {
         #[inline]
-        fn __field(self) -> Vec<CellIDCancelledItem> {
-            self.0
+        fn from(value: CellIDCancelled) -> Self {
+            value.0
         }
     }
     impl From<Vec<CellIDCancelledItem>> for CellIDCancelled {
@@ -6563,10 +6507,10 @@ pub mod s1_ap_ies {
     /// `CellIdListforMDT ::= SEQUENCE (SIZE (1..32)) OF EUTRANCGI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIdListforMDT(pub Vec<EUTRANCGI>);
-    impl oxirush_aper::protocol::__Field<Vec<EUTRANCGI>> for CellIdListforMDT {
+    impl From<CellIdListforMDT> for Vec<EUTRANCGI> {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI> {
-            self.0
+        fn from(value: CellIdListforMDT) -> Self {
+            value.0
         }
     }
     impl From<Vec<EUTRANCGI>> for CellIdListforMDT {
@@ -6615,10 +6559,10 @@ pub mod s1_ap_ies {
     /// `CellIdListforQMC ::= SEQUENCE (SIZE (1..32)) OF EUTRANCGI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIdListforQMC(pub Vec<EUTRANCGI>);
-    impl oxirush_aper::protocol::__Field<Vec<EUTRANCGI>> for CellIdListforQMC {
+    impl From<CellIdListforQMC> for Vec<EUTRANCGI> {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI> {
-            self.0
+        fn from(value: CellIdListforQMC) -> Self {
+            value.0
         }
     }
     impl From<Vec<EUTRANCGI>> for CellIdListforQMC {
@@ -6771,10 +6715,10 @@ pub mod s1_ap_ies {
     /// `CellIdentity ::= BIT STRING (SIZE (28))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct CellIdentity(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for CellIdentity {
+    impl From<CellIdentity> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: CellIdentity) -> Self {
+            value.0
         }
     }
     impl From<Bits> for CellIdentity {
@@ -6908,10 +6852,10 @@ pub mod s1_ap_ies {
     /// `CoarseUELocation ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CoarseUELocation<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for CoarseUELocation<'a> {
+    impl<'a> From<CoarseUELocation<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: CoarseUELocation<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> CoarseUELocation<'a> {
@@ -7014,10 +6958,10 @@ pub mod s1_ap_ies {
     /// `CompletedCellinEAI ::= SEQUENCE (SIZE (1..65535)) OF CompletedCellinEAIItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CompletedCellinEAI(pub Vec<CompletedCellinEAIItem>);
-    impl oxirush_aper::protocol::__Field<Vec<CompletedCellinEAIItem>> for CompletedCellinEAI {
+    impl From<CompletedCellinEAI> for Vec<CompletedCellinEAIItem> {
         #[inline]
-        fn __field(self) -> Vec<CompletedCellinEAIItem> {
-            self.0
+        fn from(value: CompletedCellinEAI) -> Self {
+            value.0
         }
     }
     impl From<Vec<CompletedCellinEAIItem>> for CompletedCellinEAI {
@@ -7148,10 +7092,10 @@ pub mod s1_ap_ies {
     /// `CompletedCellinTAI ::= SEQUENCE (SIZE (1..65535)) OF CompletedCellinTAIItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CompletedCellinTAI(pub Vec<CompletedCellinTAIItem>);
-    impl oxirush_aper::protocol::__Field<Vec<CompletedCellinTAIItem>> for CompletedCellinTAI {
+    impl From<CompletedCellinTAI> for Vec<CompletedCellinTAIItem> {
         #[inline]
-        fn __field(self) -> Vec<CompletedCellinTAIItem> {
-            self.0
+        fn from(value: CompletedCellinTAI) -> Self {
+            value.0
         }
     }
     impl From<Vec<CompletedCellinTAIItem>> for CompletedCellinTAI {
@@ -7433,10 +7377,10 @@ pub mod s1_ap_ies {
     /// `ConnectedengNBList ::= SEQUENCE (SIZE (1..256)) OF ConnectedengNBItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ConnectedengNBList<'a>(pub Vec<ConnectedengNBItem<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ConnectedengNBItem<'a>>> for ConnectedengNBList<'a> {
+    impl<'a> From<ConnectedengNBList<'a>> for Vec<ConnectedengNBItem<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ConnectedengNBItem<'a>> {
-            self.0
+        fn from(value: ConnectedengNBList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ConnectedengNBList<'a> {
@@ -7606,10 +7550,10 @@ pub mod s1_ap_ies {
     /// `Correlation-ID ::= OCTET STRING (SIZE (4))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct CorrelationID(pub [u8; 4]);
-    impl oxirush_aper::protocol::__Field<[u8; 4]> for CorrelationID {
+    impl From<CorrelationID> for [u8; 4] {
         #[inline]
-        fn __field(self) -> [u8; 4] {
-            self.0
+        fn from(value: CorrelationID) -> Self {
+            value.0
         }
     }
     impl From<[u8; 4]> for CorrelationID {
@@ -7982,12 +7926,10 @@ pub mod s1_ap_ies {
     /// `CriticalityDiagnostics-IE-List ::= SEQUENCE (SIZE (1..256)) OF CriticalityDiagnosticsIEItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CriticalityDiagnosticsIEList(pub Vec<CriticalityDiagnosticsIEItem>);
-    impl oxirush_aper::protocol::__Field<Vec<CriticalityDiagnosticsIEItem>>
-        for CriticalityDiagnosticsIEList
-    {
+    impl From<CriticalityDiagnosticsIEList> for Vec<CriticalityDiagnosticsIEItem> {
         #[inline]
-        fn __field(self) -> Vec<CriticalityDiagnosticsIEItem> {
-            self.0
+        fn from(value: CriticalityDiagnosticsIEList) -> Self {
+            value.0
         }
     }
     impl From<Vec<CriticalityDiagnosticsIEItem>> for CriticalityDiagnosticsIEList {
@@ -8406,10 +8348,10 @@ pub mod s1_ap_ies {
     /// `DAPSResponseInfoList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DAPSResponseInfoList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for DAPSResponseInfoList<'a> {
+    impl<'a> From<DAPSResponseInfoList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: DAPSResponseInfoList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> DAPSResponseInfoList<'a> {
@@ -8465,10 +8407,10 @@ pub mod s1_ap_ies {
     /// `DCN-ID ::= INTEGER (0..65535)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct DCNID(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for DCNID {
+    impl From<DCNID> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: DCNID) -> Self {
+            value.0
         }
     }
     impl From<u16> for DCNID {
@@ -8641,10 +8583,10 @@ pub mod s1_ap_ies {
     /// `DL-NAS-MAC ::= BIT STRING (SIZE (16))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct DLNASMAC(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for DLNASMAC {
+    impl From<DLNASMAC> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: DLNASMAC) -> Self {
+            value.0
         }
     }
     impl From<Bits> for DLNASMAC {
@@ -8987,10 +8929,10 @@ pub mod s1_ap_ies {
     /// `DataCodingScheme ::= BIT STRING (SIZE (8))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct DataCodingScheme(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for DataCodingScheme {
+    impl From<DataCodingScheme> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: DataCodingScheme) -> Self {
+            value.0
         }
     }
     impl From<Bits> for DataCodingScheme {
@@ -9039,10 +8981,10 @@ pub mod s1_ap_ies {
     /// `DataSize ::= INTEGER (1..4095, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct DataSize(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for DataSize {
+    impl From<DataSize> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: DataSize) -> Self {
+            value.0
         }
     }
     impl From<u64> for DataSize {
@@ -9127,10 +9069,10 @@ pub mod s1_ap_ies {
     /// `E-RAB-ID ::= INTEGER (0..15, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ERABID(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for ERABID {
+    impl From<ERABID> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: ERABID) -> Self {
+            value.0
         }
     }
     impl From<u64> for ERABID {
@@ -9169,10 +9111,10 @@ pub mod s1_ap_ies {
     /// `E-RABInformationList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABInformationList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for ERABInformationList<'a> {
+    impl<'a> From<ERABInformationList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABInformationList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABInformationList<'a> {
@@ -9555,10 +9497,10 @@ pub mod s1_ap_ies {
     /// `E-RABList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for ERABList<'a> {
+    impl<'a> From<ERABList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABList<'a> {
@@ -9710,10 +9652,10 @@ pub mod s1_ap_ies {
     /// `E-RABSecurityResultList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSecurityResultList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for ERABSecurityResultList<'a> {
+    impl<'a> From<ERABSecurityResultList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABSecurityResultList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABSecurityResultList<'a> {
@@ -9908,10 +9850,10 @@ pub mod s1_ap_ies {
     /// `E-RABUsageReportList ::= SEQUENCE (SIZE (1..2)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABUsageReportList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for ERABUsageReportList<'a> {
+    impl<'a> From<ERABUsageReportList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABUsageReportList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABUsageReportList<'a> {
@@ -9980,10 +9922,10 @@ pub mod s1_ap_ies {
     /// `E-UTRAN-Trace-ID ::= OCTET STRING (SIZE (8))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct EUTRANTraceID(pub [u8; 8]);
-    impl oxirush_aper::protocol::__Field<[u8; 8]> for EUTRANTraceID {
+    impl From<EUTRANTraceID> for [u8; 8] {
         #[inline]
-        fn __field(self) -> [u8; 8] {
-            self.0
+        fn from(value: EUTRANTraceID) -> Self {
+            value.0
         }
     }
     impl From<[u8; 8]> for EUTRANTraceID {
@@ -10022,10 +9964,10 @@ pub mod s1_ap_ies {
     /// `EARFCN ::= INTEGER (0..262143, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct EARFCN(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for EARFCN {
+    impl From<EARFCN> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: EARFCN) -> Self {
+            value.0
         }
     }
     impl From<u64> for EARFCN {
@@ -10064,10 +10006,10 @@ pub mod s1_ap_ies {
     /// `ECGI-List ::= SEQUENCE (SIZE (1..256)) OF EUTRANCGI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ECGI_List(pub Vec<EUTRANCGI>);
-    impl oxirush_aper::protocol::__Field<Vec<EUTRANCGI>> for ECGI_List {
+    impl From<ECGI_List> for Vec<EUTRANCGI> {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI> {
-            self.0
+        fn from(value: ECGI_List) -> Self {
+            value.0
         }
     }
     impl From<Vec<EUTRANCGI>> for ECGI_List {
@@ -10116,10 +10058,10 @@ pub mod s1_ap_ies {
     /// `ECGIList ::= SEQUENCE (SIZE (1..65535)) OF EUTRANCGI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ECGIList(pub Vec<EUTRANCGI>);
-    impl oxirush_aper::protocol::__Field<Vec<EUTRANCGI>> for ECGIList {
+    impl From<ECGIList> for Vec<EUTRANCGI> {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI> {
-            self.0
+        fn from(value: ECGIList) -> Self {
+            value.0
         }
     }
     impl From<Vec<EUTRANCGI>> for ECGIList {
@@ -10168,10 +10110,10 @@ pub mod s1_ap_ies {
     /// `ECGIListForRestart ::= SEQUENCE (SIZE (1..256)) OF EUTRANCGI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ECGIListForRestart(pub Vec<EUTRANCGI>);
-    impl oxirush_aper::protocol::__Field<Vec<EUTRANCGI>> for ECGIListForRestart {
+    impl From<ECGIListForRestart> for Vec<EUTRANCGI> {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI> {
-            self.0
+        fn from(value: ECGIListForRestart) -> Self {
+            value.0
         }
     }
     impl From<Vec<EUTRANCGI>> for ECGIListForRestart {
@@ -11317,10 +11259,10 @@ pub mod s1_ap_ies {
     /// `ENB-UE-S1AP-ID ::= INTEGER (0..16777215)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ENBUES1APID(pub u32);
-    impl oxirush_aper::protocol::__Field<u32> for ENBUES1APID {
+    impl From<ENBUES1APID> for u32 {
         #[inline]
-        fn __field(self) -> u32 {
-            self.0
+        fn from(value: ENBUES1APID) -> Self {
+            value.0
         }
     }
     impl From<u32> for ENBUES1APID {
@@ -11363,12 +11305,10 @@ pub mod s1_ap_ies {
     /// `ENBIndirectX2TransportLayerAddresses ::= SEQUENCE (SIZE (1..2)) OF TransportLayerAddress`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBIndirectX2TransportLayerAddresses<'a>(pub Vec<TransportLayerAddress<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<TransportLayerAddress<'a>>>
-        for ENBIndirectX2TransportLayerAddresses<'a>
-    {
+    impl<'a> From<ENBIndirectX2TransportLayerAddresses<'a>> for Vec<TransportLayerAddress<'a>> {
         #[inline]
-        fn __field(self) -> Vec<TransportLayerAddress<'a>> {
-            self.0
+        fn from(value: ENBIndirectX2TransportLayerAddresses<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ENBIndirectX2TransportLayerAddresses<'a> {
@@ -11547,10 +11487,10 @@ pub mod s1_ap_ies {
     /// `ENBX2ExtTLAs ::= SEQUENCE (SIZE (1..16)) OF ENBX2ExtTLA`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2ExtTLAs<'a>(pub Vec<ENBX2ExtTLA<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ENBX2ExtTLA<'a>>> for ENBX2ExtTLAs<'a> {
+    impl<'a> From<ENBX2ExtTLAs<'a>> for Vec<ENBX2ExtTLA<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ENBX2ExtTLA<'a>> {
-            self.0
+        fn from(value: ENBX2ExtTLAs<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ENBX2ExtTLAs<'a> {
@@ -11606,10 +11546,10 @@ pub mod s1_ap_ies {
     /// `ENBX2GTPTLAs ::= SEQUENCE (SIZE (1..16)) OF TransportLayerAddress`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2GTPTLAs<'a>(pub Vec<TransportLayerAddress<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<TransportLayerAddress<'a>>> for ENBX2GTPTLAs<'a> {
+    impl<'a> From<ENBX2GTPTLAs<'a>> for Vec<TransportLayerAddress<'a>> {
         #[inline]
-        fn __field(self) -> Vec<TransportLayerAddress<'a>> {
-            self.0
+        fn from(value: ENBX2GTPTLAs<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ENBX2GTPTLAs<'a> {
@@ -11665,10 +11605,10 @@ pub mod s1_ap_ies {
     /// `ENBX2TLAs ::= SEQUENCE (SIZE (1..2)) OF TransportLayerAddress`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2TLAs<'a>(pub Vec<TransportLayerAddress<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<TransportLayerAddress<'a>>> for ENBX2TLAs<'a> {
+    impl<'a> From<ENBX2TLAs<'a>> for Vec<TransportLayerAddress<'a>> {
         #[inline]
-        fn __field(self) -> Vec<TransportLayerAddress<'a>> {
-            self.0
+        fn from(value: ENBX2TLAs<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ENBX2TLAs<'a> {
@@ -11724,10 +11664,10 @@ pub mod s1_ap_ies {
     /// `ENBname ::= PrintableString (SIZE (1..150, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBname<'a>(pub Cow<'a, str>);
-    impl<'a> oxirush_aper::protocol::__Field<Cow<'a, str>> for ENBname<'a> {
+    impl<'a> From<ENBname<'a>> for Cow<'a, str> {
         #[inline]
-        fn __field(self) -> Cow<'a, str> {
-            self.0
+        fn from(value: ENBname<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ENBname<'a> {
@@ -11788,10 +11728,10 @@ pub mod s1_ap_ies {
     /// `EPLMNs ::= SEQUENCE (SIZE (1..15)) OF PLMNidentity`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EPLMNs(pub Vec<PLMNidentity>);
-    impl oxirush_aper::protocol::__Field<Vec<PLMNidentity>> for EPLMNs {
+    impl From<EPLMNs> for Vec<PLMNidentity> {
         #[inline]
-        fn __field(self) -> Vec<PLMNidentity> {
-            self.0
+        fn from(value: EPLMNs) -> Self {
+            value.0
         }
     }
     impl From<Vec<PLMNidentity>> for EPLMNs {
@@ -11934,10 +11874,10 @@ pub mod s1_ap_ies {
     /// `EUTRANRoundTripDelayEstimationInfo ::= INTEGER (0..2047)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct EUTRANRoundTripDelayEstimationInfo(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for EUTRANRoundTripDelayEstimationInfo {
+    impl From<EUTRANRoundTripDelayEstimationInfo> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: EUTRANRoundTripDelayEstimationInfo) -> Self {
+            value.0
         }
     }
     impl From<u16> for EUTRANRoundTripDelayEstimationInfo {
@@ -11993,10 +11933,10 @@ pub mod s1_ap_ies {
     /// `EmergencyAreaID ::= OCTET STRING (SIZE (3))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct EmergencyAreaID(pub [u8; 3]);
-    impl oxirush_aper::protocol::__Field<[u8; 3]> for EmergencyAreaID {
+    impl From<EmergencyAreaID> for [u8; 3] {
         #[inline]
-        fn __field(self) -> [u8; 3] {
-            self.0
+        fn from(value: EmergencyAreaID) -> Self {
+            value.0
         }
     }
     impl From<[u8; 3]> for EmergencyAreaID {
@@ -12035,12 +11975,10 @@ pub mod s1_ap_ies {
     /// `EmergencyAreaID-Broadcast ::= SEQUENCE (SIZE (1..65535)) OF EmergencyAreaIDBroadcastItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDBroadcast(pub Vec<EmergencyAreaIDBroadcastItem>);
-    impl oxirush_aper::protocol::__Field<Vec<EmergencyAreaIDBroadcastItem>>
-        for EmergencyAreaIDBroadcast
-    {
+    impl From<EmergencyAreaIDBroadcast> for Vec<EmergencyAreaIDBroadcastItem> {
         #[inline]
-        fn __field(self) -> Vec<EmergencyAreaIDBroadcastItem> {
-            self.0
+        fn from(value: EmergencyAreaIDBroadcast) -> Self {
+            value.0
         }
     }
     impl From<Vec<EmergencyAreaIDBroadcastItem>> for EmergencyAreaIDBroadcast {
@@ -12194,12 +12132,10 @@ pub mod s1_ap_ies {
     /// `EmergencyAreaID-Cancelled ::= SEQUENCE (SIZE (1..65535)) OF EmergencyAreaIDCancelledItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDCancelled(pub Vec<EmergencyAreaIDCancelledItem>);
-    impl oxirush_aper::protocol::__Field<Vec<EmergencyAreaIDCancelledItem>>
-        for EmergencyAreaIDCancelled
-    {
+    impl From<EmergencyAreaIDCancelled> for Vec<EmergencyAreaIDCancelledItem> {
         #[inline]
-        fn __field(self) -> Vec<EmergencyAreaIDCancelledItem> {
-            self.0
+        fn from(value: EmergencyAreaIDCancelled) -> Self {
+            value.0
         }
     }
     impl From<Vec<EmergencyAreaIDCancelledItem>> for EmergencyAreaIDCancelled {
@@ -12353,10 +12289,10 @@ pub mod s1_ap_ies {
     /// `EmergencyAreaIDList ::= SEQUENCE (SIZE (1..65535)) OF EmergencyAreaID`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDList(pub Vec<EmergencyAreaID>);
-    impl oxirush_aper::protocol::__Field<Vec<EmergencyAreaID>> for EmergencyAreaIDList {
+    impl From<EmergencyAreaIDList> for Vec<EmergencyAreaID> {
         #[inline]
-        fn __field(self) -> Vec<EmergencyAreaID> {
-            self.0
+        fn from(value: EmergencyAreaIDList) -> Self {
+            value.0
         }
     }
     impl From<Vec<EmergencyAreaID>> for EmergencyAreaIDList {
@@ -12405,10 +12341,10 @@ pub mod s1_ap_ies {
     /// `EmergencyAreaIDListForRestart ::= SEQUENCE (SIZE (1..256)) OF EmergencyAreaID`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDListForRestart(pub Vec<EmergencyAreaID>);
-    impl oxirush_aper::protocol::__Field<Vec<EmergencyAreaID>> for EmergencyAreaIDListForRestart {
+    impl From<EmergencyAreaIDListForRestart> for Vec<EmergencyAreaID> {
         #[inline]
-        fn __field(self) -> Vec<EmergencyAreaID> {
-            self.0
+        fn from(value: EmergencyAreaIDListForRestart) -> Self {
+            value.0
         }
     }
     impl From<Vec<EmergencyAreaID>> for EmergencyAreaIDListForRestart {
@@ -12503,10 +12439,10 @@ pub mod s1_ap_ies {
     /// `En-gNB-ID ::= BIT STRING (SIZE (22..32, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EnGNBID<'a>(pub BitString<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<BitString<'a>> for EnGNBID<'a> {
+    impl<'a> From<EnGNBID<'a>> for BitString<'a> {
         #[inline]
-        fn __field(self) -> BitString<'a> {
-            self.0
+        fn from(value: EnGNBID<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> EnGNBID<'a> {
@@ -12553,10 +12489,10 @@ pub mod s1_ap_ies {
     /// `EncryptionAlgorithms ::= BIT STRING (SIZE (16, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EncryptionAlgorithms<'a>(pub BitString<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<BitString<'a>> for EncryptionAlgorithms<'a> {
+    impl<'a> From<EncryptionAlgorithms<'a>> for BitString<'a> {
         #[inline]
-        fn __field(self) -> BitString<'a> {
-            self.0
+        fn from(value: EncryptionAlgorithms<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> EncryptionAlgorithms<'a> {
@@ -13062,10 +12998,10 @@ pub mod s1_ap_ies {
     /// `ExpectedActivityPeriod ::= INTEGER (1..181, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExpectedActivityPeriod(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for ExpectedActivityPeriod {
+    impl From<ExpectedActivityPeriod> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: ExpectedActivityPeriod) -> Self {
+            value.0
         }
     }
     impl From<u64> for ExpectedActivityPeriod {
@@ -13172,10 +13108,10 @@ pub mod s1_ap_ies {
     /// `ExpectedIdlePeriod ::= INTEGER (1..181, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExpectedIdlePeriod(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for ExpectedIdlePeriod {
+    impl From<ExpectedIdlePeriod> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: ExpectedIdlePeriod) -> Self {
+            value.0
         }
     }
     impl From<u64> for ExpectedIdlePeriod {
@@ -13516,10 +13452,10 @@ pub mod s1_ap_ies {
     /// `Extended-UEIdentityIndexValue ::= BIT STRING (SIZE (14))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExtendedUEIdentityIndexValue(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for ExtendedUEIdentityIndexValue {
+    impl From<ExtendedUEIdentityIndexValue> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: ExtendedUEIdentityIndexValue) -> Self {
+            value.0
         }
     }
     impl From<Bits> for ExtendedUEIdentityIndexValue {
@@ -13568,10 +13504,10 @@ pub mod s1_ap_ies {
     /// `ExtendedBitRate ::= INTEGER (10000000001..4000000000000, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExtendedBitRate(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for ExtendedBitRate {
+    impl From<ExtendedBitRate> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: ExtendedBitRate) -> Self {
+            value.0
         }
     }
     impl From<u64> for ExtendedBitRate {
@@ -13612,10 +13548,10 @@ pub mod s1_ap_ies {
     /// `ExtendedRNC-ID ::= INTEGER (4096..65535)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExtendedRNCID(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for ExtendedRNCID {
+    impl From<ExtendedRNCID> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: ExtendedRNCID) -> Self {
+            value.0
         }
     }
     impl From<u16> for ExtendedRNCID {
@@ -13658,10 +13594,10 @@ pub mod s1_ap_ies {
     /// `ExtendedRepetitionPeriod ::= INTEGER (4096..131071)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExtendedRepetitionPeriod(pub u32);
-    impl oxirush_aper::protocol::__Field<u32> for ExtendedRepetitionPeriod {
+    impl From<ExtendedRepetitionPeriod> for u32 {
         #[inline]
-        fn __field(self) -> u32 {
-            self.0
+        fn from(value: ExtendedRepetitionPeriod) -> Self {
+            value.0
         }
     }
     impl From<u32> for ExtendedRepetitionPeriod {
@@ -13717,10 +13653,10 @@ pub mod s1_ap_ies {
     /// `FiveGSTAC ::= OCTET STRING (SIZE (3))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct FiveGSTAC(pub [u8; 3]);
-    impl oxirush_aper::protocol::__Field<[u8; 3]> for FiveGSTAC {
+    impl From<FiveGSTAC> for [u8; 3] {
         #[inline]
-        fn __field(self) -> [u8; 3] {
-            self.0
+        fn from(value: FiveGSTAC) -> Self {
+            value.0
         }
     }
     impl From<[u8; 3]> for FiveGSTAC {
@@ -13857,10 +13793,10 @@ pub mod s1_ap_ies {
     /// `FiveQI ::= INTEGER (0..255, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct FiveQI(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for FiveQI {
+    impl From<FiveQI> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: FiveQI) -> Self {
+            value.0
         }
     }
     impl From<u64> for FiveQI {
@@ -13964,10 +13900,10 @@ pub mod s1_ap_ies {
     /// `ForbiddenLACs ::= SEQUENCE (SIZE (1..4096)) OF LAC`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenLACs(pub Vec<LAC>);
-    impl oxirush_aper::protocol::__Field<Vec<LAC>> for ForbiddenLACs {
+    impl From<ForbiddenLACs> for Vec<LAC> {
         #[inline]
-        fn __field(self) -> Vec<LAC> {
-            self.0
+        fn from(value: ForbiddenLACs) -> Self {
+            value.0
         }
     }
     impl From<Vec<LAC>> for ForbiddenLACs {
@@ -14016,10 +13952,10 @@ pub mod s1_ap_ies {
     /// `ForbiddenLAs ::= SEQUENCE (SIZE (1..16)) OF ForbiddenLAsItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenLAs(pub Vec<ForbiddenLAsItem>);
-    impl oxirush_aper::protocol::__Field<Vec<ForbiddenLAsItem>> for ForbiddenLAs {
+    impl From<ForbiddenLAs> for Vec<ForbiddenLAsItem> {
         #[inline]
-        fn __field(self) -> Vec<ForbiddenLAsItem> {
-            self.0
+        fn from(value: ForbiddenLAs) -> Self {
+            value.0
         }
     }
     impl From<Vec<ForbiddenLAsItem>> for ForbiddenLAs {
@@ -14167,10 +14103,10 @@ pub mod s1_ap_ies {
     /// `ForbiddenTACs ::= SEQUENCE (SIZE (1..4096)) OF TAC`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenTACs(pub Vec<TAC>);
-    impl oxirush_aper::protocol::__Field<Vec<TAC>> for ForbiddenTACs {
+    impl From<ForbiddenTACs> for Vec<TAC> {
         #[inline]
-        fn __field(self) -> Vec<TAC> {
-            self.0
+        fn from(value: ForbiddenTACs) -> Self {
+            value.0
         }
     }
     impl From<Vec<TAC>> for ForbiddenTACs {
@@ -14219,10 +14155,10 @@ pub mod s1_ap_ies {
     /// `ForbiddenTAs ::= SEQUENCE (SIZE (1..16)) OF ForbiddenTAsItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenTAs(pub Vec<ForbiddenTAsItem>);
-    impl oxirush_aper::protocol::__Field<Vec<ForbiddenTAsItem>> for ForbiddenTAs {
+    impl From<ForbiddenTAs> for Vec<ForbiddenTAsItem> {
         #[inline]
-        fn __field(self) -> Vec<ForbiddenTAsItem> {
-            self.0
+        fn from(value: ForbiddenTAs) -> Self {
+            value.0
         }
     }
     impl From<Vec<ForbiddenTAsItem>> for ForbiddenTAs {
@@ -14701,10 +14637,10 @@ pub mod s1_ap_ies {
     /// `GNB-ID ::= BIT STRING (SIZE (22..32))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct GNBID(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for GNBID {
+    impl From<GNBID> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: GNBID) -> Self {
+            value.0
         }
     }
     impl From<Bits> for GNBID {
@@ -14809,10 +14745,10 @@ pub mod s1_ap_ies {
     /// `GTP-TEID ::= OCTET STRING (SIZE (4))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct GTPTEID(pub [u8; 4]);
-    impl oxirush_aper::protocol::__Field<[u8; 4]> for GTPTEID {
+    impl From<GTPTEID> for [u8; 4] {
         #[inline]
-        fn __field(self) -> [u8; 4] {
-            self.0
+        fn from(value: GTPTEID) -> Self {
+            value.0
         }
     }
     impl From<[u8; 4]> for GTPTEID {
@@ -14960,10 +14896,10 @@ pub mod s1_ap_ies {
     /// `GUMMEIList ::= SEQUENCE (SIZE (1..256)) OF GUMMEI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GUMMEIList(pub Vec<GUMMEI>);
-    impl oxirush_aper::protocol::__Field<Vec<GUMMEI>> for GUMMEIList {
+    impl From<GUMMEIList> for Vec<GUMMEI> {
         #[inline]
-        fn __field(self) -> Vec<GUMMEI> {
-            self.0
+        fn from(value: GUMMEIList) -> Self {
+            value.0
         }
     }
     impl From<Vec<GUMMEI>> for GUMMEIList {
@@ -15462,10 +15398,10 @@ pub mod s1_ap_ies {
     /// `HFN ::= INTEGER (0..1048575)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HFN(pub u32);
-    impl oxirush_aper::protocol::__Field<u32> for HFN {
+    impl From<HFN> for u32 {
         #[inline]
-        fn __field(self) -> u32 {
-            self.0
+        fn from(value: HFN) -> Self {
+            value.0
         }
     }
     impl From<u32> for HFN {
@@ -15508,10 +15444,10 @@ pub mod s1_ap_ies {
     /// `HFNModified ::= INTEGER (0..131071)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HFNModified(pub u32);
-    impl oxirush_aper::protocol::__Field<u32> for HFNModified {
+    impl From<HFNModified> for u32 {
         #[inline]
-        fn __field(self) -> u32 {
-            self.0
+        fn from(value: HFNModified) -> Self {
+            value.0
         }
     }
     impl From<u32> for HFNModified {
@@ -15554,10 +15490,10 @@ pub mod s1_ap_ies {
     /// `HFNforPDCP-SNlength18 ::= INTEGER (0..16383)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HFNforPDCPSNlength18(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for HFNforPDCPSNlength18 {
+    impl From<HFNforPDCPSNlength18> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: HFNforPDCPSNlength18) -> Self {
+            value.0
         }
     }
     impl From<u16> for HFNforPDCPSNlength18 {
@@ -15895,10 +15831,10 @@ pub mod s1_ap_ies {
     /// `HandoverWindowDuration ::= INTEGER (1..6000)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HandoverWindowDuration(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for HandoverWindowDuration {
+    impl From<HandoverWindowDuration> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: HandoverWindowDuration) -> Self {
+            value.0
         }
     }
     impl From<u16> for HandoverWindowDuration {
@@ -15941,10 +15877,10 @@ pub mod s1_ap_ies {
     /// `HandoverWindowStart ::= INTEGER (0..1048575)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HandoverWindowStart(pub u32);
-    impl oxirush_aper::protocol::__Field<u32> for HandoverWindowStart {
+    impl From<HandoverWindowStart> for u32 {
         #[inline]
-        fn __field(self) -> u32 {
-            self.0
+        fn from(value: HandoverWindowStart) -> Self {
+            value.0
         }
     }
     impl From<u32> for HandoverWindowStart {
@@ -15987,10 +15923,10 @@ pub mod s1_ap_ies {
     /// `Hysteresis ::= INTEGER (0..30)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct Hysteresis(pub u8);
-    impl oxirush_aper::protocol::__Field<u8> for Hysteresis {
+    impl From<Hysteresis> for u8 {
         #[inline]
-        fn __field(self) -> u8 {
-            self.0
+        fn from(value: Hysteresis) -> Self {
+            value.0
         }
     }
     impl From<u8> for Hysteresis {
@@ -16170,10 +16106,10 @@ pub mod s1_ap_ies {
     /// `IMSI ::= OCTET STRING (SIZE (3..8))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IMSI<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for IMSI<'a> {
+    impl<'a> From<IMSI<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: IMSI<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> IMSI<'a> {
@@ -16578,10 +16514,10 @@ pub mod s1_ap_ies {
     /// `IntegrityProtectionAlgorithms ::= BIT STRING (SIZE (16, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IntegrityProtectionAlgorithms<'a>(pub BitString<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<BitString<'a>> for IntegrityProtectionAlgorithms<'a> {
+    impl<'a> From<IntegrityProtectionAlgorithms<'a>> for BitString<'a> {
         #[inline]
-        fn __field(self) -> BitString<'a> {
-            self.0
+        fn from(value: IntegrityProtectionAlgorithms<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> IntegrityProtectionAlgorithms<'a> {
@@ -16723,10 +16659,10 @@ pub mod s1_ap_ies {
     /// `IntendedNumberOfPagingAttempts ::= INTEGER (1..16, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct IntendedNumberOfPagingAttempts(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for IntendedNumberOfPagingAttempts {
+    impl From<IntendedNumberOfPagingAttempts> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: IntendedNumberOfPagingAttempts) -> Self {
+            value.0
         }
     }
     impl From<u64> for IntendedNumberOfPagingAttempts {
@@ -17193,12 +17129,10 @@ pub mod s1_ap_ies {
     /// `InterSystemMeasurementList ::= SEQUENCE (SIZE (1..64)) OF InterSystemMeasurementItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct InterSystemMeasurementList<'a>(pub Vec<InterSystemMeasurementItem<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<InterSystemMeasurementItem<'a>>>
-        for InterSystemMeasurementList<'a>
-    {
+    impl<'a> From<InterSystemMeasurementList<'a>> for Vec<InterSystemMeasurementItem<'a>> {
         #[inline]
-        fn __field(self) -> Vec<InterSystemMeasurementItem<'a>> {
-            self.0
+        fn from(value: InterSystemMeasurementList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> InterSystemMeasurementList<'a> {
@@ -17395,10 +17329,10 @@ pub mod s1_ap_ies {
     /// `InterfacesToTrace ::= BIT STRING (SIZE (8))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct InterfacesToTrace(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for InterfacesToTrace {
+    impl From<InterfacesToTrace> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: InterfacesToTrace) -> Self {
+            value.0
         }
     }
     impl From<Bits> for InterfacesToTrace {
@@ -17637,10 +17571,10 @@ pub mod s1_ap_ies {
     /// `IntersystemSONConfigurationTransfer ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IntersystemSONConfigurationTransfer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for IntersystemSONConfigurationTransfer<'a> {
+    impl<'a> From<IntersystemSONConfigurationTransfer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: IntersystemSONConfigurationTransfer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> IntersystemSONConfigurationTransfer<'a> {
@@ -17742,10 +17676,10 @@ pub mod s1_ap_ies {
     /// `L3-Information ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct L3Information<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for L3Information<'a> {
+    impl<'a> From<L3Information<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: L3Information<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> L3Information<'a> {
@@ -17815,10 +17749,10 @@ pub mod s1_ap_ies {
     /// `LAC ::= OCTET STRING (SIZE (2))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct LAC(pub [u8; 2]);
-    impl oxirush_aper::protocol::__Field<[u8; 2]> for LAC {
+    impl From<LAC> for [u8; 2] {
         #[inline]
-        fn __field(self) -> [u8; 2] {
-            self.0
+        fn from(value: LAC) -> Self {
+            value.0
         }
     }
     impl From<[u8; 2]> for LAC {
@@ -17952,10 +17886,10 @@ pub mod s1_ap_ies {
     /// `LHN-ID ::= OCTET STRING (SIZE (32..256))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LHNID<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for LHNID<'a> {
+    impl<'a> From<LHNID<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: LHNID<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> LHNID<'a> {
@@ -18013,10 +17947,10 @@ pub mod s1_ap_ies {
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LPPaPDU<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for LPPaPDU<'a> {
+    impl<'a> From<LPPaPDU<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: LPPaPDU<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> LPPaPDU<'a> {
@@ -18559,10 +18493,10 @@ pub mod s1_ap_ies {
     /// `LastVisitedNGRANCellInformation ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedNGRANCellInformation<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for LastVisitedNGRANCellInformation<'a> {
+    impl<'a> From<LastVisitedNGRANCellInformation<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: LastVisitedNGRANCellInformation<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> LastVisitedNGRANCellInformation<'a> {
@@ -18727,10 +18661,10 @@ pub mod s1_ap_ies {
     /// `LastVisitedPSCellList ::= SEQUENCE (SIZE (1..8)) OF LastVisitedPSCellInformation`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedPSCellList(pub Vec<LastVisitedPSCellInformation>);
-    impl oxirush_aper::protocol::__Field<Vec<LastVisitedPSCellInformation>> for LastVisitedPSCellList {
+    impl From<LastVisitedPSCellList> for Vec<LastVisitedPSCellInformation> {
         #[inline]
-        fn __field(self) -> Vec<LastVisitedPSCellInformation> {
-            self.0
+        fn from(value: LastVisitedPSCellList) -> Self {
+            value.0
         }
     }
     impl From<Vec<LastVisitedPSCellInformation>> for LastVisitedPSCellList {
@@ -18779,10 +18713,10 @@ pub mod s1_ap_ies {
     /// `LastVisitedUTRANCellInformation ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedUTRANCellInformation<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for LastVisitedUTRANCellInformation<'a> {
+    impl<'a> From<LastVisitedUTRANCellInformation<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: LastVisitedUTRANCellInformation<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> LastVisitedUTRANCellInformation<'a> {
@@ -19479,10 +19413,10 @@ pub mod s1_ap_ies {
     /// `M-TMSI ::= OCTET STRING (SIZE (4))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MTMSI(pub [u8; 4]);
-    impl oxirush_aper::protocol::__Field<[u8; 4]> for MTMSI {
+    impl From<MTMSI> for [u8; 4] {
         #[inline]
-        fn __field(self) -> [u8; 4] {
-            self.0
+        fn from(value: MTMSI) -> Self {
+            value.0
         }
     }
     impl From<[u8; 4]> for MTMSI {
@@ -20832,10 +20766,10 @@ pub mod s1_ap_ies {
     /// `M7period ::= INTEGER (1..60, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct M7period(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for M7period {
+    impl From<M7period> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: M7period) -> Self {
+            value.0
         }
     }
     impl From<u64> for M7period {
@@ -20874,10 +20808,10 @@ pub mod s1_ap_ies {
     /// `MBSFN-ResultToLog ::= SEQUENCE (SIZE (1..8)) OF MBSFNResultToLogInfo`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MBSFNResultToLog(pub Vec<MBSFNResultToLogInfo>);
-    impl oxirush_aper::protocol::__Field<Vec<MBSFNResultToLogInfo>> for MBSFNResultToLog {
+    impl From<MBSFNResultToLog> for Vec<MBSFNResultToLogInfo> {
         #[inline]
-        fn __field(self) -> Vec<MBSFNResultToLogInfo> {
-            self.0
+        fn from(value: MBSFNResultToLog) -> Self {
+            value.0
         }
     }
     impl From<Vec<MBSFNResultToLogInfo>> for MBSFNResultToLog {
@@ -21221,10 +21155,10 @@ pub mod s1_ap_ies {
     /// `MDT-ConfigurationNR ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MDTConfigurationNR<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for MDTConfigurationNR<'a> {
+    impl<'a> From<MDTConfigurationNR<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: MDTConfigurationNR<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> MDTConfigurationNR<'a> {
@@ -21281,10 +21215,10 @@ pub mod s1_ap_ies {
     /// `MDT-Location-Info ::= BIT STRING (SIZE (8))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MDTLocationInfo(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for MDTLocationInfo {
+    impl From<MDTLocationInfo> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: MDTLocationInfo) -> Self {
+            value.0
         }
     }
     impl From<Bits> for MDTLocationInfo {
@@ -21445,10 +21379,10 @@ pub mod s1_ap_ies {
     /// `MDTPLMNList ::= SEQUENCE (SIZE (1..16)) OF PLMNidentity`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MDTPLMNList(pub Vec<PLMNidentity>);
-    impl oxirush_aper::protocol::__Field<Vec<PLMNidentity>> for MDTPLMNList {
+    impl From<MDTPLMNList> for Vec<PLMNidentity> {
         #[inline]
-        fn __field(self) -> Vec<PLMNidentity> {
-            self.0
+        fn from(value: MDTPLMNList) -> Self {
+            value.0
         }
     }
     impl From<Vec<PLMNidentity>> for MDTPLMNList {
@@ -21510,10 +21444,10 @@ pub mod s1_ap_ies {
     /// `MME-Code ::= OCTET STRING (SIZE (1))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MMECode(pub [u8; 1]);
-    impl oxirush_aper::protocol::__Field<[u8; 1]> for MMECode {
+    impl From<MMECode> for [u8; 1] {
         #[inline]
-        fn __field(self) -> [u8; 1] {
-            self.0
+        fn from(value: MMECode) -> Self {
+            value.0
         }
     }
     impl From<[u8; 1]> for MMECode {
@@ -21566,10 +21500,10 @@ pub mod s1_ap_ies {
     /// `MME-Group-ID ::= OCTET STRING (SIZE (2))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MMEGroupID(pub [u8; 2]);
-    impl oxirush_aper::protocol::__Field<[u8; 2]> for MMEGroupID {
+    impl From<MMEGroupID> for [u8; 2] {
         #[inline]
-        fn __field(self) -> [u8; 2] {
-            self.0
+        fn from(value: MMEGroupID) -> Self {
+            value.0
         }
     }
     impl From<[u8; 2]> for MMEGroupID {
@@ -21609,10 +21543,10 @@ pub mod s1_ap_ies {
     /// `MME-UE-S1AP-ID ::= INTEGER (0..4294967295)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MMEUES1APID(pub u32);
-    impl oxirush_aper::protocol::__Field<u32> for MMEUES1APID {
+    impl From<MMEUES1APID> for u32 {
         #[inline]
-        fn __field(self) -> u32 {
-            self.0
+        fn from(value: MMEUES1APID) -> Self {
+            value.0
         }
     }
     impl From<u32> for MMEUES1APID {
@@ -21767,10 +21701,10 @@ pub mod s1_ap_ies {
     /// `MMEname ::= PrintableString (SIZE (1..150, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MMEname<'a>(pub Cow<'a, str>);
-    impl<'a> oxirush_aper::protocol::__Field<Cow<'a, str>> for MMEname<'a> {
+    impl<'a> From<MMEname<'a>> for Cow<'a, str> {
         #[inline]
-        fn __field(self) -> Cow<'a, str> {
-            self.0
+        fn from(value: MMEname<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> MMEname<'a> {
@@ -21831,10 +21765,10 @@ pub mod s1_ap_ies {
     /// `MSClassmark2 ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MSClassmark2<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for MSClassmark2<'a> {
+    impl<'a> From<MSClassmark2<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: MSClassmark2<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> MSClassmark2<'a> {
@@ -21891,10 +21825,10 @@ pub mod s1_ap_ies {
     /// `MSClassmark3 ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MSClassmark3<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for MSClassmark3<'a> {
+    impl<'a> From<MSClassmark3<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: MSClassmark3<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> MSClassmark3<'a> {
@@ -21997,10 +21931,10 @@ pub mod s1_ap_ies {
     /// `Masked-IMEISV ::= BIT STRING (SIZE (64))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MaskedIMEISV(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for MaskedIMEISV {
+    impl From<MaskedIMEISV> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: MaskedIMEISV) -> Self {
+            value.0
         }
     }
     impl From<Bits> for MaskedIMEISV {
@@ -22215,10 +22149,10 @@ pub mod s1_ap_ies {
     /// `MeasurementsToActivate ::= BIT STRING (SIZE (8))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MeasurementsToActivate(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for MeasurementsToActivate {
+    impl From<MeasurementsToActivate> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: MeasurementsToActivate) -> Self {
+            value.0
         }
     }
     impl From<Bits> for MeasurementsToActivate {
@@ -22267,10 +22201,10 @@ pub mod s1_ap_ies {
     /// `MessageIdentifier ::= BIT STRING (SIZE (16))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MessageIdentifier(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for MessageIdentifier {
+    impl From<MessageIdentifier> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: MessageIdentifier) -> Self {
+            value.0
         }
     }
     impl From<Bits> for MessageIdentifier {
@@ -22319,10 +22253,10 @@ pub mod s1_ap_ies {
     /// `MobilityInformation ::= BIT STRING (SIZE (32))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MobilityInformation(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for MobilityInformation {
+    impl From<MobilityInformation> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: MobilityInformation) -> Self {
+            value.0
         }
     }
     impl From<Bits> for MobilityInformation {
@@ -22604,10 +22538,10 @@ pub mod s1_ap_ies {
     /// `NAS-PDU ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASPDU<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for NASPDU<'a> {
+    impl<'a> From<NASPDU<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: NASPDU<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> NASPDU<'a> {
@@ -22664,10 +22598,10 @@ pub mod s1_ap_ies {
     /// `NASSecurityParametersfromE-UTRAN ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASSecurityParametersfromEUTRAN<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for NASSecurityParametersfromEUTRAN<'a> {
+    impl<'a> From<NASSecurityParametersfromEUTRAN<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: NASSecurityParametersfromEUTRAN<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> NASSecurityParametersfromEUTRAN<'a> {
@@ -22724,10 +22658,10 @@ pub mod s1_ap_ies {
     /// `NASSecurityParameterstoE-UTRAN ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASSecurityParameterstoEUTRAN<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for NASSecurityParameterstoEUTRAN<'a> {
+    impl<'a> From<NASSecurityParameterstoEUTRAN<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: NASSecurityParameterstoEUTRAN<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> NASSecurityParameterstoEUTRAN<'a> {
@@ -23178,10 +23112,10 @@ pub mod s1_ap_ies {
     /// `NB-IoT-RLF-Report-Container ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NBIoTRLFReportContainer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for NBIoTRLFReportContainer<'a> {
+    impl<'a> From<NBIoTRLFReportContainer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: NBIoTRLFReportContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> NBIoTRLFReportContainer<'a> {
@@ -23238,10 +23172,10 @@ pub mod s1_ap_ies {
     /// `NB-IoT-UEIdentityIndexValue ::= BIT STRING (SIZE (12))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct NBIoTUEIdentityIndexValue(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for NBIoTUEIdentityIndexValue {
+    impl From<NBIoTUEIdentityIndexValue> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: NBIoTUEIdentityIndexValue) -> Self {
+            value.0
         }
     }
     impl From<Bits> for NBIoTUEIdentityIndexValue {
@@ -23475,10 +23409,10 @@ pub mod s1_ap_ies {
     /// `NRCellIdentity ::= BIT STRING (SIZE (36))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct NRCellIdentity(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for NRCellIdentity {
+    impl From<NRCellIdentity> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: NRCellIdentity) -> Self {
+            value.0
         }
     }
     impl From<Bits> for NRCellIdentity {
@@ -23861,10 +23795,10 @@ pub mod s1_ap_ies {
     /// `NRencryptionAlgorithms ::= BIT STRING (SIZE (16, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRencryptionAlgorithms<'a>(pub BitString<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<BitString<'a>> for NRencryptionAlgorithms<'a> {
+    impl<'a> From<NRencryptionAlgorithms<'a>> for BitString<'a> {
         #[inline]
-        fn __field(self) -> BitString<'a> {
-            self.0
+        fn from(value: NRencryptionAlgorithms<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> NRencryptionAlgorithms<'a> {
@@ -23911,10 +23845,10 @@ pub mod s1_ap_ies {
     /// `NRintegrityProtectionAlgorithms ::= BIT STRING (SIZE (16, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRintegrityProtectionAlgorithms<'a>(pub BitString<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<BitString<'a>> for NRintegrityProtectionAlgorithms<'a> {
+    impl<'a> From<NRintegrityProtectionAlgorithms<'a>> for BitString<'a> {
         #[inline]
-        fn __field(self) -> BitString<'a> {
-            self.0
+        fn from(value: NRintegrityProtectionAlgorithms<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> NRintegrityProtectionAlgorithms<'a> {
@@ -24146,10 +24080,10 @@ pub mod s1_ap_ies {
     /// `NumberOfBroadcasts ::= INTEGER (0..65535)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct NumberOfBroadcasts(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for NumberOfBroadcasts {
+    impl From<NumberOfBroadcasts> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: NumberOfBroadcasts) -> Self {
+            value.0
         }
     }
     impl From<u16> for NumberOfBroadcasts {
@@ -24192,10 +24126,10 @@ pub mod s1_ap_ies {
     /// `NumberofBroadcastRequest ::= INTEGER (0..65535)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct NumberofBroadcastRequest(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for NumberofBroadcastRequest {
+    impl From<NumberofBroadcastRequest> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: NumberofBroadcastRequest) -> Self {
+            value.0
         }
     }
     impl From<u16> for NumberofBroadcastRequest {
@@ -24238,10 +24172,10 @@ pub mod s1_ap_ies {
     /// `OldBSS-ToNewBSS-Information ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct OldBSSToNewBSSInformation<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for OldBSSToNewBSSInformation<'a> {
+    impl<'a> From<OldBSSToNewBSSInformation<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: OldBSSToNewBSSInformation<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> OldBSSToNewBSSInformation<'a> {
@@ -24649,10 +24583,10 @@ pub mod s1_ap_ies {
     /// `PC5QoSFlowList ::= SEQUENCE (SIZE (1..2048)) OF PC5QoSFlowItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PC5QoSFlowList(pub Vec<PC5QoSFlowItem>);
-    impl oxirush_aper::protocol::__Field<Vec<PC5QoSFlowItem>> for PC5QoSFlowList {
+    impl From<PC5QoSFlowList> for Vec<PC5QoSFlowItem> {
         #[inline]
-        fn __field(self) -> Vec<PC5QoSFlowItem> {
-            self.0
+        fn from(value: PC5QoSFlowList) -> Self {
+            value.0
         }
     }
     impl From<Vec<PC5QoSFlowItem>> for PC5QoSFlowList {
@@ -24818,10 +24752,10 @@ pub mod s1_ap_ies {
     /// `PDCP-SN ::= INTEGER (0..4095)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PDCPSN(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for PDCPSN {
+    impl From<PDCPSN> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: PDCPSN) -> Self {
+            value.0
         }
     }
     impl From<u16> for PDCPSN {
@@ -24864,10 +24798,10 @@ pub mod s1_ap_ies {
     /// `PDCP-SNExtended ::= INTEGER (0..32767)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PDCPSNExtended(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for PDCPSNExtended {
+    impl From<PDCPSNExtended> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: PDCPSNExtended) -> Self {
+            value.0
         }
     }
     impl From<u16> for PDCPSNExtended {
@@ -24910,10 +24844,10 @@ pub mod s1_ap_ies {
     /// `PDCP-SNlength18 ::= INTEGER (0..262143)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PDCPSNlength18(pub u32);
-    impl oxirush_aper::protocol::__Field<u32> for PDCPSNlength18 {
+    impl From<PDCPSNlength18> for u32 {
         #[inline]
-        fn __field(self) -> u32 {
-            self.0
+        fn from(value: PDCPSNlength18) -> Self {
+            value.0
         }
     }
     impl From<u32> for PDCPSNlength18 {
@@ -25042,10 +24976,10 @@ pub mod s1_ap_ies {
     /// `PLMNListforQMC ::= SEQUENCE (SIZE (1..16)) OF PLMNidentity`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PLMNListforQMC(pub Vec<PLMNidentity>);
-    impl oxirush_aper::protocol::__Field<Vec<PLMNidentity>> for PLMNListforQMC {
+    impl From<PLMNListforQMC> for Vec<PLMNidentity> {
         #[inline]
-        fn __field(self) -> Vec<PLMNidentity> {
-            self.0
+        fn from(value: PLMNListforQMC) -> Self {
+            value.0
         }
     }
     impl From<Vec<PLMNidentity>> for PLMNListforQMC {
@@ -25125,10 +25059,10 @@ pub mod s1_ap_ies {
     /// `PLMNidentity ::= TBCDSTRING`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PLMNidentity(pub TBCDSTRING);
-    impl oxirush_aper::protocol::__Field<TBCDSTRING> for PLMNidentity {
+    impl From<PLMNidentity> for TBCDSTRING {
         #[inline]
-        fn __field(self) -> TBCDSTRING {
-            self.0
+        fn from(value: PLMNidentity) -> Self {
+            value.0
         }
     }
     impl From<TBCDSTRING> for PLMNidentity {
@@ -25296,10 +25230,10 @@ pub mod s1_ap_ies {
     /// `PWSfailedECGIList ::= SEQUENCE (SIZE (1..256)) OF EUTRANCGI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PWSfailedECGIList(pub Vec<EUTRANCGI>);
-    impl oxirush_aper::protocol::__Field<Vec<EUTRANCGI>> for PWSfailedECGIList {
+    impl From<PWSfailedECGIList> for Vec<EUTRANCGI> {
         #[inline]
-        fn __field(self) -> Vec<EUTRANCGI> {
-            self.0
+        fn from(value: PWSfailedECGIList) -> Self {
+            value.0
         }
     }
     impl From<Vec<EUTRANCGI>> for PWSfailedECGIList {
@@ -25348,10 +25282,10 @@ pub mod s1_ap_ies {
     /// `Packet-LossRate ::= INTEGER (0..1000)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PacketLossRate(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for PacketLossRate {
+    impl From<PacketLossRate> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: PacketLossRate) -> Self {
+            value.0
         }
     }
     impl From<u16> for PacketLossRate {
@@ -25584,10 +25518,10 @@ pub mod s1_ap_ies {
     /// `PagingAttemptCount ::= INTEGER (1..16, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PagingAttemptCount(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for PagingAttemptCount {
+    impl From<PagingAttemptCount> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: PagingAttemptCount) -> Self {
+            value.0
         }
     }
     impl From<u64> for PagingAttemptCount {
@@ -26216,10 +26150,10 @@ pub mod s1_ap_ies {
     /// `Port-Number ::= OCTET STRING (SIZE (2))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PortNumber(pub [u8; 2]);
-    impl oxirush_aper::protocol::__Field<[u8; 2]> for PortNumber {
+    impl From<PortNumber> for [u8; 2] {
         #[inline]
-        fn __field(self) -> [u8; 2] {
-            self.0
+        fn from(value: PortNumber) -> Self {
+            value.0
         }
     }
     impl From<[u8; 2]> for PortNumber {
@@ -26355,10 +26289,10 @@ pub mod s1_ap_ies {
     /// `PriorityLevel ::= INTEGER (0..15)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PriorityLevel(pub u8);
-    impl oxirush_aper::protocol::__Field<u8> for PriorityLevel {
+    impl From<PriorityLevel> for u8 {
         #[inline]
-        fn __field(self) -> u8 {
-            self.0
+        fn from(value: PriorityLevel) -> Self {
+            value.0
         }
     }
     impl From<u8> for PriorityLevel {
@@ -26727,10 +26661,10 @@ pub mod s1_ap_ies {
     /// `QCI ::= INTEGER (0..255)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct QCI(pub u8);
-    impl oxirush_aper::protocol::__Field<u8> for QCI {
+    impl From<QCI> for u8 {
         #[inline]
-        fn __field(self) -> u8 {
-            self.0
+        fn from(value: QCI) -> Self {
+            value.0
         }
     }
     impl From<u8> for QCI {
@@ -26784,10 +26718,10 @@ pub mod s1_ap_ies {
     /// `RAC ::= OCTET STRING (SIZE (1))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RAC(pub [u8; 1]);
-    impl oxirush_aper::protocol::__Field<[u8; 1]> for RAC {
+    impl From<RAC> for [u8; 1] {
         #[inline]
-        fn __field(self) -> [u8; 1] {
-            self.0
+        fn from(value: RAC) -> Self {
+            value.0
         }
     }
     impl From<[u8; 1]> for RAC {
@@ -26873,10 +26807,10 @@ pub mod s1_ap_ies {
     /// `RAN-UE-NGAP-ID ::= INTEGER (0..4294967295)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RANUENGAPID(pub u32);
-    impl oxirush_aper::protocol::__Field<u32> for RANUENGAPID {
+    impl From<RANUENGAPID> for u32 {
         #[inline]
-        fn __field(self) -> u32 {
-            self.0
+        fn from(value: RANUENGAPID) -> Self {
+            value.0
         }
     }
     impl From<u32> for RANUENGAPID {
@@ -26919,10 +26853,10 @@ pub mod s1_ap_ies {
     /// `RAT-Restrictions ::= SEQUENCE (SIZE (1..16)) OF RATRestrictionsItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RATRestrictions<'a>(pub Vec<RATRestrictionsItem<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<RATRestrictionsItem<'a>>> for RATRestrictions<'a> {
+    impl<'a> From<RATRestrictions<'a>> for Vec<RATRestrictionsItem<'a>> {
         #[inline]
-        fn __field(self) -> Vec<RATRestrictionsItem<'a>> {
-            self.0
+        fn from(value: RATRestrictions<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> RATRestrictions<'a> {
@@ -27172,10 +27106,10 @@ pub mod s1_ap_ies {
     /// `RIMInformation ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RIMInformation<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for RIMInformation<'a> {
+    impl<'a> From<RIMInformation<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: RIMInformation<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> RIMInformation<'a> {
@@ -27599,10 +27533,10 @@ pub mod s1_ap_ies {
     /// `RNC-ID ::= INTEGER (0..4095)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RNCID(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for RNCID {
+    impl From<RNCID> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: RNCID) -> Self {
+            value.0
         }
     }
     impl From<u16> for RNCID {
@@ -27645,10 +27579,10 @@ pub mod s1_ap_ies {
     /// `RRC-Container ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RRCContainer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for RRCContainer<'a> {
+    impl<'a> From<RRCContainer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: RRCContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> RRCContainer<'a> {
@@ -27842,10 +27776,10 @@ pub mod s1_ap_ies {
     /// `ReceiveStatusOfULPDCPSDUsExtended ::= BIT STRING (SIZE (1..16384))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ReceiveStatusOfULPDCPSDUsExtended<'a>(pub BitString<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<BitString<'a>> for ReceiveStatusOfULPDCPSDUsExtended<'a> {
+    impl<'a> From<ReceiveStatusOfULPDCPSDUsExtended<'a>> for BitString<'a> {
         #[inline]
-        fn __field(self) -> BitString<'a> {
-            self.0
+        fn from(value: ReceiveStatusOfULPDCPSDUsExtended<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ReceiveStatusOfULPDCPSDUsExtended<'a> {
@@ -27894,12 +27828,10 @@ pub mod s1_ap_ies {
     /// `ReceiveStatusOfULPDCPSDUsPDCP-SNlength18 ::= BIT STRING (SIZE (1..131072))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a>(pub BitString<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<BitString<'a>>
-        for ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a>
-    {
+    impl<'a> From<ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a>> for BitString<'a> {
         #[inline]
-        fn __field(self) -> BitString<'a> {
-            self.0
+        fn from(value: ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a> {
@@ -27948,10 +27880,10 @@ pub mod s1_ap_ies {
     /// `ReceiveStatusofULPDCPSDUs ::= BIT STRING (SIZE (4096))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ReceiveStatusofULPDCPSDUs<'a>(pub BitString<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<BitString<'a>> for ReceiveStatusofULPDCPSDUs<'a> {
+    impl<'a> From<ReceiveStatusofULPDCPSDUs<'a>> for BitString<'a> {
         #[inline]
-        fn __field(self) -> BitString<'a> {
-            self.0
+        fn from(value: ReceiveStatusofULPDCPSDUs<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ReceiveStatusofULPDCPSDUs<'a> {
@@ -28120,10 +28052,10 @@ pub mod s1_ap_ies {
     /// `RecommendedCellList ::= SEQUENCE (SIZE (1..16)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedCellList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for RecommendedCellList<'a> {
+    impl<'a> From<RecommendedCellList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: RecommendedCellList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> RecommendedCellList<'a> {
@@ -28362,10 +28294,10 @@ pub mod s1_ap_ies {
     /// `RecommendedENBList ::= SEQUENCE (SIZE (1..16)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedENBList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for RecommendedENBList<'a> {
+    impl<'a> From<RecommendedENBList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: RecommendedENBList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> RecommendedENBList<'a> {
@@ -28518,10 +28450,10 @@ pub mod s1_ap_ies {
     /// `RelativeMMECapacity ::= INTEGER (0..255)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RelativeMMECapacity(pub u8);
-    impl oxirush_aper::protocol::__Field<u8> for RelativeMMECapacity {
+    impl From<RelativeMMECapacity> for u8 {
         #[inline]
-        fn __field(self) -> u8 {
-            self.0
+        fn from(value: RelativeMMECapacity) -> Self {
+            value.0
         }
     }
     impl From<u8> for RelativeMMECapacity {
@@ -28608,10 +28540,10 @@ pub mod s1_ap_ies {
     /// `RepetitionPeriod ::= INTEGER (0..4095)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RepetitionPeriod(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for RepetitionPeriod {
+    impl From<RepetitionPeriod> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: RepetitionPeriod) -> Self {
+            value.0
         }
     }
     impl From<u16> for RepetitionPeriod {
@@ -29062,10 +28994,10 @@ pub mod s1_ap_ies {
     /// `Routing-ID ::= INTEGER (0..255)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RoutingID(pub u8);
-    impl oxirush_aper::protocol::__Field<u8> for RoutingID {
+    impl From<RoutingID> for u8 {
         #[inline]
-        fn __field(self) -> u8 {
-            self.0
+        fn from(value: RoutingID) -> Self {
+            value.0
         }
     }
     impl From<u8> for RoutingID {
@@ -30129,12 +30061,10 @@ pub mod s1_ap_ies {
     /// `SecondaryRATDataUsageReportList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecondaryRATDataUsageReportList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for SecondaryRATDataUsageReportList<'a>
-    {
+    impl<'a> From<SecondaryRATDataUsageReportList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: SecondaryRATDataUsageReportList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> SecondaryRATDataUsageReportList<'a> {
@@ -30501,10 +30431,10 @@ pub mod s1_ap_ies {
     /// `SecurityKey ::= BIT STRING (SIZE (256))`.
     #[derive(Clone, PartialEq, Eq, Hash)]
     pub struct SecurityKey<'a>(pub BitString<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<BitString<'a>> for SecurityKey<'a> {
+    impl<'a> From<SecurityKey<'a>> for BitString<'a> {
         #[inline]
-        fn __field(self) -> BitString<'a> {
-            self.0
+        fn from(value: SecurityKey<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> SecurityKey<'a> {
@@ -30783,10 +30713,10 @@ pub mod s1_ap_ies {
     /// `SensorMeasConfigNameList ::= SEQUENCE (SIZE (1..3)) OF SensorMeasConfigNameItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SensorMeasConfigNameList(pub Vec<SensorMeasConfigNameItem>);
-    impl oxirush_aper::protocol::__Field<Vec<SensorMeasConfigNameItem>> for SensorMeasConfigNameList {
+    impl From<SensorMeasConfigNameList> for Vec<SensorMeasConfigNameItem> {
         #[inline]
-        fn __field(self) -> Vec<SensorMeasConfigNameItem> {
-            self.0
+        fn from(value: SensorMeasConfigNameList) -> Self {
+            value.0
         }
     }
     impl From<Vec<SensorMeasConfigNameItem>> for SensorMeasConfigNameList {
@@ -31084,10 +31014,10 @@ pub mod s1_ap_ies {
     /// `SerialNumber ::= BIT STRING (SIZE (16))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct SerialNumber(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for SerialNumber {
+    impl From<SerialNumber> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: SerialNumber) -> Self {
+            value.0
         }
     }
     impl From<Bits> for SerialNumber {
@@ -31136,10 +31066,10 @@ pub mod s1_ap_ies {
     /// `ServedDCNs ::= SEQUENCE (SIZE (0..32)) OF ServedDCNsItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedDCNs(pub Vec<ServedDCNsItem>);
-    impl oxirush_aper::protocol::__Field<Vec<ServedDCNsItem>> for ServedDCNs {
+    impl From<ServedDCNs> for Vec<ServedDCNsItem> {
         #[inline]
-        fn __field(self) -> Vec<ServedDCNsItem> {
-            self.0
+        fn from(value: ServedDCNs) -> Self {
+            value.0
         }
     }
     impl From<Vec<ServedDCNsItem>> for ServedDCNs {
@@ -31288,10 +31218,10 @@ pub mod s1_ap_ies {
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedGUMMEIs(pub Vec<ServedGUMMEIsItem>);
-    impl oxirush_aper::protocol::__Field<Vec<ServedGUMMEIsItem>> for ServedGUMMEIs {
+    impl From<ServedGUMMEIs> for Vec<ServedGUMMEIsItem> {
         #[inline]
-        fn __field(self) -> Vec<ServedGUMMEIsItem> {
-            self.0
+        fn from(value: ServedGUMMEIs) -> Self {
+            value.0
         }
     }
     impl From<Vec<ServedGUMMEIsItem>> for ServedGUMMEIs {
@@ -31456,10 +31386,10 @@ pub mod s1_ap_ies {
     /// `ServedGroupIDs ::= SEQUENCE (SIZE (1..65535)) OF MMEGroupID`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedGroupIDs(pub Vec<MMEGroupID>);
-    impl oxirush_aper::protocol::__Field<Vec<MMEGroupID>> for ServedGroupIDs {
+    impl From<ServedGroupIDs> for Vec<MMEGroupID> {
         #[inline]
-        fn __field(self) -> Vec<MMEGroupID> {
-            self.0
+        fn from(value: ServedGroupIDs) -> Self {
+            value.0
         }
     }
     impl From<Vec<MMEGroupID>> for ServedGroupIDs {
@@ -31508,10 +31438,10 @@ pub mod s1_ap_ies {
     /// `ServedMMECs ::= SEQUENCE (SIZE (1..256)) OF MMECode`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedMMECs(pub Vec<MMECode>);
-    impl oxirush_aper::protocol::__Field<Vec<MMECode>> for ServedMMECs {
+    impl From<ServedMMECs> for Vec<MMECode> {
         #[inline]
-        fn __field(self) -> Vec<MMECode> {
-            self.0
+        fn from(value: ServedMMECs) -> Self {
+            value.0
         }
     }
     impl From<Vec<MMECode>> for ServedMMECs {
@@ -31560,10 +31490,10 @@ pub mod s1_ap_ies {
     /// `ServedPLMNs ::= SEQUENCE (SIZE (1..32)) OF PLMNidentity`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedPLMNs(pub Vec<PLMNidentity>);
-    impl oxirush_aper::protocol::__Field<Vec<PLMNidentity>> for ServedPLMNs {
+    impl From<ServedPLMNs> for Vec<PLMNidentity> {
         #[inline]
-        fn __field(self) -> Vec<PLMNidentity> {
-            self.0
+        fn from(value: ServedPLMNs) -> Self {
+            value.0
         }
     }
     impl From<Vec<PLMNidentity>> for ServedPLMNs {
@@ -31661,10 +31591,10 @@ pub mod s1_ap_ies {
     /// `Source-ToTarget-TransparentContainer ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceToTargetTransparentContainer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for SourceToTargetTransparentContainer<'a> {
+    impl<'a> From<SourceToTargetTransparentContainer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: SourceToTargetTransparentContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> SourceToTargetTransparentContainer<'a> {
@@ -31723,12 +31653,10 @@ pub mod s1_ap_ies {
     #[doc = " The octets of the OCTET STRING are encoded according to the specifications of the target system."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceBSSToTargetBSSTransparentContainer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>>
-        for SourceBSSToTargetBSSTransparentContainer<'a>
-    {
+    impl<'a> From<SourceBSSToTargetBSSTransparentContainer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: SourceBSSToTargetBSSTransparentContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> SourceBSSToTargetBSSTransparentContainer<'a> {
@@ -31886,12 +31814,10 @@ pub mod s1_ap_ies {
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>>
-        for SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'a>
-    {
+    impl<'a> From<SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'a> {
@@ -32081,12 +32007,10 @@ pub mod s1_ap_ies {
     /// `SourceRNC-ToTargetRNC-TransparentContainer ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SourceRNCToTargetRNCTransparentContainer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>>
-        for SourceRNCToTargetRNCTransparentContainer<'a>
-    {
+    impl<'a> From<SourceRNCToTargetRNCTransparentContainer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: SourceRNCToTargetRNCTransparentContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> SourceRNCToTargetRNCTransparentContainer<'a> {
@@ -32433,10 +32357,10 @@ pub mod s1_ap_ies {
     /// `StratumLevel ::= INTEGER (0..3, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct StratumLevel(pub u64);
-    impl oxirush_aper::protocol::__Field<u64> for StratumLevel {
+    impl From<StratumLevel> for u64 {
         #[inline]
-        fn __field(self) -> u64 {
-            self.0
+        fn from(value: StratumLevel) -> Self {
+            value.0
         }
     }
     impl From<u64> for StratumLevel {
@@ -32475,10 +32399,10 @@ pub mod s1_ap_ies {
     /// `SubscriberProfileIDforRFP ::= INTEGER (1..256)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct SubscriberProfileIDforRFP(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for SubscriberProfileIDforRFP {
+    impl From<SubscriberProfileIDforRFP> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: SubscriberProfileIDforRFP) -> Self {
+            value.0
         }
     }
     impl From<u16> for SubscriberProfileIDforRFP {
@@ -32994,10 +32918,10 @@ pub mod s1_ap_ies {
     /// `SupportedTAs ::= SEQUENCE (SIZE (1..256)) OF SupportedTAsItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SupportedTAs(pub Vec<SupportedTAsItem>);
-    impl oxirush_aper::protocol::__Field<Vec<SupportedTAsItem>> for SupportedTAs {
+    impl From<SupportedTAs> for Vec<SupportedTAsItem> {
         #[inline]
-        fn __field(self) -> Vec<SupportedTAsItem> {
-            self.0
+        fn from(value: SupportedTAs) -> Self {
+            value.0
         }
     }
     impl From<Vec<SupportedTAsItem>> for SupportedTAs {
@@ -33530,10 +33454,10 @@ pub mod s1_ap_ies {
     /// `TAC ::= OCTET STRING (SIZE (2))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TAC(pub [u8; 2]);
-    impl oxirush_aper::protocol::__Field<[u8; 2]> for TAC {
+    impl From<TAC> for [u8; 2] {
         #[inline]
-        fn __field(self) -> [u8; 2] {
-            self.0
+        fn from(value: TAC) -> Self {
+            value.0
         }
     }
     impl From<[u8; 2]> for TAC {
@@ -33573,10 +33497,10 @@ pub mod s1_ap_ies {
     /// `TACList-In-LTE-NTN ::= SEQUENCE (SIZE (1..12)) OF TAC`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TACListInLTENTN(pub Vec<TAC>);
-    impl oxirush_aper::protocol::__Field<Vec<TAC>> for TACListInLTENTN {
+    impl From<TACListInLTENTN> for Vec<TAC> {
         #[inline]
-        fn __field(self) -> Vec<TAC> {
-            self.0
+        fn from(value: TACListInLTENTN) -> Self {
+            value.0
         }
     }
     impl From<Vec<TAC>> for TACListInLTENTN {
@@ -33719,10 +33643,10 @@ pub mod s1_ap_ies {
     /// `TAI-Broadcast ::= SEQUENCE (SIZE (1..65535)) OF TAIBroadcastItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIBroadcast(pub Vec<TAIBroadcastItem>);
-    impl oxirush_aper::protocol::__Field<Vec<TAIBroadcastItem>> for TAIBroadcast {
+    impl From<TAIBroadcast> for Vec<TAIBroadcastItem> {
         #[inline]
-        fn __field(self) -> Vec<TAIBroadcastItem> {
-            self.0
+        fn from(value: TAIBroadcast) -> Self {
+            value.0
         }
     }
     impl From<Vec<TAIBroadcastItem>> for TAIBroadcast {
@@ -33870,10 +33794,10 @@ pub mod s1_ap_ies {
     /// `TAI-Cancelled ::= SEQUENCE (SIZE (1..65535)) OF TAICancelledItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAICancelled(pub Vec<TAICancelledItem>);
-    impl oxirush_aper::protocol::__Field<Vec<TAICancelledItem>> for TAICancelled {
+    impl From<TAICancelled> for Vec<TAICancelledItem> {
         #[inline]
-        fn __field(self) -> Vec<TAICancelledItem> {
-            self.0
+        fn from(value: TAICancelled) -> Self {
+            value.0
         }
     }
     impl From<Vec<TAICancelledItem>> for TAICancelled {
@@ -34193,10 +34117,10 @@ pub mod s1_ap_ies {
     /// `TAIListForRestart ::= SEQUENCE (SIZE (1..2048)) OF TAI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListForRestart(pub Vec<TAI>);
-    impl oxirush_aper::protocol::__Field<Vec<TAI>> for TAIListForRestart {
+    impl From<TAIListForRestart> for Vec<TAI> {
         #[inline]
-        fn __field(self) -> Vec<TAI> {
-            self.0
+        fn from(value: TAIListForRestart) -> Self {
+            value.0
         }
     }
     impl From<Vec<TAI>> for TAIListForRestart {
@@ -34245,10 +34169,10 @@ pub mod s1_ap_ies {
     /// `TAIListforMDT ::= SEQUENCE (SIZE (1..8)) OF TAI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListforMDT(pub Vec<TAI>);
-    impl oxirush_aper::protocol::__Field<Vec<TAI>> for TAIListforMDT {
+    impl From<TAIListforMDT> for Vec<TAI> {
         #[inline]
-        fn __field(self) -> Vec<TAI> {
-            self.0
+        fn from(value: TAIListforMDT) -> Self {
+            value.0
         }
     }
     impl From<Vec<TAI>> for TAIListforMDT {
@@ -34297,10 +34221,10 @@ pub mod s1_ap_ies {
     /// `TAIListforQMC ::= SEQUENCE (SIZE (1..8)) OF TAI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListforQMC(pub Vec<TAI>);
-    impl oxirush_aper::protocol::__Field<Vec<TAI>> for TAIListforQMC {
+    impl From<TAIListforQMC> for Vec<TAI> {
         #[inline]
-        fn __field(self) -> Vec<TAI> {
-            self.0
+        fn from(value: TAIListforQMC) -> Self {
+            value.0
         }
     }
     impl From<Vec<TAI>> for TAIListforQMC {
@@ -34349,10 +34273,10 @@ pub mod s1_ap_ies {
     /// `TAIListforWarning ::= SEQUENCE (SIZE (1..65535)) OF TAI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListforWarning(pub Vec<TAI>);
-    impl oxirush_aper::protocol::__Field<Vec<TAI>> for TAIListforWarning {
+    impl From<TAIListforWarning> for Vec<TAI> {
         #[inline]
-        fn __field(self) -> Vec<TAI> {
-            self.0
+        fn from(value: TAIListforWarning) -> Self {
+            value.0
         }
     }
     impl From<Vec<TAI>> for TAIListforWarning {
@@ -34401,10 +34325,10 @@ pub mod s1_ap_ies {
     /// `TAListforMDT ::= SEQUENCE (SIZE (1..8)) OF TAC`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAListforMDT(pub Vec<TAC>);
-    impl oxirush_aper::protocol::__Field<Vec<TAC>> for TAListforMDT {
+    impl From<TAListforMDT> for Vec<TAC> {
         #[inline]
-        fn __field(self) -> Vec<TAC> {
-            self.0
+        fn from(value: TAListforMDT) -> Self {
+            value.0
         }
     }
     impl From<Vec<TAC>> for TAListforMDT {
@@ -34453,10 +34377,10 @@ pub mod s1_ap_ies {
     /// `TAListforQMC ::= SEQUENCE (SIZE (1..8)) OF TAC`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAListforQMC(pub Vec<TAC>);
-    impl oxirush_aper::protocol::__Field<Vec<TAC>> for TAListforQMC {
+    impl From<TAListforQMC> for Vec<TAC> {
         #[inline]
-        fn __field(self) -> Vec<TAC> {
-            self.0
+        fn from(value: TAListforQMC) -> Self {
+            value.0
         }
     }
     impl From<Vec<TAC>> for TAListforQMC {
@@ -34518,10 +34442,10 @@ pub mod s1_ap_ies {
     /// `TBCD-STRING ::= OCTET STRING (SIZE (3))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TBCDSTRING(pub [u8; 3]);
-    impl oxirush_aper::protocol::__Field<[u8; 3]> for TBCDSTRING {
+    impl From<TBCDSTRING> for [u8; 3] {
         #[inline]
-        fn __field(self) -> [u8; 3] {
-            self.0
+        fn from(value: TBCDSTRING) -> Self {
+            value.0
         }
     }
     impl From<[u8; 3]> for TBCDSTRING {
@@ -34560,10 +34484,10 @@ pub mod s1_ap_ies {
     /// `Target-ToSource-TransparentContainer ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetToSourceTransparentContainer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for TargetToSourceTransparentContainer<'a> {
+    impl<'a> From<TargetToSourceTransparentContainer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: TargetToSourceTransparentContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> TargetToSourceTransparentContainer<'a> {
@@ -34621,12 +34545,10 @@ pub mod s1_ap_ies {
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetBSSToSourceBSSTransparentContainer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>>
-        for TargetBSSToSourceBSSTransparentContainer<'a>
-    {
+    impl<'a> From<TargetBSSToSourceBSSTransparentContainer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: TargetBSSToSourceBSSTransparentContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> TargetBSSToSourceBSSTransparentContainer<'a> {
@@ -34895,12 +34817,10 @@ pub mod s1_ap_ies {
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>>
-        for TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'a>
-    {
+    impl<'a> From<TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'a> {
@@ -35089,12 +35009,10 @@ pub mod s1_ap_ies {
     #[doc = " The octets of the OCTET STRING are coded according to the specifications of the target system."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetRNCToSourceRNCTransparentContainer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>>
-        for TargetRNCToSourceRNCTransparentContainer<'a>
-    {
+    impl<'a> From<TargetRNCToSourceRNCTransparentContainer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: TargetRNCToSourceRNCTransparentContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> TargetRNCToSourceRNCTransparentContainer<'a> {
@@ -35341,10 +35259,10 @@ pub mod s1_ap_ies {
     /// `Threshold-RSRP ::= INTEGER (0..97)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ThresholdRSRP(pub u8);
-    impl oxirush_aper::protocol::__Field<u8> for ThresholdRSRP {
+    impl From<ThresholdRSRP> for u8 {
         #[inline]
-        fn __field(self) -> u8 {
-            self.0
+        fn from(value: ThresholdRSRP) -> Self {
+            value.0
         }
     }
     impl From<u8> for ThresholdRSRP {
@@ -35385,10 +35303,10 @@ pub mod s1_ap_ies {
     /// `Threshold-RSRQ ::= INTEGER (0..34)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ThresholdRSRQ(pub u8);
-    impl oxirush_aper::protocol::__Field<u8> for ThresholdRSRQ {
+    impl From<ThresholdRSRQ> for u8 {
         #[inline]
-        fn __field(self) -> u8 {
-            self.0
+        fn from(value: ThresholdRSRQ) -> Self {
+            value.0
         }
     }
     impl From<u8> for ThresholdRSRQ {
@@ -35429,10 +35347,10 @@ pub mod s1_ap_ies {
     /// `Time-UE-StayedInCell ::= INTEGER (0..4095)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TimeUEStayedInCell(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for TimeUEStayedInCell {
+    impl From<TimeUEStayedInCell> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: TimeUEStayedInCell) -> Self {
+            value.0
         }
     }
     impl From<u16> for TimeUEStayedInCell {
@@ -35475,10 +35393,10 @@ pub mod s1_ap_ies {
     /// `Time-UE-StayedInCell-EnhancedGranularity ::= INTEGER (0..40950)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TimeUEStayedInCellEnhancedGranularity(pub u16);
-    impl oxirush_aper::protocol::__Field<u16> for TimeUEStayedInCellEnhancedGranularity {
+    impl From<TimeUEStayedInCellEnhancedGranularity> for u16 {
         #[inline]
-        fn __field(self) -> u16 {
-            self.0
+        fn from(value: TimeUEStayedInCellEnhancedGranularity) -> Self {
+            value.0
         }
     }
     impl From<u16> for TimeUEStayedInCellEnhancedGranularity {
@@ -35685,10 +35603,10 @@ pub mod s1_ap_ies {
     /// `TimeSinceSecondaryNodeRelease ::= OCTET STRING (SIZE (4))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TimeSinceSecondaryNodeRelease(pub [u8; 4]);
-    impl oxirush_aper::protocol::__Field<[u8; 4]> for TimeSinceSecondaryNodeRelease {
+    impl From<TimeSinceSecondaryNodeRelease> for [u8; 4] {
         #[inline]
-        fn __field(self) -> [u8; 4] {
-            self.0
+        fn from(value: TimeSinceSecondaryNodeRelease) -> Self {
+            value.0
         }
     }
     impl From<[u8; 4]> for TimeSinceSecondaryNodeRelease {
@@ -36188,10 +36106,10 @@ pub mod s1_ap_ies {
     /// `TrafficLoadReductionIndication ::= INTEGER (1..99)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TrafficLoadReductionIndication(pub u8);
-    impl oxirush_aper::protocol::__Field<u8> for TrafficLoadReductionIndication {
+    impl From<TrafficLoadReductionIndication> for u8 {
         #[inline]
-        fn __field(self) -> u8 {
-            self.0
+        fn from(value: TrafficLoadReductionIndication) -> Self {
+            value.0
         }
     }
     impl From<u8> for TrafficLoadReductionIndication {
@@ -36315,10 +36233,10 @@ pub mod s1_ap_ies {
     /// `TransportLayerAddress ::= BIT STRING (SIZE (1..160, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TransportLayerAddress<'a>(pub BitString<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<BitString<'a>> for TransportLayerAddress<'a> {
+    impl<'a> From<TransportLayerAddress<'a>> for BitString<'a> {
         #[inline]
-        fn __field(self) -> BitString<'a> {
-            self.0
+        fn from(value: TransportLayerAddress<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> TransportLayerAddress<'a> {
@@ -36537,10 +36455,10 @@ pub mod s1_ap_ies {
     /// `UE-Application-Layer-Measurement-Capability ::= BIT STRING (SIZE (8))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct UEApplicationLayerMeasurementCapability(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for UEApplicationLayerMeasurementCapability {
+    impl From<UEApplicationLayerMeasurementCapability> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: UEApplicationLayerMeasurementCapability) -> Self {
+            value.0
         }
     }
     impl From<Bits> for UEApplicationLayerMeasurementCapability {
@@ -36589,12 +36507,10 @@ pub mod s1_ap_ies {
     /// `UE-HistoryInformation ::= SEQUENCE (SIZE (1..16)) OF LastVisitedCellItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEHistoryInformation<'a>(pub Vec<LastVisitedCellItem<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<LastVisitedCellItem<'a>>>
-        for UEHistoryInformation<'a>
-    {
+    impl<'a> From<UEHistoryInformation<'a>> for Vec<LastVisitedCellItem<'a>> {
         #[inline]
-        fn __field(self) -> Vec<LastVisitedCellItem<'a>> {
-            self.0
+        fn from(value: UEHistoryInformation<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> UEHistoryInformation<'a> {
@@ -36650,10 +36566,10 @@ pub mod s1_ap_ies {
     /// `UE-HistoryInformationFromTheUE ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEHistoryInformationFromTheUE<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for UEHistoryInformationFromTheUE<'a> {
+    impl<'a> From<UEHistoryInformationFromTheUE<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: UEHistoryInformationFromTheUE<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> UEHistoryInformationFromTheUE<'a> {
@@ -36710,10 +36626,10 @@ pub mod s1_ap_ies {
     /// `UE-RLF-Report-Container ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERLFReportContainer<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for UERLFReportContainer<'a> {
+    impl<'a> From<UERLFReportContainer<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: UERLFReportContainer<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> UERLFReportContainer<'a> {
@@ -36770,10 +36686,10 @@ pub mod s1_ap_ies {
     /// `UE-RLF-Report-Container-for-extended-bands ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERLFReportContainerForExtendedBands<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for UERLFReportContainerForExtendedBands<'a> {
+    impl<'a> From<UERLFReportContainerForExtendedBands<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: UERLFReportContainerForExtendedBands<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> UERLFReportContainerForExtendedBands<'a> {
@@ -37049,10 +36965,10 @@ pub mod s1_ap_ies {
     /// `UE-Usage-Type ::= INTEGER (0..255)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct UEUsageType(pub u8);
-    impl oxirush_aper::protocol::__Field<u8> for UEUsageType {
+    impl From<UEUsageType> for u8 {
         #[inline]
-        fn __field(self) -> u8 {
-            self.0
+        fn from(value: UEUsageType) -> Self {
+            value.0
         }
     }
     impl From<u8> for UEUsageType {
@@ -37491,10 +37407,10 @@ pub mod s1_ap_ies {
     /// `UEIdentityIndexValue ::= BIT STRING (SIZE (10))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct UEIdentityIndexValue(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for UEIdentityIndexValue {
+    impl From<UEIdentityIndexValue> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: UEIdentityIndexValue) -> Self {
+            value.0
         }
     }
     impl From<Bits> for UEIdentityIndexValue {
@@ -37615,10 +37531,10 @@ pub mod s1_ap_ies {
     /// `UERadioCapability ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapability<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for UERadioCapability<'a> {
+    impl<'a> From<UERadioCapability<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: UERadioCapability<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> UERadioCapability<'a> {
@@ -37675,10 +37591,10 @@ pub mod s1_ap_ies {
     /// `UERadioCapabilityForPaging ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapabilityForPaging<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for UERadioCapabilityForPaging<'a> {
+    impl<'a> From<UERadioCapabilityForPaging<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: UERadioCapabilityForPaging<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> UERadioCapabilityForPaging<'a> {
@@ -37735,10 +37651,10 @@ pub mod s1_ap_ies {
     /// `UERadioCapabilityID ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapabilityID<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for UERadioCapabilityID<'a> {
+    impl<'a> From<UERadioCapabilityID<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: UERadioCapabilityID<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> UERadioCapabilityID<'a> {
@@ -38156,10 +38072,10 @@ pub mod s1_ap_ies {
     /// `UL-NAS-Count ::= BIT STRING (SIZE (5))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ULNASCount(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for ULNASCount {
+    impl From<ULNASCount> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: ULNASCount) -> Self {
+            value.0
         }
     }
     impl From<Bits> for ULNASCount {
@@ -38209,10 +38125,10 @@ pub mod s1_ap_ies {
     /// `UL-NAS-MAC ::= BIT STRING (SIZE (16))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ULNASMAC(pub Bits);
-    impl oxirush_aper::protocol::__Field<Bits> for ULNASMAC {
+    impl From<ULNASMAC> for Bits {
         #[inline]
-        fn __field(self) -> Bits {
-            self.0
+        fn from(value: ULNASMAC) -> Self {
+            value.0
         }
     }
     impl From<Bits> for ULNASMAC {
@@ -38261,10 +38177,10 @@ pub mod s1_ap_ies {
     /// `URI-Address ::= VisibleString`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct URIAddress<'a>(pub Cow<'a, str>);
-    impl<'a> oxirush_aper::protocol::__Field<Cow<'a, str>> for URIAddress<'a> {
+    impl<'a> From<URIAddress<'a>> for Cow<'a, str> {
         #[inline]
-        fn __field(self) -> Cow<'a, str> {
-            self.0
+        fn from(value: URIAddress<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> URIAddress<'a> {
@@ -38718,10 +38634,10 @@ pub mod s1_ap_ies {
     /// `WLANMeasConfigNameList ::= SEQUENCE (SIZE (1..4)) OF WLANName`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WLANMeasConfigNameList<'a>(pub Vec<WLANName<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<WLANName<'a>>> for WLANMeasConfigNameList<'a> {
+    impl<'a> From<WLANMeasConfigNameList<'a>> for Vec<WLANName<'a>> {
         #[inline]
-        fn __field(self) -> Vec<WLANName<'a>> {
-            self.0
+        fn from(value: WLANMeasConfigNameList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> WLANMeasConfigNameList<'a> {
@@ -39059,10 +38975,10 @@ pub mod s1_ap_ies {
     /// `WLANName ::= OCTET STRING (SIZE (1..32))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WLANName<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for WLANName<'a> {
+    impl<'a> From<WLANName<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: WLANName<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> WLANName<'a> {
@@ -39212,10 +39128,10 @@ pub mod s1_ap_ies {
     /// `WarningAreaCoordinates ::= OCTET STRING (SIZE (1..1024))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WarningAreaCoordinates<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for WarningAreaCoordinates<'a> {
+    impl<'a> From<WarningAreaCoordinates<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: WarningAreaCoordinates<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> WarningAreaCoordinates<'a> {
@@ -39366,10 +39282,10 @@ pub mod s1_ap_ies {
     /// `WarningMessageContents ::= OCTET STRING (SIZE (1..9600))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WarningMessageContents<'a>(pub Octets<'a>);
-    impl<'a> oxirush_aper::protocol::__Field<Octets<'a>> for WarningMessageContents<'a> {
+    impl<'a> From<WarningMessageContents<'a>> for Octets<'a> {
         #[inline]
-        fn __field(self) -> Octets<'a> {
-            self.0
+        fn from(value: WarningMessageContents<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> WarningMessageContents<'a> {
@@ -39439,10 +39355,10 @@ pub mod s1_ap_ies {
     /// `WarningSecurityInfo ::= OCTET STRING (SIZE (50))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct WarningSecurityInfo(pub [u8; 50]);
-    impl oxirush_aper::protocol::__Field<[u8; 50]> for WarningSecurityInfo {
+    impl From<WarningSecurityInfo> for [u8; 50] {
         #[inline]
-        fn __field(self) -> [u8; 50] {
-            self.0
+        fn from(value: WarningSecurityInfo) -> Self {
+            value.0
         }
     }
     impl From<[u8; 50]> for WarningSecurityInfo {
@@ -39494,10 +39410,10 @@ pub mod s1_ap_ies {
     /// `WarningType ::= OCTET STRING (SIZE (2))`.
     #[derive(Clone, PartialEq, Eq, Hash, Copy)]
     pub struct WarningType(pub [u8; 2]);
-    impl oxirush_aper::protocol::__Field<[u8; 2]> for WarningType {
+    impl From<WarningType> for [u8; 2] {
         #[inline]
-        fn __field(self) -> [u8; 2] {
-            self.0
+        fn from(value: WarningType) -> Self {
+            value.0
         }
     }
     impl From<[u8; 2]> for WarningType {
@@ -40442,10 +40358,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABAdmittedList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABAdmittedList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for ERABAdmittedList<'a> {
+    impl<'a> From<ERABAdmittedList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABAdmittedList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABAdmittedList<'a> {
@@ -40889,12 +40805,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABFailedToResumeListResumeReq ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToResumeListResumeReq<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABFailedToResumeListResumeReq<'a>
-    {
+    impl<'a> From<ERABFailedToResumeListResumeReq<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABFailedToResumeListResumeReq<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABFailedToResumeListResumeReq<'a> {
@@ -40952,12 +40866,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABFailedToResumeListResumeRes ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToResumeListResumeRes<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABFailedToResumeListResumeRes<'a>
-    {
+    impl<'a> From<ERABFailedToResumeListResumeRes<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABFailedToResumeListResumeRes<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABFailedToResumeListResumeRes<'a> {
@@ -41106,12 +41018,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABFailedtoSetupListHOReqAck ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedtoSetupListHOReqAck<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABFailedtoSetupListHOReqAck<'a>
-    {
+    impl<'a> From<ERABFailedtoSetupListHOReqAck<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABFailedtoSetupListHOReqAck<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABFailedtoSetupListHOReqAck<'a> {
@@ -41447,12 +41357,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABModifyListBearerModConf ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyListBearerModConf<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABModifyListBearerModConf<'a>
-    {
+    impl<'a> From<ERABModifyListBearerModConf<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABModifyListBearerModConf<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABModifyListBearerModConf<'a> {
@@ -41508,12 +41416,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABModifyListBearerModRes ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyListBearerModRes<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABModifyListBearerModRes<'a>
-    {
+    impl<'a> From<ERABModifyListBearerModRes<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABModifyListBearerModRes<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABModifyListBearerModRes<'a> {
@@ -41813,12 +41719,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABNotToBeModifiedListBearerModInd ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABNotToBeModifiedListBearerModInd<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABNotToBeModifiedListBearerModInd<'a>
-    {
+    impl<'a> From<ERABNotToBeModifiedListBearerModInd<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABNotToBeModifiedListBearerModInd<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABNotToBeModifiedListBearerModInd<'a> {
@@ -42072,12 +41976,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABReleaseListBearerRelComp ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABReleaseListBearerRelComp<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABReleaseListBearerRelComp<'a>
-    {
+    impl<'a> From<ERABReleaseListBearerRelComp<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABReleaseListBearerRelComp<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABReleaseListBearerRelComp<'a> {
@@ -42446,12 +42348,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABSetupListBearerSURes ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupListBearerSURes<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABSetupListBearerSURes<'a>
-    {
+    impl<'a> From<ERABSetupListBearerSURes<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABSetupListBearerSURes<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABSetupListBearerSURes<'a> {
@@ -42507,10 +42407,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABSetupListCtxtSURes ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupListCtxtSURes<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for ERABSetupListCtxtSURes<'a> {
+    impl<'a> From<ERABSetupListCtxtSURes<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABSetupListCtxtSURes<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABSetupListCtxtSURes<'a> {
@@ -42680,12 +42580,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABSubjecttoDataForwardingList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSubjecttoDataForwardingList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABSubjecttoDataForwardingList<'a>
-    {
+    impl<'a> From<ERABSubjecttoDataForwardingList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABSubjecttoDataForwardingList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABSubjecttoDataForwardingList<'a> {
@@ -43001,12 +42899,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABToBeModifiedListBearerModInd ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeModifiedListBearerModInd<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABToBeModifiedListBearerModInd<'a>
-    {
+    impl<'a> From<ERABToBeModifiedListBearerModInd<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABToBeModifiedListBearerModInd<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABToBeModifiedListBearerModInd<'a> {
@@ -43064,12 +42960,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABToBeModifiedListBearerModReq ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeModifiedListBearerModReq<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABToBeModifiedListBearerModReq<'a>
-    {
+    impl<'a> From<ERABToBeModifiedListBearerModReq<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABToBeModifiedListBearerModReq<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABToBeModifiedListBearerModReq<'a> {
@@ -43291,7 +43185,7 @@ pub mod s1_ap_pdu_contents {
     ///
     /// ```
     /// use oxirush_s1ap::aper::BitString;
-    /// use oxirush_s1ap::{build_s1ap, build_s1ap_ie, ie, s1ap::*};
+    /// use oxirush_s1ap::{build_s1ap, Ie, ie, s1ap::*};
     ///
     /// // The default bearer: E-RAB 5 of QCI 9, and the S-GW's end of its tunnel
     /// let priority = AllocationAndRetentionPriority::new(PriorityLevel(15),
@@ -43300,11 +43194,11 @@ pub mod s1_ap_pdu_contents {
     /// let qos = ERABLevelQoSParameters::new(QCI(9), priority, None, None);
     /// let bearer = ERABToBeSetupItemCtxtSUReq::new(ERABID(5), qos,
     ///     TransportLayerAddress(BitString::from([10, 0, 0, 1])), GTPTEID([0, 0, 0, 1]), None, None);
-    /// let request = build_s1ap!(InitiatingMessage, InitialContextSetup, InitialContextSetupRequest,
+    /// let request = build_s1ap!(InitialContextSetupRequest,
     ///     MME_UE_S1AP_ID(1u32),
     ///     eNB_UE_S1AP_ID(7u32),
     ///     E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(vec![
-    ///         build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(bearer))?,
+    ///         ie::E_RABToBeSetupItemCtxtSUReq::field(Criticality::Reject, bearer)?,
     ///     ])),
     /// )?;
     ///
@@ -43636,12 +43530,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABToBeSetupListBearerSUReq ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupListBearerSUReq<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABToBeSetupListBearerSUReq<'a>
-    {
+    impl<'a> From<ERABToBeSetupListBearerSUReq<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABToBeSetupListBearerSUReq<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABToBeSetupListBearerSUReq<'a> {
@@ -43697,12 +43589,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABToBeSetupListCtxtSUReq ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupListCtxtSUReq<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for ERABToBeSetupListCtxtSUReq<'a>
-    {
+    impl<'a> From<ERABToBeSetupListCtxtSUReq<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABToBeSetupListCtxtSUReq<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABToBeSetupListCtxtSUReq<'a> {
@@ -43758,10 +43648,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABToBeSetupListHOReq ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupListHOReq<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for ERABToBeSetupListHOReq<'a> {
+    impl<'a> From<ERABToBeSetupListHOReq<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABToBeSetupListHOReq<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABToBeSetupListHOReq<'a> {
@@ -43945,10 +43835,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABToBeSwitchedDLList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSwitchedDLList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for ERABToBeSwitchedDLList<'a> {
+    impl<'a> From<ERABToBeSwitchedDLList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABToBeSwitchedDLList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABToBeSwitchedDLList<'a> {
@@ -44132,10 +44022,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABToBeSwitchedULList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSwitchedULList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for ERABToBeSwitchedULList<'a> {
+    impl<'a> From<ERABToBeSwitchedULList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABToBeSwitchedULList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABToBeSwitchedULList<'a> {
@@ -44301,10 +44191,10 @@ pub mod s1_ap_pdu_contents {
     /// `E-RABToBeUpdatedList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeUpdatedList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for ERABToBeUpdatedList<'a> {
+    impl<'a> From<ERABToBeUpdatedList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: ERABToBeUpdatedList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> ERABToBeUpdatedList<'a> {
@@ -47124,12 +47014,10 @@ pub mod s1_ap_pdu_contents {
     /// `PrivateMessagePrivateIEs ::= SEQUENCE (SIZE (1..65535)) OF AnonymousPrivateMessagePrivateIEs`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PrivateMessagePrivateIEs<'a>(pub Vec<AnonymousPrivateMessagePrivateIEs<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<AnonymousPrivateMessagePrivateIEs<'a>>>
-        for PrivateMessagePrivateIEs<'a>
-    {
+    impl<'a> From<PrivateMessagePrivateIEs<'a>> for Vec<AnonymousPrivateMessagePrivateIEs<'a>> {
         #[inline]
-        fn __field(self) -> Vec<AnonymousPrivateMessagePrivateIEs<'a>> {
-            self.0
+        fn from(value: PrivateMessagePrivateIEs<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> PrivateMessagePrivateIEs<'a> {
@@ -48072,10 +47960,10 @@ pub mod s1_ap_pdu_contents {
     /// `TAIList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIList<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>> for TAIList<'a> {
+    impl<'a> From<TAIList<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: TAIList<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> TAIList<'a> {
@@ -48245,12 +48133,10 @@ pub mod s1_ap_pdu_contents {
     /// `UE-associatedLogicalS1-ConnectionListRes ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEAssociatedLogicalS1ConnectionListRes<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for UEAssociatedLogicalS1ConnectionListRes<'a>
-    {
+    impl<'a> From<UEAssociatedLogicalS1ConnectionListRes<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: UEAssociatedLogicalS1ConnectionListRes<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> UEAssociatedLogicalS1ConnectionListRes<'a> {
@@ -48308,12 +48194,10 @@ pub mod s1_ap_pdu_contents {
     /// `UE-associatedLogicalS1-ConnectionListResAck ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEAssociatedLogicalS1ConnectionListResAck<'a>(pub Vec<ProtocolIEField<'a>>);
-    impl<'a> oxirush_aper::protocol::__Field<Vec<ProtocolIEField<'a>>>
-        for UEAssociatedLogicalS1ConnectionListResAck<'a>
-    {
+    impl<'a> From<UEAssociatedLogicalS1ConnectionListResAck<'a>> for Vec<ProtocolIEField<'a>> {
         #[inline]
-        fn __field(self) -> Vec<ProtocolIEField<'a>> {
-            self.0
+        fn from(value: UEAssociatedLogicalS1ConnectionListResAck<'a>) -> Self {
+            value.0
         }
     }
     impl<'a> UEAssociatedLogicalS1ConnectionListResAck<'a> {
@@ -50560,7 +50444,8 @@ impl core::fmt::Display for S1APPDU<'_> {
             S1APPDU::unsuccessfulOutcome(_) => "unsuccessful outcome",
         };
         let code = self.procedure_code();
-        match crate::registry::message_name(self.direction(), code) {
+        let set = oxirush_aper::protocol::object_set::<crate::S1ap>(self.direction(), code);
+        match set.map(|set| set.name) {
             Some(name) => write!(formatter, "{name} (procedure {code}, {direction})")?,
             None => write!(
                 formatter,

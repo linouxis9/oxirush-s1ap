@@ -89,19 +89,16 @@ fn a_message_in_fragments_is_read_through_a_pdu_that_borrows() -> Result<(), Err
 /// specification assigns.
 #[test]
 fn a_criticality_that_a_call_leaves_out_is_the_one_that_is_assigned() -> Result<(), Error> {
-    use oxirush_s1ap::{Message, build_s1ap, build_s1ap_ie};
+    use oxirush_s1ap::{Ie, Message, build_s1ap, ie};
 
     assert_eq!(UEContextReleaseRequest::CRITICALITY, Criticality::Ignore);
     assert_eq!(S1SetupRequest::CRITICALITY, Criticality::Reject);
-    let written = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, IGNORE,
-        UEContextReleaseRequest,
+    let written = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
     )?;
     let assigned = build_s1ap!(
-        InitiatingMessage,
-        UEContextReleaseRequest,
         UEContextReleaseRequest,
         MME_UE_S1AP_ID(42u32),
         eNB_UE_S1AP_ID(7u32),
@@ -110,8 +107,7 @@ fn a_criticality_that_a_call_leaves_out_is_the_one_that_is_assigned() -> Result<
     assert_eq!(assigned, written);
     assert!(assigned.check()?.is_empty());
     // Some written and some left out, in any order.
-    let mixed = build_s1ap!(InitiatingMessage, UEContextReleaseRequest, IGNORE,
-        UEContextReleaseRequest,
+    let mixed = build_s1ap!(IGNORE UEContextReleaseRequest,
         MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(7u32),
         Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -121,13 +117,7 @@ fn a_criticality_that_a_call_leaves_out_is_the_one_that_is_assigned() -> Result<
     let again = S1AP_PDU::of_message(&message, UEContextReleaseRequest::CRITICALITY)?;
     assert_eq!(again, written);
     // An IE that the object set of the message does not have is assigned none.
-    let error = build_s1ap!(
-        InitiatingMessage,
-        S1Setup,
-        S1SetupRequest,
-        MME_UE_S1AP_ID(1u32),
-    )
-    .unwrap_err();
+    let error = build_s1ap!(S1SetupRequest, MME_UE_S1AP_ID(1u32),).unwrap_err();
     assert_eq!(error.kind(), ErrorKind::Argument);
     assert!(
         error
@@ -136,9 +126,9 @@ fn a_criticality_that_a_call_leaves_out_is_the_one_that_is_assigned() -> Result<
         "{error}"
     );
     // One IE, of its message.
-    let ie = build_s1ap_ie!(S1SetupRequest, DefaultPagingDRX(PagingDRX::v128))?;
+    let ie = ie::DefaultPagingDRX::field_of::<S1SetupRequest>(PagingDRX::v128)?;
     assert_eq!(ie.criticality, Criticality::Ignore);
-    let error = build_s1ap_ie!(S1SetupRequest, MME_UE_S1AP_ID(1u32)).unwrap_err();
+    let error = ie::MME_UE_S1AP_ID::field_of::<S1SetupRequest>(1u32).unwrap_err();
     assert_eq!(error.kind(), ErrorKind::Argument);
     Ok(())
 }

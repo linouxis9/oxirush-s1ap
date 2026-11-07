@@ -4,7 +4,7 @@
 
 use oxirush_s1ap::s1ap::*;
 use oxirush_s1ap::{
-    BitString, Deviation, Error, ErrorKind, Octets, build_s1ap, build_s1ap_ie, extract_s1ap_ies, ie,
+    BitString, Deviation, Error, ErrorKind, Ie, Octets, build_s1ap, extract_s1ap_ies, ie,
 };
 
 /// The PDUs of the fixtures and of the captures: the name of each, and its octets.
@@ -25,8 +25,6 @@ fn fixtures() -> impl Iterator<Item = (&'static str, Vec<u8>)> {
 /// A UE CONTEXT RELEASE REQUEST of these IEs.
 fn release_request() -> S1AP_PDU {
     build_s1ap!(
-        InitiatingMessage,
-        UEContextReleaseRequest,
         UEContextReleaseRequest,
         MME_UE_S1AP_ID(42u32),
         eNB_UE_S1AP_ID(7u32),
@@ -60,12 +58,7 @@ fn the_macro_reads_a_pdu_without_decode_value() -> Result<(), Error> {
     }
     assert_eq!(read(&release_request())?, (42, 7));
     // A PDU of another message is an error of the kind `WrongMessage`.
-    let setup = build_s1ap!(
-        InitiatingMessage,
-        S1Setup,
-        S1SetupRequest,
-        DefaultPagingDRX(PagingDRX::v128),
-    )?;
+    let setup = build_s1ap!(S1SetupRequest, DefaultPagingDRX(PagingDRX::v128),)?;
     assert_eq!(read(&setup).unwrap_err().kind(), ErrorKind::WrongMessage);
     Ok(())
 }
@@ -76,8 +69,6 @@ fn a_nas_pdu_in_fragments_is_read_and_kept() -> Result<(), Error> {
     // the OCTET STRING of the NAS-PDU.
     let nas: Vec<u8> = (0..20_000).map(|at| (at % 253) as u8).collect();
     let pdu = build_s1ap!(
-        InitiatingMessage,
-        downlinkNASTransport,
         DownlinkNASTransport,
         MME_UE_S1AP_ID(42u32),
         eNB_UE_S1AP_ID(7u32),
@@ -163,8 +154,6 @@ fn check_structure_reports_what_check_reports_of_the_container() -> Result<(), E
 #[test]
 fn a_repeated_ie_is_there_twice_for_ies_and_once_for_the_macro() -> Result<(), Error> {
     let pdu = build_s1ap!(
-        InitiatingMessage,
-        UEContextReleaseRequest,
         UEContextReleaseRequest,
         MME_UE_S1AP_ID(42u32),
         eNB_UE_S1AP_ID(7u32),
@@ -227,14 +216,12 @@ fn bearer(id: u64) -> Result<ProtocolIEField<'static>, Error> {
         None,
         None,
     );
-    build_s1ap_ie!(REJECT E_RABToBeSetupItemCtxtSUReq(item))
+    ie::E_RABToBeSetupItemCtxtSUReq::field(Criticality::Reject, item)
 }
 
 #[test]
 fn the_items_of_an_e_rab_list_are_walked_without_building_the_list() -> Result<(), Error> {
     let pdu = build_s1ap!(
-        InitiatingMessage,
-        InitialContextSetup,
         InitialContextSetupRequest,
         MME_UE_S1AP_ID(1u32),
         eNB_UE_S1AP_ID(7u32),

@@ -453,8 +453,7 @@ mod tests {
 
     #[test]
     fn pdu_encode_decode_round_trip() {
-        let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-            IGNORE, UEContextReleaseRequest,
+        let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
             REJECT MME_UE_S1AP_ID(1u32),
             REJECT eNB_UE_S1AP_ID(7u32),
             IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),

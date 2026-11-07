@@ -17,8 +17,6 @@ fn a_pdu_shows_the_identifiers_of_its_ue_however_its_message_carries_them() -> R
     // UE CONTEXT RELEASE COMMAND, with the pair
     let pair = UES1APIDPair::new(MMEUES1APID(42), ENBUES1APID(7), None);
     let command = build_s1ap!(
-        InitiatingMessage,
-        UEContextRelease,
         UEContextReleaseCommand,
         UE_S1AP_IDs(UES1APIDs::uE_S1AP_ID_pair(pair)),
         Cause(cause()),
@@ -30,8 +28,6 @@ fn a_pdu_shows_the_identifiers_of_its_ue_however_its_message_carries_them() -> R
 
     // and with the MME UE S1AP ID alone
     let command = build_s1ap!(
-        InitiatingMessage,
-        UEContextRelease,
         UEContextReleaseCommand,
         UE_S1AP_IDs(UES1APIDs::mME_UE_S1AP_ID(MMEUES1APID(42))),
         Cause(cause()),
@@ -43,8 +39,6 @@ fn a_pdu_shows_the_identifiers_of_its_ue_however_its_message_carries_them() -> R
 
     // UE CONTEXT RELEASE COMPLETE has them as two IEs, and S1 SETUP REQUEST none
     let complete = build_s1ap!(
-        SuccessfulOutcome,
-        UEContextRelease,
         UEContextReleaseComplete,
         MME_UE_S1AP_ID(42u32),
         ENB_UE_S1AP_ID(7u32),
@@ -53,12 +47,7 @@ fn a_pdu_shows_the_identifiers_of_its_ue_however_its_message_carries_them() -> R
         received(&complete)?.to_string(),
         "UEContextReleaseComplete (procedure 23, successful outcome), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7"
     );
-    let setup = build_s1ap!(
-        InitiatingMessage,
-        S1Setup,
-        S1SetupRequest,
-        DefaultPagingDRX(PagingDRX::v128),
-    )?;
+    let setup = build_s1ap!(S1SetupRequest, DefaultPagingDRX(PagingDRX::v128),)?;
     assert_eq!(
         received(&setup)?.to_string(),
         "S1SetupRequest (procedure 17, initiating message)"

@@ -1,4 +1,4 @@
-//! Build S1AP PDUs using the `build_s1ap!` and `build_s1ap_ie!` ergonomic macros.
+//! Build S1AP PDUs using `build_s1ap!` and `Ie::field`.
 //!
 //! The examples cover simple and complex context setup, UE release, handover
 //! outcomes, failure handling, and standalone IE construction. The macro
@@ -7,7 +7,7 @@
 
 use oxirush_s1ap::helpers::*;
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{Error, build_s1ap, build_s1ap_ie};
+use oxirush_s1ap::{Error, Ie, build_s1ap, ie};
 
 fn main() -> Result<(), Error> {
     // ── 1. Simple: InitialContextSetupResponse ─────────────────────────────
@@ -15,11 +15,9 @@ fn main() -> Result<(), Error> {
     let mme_ue_id: u32 = 1;
     let enb_ue_id: u32 = 0;
 
-    // The direction, the procedure, its criticality and the message, then
-    // each IE with its criticality.
-    let pdu = build_s1ap!(SuccessfulOutcome, InitialContextSetup,
-        REJECT, InitialContextSetupResponse,
-
+    // The message, after the criticality of the PDU where it is not that of
+    // its procedure, then each IE with its criticality.
+    let pdu = build_s1ap!(REJECT InitialContextSetupResponse,
         IGNORE MME_UE_S1AP_ID(mme_ue_id),
         IGNORE eNB_UE_S1AP_ID(enb_ue_id),
         IGNORE E_RABSetupListCtxtSURes(erab_setup_list()),
@@ -30,9 +28,7 @@ fn main() -> Result<(), Error> {
 
     // ── 2. UEContextReleaseRequest with Cause ──────────────────────────────
 
-    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
-
+    let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(mme_ue_id),
         REJECT eNB_UE_S1AP_ID(enb_ue_id),
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
@@ -52,9 +48,7 @@ fn main() -> Result<(), Error> {
     let bit_rate =
         UEAggregateMaximumBitrate::new(BitRate(1_000_000_000), BitRate(500_000_000), None);
 
-    let pdu = build_s1ap!(InitiatingMessage, InitialContextSetup,
-        REJECT, InitialContextSetupRequest,
-
+    let pdu = build_s1ap!(REJECT InitialContextSetupRequest,
         // The UE, on each side of the interface
         REJECT MME_UE_S1AP_ID(mme_ue_id),
         REJECT eNB_UE_S1AP_ID(enb_ue_id),
@@ -85,9 +79,7 @@ fn main() -> Result<(), Error> {
     let target = TargetID::targeteNB_ID(TargeteNBID::new(target_enb, target_area, None));
     let cause = Cause::radioNetwork(CauseRadioNetwork::handover_desirable_for_radio_reason);
 
-    let pdu = build_s1ap!(InitiatingMessage, HandoverPreparation,
-        REJECT, HandoverRequired,
-
+    let pdu = build_s1ap!(REJECT HandoverRequired,
         REJECT MME_UE_S1AP_ID(mme_ue_id),
         REJECT eNB_UE_S1AP_ID(enb_ue_id),
 
@@ -105,9 +97,7 @@ fn main() -> Result<(), Error> {
 
     // ── 5. SuccessfulOutcome + UnsuccessfulOutcome ─────────────────────────
 
-    let pdu = build_s1ap!(SuccessfulOutcome, HandoverResourceAllocation,
-        REJECT, HandoverRequestAcknowledge,
-
+    let pdu = build_s1ap!(REJECT HandoverRequestAcknowledge,
         IGNORE MME_UE_S1AP_ID(mme_ue_id),
         IGNORE eNB_UE_S1AP_ID(enb_ue_id),
 
@@ -118,22 +108,21 @@ fn main() -> Result<(), Error> {
     println!("\n=== 5. HandoverRequestAcknowledge (SuccessfulOutcome) ===");
     print_and_encode(&pdu)?;
 
-    let pdu = build_s1ap!(UnsuccessfulOutcome, S1Setup,
-        REJECT, S1SetupFailure,
-
+    let pdu = build_s1ap!(REJECT S1SetupFailure,
         IGNORE Cause(Cause::misc(CauseMisc::unknown_PLMN)),
     )?;
 
     println!("\n=== 5. S1SetupFailure (UnsuccessfulOutcome) ===");
     print_and_encode(&pdu)?;
 
-    // ── 6. build_s1ap_ie! for conditional IE construction ──────────────────
+    // ── 6. Ie::field for an IE built apart ──────────────────
 
-    let cause_ie = build_s1ap_ie!(UEContextReleaseRequest, IGNORE
-        Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity))
+    let cause_ie = ie::Cause::field(
+        Criticality::Ignore,
+        Cause::radioNetwork(CauseRadioNetwork::user_inactivity),
     )?;
 
-    println!("\n=== 6. Single IE (via build_s1ap_ie!) ===");
+    println!("\n=== 6. Single IE (via Ie::field) ===");
     println!(
         "IE ID: {}, Criticality: {:?}",
         cause_ie.id.0, cause_ie.criticality

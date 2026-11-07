@@ -6,7 +6,7 @@
 //! ```
 
 use oxirush_s1ap::tree;
-use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+use oxirush_s1ap::{S1ap, inspect, s1ap::S1AP_PDU};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // INITIAL UE MESSAGE: eNB-UE-S1AP-ID, NAS-PDU, TAI, EUTRAN-CGI and
@@ -19,7 +19,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // The message by the name that ASN.1 gives it, then each value with the path that
     // selects it: `/s1ap` stands for the IEs of the message, and an IE goes by its name.
-    let name = inspect::message_name(&pdu).expect("a message of TS 36.413");
+    let set = S1ap::object_set(pdu.direction(), pdu.procedure_code());
+    let name = set.expect("a message of the specification").name;
     println!("{name}");
     for (path, value) in inspect::paths(&view) {
         println!("{path} = {value}");

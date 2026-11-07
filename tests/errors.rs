@@ -3,8 +3,7 @@
 
 use oxirush_s1ap::s1ap::*;
 use oxirush_s1ap::{
-    AsnType, Direction, Error, ErrorKind, Message, Octets, build_s1ap, build_s1ap_ie,
-    extract_s1ap_ies, with_s1ap_ie_mut,
+    AsnType, Direction, Error, ErrorKind, Ie, Message, Octets, build_s1ap, extract_s1ap_ies, ie,
 };
 
 /// A UE CONTEXT RELEASE REQUEST with its three IEs, the message of the README.
@@ -228,8 +227,8 @@ fn request(ies: Vec<ProtocolIEField>) -> UEContextReleaseRequest {
 
 /// The entry of an MME UE S1AP ID and that of an eNB UE S1AP ID.
 fn mme_and_enb() -> (ProtocolIEField<'static>, ProtocolIEField<'static>) {
-    let mme = build_s1ap_ie!(UEContextReleaseRequest, REJECT MME_UE_S1AP_ID(42u32));
-    let enb = build_s1ap_ie!(UEContextReleaseRequest, REJECT eNB_UE_S1AP_ID(7u32));
+    let mme = ie::MME_UE_S1AP_ID::field(Criticality::Reject, 42u32);
+    let enb = ie::eNB_UE_S1AP_ID::field(Criticality::Reject, 7u32);
     (mme.unwrap(), enb.unwrap())
 }
 
@@ -398,8 +397,7 @@ fn the_first_of_an_ie_that_is_there_twice_decides_each_field() {
 fn a_value_outside_its_constraint_is_an_error_of_the_macros_that_build() {
     // An eNB UE S1AP ID is an INTEGER (0..16777215), TS 36.413 clause 9.2.3.4, and the
     // macro takes a `u32`.
-    let pdu = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(42u32),
         REJECT eNB_UE_S1AP_ID(1u32 << 24),
     );
@@ -410,12 +408,11 @@ fn a_value_outside_its_constraint_is_an_error_of_the_macros_that_build() {
         "a value of ENB-UE-S1AP-ID does not encode: 16777216 is outside its constraint \
          (0..16777215)"
     );
-    let ie = build_s1ap_ie!(UEContextReleaseRequest, REJECT eNB_UE_S1AP_ID(1u32 << 24));
+    let ie = ie::eNB_UE_S1AP_ID::field(Criticality::Reject, 1u32 << 24);
     assert_eq!(ie.unwrap_err(), error);
 
     // The last value of the constraint is built.
-    let last = build_s1ap!(InitiatingMessage, UEContextReleaseRequest,
-        IGNORE, UEContextReleaseRequest,
+    let last = build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT eNB_UE_S1AP_ID((1u32 << 24) - 1),
     );
     assert!(last.is_ok());
@@ -426,32 +423,24 @@ fn changing_an_ie_says_whether_it_did_or_why_it_did_not() {
     let (_, enb) = mme_and_enb();
     let mut message = request(vec![enb]);
 
-    // The IE is changed, another one is not there, and the expression says no.
-    let changed = with_s1ap_ie_mut!(message, UEContextReleaseRequest, eNB_UE_S1AP_ID(id) = 8u32);
-    assert_eq!(changed, Ok(true));
-    let absent = with_s1ap_ie_mut!(message, UEContextReleaseRequest, MME_UE_S1AP_ID(id) = 43u32);
-    assert_eq!(absent, Ok(false));
-    let refused =
-        with_s1ap_ie_mut!(message, UEContextReleaseRequest, eNB_UE_S1AP_ID(id) => id.0 == 0);
-    assert_eq!(refused, Ok(false));
+    // The IE is changed, and another one is not there.
+    assert_eq!(message.set_ie::<ie::eNB_UE_S1AP_ID>(8u32), Ok(true));
+    assert_eq!(message.set_ie::<ie::MME_UE_S1AP_ID>(43u32), Ok(false));
     assert_eq!(ids(&message).unwrap_err().kind(), ErrorKind::MissingIe);
 
     // A value that does not encode: the message is as it was.
     let before = message.clone();
-    let outside = with_s1ap_ie_mut!(
-        message,
-        UEContextReleaseRequest,
-        eNB_UE_S1AP_ID(id) = 1u32 << 24
-    );
+    let outside = message.set_ie::<ie::eNB_UE_S1AP_ID>(1u32 << 24);
     assert_eq!(outside.unwrap_err().kind(), ErrorKind::Encode);
     assert_eq!(message, before);
 
-    // An IE that does not decode is not changed either.
+    // An IE that does not decode is replaced: its value is not read.
     let mut message = request(vec![undecodable(8)]);
-    let before = message.clone();
-    let unread = with_s1ap_ie_mut!(message, UEContextReleaseRequest, eNB_UE_S1AP_ID(id) = 1u32);
-    assert_eq!(unread.unwrap_err().kind(), ErrorKind::UndecodableIe);
-    assert_eq!(message, before);
+    assert_eq!(message.set_ie::<ie::eNB_UE_S1AP_ID>(1u32), Ok(true));
+    let read = message
+        .ie::<ie::eNB_UE_S1AP_ID>()
+        .map(|id| id.map(|id| id.0));
+    assert_eq!(read, Some(Ok(1)));
 }
 
 #[test]
