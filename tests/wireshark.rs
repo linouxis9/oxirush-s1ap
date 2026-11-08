@@ -40,7 +40,7 @@ use std::process::{Command, Stdio};
 
 use oxirush_s1ap::S1ap;
 use oxirush_s1ap::inspect;
-use oxirush_s1ap::s1ap::S1AP_PDU;
+use oxirush_s1ap::s1ap::S1APPDU;
 use oxirush_utils::tree::{Map, Value as Tree};
 use serde_json::{Value, json};
 
@@ -99,7 +99,7 @@ fn as_tree(value: &Tree) -> Tree {
 /// and they are the eNB's own when the HandoverType of the message is a handover
 /// within E-UTRAN or to it from another system. This is the choice that Wireshark
 /// makes from the same IE; for another HandoverType, or none, the octets stay.
-fn containers(pdu: &S1AP_PDU, tree: &mut Tree) {
+fn containers(pdu: &S1APPDU<'_>, tree: &mut Tree) {
     let ies = tree
         .get("ies")
         .and_then(Tree::as_array)
@@ -156,7 +156,7 @@ fn containers(pdu: &S1AP_PDU, tree: &mut Tree) {
 fn reading(octets: &[u8]) -> String {
     let head = json!({"octets": hex::encode(octets)}).to_string();
     let head = head.trim_end_matches('}');
-    match S1AP_PDU::decode(octets) {
+    match S1APPDU::decode(octets) {
         Ok(pdu) => {
             let check: Value = match pdu.check() {
                 Ok(deviations) => deviations.iter().map(ToString::to_string).collect(),

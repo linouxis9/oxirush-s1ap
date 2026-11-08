@@ -1,7 +1,7 @@
 //! Decoded PDUs as JSON, in two forms: a view, which is read and edited by paths and
 //! encoded again, and a tree, the short form in which a message is shown and written.
 //!
-//! The two forms are methods of the PDU, [`S1AP_PDU`], and the functions of this module
+//! The two forms are methods of the PDU, [`S1APPDU`], and the functions of this module
 //! read and edit a view by its paths, and say what the messages of the protocol have.
 //!
 //! | | Tree | View |
@@ -109,11 +109,11 @@
 //! # use std::fmt::Write as _;
 //! # let mut printed = String::new();
 //! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
-//! use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+//! use oxirush_s1ap::{inspect, s1ap::S1APPDU};
 //! use oxirush_s1ap::tree;
 //!
 //! let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-//! let pdu = S1AP_PDU::decode(&bytes).unwrap();
+//! let pdu = S1APPDU::decode(&bytes).unwrap();
 //! let mut view = pdu.to_view().unwrap();
 //!
 //! // An IE is added at the end, by its name and its typed value
@@ -143,7 +143,7 @@
 //! # use std::fmt::Write as _;
 //! # let mut printed = String::new();
 //! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
-//! use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+//! use oxirush_s1ap::{inspect, s1ap::S1APPDU};
 //! use oxirush_s1ap::tree;
 //!
 //! // A message that has one IE twice
@@ -152,7 +152,7 @@
 //!     {"eNB-UE-S1AP-ID": 7},
 //!     {"MME-UE-S1AP-ID": 2},
 //! ]});
-//! let pdu = S1AP_PDU::from_tree(&twice).unwrap();
+//! let pdu = S1APPDU::from_tree(&twice).unwrap();
 //! let mut view = pdu.to_view().unwrap();
 //!
 //! // The name selects both, in the order of the message
@@ -191,7 +191,7 @@
 //! # use std::fmt::Write as _;
 //! # let mut printed = String::new();
 //! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
-//! use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+//! use oxirush_s1ap::{inspect, s1ap::S1APPDU};
 //! use oxirush_s1ap::{tree, tree::Value};
 //!
 //! // A message whose one IE is a list of two items
@@ -201,7 +201,7 @@
 //!         {"E-RABItem": {"e-RAB-ID": 6, "cause": {"nas": "normal-release"}}},
 //!     ]},
 //! ]});
-//! let pdu = S1AP_PDU::from_tree(&command).unwrap();
+//! let pdu = S1APPDU::from_tree(&command).unwrap();
 //! let mut view = pdu.to_view().unwrap();
 //!
 //! // An item by its position or by its name, which selects each item of that name
@@ -304,7 +304,7 @@
 //! # use std::fmt::Write as _;
 //! # let mut printed = String::new();
 //! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
-//! use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1AP_PDU};
+//! use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1APPDU};
 //! use oxirush_s1ap::tree;
 //!
 //! // Written: the name of the type with its value, in place of the octets
@@ -320,7 +320,7 @@
 //! ]});
 //!
 //! // A tree shows the octets that the container was encoded as
-//! let pdu = S1AP_PDU::from_tree(&required).unwrap();
+//! let pdu = S1APPDU::from_tree(&required).unwrap();
 //! println!("{}", pdu.to_tree()["ies"][2]);
 //!
 //! // Read: a path goes through the name of the type
@@ -611,11 +611,11 @@
 //! reports, and what is not edited is sent as the octets received. The `rRC-Container`
 //! in it stays octets: it is a message of RRC.
 //!
-//! [`to_tree`]: S1AP_PDU::to_tree
-//! [`from_tree`]: S1AP_PDU::from_tree
-//! [`to_view`]: S1AP_PDU::to_view
-//! [`from_view`]: S1AP_PDU::from_view
-//! [`with_view`]: S1AP_PDU::with_view
+//! [`to_tree`]: S1APPDU::to_tree
+//! [`from_tree`]: S1APPDU::from_tree
+//! [`to_view`]: S1APPDU::to_view
+//! [`from_view`]: S1APPDU::from_view
+//! [`with_view`]: S1APPDU::with_view
 
 // The tables, the paths and the functions of the module, which oxirush-aper writes for
 // both protocols.
@@ -623,9 +623,10 @@ oxirush_aper::__inspect! {
     bindings s1ap, pdu S1APPDU, hooks oxirush_s1ap_hooks, any crate::s1ap::ErrorIndication<'a>
 }
 
-use crate::s1ap::{S1AP_PDU, S1APPDU};
+use crate::s1ap::S1APPDU;
 use oxirush_aper::Octets;
 use oxirush_aper::inspect::Parts;
+use oxirush_aper::protocol::Pdu;
 
 /// The two JSON forms of a PDU, with the `inspect` feature: its tree, the short form in
 /// which a message is shown and written, and its view, which keeps what was received and
@@ -640,18 +641,18 @@ impl S1APPDU<'_> {
     /// ```
     ///
     /// ```
-    /// use oxirush_s1ap::s1ap::S1AP_PDU;
+    /// use oxirush_s1ap::s1ap::S1APPDU;
     /// use oxirush_s1ap::tree;
     ///
     /// // A UE CONTEXT RELEASE REQUEST
     /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    /// let pdu = S1AP_PDU::decode(&octets)?;
+    /// let pdu = S1APPDU::decode(&octets)?;
     /// let tree = pdu.to_tree();
     /// assert_eq!(tree["message"], tree!("UEContextReleaseRequest"));
     /// assert_eq!(tree["ies"][2]["Cause"]["radioNetwork"], tree!("user-inactivity"));
     ///
     /// // The tree is a PDU again, of the same octets
-    /// assert_eq!(S1AP_PDU::from_tree(&tree)?.encode()?, octets);
+    /// assert_eq!(S1APPDU::from_tree(&tree)?.encode()?, octets);
     /// # Ok::<(), oxirush_s1ap::Error>(())
     /// ```
     ///
@@ -719,7 +720,7 @@ impl S1APPDU<'_> {
     /// `criticality` and its `value` for an IE, and the two forms are taken in one tree.
     ///
     /// ```
-    /// use oxirush_s1ap::s1ap::S1AP_PDU;
+    /// use oxirush_s1ap::s1ap::S1APPDU;
     /// use oxirush_s1ap::tree;
     ///
     /// let request = tree!({"message": "UEContextReleaseRequest", "ies": [
@@ -727,19 +728,19 @@ impl S1APPDU<'_> {
     ///     {"eNB-UE-S1AP-ID": 7},
     ///     {"Cause": {"radioNetwork": "user-inactivity"}},
     /// ]});
-    /// let octets = S1AP_PDU::from_tree(&request)?.encode()?;
+    /// let octets = S1APPDU::from_tree(&request)?.encode()?;
     /// assert_eq!(hex::encode(octets), "0012401500000300000002002a000800020007000240020280");
     /// # Ok::<(), oxirush_s1ap::Error>(())
     /// ```
-    pub fn from_tree(tree: &Value) -> Result<S1AP_PDU, Error> {
-        S1AP_PDU::of_parts(shared::tree_parts(&TABLES, tree)?)
+    pub fn from_tree(tree: &Value) -> Result<S1APPDU<'static>, Error> {
+        S1APPDU::of_parts(shared::tree_parts(&TABLES, tree)?)
     }
 
     /// The PDU of what a view or a tree writes.
-    fn of_parts(parts: Parts) -> Result<S1AP_PDU, Error> {
+    fn of_parts(parts: Parts) -> Result<S1APPDU<'static>, Error> {
         let criticality = json::from_value(&parts.criticality)?;
         let value = Octets::owned(parts.message);
-        Ok(S1AP_PDU::of(
+        Ok(S1APPDU::__of(
             parts.direction,
             parts.code,
             criticality,
@@ -759,20 +760,20 @@ impl S1APPDU<'_> {
     /// [`protocol_ies`](Self::protocol_ies) reads them whatever the message is. Its tree
     /// has its procedure code and its direction in the place of the name of a message.
     ///
-    /// A view takes up to 143 octets of memory for each octet of the S1AP_PDU, and
+    /// A view takes up to 143 octets of memory for each octet of the PDU, and
     /// [`with_view`](Self::with_view) 177: those of a message of 65,535 IEs of an
     /// identifier that the crate does not know, each of no octet, 262 KB, which takes 37
     /// MB and 46 MB. IEs that decode take less for each octet: 94 and 120 octets for
-    /// 65,535 MME UE S1AP IDs. The crate has no limit on the octets of a S1AP_PDU: the
+    /// 65,535 MME UE S1AP IDs. The crate has no limit on the octets of a PDU: the
     /// caller bounds them.
     ///
     /// ```
-    /// use oxirush_s1ap::{inspect, s1ap::S1AP_PDU};
+    /// use oxirush_s1ap::{inspect, s1ap::S1APPDU};
     /// use oxirush_s1ap::tree;
     ///
     /// // A UE CONTEXT RELEASE REQUEST
     /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    /// let view = S1AP_PDU::decode(&octets)?.to_view()?;
+    /// let view = S1APPDU::decode(&octets)?.to_view()?;
     /// assert_eq!(view["procedure_code"], tree!(18));
     /// assert_eq!(inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/value")?, [&tree!(7)]);
     /// # Ok::<(), oxirush_s1ap::Error>(())
@@ -791,18 +792,18 @@ impl S1APPDU<'_> {
     /// refuses the view of another message.
     ///
     /// ```
-    /// use oxirush_s1ap::s1ap::S1AP_PDU;
+    /// use oxirush_s1ap::s1ap::S1APPDU;
     ///
     /// // A view, kept as JSON text and read back
     /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    /// let view = S1AP_PDU::decode(&octets)?.to_view()?;
+    /// let view = S1APPDU::decode(&octets)?.to_view()?;
     /// let text = view.to_string();
     /// let read: oxirush_s1ap::tree::Value = text.parse().unwrap();
-    /// assert_eq!(S1AP_PDU::from_view(&read)?.encode()?, octets);
+    /// assert_eq!(S1APPDU::from_view(&read)?.encode()?, octets);
     /// # Ok::<(), oxirush_s1ap::Error>(())
     /// ```
-    pub fn from_view(view: &Value) -> Result<S1AP_PDU, Error> {
-        S1AP_PDU::of_parts(shared::view_parts(&TABLES, view)?)
+    pub fn from_view(view: &Value) -> Result<S1APPDU<'static>, Error> {
+        S1APPDU::of_parts(shared::view_parts(&TABLES, view)?)
     }
 
     /// The PDU of a view of this PDU, as [`to_view`](Self::to_view) gives it and the
@@ -814,12 +815,12 @@ impl S1APPDU<'_> {
     /// [`from_view`](Self::from_view) gives the PDU of any view.
     ///
     /// ```
-    /// use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1AP_PDU};
+    /// use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1APPDU};
     /// use oxirush_s1ap::tree;
     ///
     /// // A UE CONTEXT RELEASE REQUEST, and its view with another cause
     /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    /// let pdu = S1AP_PDU::decode(&octets)?;
+    /// let pdu = S1APPDU::decode(&octets)?;
     /// let mut view = pdu.to_view()?;
     /// inspect::set(&mut view, "/s1ap/Cause/nas", tree!("normal-release"))?;
     /// let edited = pdu.with_view(&view)?;
@@ -830,10 +831,10 @@ impl S1APPDU<'_> {
     /// assert_eq!(pdu.with_view(&view).unwrap_err().kind(), ErrorKind::Form);
     /// # Ok::<(), oxirush_s1ap::Error>(())
     /// ```
-    pub fn with_view(&self, view: &Value) -> Result<S1AP_PDU, Error> {
+    pub fn with_view(&self, view: &Value) -> Result<S1APPDU<'static>, Error> {
         let (direction, code) = (self.direction(), self.procedure_code());
         shared::of_the_pdu(&TABLES, view, direction, code)?;
-        S1AP_PDU::from_view(view)
+        S1APPDU::from_view(view)
     }
 }
 
@@ -854,6 +855,6 @@ impl<'de> serde_core::Deserialize<'de> for S1APPDU<'_> {
     fn deserialize<D: serde_core::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         use serde_core::de::Error as _;
         let tree = <Value as serde_core::Deserialize>::deserialize(deserializer)?;
-        S1AP_PDU::from_tree(&tree).map_err(D::Error::custom)
+        S1APPDU::from_tree(&tree).map_err(D::Error::custom)
     }
 }

@@ -77,7 +77,7 @@ oxirush_aper::__ies! {
     1 "HandoverType" crate::s1ap::HandoverType => HandoverType;
     2 "Cause" crate::s1ap::Cause => Cause;
     4 "TargetID" crate::s1ap::TargetID => TargetID;
-    8 "eNB-UE-S1AP-ID" crate::s1ap::ENBUES1APID => eNB_UE_S1AP_ID ENBUES1APID ENB_UE_S1AP_ID;
+    8 "eNB-UE-S1AP-ID" crate::s1ap::ENBUES1APID => eNB_UE_S1AP_ID ENBUES1APID;
     12 "E-RABSubjecttoDataForwardingList" crate::s1ap::ERABSubjecttoDataForwardingList<'a> => E_RABSubjecttoDataForwardingList ERABSubjecttoDataForwardingList;
     13 "E-RABtoReleaseListHOCmd" crate::s1ap::ERABList<'a> => E_RABtoReleaseListHOCmd;
     14 ignore "E-RABDataForwardingItem" crate::s1ap::ERABDataForwardingItem<'a> => E_RABDataForwardingItem ERABDataForwardingItem;

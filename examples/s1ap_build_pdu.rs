@@ -143,24 +143,24 @@ fn main() -> Result<(), Error> {
     //           ProtocolIEField {
     //               id: ProtocolIEID(0),
     //               criticality: Criticality::Ignore,
-    //               value: encode_open_type(&MMEUES1APID(1))?,
+    //               value: oxirush_s1ap::encode(&MMEUES1APID(1))?,
     //           },
     //           ProtocolIEField {
     //               id: ProtocolIEID(8),
     //               criticality: Criticality::Ignore,
-    //               value: encode_open_type(&ENBUES1APID(0))?,
+    //               value: oxirush_s1ap::encode(&ENBUES1APID(0))?,
     //           },
     //           ProtocolIEField {
     //               id: ProtocolIEID(51),
     //               criticality: Criticality::Ignore,
-    //               value: encode_open_type(&erab_setup_list())?,
+    //               value: oxirush_s1ap::encode(&erab_setup_list())?,
     //           },
     //       ]),
     //   };
-    //   let pdu = S1AP_PDU::successfulOutcome(SuccessfulOutcome {
+    //   let pdu = S1APPDU::successfulOutcome(SuccessfulOutcome {
     //       procedure_code: ProcedureCode(9),
     //       criticality: Criticality::Reject,
-    //       value: encode_open_type(&response)?,
+    //       value: oxirush_s1ap::encode(&response)?,
     //   });
     Ok(())
 }
@@ -177,7 +177,9 @@ fn erab_setup_list() -> ERABSetupListCtxtSURes<'static> {
     ERABSetupListCtxtSURes(vec![ProtocolIEField {
         id: ID_E_RABSETUP_ITEM_CTXT_SURES,
         criticality: Criticality::Ignore,
-        value: encode_open_type(&item).expect("encode E-RAB setup item"),
+        value: oxirush_s1ap::encode(&item)
+            .expect("encode E-RAB setup item")
+            .into(),
     }])
 }
 
@@ -196,7 +198,9 @@ fn erab_admitted_list() -> ERABAdmittedList<'static> {
     ERABAdmittedList(vec![ProtocolIEField {
         id: ID_E_RABADMITTED_ITEM,
         criticality: Criticality::Ignore,
-        value: encode_open_type(&item).expect("encode admitted E-RAB item"),
+        value: oxirush_s1ap::encode(&item)
+            .expect("encode admitted E-RAB item")
+            .into(),
     }])
 }
 
@@ -225,11 +229,13 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq<'static> {
     ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField {
         id: ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ,
         criticality: Criticality::Reject,
-        value: encode_open_type(&item).expect("encode E-RAB item"),
+        value: oxirush_s1ap::encode(&item)
+            .expect("encode E-RAB item")
+            .into(),
     }])
 }
 
-fn print_and_encode(pdu: &S1AP_PDU) -> Result<(), Error> {
+fn print_and_encode(pdu: &S1APPDU<'_>) -> Result<(), Error> {
     // Display example: "S1SetupRequest (procedure 17, initiating message)".
     println!("{pdu}");
     println!(

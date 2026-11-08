@@ -26,7 +26,7 @@ fn complete_warning_request_preserves_unknown_addition_bytes() {
         "00240031000005006f00028000007000028000007140122000018002f83900010101000002f839000200720002000a007300020001",
     )
     .unwrap();
-    let pdu = S1AP_PDU::decode(&wire).unwrap();
+    let pdu = S1APPDU::decode(&wire).unwrap();
     assert_eq!(pdu.encode().unwrap(), wire);
     let request: WriteReplaceWarningRequest = pdu.decode_value().unwrap();
     let ie = request
@@ -36,7 +36,7 @@ fn complete_warning_request_preserves_unknown_addition_bytes() {
         .find(|ie| ie.id == ID_WARNING_AREA_LIST)
         .unwrap();
     let WarningAreaList::trackingAreaListforWarning(list) =
-        decode_open_type::<WarningAreaList>(&ie.value).unwrap()
+        oxirush_s1ap::decode::<WarningAreaList>(&ie.value).unwrap()
     else {
         panic!("expected tracking area warning list");
     };

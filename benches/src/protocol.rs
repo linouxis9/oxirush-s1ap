@@ -34,7 +34,7 @@ pub use codec::s1ap as types;
 pub use codec::{build_s1ap as build, extract_s1ap_ies as extract_ies};
 
 /// A PDU of the protocol, which owns its octets.
-pub type Pdu = s1ap::S1AP_PDU;
+pub type Pdu = s1ap::S1APPDU<'static>;
 
 /// A PDU that borrows its message from the octets that it is decoded from.
 pub type Borrowed<'a> = s1ap::S1APPDU<'a>;

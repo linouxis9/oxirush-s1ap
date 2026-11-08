@@ -39,6 +39,17 @@ All notable changes to `oxirush-s1ap` are recorded here.
 - No `SEQUENCE` has a `new`: a struct literal builds one, with its members by
   their names. The `new` of a bit string of one size, as `AMFSetID::new(1)?`,
   stays.
+- A PDU decodes one way: `S1APPDU::decode` borrows the octets of its message
+  from what it is given, and `into_owned()` gives the `S1APPDU<'static>` that
+  is kept after them. `decode_value` is the one way to its message, which
+  borrows from the PDU: `into_owned()` keeps it too.
+- `oxirush_s1ap::decode` and `encode`, those of oxirush-aper, read and write any
+  value of the bindings in its open type; `encode` gives the octets as a
+  `Vec<u8>`.
+- The methods of a PDU and its `Display` are those of oxirush-aper, written
+  once for both protocols, with the same documentation.
+- The documentation of a PDU cites TS 36.413 clause 9.3.0 for the PDU that a
+  sender constructs, in each place.
 
 ### Removed
 
@@ -49,6 +60,14 @@ All notable changes to `oxirush-s1ap` are recorded here.
 - `is_initiating()`, `is_successful()` and `is_unsuccessful()`: compare
   `direction()` with a `Direction`.
 - `build/fields.tsv` and the hidden macros `__s1ap_ie_id!` and `__s1ap_proc_code!`.
+- `S1AP_PDU`, which is `S1APPDU<'static>`; `decode_borrowed`, which is `decode`;
+  `message()`; `s1ap::decode_open_type` and `s1ap::encode_open_type`; and
+  `src/pdu.rs`.
+- The aliases of the types of the two identifiers of a UE, as
+  `s1ap::MME_UE_S1AP_ID` for `MMEUES1APID`, and the name `ENB_UE_S1AP_ID` of the IE
+  `eNB_UE_S1AP_ID` in the macros.
+- The examples in the documentation of a few generated types: the README has
+  each task.
 
 ### Migration
 
@@ -57,6 +76,11 @@ All notable changes to `oxirush-s1ap` are recorded here.
 | `Criticality::reject` | `Criticality::Reject` |
 | `pdu.is_initiating()` | `pdu.direction() == Direction::Initiating` |
 | `pdu.direction() == "SuccessfulOutcome"` | `pdu.direction() == Direction::Successful` |
+| `S1AP_PDU::decode(&octets)?` | `S1APPDU::decode(&octets)?`, and `.into_owned()` to keep it |
+| `S1AP_PDU::decode_borrowed(&octets)?` | `S1APPDU::decode(&octets)?` |
+| `pdu.message::<M>()?` | `pdu.decode_value::<M>()?`, and `.into_owned()` to keep it |
+| `decode_open_type::<T>(&octets)`, `encode_open_type(&value)` | `oxirush_s1ap::decode::<T>(&octets)`, `oxirush_s1ap::encode(&value)` (a `Vec<u8>`: `.into()` gives `Octets`) |
+| `MME_UE_S1AP_ID(42)` (the type) | `MMEUES1APID(42)` |
 | `TAI::new(plmn, tac, None)` | `TAI { plmn_identity: plmn, tac, ie_extensions: None }` |
 | `inspect::message_named(name)` gives `("InitiatingMessage", code)` | it gives `(Direction::Initiating, code)` |
 | `tree["message"] == "..."` | `tree["message"] == tree!("...")` (oxirush-utils 0.2.0) |

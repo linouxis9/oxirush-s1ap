@@ -10,14 +10,14 @@ fn public_macros_round_trip_typed_open_message() -> Result<(), Error> {
         IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
     )?;
 
-    let S1AP_PDU::initiatingMessage(message) = &pdu else {
+    let S1APPDU::initiatingMessage(message) = &pdu else {
         panic!("expected initiating message");
     };
     // Extension bit, octet padding, then the aligned 16-bit ProtocolIE count.
     assert_eq!(&message.value[..3], &[0x00, 0x00, 0x03]);
 
     let wire = pdu.encode().expect("encode PDU");
-    let decoded = S1AP_PDU::decode(&wire).expect("decode PDU");
+    let decoded = S1APPDU::decode(&wire).expect("decode PDU");
     assert_eq!(decoded, pdu);
 
     let request: UEContextReleaseRequest = decoded.decode_value().expect("decode message");
@@ -63,7 +63,7 @@ fn every_constrained_list_encodes_its_length_per_x691() -> Result<(), Error> {
         hex::encode(&wire),
         "000f40140000020002400131003a40087809000000001a40"
     );
-    assert_eq!(S1AP_PDU::decode(&wire).expect("decode"), error);
+    assert_eq!(S1APPDU::decode(&wire).expect("decode"), error);
     Ok(())
 }
 
@@ -88,7 +88,9 @@ fn e_rab_container_lists_encode_their_size_constraint() -> Result<(), Error> {
     let admitted = ERABAdmittedList(vec![ProtocolIEField {
         id: ID_E_RABADMITTED_ITEM,
         criticality: Criticality::Ignore,
-        value: encode_open_type(&item).expect("encode E-RAB admitted item"),
+        value: oxirush_s1ap::encode(&item)
+            .expect("encode E-RAB admitted item")
+            .into(),
     }]);
     let acknowledge = build_s1ap!(REJECT HandoverRequestAcknowledge,
         IGNORE MME_UE_S1AP_ID(1u32),
@@ -105,7 +107,7 @@ fn e_rab_container_lists_encode_their_size_constraint() -> Result<(), Error> {
     );
 
     // The message borrows from the PDU, which is kept beside it.
-    let received = S1AP_PDU::decode(&wire).expect("decode PDU");
+    let received = S1APPDU::decode(&wire).expect("decode PDU");
     let decoded: HandoverRequestAcknowledge = received
         .decode_value()
         .expect("decode HandoverRequestAcknowledge");
@@ -116,7 +118,7 @@ fn e_rab_container_lists_encode_their_size_constraint() -> Result<(), Error> {
         .find(|ie| ie.id.0 == ID_E_RABADMITTED_LIST.0)
         .expect("E-RABAdmittedList IE");
     assert_eq!(
-        decode_open_type::<ERABAdmittedList>(&ie.value).expect("decode E-RABAdmittedList"),
+        oxirush_s1ap::decode::<ERABAdmittedList>(&ie.value).expect("decode E-RABAdmittedList"),
         admitted
     );
     Ok(())
@@ -146,7 +148,7 @@ fn each_ecgi_list_encodes_its_own_size_constraint() -> Result<(), Error> {
         hex::encode(&wire),
         "0024002a000005006f000280000070000280000071400b0000000002f8391234501000720002000a007300020001"
     );
-    assert_eq!(S1AP_PDU::decode(&wire).expect("decode"), request);
+    assert_eq!(S1APPDU::decode(&wire).expect("decode"), request);
 
     let synchronisation = SynchronisationInformation {
         source_stratum_level: None,
@@ -183,7 +185,7 @@ fn empty_encoding_in_an_open_type_is_one_zero_octet() -> Result<(), Error> {
     );
 
     // The message borrows from the PDU, which is kept beside it.
-    let received = S1AP_PDU::decode(&wire).expect("decode PDU");
+    let received = S1APPDU::decode(&wire).expect("decode PDU");
     let request: KillRequest = received.decode_value().expect("decode KillRequest");
     extract_s1ap_ies!(&request, KillRequest,
         req kill_all: KillAllWarningMessages = KillAllWarningMessages(value) => value,
@@ -209,7 +211,7 @@ fn reroute_nas_request_carries_the_s1_message_ie() -> Result<(), Error> {
     );
 
     // The message borrows from the PDU, which is kept beside it.
-    let received = S1AP_PDU::decode(&wire).expect("decode PDU");
+    let received = S1APPDU::decode(&wire).expect("decode PDU");
     let request: RerouteNASRequest = received.decode_value().expect("decode RerouteNASRequest");
     extract_s1ap_ies!(&request, RerouteNASRequest,
         req s1_message: Vec<u8> = S1_Message(value) => value.to_vec(),
@@ -235,46 +237,6 @@ fn extraction_binding_may_share_the_field_name() -> Result<(), Error> {
         cause,
         Some(Cause::radioNetwork(CauseRadioNetwork::user_inactivity))
     );
-    Ok(())
-}
-
-/// The crate names the type of id-eNB-UE-S1AP-ID `ENB_UE_S1AP_ID`, and the macros
-/// take that alias wherever they take `eNB_UE_S1AP_ID`, the name of the IE.
-#[test]
-fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), Error> {
-    use oxirush_s1ap::{Ie, ie};
-
-    // The alias is the type, and the two names are one entry.
-    let id: ENB_UE_S1AP_ID = ENBUES1APID(7);
-    let by_alias = ie::ENB_UE_S1AP_ID::field(Criticality::Reject, id)?;
-    let by_name = ie::eNB_UE_S1AP_ID::field(Criticality::Reject, 7u32)?;
-    assert_eq!(by_alias, by_name);
-    assert_eq!(by_alias.id, ID_E_NB_UE_S1_AP_ID);
-
-    // A PDU that is built by the alias is the octets of one built by the name.
-    let pdu = build_s1ap!(IGNORE UEContextReleaseRequest,
-        REJECT MME_UE_S1AP_ID(42u32),
-        REJECT ENB_UE_S1AP_ID(7u32),
-    )?;
-    let named = build_s1ap!(IGNORE UEContextReleaseRequest,
-        REJECT MME_UE_S1AP_ID(42u32),
-        REJECT eNB_UE_S1AP_ID(7u32),
-    )?;
-    assert_eq!(pdu.encode().unwrap(), named.encode().unwrap());
-
-    // The alias reads the IE, and changes it.
-    let mut request: UEContextReleaseRequest = pdu.decode_value().expect("decode message");
-    extract_s1ap_ies!(&request, UEContextReleaseRequest,
-        req read: u32 = ENB_UE_S1AP_ID(id),
-        opt absent: Cause = Cause(cause) => cause,
-    );
-    assert_eq!((read, absent), (7, None));
-    let renamed = request.set_ie::<ie::ENB_UE_S1AP_ID>(9u32);
-    assert_eq!(renamed, Ok(true));
-    extract_s1ap_ies!(&request, UEContextReleaseRequest,
-        req changed: u32 = eNB_UE_S1AP_ID(id),
-    );
-    assert_eq!(changed, 9);
     Ok(())
 }
 

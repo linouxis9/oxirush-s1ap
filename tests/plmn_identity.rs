@@ -125,7 +125,9 @@ fn the_identities_of_an_s1_setup_are_those_that_tshark_reads() -> Result<(), Err
     assert_eq!(read, [visited.clone(), home, visited]);
 
     // The helpers read the same networks in the same octets.
-    let pdu = S1AP_PDU::decode(&hex::decode(S1_SETUP).unwrap()).expect("decode PDU");
+    let pdu = S1APPDU::decode(&hex::decode(S1_SETUP).unwrap())
+        .expect("decode PDU")
+        .into_owned();
     let request: S1SetupRequest = pdu.decode_value().expect("decode message");
     extract_s1ap_ies!(&request, S1SetupRequest,
         req enb: GlobalENBID = Global_ENB_ID(enb) => enb,
@@ -189,7 +191,7 @@ fn octets_that_are_no_plmn_identity_are_shown_as_octets() {
 
     for octets in ["abcdef", "02f8f9", "0ff839", "02f83f", "02a839"] {
         let wire = hex::decode(S1_SETUP.replacen("134001", octets, 1)).unwrap();
-        let pdu = S1AP_PDU::decode(&wire).unwrap();
+        let pdu = S1APPDU::decode(&wire).unwrap();
         let view = pdu.to_view().unwrap();
         let shown = inspect::select(&view, "/s1ap/Global-ENB-ID/pLMNidentity").unwrap();
         assert_eq!(shown, [&tree!(octets)]);
@@ -198,8 +200,8 @@ fn octets_that_are_no_plmn_identity_are_shown_as_octets() {
             tree["ies"][0]["Global-ENB-ID"]["pLMNidentity"],
             tree!(octets)
         );
-        assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
-        assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
+        assert_eq!(S1APPDU::from_view(&view).unwrap().encode().unwrap(), wire);
+        assert_eq!(S1APPDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
     }
 }
 
@@ -213,7 +215,7 @@ fn the_notation_of_a_plmn_identity_has_the_octets_of_the_clause() {
 
     // Shown: the tree and the view of the request name the networks that tshark reads.
     let wire = hex::decode(S1_SETUP).unwrap();
-    let pdu = S1AP_PDU::decode(&wire).unwrap();
+    let pdu = S1APPDU::decode(&wire).unwrap();
     let tree = pdu.to_tree();
     assert_eq!(
         tree["ies"][0]["Global-ENB-ID"]["pLMNidentity"],
@@ -230,12 +232,12 @@ fn the_notation_of_a_plmn_identity_has_the_octets_of_the_clause() {
 
     // Written: the tree is the octets of the message, and so is each identity of the
     // vectors, set through the view.
-    assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
+    assert_eq!(S1APPDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
     for (mcc, mnc, octets) in IDENTITIES {
         inspect::set(&mut view, of_the_enb, tree!(format!("{mcc}-{mnc}"))).unwrap();
-        let edited = S1AP_PDU::from_view(&view).unwrap();
+        let edited = S1APPDU::from_view(&view).unwrap();
         let request: S1SetupRequest = edited.decode_value().unwrap();
-        let enb: GlobalENBID = decode_open_type(&request.protocol_ies.0[0].value).unwrap();
+        let enb: GlobalENBID = oxirush_s1ap::decode(&request.protocol_ies.0[0].value).unwrap();
         assert_eq!(&enb.plmn_identity.0.0[..], octets, "{mcc}-{mnc}");
         let shown = edited.to_view().unwrap();
         let shown = inspect::select(&shown, of_the_enb).unwrap();

@@ -66,7 +66,7 @@ fn bearers_decoded(pdu: &Pdu) {
             req list: types::ERABToBeSetupListBearerSUReq = E_RABToBeSetupListBearerSUReq(list) => list,
         );
         for item in &list.0 {
-            let bearer: types::ERABToBeSetupItemBearerSUReq = types::decode_open_type(&item.value)?;
+            let bearer: types::ERABToBeSetupItemBearerSUReq = codec::decode(&item.value)?;
             black_box(bearer);
         }
         Ok(())

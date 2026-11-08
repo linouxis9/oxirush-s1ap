@@ -113,7 +113,7 @@ construction.
 | Subject | What the generator does |
 |---------|-------------------------|
 | Containers | The protocol IE and extension containers take an object set as a parameter, which an opaque open type does not use. Each is one type, `ProtocolIEContainer` of `ProtocolIEField` and `ProtocolExtensionContainer` of `ProtocolExtensionField`, in place of the one that `rasn-compiler` resolves for each use. |
-| Complete values | `S1AP_PDU::decode`, `decode_value` and the extraction of a typed IE refuse incomplete values and trailing whole octets. |
+| Complete values | `S1APPDU::decode`, `decode_value` and the extraction of a typed IE refuse incomplete values and trailing whole octets. |
 
 rasn 0.29's APER codec departs from ITU-T X.691 where S1AP reaches it. There
 the oracle has a codec of its own in the place of the derived one, so that

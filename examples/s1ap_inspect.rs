@@ -6,7 +6,7 @@
 //! ```
 
 use oxirush_s1ap::tree;
-use oxirush_s1ap::{S1ap, inspect, s1ap::S1AP_PDU};
+use oxirush_s1ap::{S1ap, inspect, s1ap::S1APPDU};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // INITIAL UE MESSAGE: eNB-UE-S1AP-ID, NAS-PDU, TAI, EUTRAN-CGI and
@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let wire = hex::decode(
         "000c402c000005000800020000001a000403076002004300060002f839595c006440080002f839000000000086400100",
     )?;
-    let pdu = S1AP_PDU::decode(&wire)?;
+    let pdu = S1APPDU::decode(&wire)?;
     let mut view = pdu.to_view()?;
 
     // The message by the name that ASN.1 gives it, then each value with the path that

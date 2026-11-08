@@ -6,8 +6,8 @@ use oxirush_s1ap::s1ap::*;
 use oxirush_s1ap::{Error, build_s1ap};
 
 /// The PDU that the octets of `pdu` decode to: what a peer receives.
-fn received(pdu: &S1AP_PDU) -> Result<S1AP_PDU, Error> {
-    S1AP_PDU::decode(&pdu.encode()?)
+fn received(pdu: &S1APPDU<'_>) -> Result<S1APPDU<'static>, Error> {
+    Ok(S1APPDU::decode(&pdu.encode()?)?.into_owned())
 }
 
 #[test]
@@ -45,7 +45,7 @@ fn a_pdu_shows_the_identifiers_of_its_ue_however_its_message_carries_them() -> R
     let complete = build_s1ap!(
         UEContextReleaseComplete,
         MME_UE_S1AP_ID(42u32),
-        ENB_UE_S1AP_ID(7u32),
+        eNB_UE_S1AP_ID(7u32),
     )?;
     assert_eq!(
         received(&complete)?.to_string(),

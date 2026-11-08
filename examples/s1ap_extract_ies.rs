@@ -10,7 +10,7 @@ use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies};
 
 // ── 1. Simple extraction: required IDs + optional cause ────────────────────
 
-fn handle_release_request(pdu: &S1AP_PDU) -> Result<Vec<String>, Error> {
+fn handle_release_request(pdu: &S1APPDU<'_>) -> Result<Vec<String>, Error> {
     // The message of the PDU, as its type: another message is an error.
     let msg: UEContextReleaseRequest = pdu.decode_value()?;
 
@@ -36,7 +36,7 @@ fn handle_release_request(pdu: &S1AP_PDU) -> Result<Vec<String>, Error> {
 
 // ── 2. Complex extraction: handover with pattern matching ──────────────────
 
-fn handle_handover_required(pdu: &S1AP_PDU) -> Result<Vec<String>, Error> {
+fn handle_handover_required(pdu: &S1APPDU<'_>) -> Result<Vec<String>, Error> {
     let msg: HandoverRequired = pdu.decode_value()?;
 
     // Demonstrates concrete ENUMERATED values, a nested TargetID CHOICE,
@@ -74,7 +74,7 @@ fn handle_handover_required(pdu: &S1AP_PDU) -> Result<Vec<String>, Error> {
 
 // ── 3. InitialContextSetupRequest: many IEs + nested EPS bearer ────────────
 
-fn handle_initial_context_setup(pdu: &S1AP_PDU) -> Result<Vec<String>, Error> {
+fn handle_initial_context_setup(pdu: &S1APPDU<'_>) -> Result<Vec<String>, Error> {
     let msg: InitialContextSetupRequest = pdu.decode_value()?;
 
     extract_s1ap_ies!(&msg, InitialContextSetupRequest,
@@ -143,8 +143,8 @@ fn main() -> Result<(), Error> {
     )?;
 
     // Encode → decode round-trip, then extract.
-    type Handler = fn(&S1AP_PDU) -> Result<Vec<String>, Error>;
-    let cases: [(&str, &S1AP_PDU, Handler); 3] = [
+    type Handler = fn(&S1APPDU<'_>) -> Result<Vec<String>, Error>;
+    let cases: [(&str, &S1APPDU<'_>, Handler); 3] = [
         (
             "UEContextReleaseRequest",
             &release_pdu,
@@ -160,7 +160,7 @@ fn main() -> Result<(), Error> {
 
     for (name, pdu, handler) in cases {
         let bytes = pdu.encode()?;
-        let decoded = S1AP_PDU::decode(&bytes)?;
+        let decoded = S1APPDU::decode(&bytes)?;
 
         println!("=== {name} ({decoded}) ===");
         match handler(&decoded) {
@@ -217,13 +217,15 @@ fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq<'static> {
     ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField {
         id: ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ,
         criticality: Criticality::Reject,
-        value: encode_open_type(&item).expect("encode E-RAB item"),
+        value: oxirush_s1ap::encode(&item)
+            .expect("encode E-RAB item")
+            .into(),
     }])
 }
 
 fn nested_nas_len(list: &ERABToBeSetupListCtxtSUReq) -> Option<usize> {
     list.0.iter().find_map(|entry| {
-        let item: ERABToBeSetupItemCtxtSUReq = decode_open_type(&entry.value).ok()?;
+        let item: ERABToBeSetupItemCtxtSUReq = oxirush_s1ap::decode(&entry.value).ok()?;
         item.nas_pdu.map(|nas| nas.0.len())
     })
 }

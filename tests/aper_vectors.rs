@@ -3,12 +3,12 @@ use oxirush_s1ap::Octets;
 use oxirush_s1ap::s1ap::*;
 use std::collections::BTreeSet;
 
-fn value(pdu: &S1AP_PDU) -> &Octets<'static> {
+fn value<'p>(pdu: &'p S1APPDU<'p>) -> &'p Octets<'p> {
     match pdu {
-        S1AP_PDU::initiatingMessage(message) => &message.value,
-        S1AP_PDU::successfulOutcome(message) => &message.value,
-        S1AP_PDU::unsuccessfulOutcome(message) => &message.value,
-        _ => panic!("unexpected S1AP_PDU alternative"),
+        S1APPDU::initiatingMessage(message) => &message.value,
+        S1APPDU::successfulOutcome(message) => &message.value,
+        S1APPDU::unsuccessfulOutcome(message) => &message.value,
+        _ => panic!("unexpected alternative"),
     }
 }
 
@@ -33,15 +33,15 @@ fn cuts(length: usize) -> Vec<usize> {
 /// that borrows is named without its lifetime, which each use gives it.
 macro_rules! check_typed {
     ($message:ident, $pdu:expr, $name:expr) => {{
-        let (pdu, name): (&S1AP_PDU, &str) = ($pdu, $name);
+        let (pdu, name): (&S1APPDU, &str) = ($pdu, $name);
         let raw = value(pdu);
         let decoded: $message = pdu
             .decode_value()
             .unwrap_or_else(|error| panic!("{name}: {error}"));
-        assert_eq!(encode_open_type(&decoded).unwrap(), *raw, "{name}");
+        assert_eq!(oxirush_s1ap::encode(&decoded).unwrap(), *raw, "{name}");
         for cut in cuts(raw.len()) {
             assert!(
-                decode_open_type::<$message>(&raw[..cut]).is_err(),
+                oxirush_s1ap::decode::<$message>(&raw[..cut]).is_err(),
                 "{name}: prefix {cut}"
             );
         }
@@ -49,15 +49,15 @@ macro_rules! check_typed {
             let mut bytes = raw.to_vec();
             bytes.push(octet);
             assert!(
-                decode_open_type::<$message>(&bytes).is_err(),
+                oxirush_s1ap::decode::<$message>(&bytes).is_err(),
                 "{name}: trailing octet"
             );
             let mut extra = pdu.clone();
             match &mut extra {
-                S1AP_PDU::initiatingMessage(message) => message.value = bytes.into(),
-                S1AP_PDU::successfulOutcome(message) => message.value = bytes.into(),
-                S1AP_PDU::unsuccessfulOutcome(message) => message.value = bytes.into(),
-                _ => panic!("unexpected S1AP_PDU alternative"),
+                S1APPDU::initiatingMessage(message) => message.value = bytes.into(),
+                S1APPDU::successfulOutcome(message) => message.value = bytes.into(),
+                S1APPDU::unsuccessfulOutcome(message) => message.value = bytes.into(),
+                _ => panic!("unexpected alternative"),
             }
             assert!(
                 extra.decode_value::<$message>().is_err(),
@@ -67,7 +67,7 @@ macro_rules! check_typed {
     }};
 }
 
-fn check_message(name: &str, pdu: &S1AP_PDU) {
+fn check_message(name: &str, pdu: &S1APPDU<'_>) {
     match name {
         "HandoverRequired" => check_typed!(HandoverRequired, pdu, name),
         "HandoverCommand" => check_typed!(HandoverCommand, pdu, name),
@@ -206,27 +206,27 @@ fn check_vector(name: &str, fields: &[&str]) -> &'static str {
     assert_eq!(fields.len(), 4, "{name}");
     let message = fields[0].split('/').next().unwrap();
     let wire = hex::decode(fields[1]).unwrap();
-    let pdu = S1AP_PDU::decode(&wire).unwrap_or_else(|error| panic!("{name}: {error}"));
+    let pdu = S1APPDU::decode(&wire).unwrap_or_else(|error| panic!("{name}: {error}"));
     assert_eq!(hex::encode(pdu.encode().unwrap()), fields[1], "{name}");
     assert_eq!(pdu.procedure_code().to_string(), fields[2], "{name}");
     let choice = match &pdu {
-        S1AP_PDU::initiatingMessage(_) => "0",
-        S1AP_PDU::successfulOutcome(_) => "1",
-        S1AP_PDU::unsuccessfulOutcome(_) => "2",
-        _ => panic!("unexpected S1AP_PDU alternative"),
+        S1APPDU::initiatingMessage(_) => "0",
+        S1APPDU::successfulOutcome(_) => "1",
+        S1APPDU::unsuccessfulOutcome(_) => "2",
+        _ => panic!("unexpected alternative"),
     };
     assert_eq!(choice, fields[3], "{name}");
     check_message(message, &pdu);
     for cut in cuts(wire.len()) {
         assert!(
-            S1AP_PDU::decode(&wire[..cut]).is_err(),
+            S1APPDU::decode(&wire[..cut]).is_err(),
             "{name}: prefix {cut}"
         );
     }
     for octet in [0, 0xff] {
         let mut extra = wire.clone();
         extra.push(octet);
-        assert!(S1AP_PDU::decode(&extra).is_err(), "{name}: trailing octet");
+        assert!(S1APPDU::decode(&extra).is_err(), "{name}: trailing octet");
     }
     choice
 }
@@ -276,10 +276,10 @@ fn the_vectors_with_content_round_trip_and_reject_incomplete_encodings() {
 #[test]
 fn complete_open_types_require_a_zero_octet_even_for_null() {
     for bytes in [vec![], vec![0xff], vec![0, 0], vec![0, 0xff]] {
-        assert!(decode_open_type::<()>(&bytes).is_err());
+        assert!(oxirush_s1ap::decode::<()>(&bytes).is_err());
     }
-    decode_open_type::<()>(&[0]).unwrap();
-    assert_eq!(encode_open_type(&()).unwrap(), [0]);
+    oxirush_s1ap::decode::<()>(&[0]).unwrap();
+    assert_eq!(oxirush_s1ap::encode(&()).unwrap(), [0]);
     // Fewer than eight unused bits retain the decoder's receive policy.
-    assert!(decode_open_type::<bool>(&[0xff]).unwrap());
+    assert!(oxirush_s1ap::decode::<bool>(&[0xff]).unwrap());
 }

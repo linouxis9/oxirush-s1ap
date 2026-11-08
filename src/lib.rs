@@ -23,7 +23,7 @@
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Decode a UE CONTEXT RELEASE REQUEST
 //!     let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
-//!     let pdu = S1AP_PDU::decode(&bytes)?;
+//!     let pdu = S1APPDU::decode(&bytes)?;
 //!     assert_eq!((pdu.procedure_code(), pdu.direction()), (18, Direction::Initiating));
 //!     println!("{}", pdu.procedure_name());
 //!     # assert_eq!(pdu.procedure_name(), "UEContextReleaseRequest");
@@ -70,14 +70,14 @@
 //!
 //! | Task | Items |
 //! |------|-------|
-//! | Answer an eNB, from S1 SETUP to the INITIAL CONTEXT SETUP | [`build_s1ap!`], [`extract_s1ap_ies!`], [`helpers`], [`S1AP_PDU::ie`](s1ap::S1APPDU::ie) |
-//! | Decode a PDU | [`S1AP_PDU::decode`](s1ap::S1APPDU::decode), [`S1AP_PDU::decode_borrowed`](s1ap::S1APPDU::decode_borrowed), [`S1AP_PDU::kind`](s1ap::S1APPDU::kind), [`S1AP_PDU::decode_value`](s1ap::S1APPDU::decode_value) |
-//! | Build a PDU | [`build_s1ap!`], [`S1AP_PDU::of_message`](s1ap::S1APPDU::of_message) |
+//! | Answer an eNB, from S1 SETUP to the INITIAL CONTEXT SETUP | [`build_s1ap!`], [`extract_s1ap_ies!`], [`helpers`], [`S1APPDU::ie`](s1ap::S1APPDU::ie) |
+//! | Decode a PDU | [`S1APPDU::decode`](s1ap::S1APPDU::decode), [`S1APPDU::kind`](s1ap::S1APPDU::kind), [`S1APPDU::decode_value`](s1ap::S1APPDU::decode_value) |
+//! | Build a PDU | [`build_s1ap!`], [`S1APPDU::of_message`](s1ap::S1APPDU::of_message) |
 //! | Read the IEs of a message | [`extract_s1ap_ies!`], [`ie`], [`Ie::field`], `set_ie` |
-//! | A list of single containers, and a handover container, typed | [`S1AP_PDU::items`](s1ap::S1APPDU::items), [`s1ap::decode_open_type`], [`s1ap::encode_open_type`] |
-//! | Check a message, and answer one that is faulty | [`S1AP_PDU::check`](s1ap::S1APPDU::check), [`S1AP_PDU::check_structure`](s1ap::S1APPDU::check_structure), [`Deviation`], [`S1AP_PDU::criticality_diagnostics_for_response`](s1ap::S1APPDU::criticality_diagnostics_for_response) |
-//! | A PDU as JSON | [`S1AP_PDU::to_tree`](s1ap::S1APPDU::to_tree), [`S1AP_PDU::to_view`](s1ap::S1APPDU::to_view), [`S1AP_PDU::with_view`](s1ap::S1APPDU::with_view), [`inspect`] |
-//! | Write a message from its tree | [`S1AP_PDU::from_tree`](s1ap::S1APPDU::from_tree) |
+//! | A list of single containers, and a handover container, typed | [`S1APPDU::items`](s1ap::S1APPDU::items), [`decode`], [`encode`] |
+//! | Check a message, and answer one that is faulty | [`S1APPDU::check`](s1ap::S1APPDU::check), [`S1APPDU::check_structure`](s1ap::S1APPDU::check_structure), [`Deviation`], [`S1APPDU::criticality_diagnostics_for_response`](s1ap::S1APPDU::criticality_diagnostics_for_response) |
+//! | A PDU as JSON | [`S1APPDU::to_tree`](s1ap::S1APPDU::to_tree), [`S1APPDU::to_view`](s1ap::S1APPDU::to_view), [`S1APPDU::with_view`](s1ap::S1APPDU::with_view), [`inspect`] |
+//! | Write a message from its tree | [`S1APPDU::from_tree`](s1ap::S1APPDU::from_tree) |
 //!
 // Without `inspect` the items of the JSON forms in the tasks are no links: the links are
 // checked in the build of every feature, which docs.rs makes.
@@ -94,13 +94,13 @@
 //!
 //! // A UE CONTEXT RELEASE REQUEST is not decoded as an S1 SETUP REQUEST
 //! let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-//! let pdu = S1AP_PDU::decode(&bytes).unwrap();
+//! let pdu = S1APPDU::decode(&bytes).unwrap();
 //! let wrong = pdu.decode_value::<S1SetupRequest>().unwrap_err();
 //! assert_eq!(wrong.kind(), ErrorKind::WrongMessage);
 //! println!("{wrong}");
 //!
 //! // Octets that end early
-//! let short = S1AP_PDU::decode(&bytes[..10]).unwrap_err();
+//! let short = S1APPDU::decode(&bytes[..10]).unwrap_err();
 //! assert_eq!(short.kind(), ErrorKind::Decode);
 //! println!("{short}");
 //! # assert_eq!(printed, r##"the message of this PDU is UEContextReleaseRequest, not S1SetupRequest: kind() says which message a PDU holds
@@ -133,13 +133,10 @@
 //!
 //! | To | Write |
 //! | --- | --- |
-//! | Read a message where it was received | `let pdu = S1AP_PDU::decode(&octets)?;` then `pdu.decode_value()?`: the message borrows from `pdu`, which is a variable of its own |
+//! | Read a message where it was received | `let pdu = S1APPDU::decode(&octets)?;` then `pdu.decode_value()?`: the message borrows from `pdu`, which is a variable of its own |
 //! | Keep a value after the PDU is gone | `value.into_owned()`, which gives the same type with the lifetime `'static`, as `NASPDU<'static>`: this is the type to write in a struct |
 //! | Build a value | From data that it owns: `NASPDU::from(vec)` is a `NASPDU<'static>` |
-//! | Read a PDU in the buffer that it was received in | [`S1AP_PDU::decode_borrowed`](s1ap::S1APPDU::decode_borrowed), which copies nothing: the PDU borrows from the buffer |
-//!
-//! [`S1AP_PDU`](s1ap::S1AP_PDU) is the PDU that owns its octets, `S1APPDU<'static>`,
-//! and has no lifetime to write.
+//! | Keep a PDU after the buffer that it was received in | `pdu.into_owned()`, a `S1APPDU<'static>`: [`S1APPDU::decode`](s1ap::S1APPDU::decode) copies nothing, and the PDU borrows from the buffer |
 //!
 //! ```
 //! use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies, s1ap::*};
@@ -151,7 +148,7 @@
 //!     nas: NASPDU<'static>,
 //! }
 //!
-//! fn admit(pdu: &S1AP_PDU) -> Result<Ue, Error> {
+//! fn admit(pdu: &S1APPDU<'_>) -> Result<Ue, Error> {
 //!     // `message` borrows from `pdu`, and `nas` from `message`
 //!     let message: InitialUEMessage = pdu.decode_value()?;
 //!     extract_s1ap_ies!(message, InitialUEMessage,
@@ -184,7 +181,7 @@
 //! }
 //!
 //! async fn handle(received: Vec<u8>) -> Result<(), Error> {
-//!     let pdu = S1AP_PDU::decode_borrowed(&received)?;
+//!     let pdu = S1APPDU::decode(&received)?;
 //!     let message: UplinkNASTransport = pdu.decode_value()?;
 //!     extract_s1ap_ies!(message, UplinkNASTransport,
 //!         req nas: NASPDU = NAS_PDU(nas) => nas,
@@ -295,32 +292,40 @@ extern crate alloc;
 pub mod helpers;
 // What the fuzz targets and the oracle take from the inside of the crate, with
 // `--cfg oxirush_s1ap_hooks`: the module `hooks`.
-oxirush_aper::__hooks! { cfg oxirush_s1ap_hooks, bindings s1ap, pdu S1APPDU, owned S1AP_PDU }
+oxirush_aper::__hooks! { cfg oxirush_s1ap_hooks, bindings s1ap, pdu S1APPDU }
 #[cfg(feature = "inspect")]
 pub mod inspect;
 #[cfg(feature = "inspect")]
 mod inspect_registry;
 pub mod macros;
 /// The types of the ASN.1 modules of TS 36.413, as the generator writes them:
-/// [`S1AP_PDU`](s1ap::S1AP_PDU) and its three directions, each message, each IE and
+/// [`S1APPDU`](s1ap::S1APPDU) and its three directions, each message, each IE and
 /// each type of a value, which decode and encode themselves in aligned PER.
 ///
 /// ```
-/// use oxirush_s1ap::s1ap::{MMEUES1APID, decode_open_type, encode_open_type};
+/// use oxirush_s1ap::{decode, encode, s1ap::MMEUES1APID};
 ///
 /// // `MME-UE-S1AP-ID ::= INTEGER (0..4294967295)`, as the value of its IE holds it
-/// let octets = encode_open_type(&MMEUES1APID(42))?;
+/// let octets = encode(&MMEUES1APID(42))?;
 /// assert_eq!(octets, [0x00, 0x2a]);
-/// assert_eq!(decode_open_type::<MMEUES1APID>(&octets)?, MMEUES1APID(42));
+/// assert_eq!(decode::<MMEUES1APID>(&octets)?, MMEUES1APID(42));
 /// # Ok::<(), oxirush_s1ap::Error>(())
 /// ```
 // The bindings are formatted where they are generated, by the rustfmt of the toolchain
 // that the generator runs with: a later one breaks some of their long lines otherwise.
 #[rustfmt::skip]
 pub mod s1ap;
-mod pdu;
 #[doc(hidden)]
 pub mod registry;
+
+oxirush_aper::__pdu! {
+    pdu S1APPDU, protocol S1ap, name oxirush_s1ap, bindings s1ap,
+    specification "TS 36.413", construction "9.3.0", diagnostics "9.2.1.21",
+    release "0012401500000300000002002a000800020007000240020280",
+    display "UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7",
+    ue MME_UE_S1AP_ID eNB_UE_S1AP_ID,
+    pair UE_S1AP_IDs UES1APIDs uE_S1AP_ID_pair(mme_ue_s1ap_id, enb_ue_s1ap_id) mME_UE_S1AP_ID
+}
 
 /// The aligned PER runtime that the bindings are made of, at the version that this
 /// crate is built with. The values of the bindings are its types, such as
@@ -342,7 +347,7 @@ pub use oxirush_utils::tree;
 pub use oxirush_aper::protocol::{Ie, Message};
 pub use oxirush_aper::{
     AsnType, BitString, Bits, Criticality, Decode, Direction, Encode, Error, ErrorKind, Fault,
-    Faults, ObjectSet, Octets, Presence,
+    Faults, ObjectSet, Octets, Presence, decode, encode,
 };
 /// ```
 /// use oxirush_s1ap::{Deviation, build_s1ap, s1ap::*};

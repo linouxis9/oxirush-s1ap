@@ -4,7 +4,7 @@
 //! and the oracle of the tests.
 
 use anyhow::{Result, ensure};
-use generator::protocol::{Protocol, UeIds, generate};
+use generator::protocol::{Protocol, generate};
 
 /// The IEs whose octets ASN.1 leaves open, each with the type of this module that TS
 /// 36.413 gives them for a handover between eNBs: clauses 9.2.1.56 and 9.2.1.57. For
@@ -37,59 +37,6 @@ const FOREIGN: &[(&str, &str, &str)] = &[
     ),
 ];
 
-/// The examples of the types that a program meets first, which the documentation of each
-/// has after what the type is in ASN.1.
-const EXAMPLES: &[(&str, &str)] = &[(
-    "ERABToBeSetupItemCtxtSUReq",
-    r#"An E-RAB of an INITIAL CONTEXT SETUP REQUEST: the item of a list of single containers,
-which `items()` of a PDU walks.
-
-```
-use oxirush_s1ap::aper::BitString;
-use oxirush_s1ap::{Ie, build_s1ap, ie, s1ap::*};
-
-// The default bearer: E-RAB 5 of QCI 9, and the S-GW's end of its tunnel
-let priority = AllocationAndRetentionPriority {
-    priority_level: PriorityLevel(15),
-    pre_emption_capability: PreEmptionCapability::shall_not_trigger_pre_emption,
-    pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
-    ie_extensions: None,
-};
-let qos = ERABLevelQoSParameters {
-    qci: QCI(9),
-    allocation_retention_priority: priority,
-    gbr_qos_information: None,
-    ie_extensions: None,
-};
-let bearer = ERABToBeSetupItemCtxtSUReq {
-    e_rab_id: ERABID(5),
-    e_rab_level_qos_parameters: qos,
-    transport_layer_address: TransportLayerAddress(BitString::from([10, 0, 0, 1])),
-    gtp_teid: GTPTEID([0, 0, 0, 1]),
-    nas_pdu: None,
-    ie_extensions: None,
-};
-let request = build_s1ap!(
-    InitialContextSetupRequest,
-    MME_UE_S1AP_ID(1u32),
-    eNB_UE_S1AP_ID(7u32),
-    E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(vec![
-        ie::E_RABToBeSetupItemCtxtSUReq::field(Criticality::Reject, bearer)?,
-    ])),
-)?;
-
-// Each item, where it is in the octets of the PDU
-for item in request.items::<ie::E_RABToBeSetupListCtxtSUReq>() {
-    let item = item?;
-    assert_eq!(
-        (item.e_rab_id, item.gtp_teid),
-        (ERABID(5), GTPTEID([0, 0, 0, 1]))
-    );
-}
-# Ok::<(), oxirush_s1ap::Error>(())
-```"#,
-)];
-
 fn main() -> Result<()> {
     generate(&Protocol {
         name: "S1AP",
@@ -98,21 +45,6 @@ fn main() -> Result<()> {
         foreign: FOREIGN,
         keys: &["SecurityKey"],
         plmn: "PLMNidentity",
-        aliases: &[
-            ("MME_UE_S1AP_ID", "MMEUES1APID"),
-            ("ENB_UE_S1AP_ID", "ENBUES1APID"),
-        ],
-        ue_ids: UeIds {
-            ie: "UE_S1AP_IDs",
-            choice: "UES1APIDs",
-            pair: ("uE_S1AP_ID_pair", "mme_ue_s1ap_id", "enb_ue_s1ap_id"),
-            first: "mME_UE_S1AP_ID",
-        },
-        release_request: "0012401500000300000002002a000800020007000240020280",
-        release_display: "UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7",
-        other_message: "S1SetupRequest",
-        no_message: "ERABToBeSetupItemCtxtSUReq",
-        examples: EXAMPLES,
         correct,
     })
 }

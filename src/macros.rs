@@ -72,9 +72,8 @@
 //! ```
 //!
 //! IEs are named after their `id-` constant. The name of a type is an alias
-//! only for the one IE of that type, and so is an alias that the crate gives
-//! the type: id-eNB-UE-S1AP-ID is `eNB_UE_S1AP_ID`, `ENBUES1APID` and
-//! `ENB_UE_S1AP_ID`. The type of both id-GUMMEI-ID and id-SourceMME-GUMMEI is
+//! only for the one IE of that type: id-eNB-UE-S1AP-ID is `eNB_UE_S1AP_ID` and
+//! `ENBUES1APID`. The type of both id-GUMMEI-ID and id-SourceMME-GUMMEI is
 //! addressed by the IE names.
 //!
 //! ```
@@ -205,7 +204,7 @@
 /// the IE, which the field is then.
 ///
 /// The IEs are read in one pass over the IEs of the message, which stops once each that
-/// a field asks for is found, and only those are decoded. `S1AP_PDU` is taken too,
+/// a field asks for is found, and only those are decoded. A PDU is taken too,
 /// as the message that it holds, without `decode_value` first: the octets of its message
 /// are read where they are, and a PDU of another message is an error of the kind
 /// `WrongMessage` for a `req` and an `opt` field, as octets that are no container of
@@ -219,7 +218,7 @@
 /// ```
 /// use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies, s1ap::*};
 ///
-/// fn released(pdu: &S1AP_PDU) -> Result<(u32, bool, Option<GWContextReleaseIndication>), Error> {
+/// fn released(pdu: &S1APPDU<'_>) -> Result<(u32, bool, Option<GWContextReleaseIndication>), Error> {
 ///     let message: UEContextReleaseRequest = pdu.decode_value()?;
 ///     extract_s1ap_ies!(message, UEContextReleaseRequest,
 ///         // The one value that the IE is a name for
@@ -263,7 +262,7 @@
 ///     "0012401500000300000002002a000800020007000240020280",
 ///     "0012401500000300000002002a000800020007000240027280",
 /// ] {
-///     let pdu = S1AP_PDU::decode(&hex::decode(octets).unwrap()).unwrap();
+///     let pdu = S1APPDU::decode(&hex::decode(octets).unwrap()).unwrap().into_owned();
 ///     println!("{:?}", cause(&pdu.decode_value().unwrap()));
 /// }
 /// # assert_eq!(printed, r##"Some(radioNetwork(user_inactivity))
@@ -282,9 +281,9 @@ macro_rules! extract_s1ap_ies {
     };
 }
 
-/// Build a complete `S1AP_PDU` from a direction, procedure, message, and IEs.
+/// Build a complete `S1APPDU` from a direction, procedure, message, and IEs.
 ///
-/// Gives a `Result<S1AP_PDU, Error>`: a value that does not encode into its open type,
+/// Gives a `Result<S1APPDU<'static>, Error>`: a value that does not encode into its open type,
 /// such as an integer outside its constraint, is an error of the kind `Encode`. A
 /// criticality that a call leaves out is the one that the specification assigns: that of
 /// the procedure for the PDU, and that of the object set of the message for an IE, which
@@ -323,7 +322,7 @@ mod tests {
             IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
         )?;
 
-        let S1AP_PDU::initiatingMessage(message) = &mut pdu else {
+        let S1APPDU::initiatingMessage(message) = &mut pdu else {
             panic!("expected initiating message");
         };
         let request: UEContextReleaseRequest =

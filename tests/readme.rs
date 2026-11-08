@@ -106,7 +106,7 @@ fn block_1() {
     fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Decode a UE CONTEXT RELEASE REQUEST
         let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
-        let pdu = S1AP_PDU::decode(&bytes)?;
+        let pdu = S1APPDU::decode(&bytes)?;
         println!("{pdu}");
 
         // Read its IEs by name: `req` fails when the IE is missing, `opt` gives an Option
@@ -154,7 +154,8 @@ fn block_2() {
         )?;
 
         // The MME reads it, and answers with its name and its GUMMEIs
-        let received = S1AP_PDU::decode(&request.encode()?)?;
+        let octets = request.encode()?;
+        let received = S1APPDU::decode(&octets)?;
         extract_s1ap_ies!(received, S1SetupRequest,
             opt name: String = eNBname(name) => name.0.into_owned(),
             req areas: SupportedTAs = SupportedTAs(areas) => areas,
@@ -185,7 +186,7 @@ fn block_2() {
 
         // The MME reads the two IEs it needs, in place in the received octets
         let octets = initial.encode()?;
-        let received = S1AP_PDU::decode_borrowed(&octets)?;
+        let received = S1APPDU::decode(&octets)?;
         extract_s1ap_ies!(received, InitialUEMessage,
             req enb_id: u32 = eNB_UE_S1AP_ID(id),
             req nas: NASPDU = NAS_PDU(nas) => nas,
@@ -243,7 +244,8 @@ fn block_2() {
         )?;
 
         // The eNB checks the message against the specification, and takes the key
-        let received = S1AP_PDU::decode(&setup.encode()?)?;
+        let octets = setup.encode()?;
+        let received = S1APPDU::decode(&octets)?;
         let deviations = received.check()?;
         extract_s1ap_ies!(received, InitialContextSetupRequest,
             req key: SecurityKey = SecurityKey(key) => key,
@@ -261,8 +263,8 @@ fn block_3() {
     use oxirush_s1ap::{S1apPduKind, extract_s1ap_ies, ie, s1ap::*};
 
     fn receive(octets: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
-        // `decode_borrowed` copies nothing: the PDU borrows from `octets`
-        let pdu = S1AP_PDU::decode_borrowed(octets)?;
+        // `decode` copies nothing: the PDU borrows from `octets`
+        let pdu = S1APPDU::decode(octets)?;
         match pdu.kind() {
             S1apPduKind::UEContextReleaseRequest => {
                 // Only the IEs that a field asks for are decoded
@@ -307,7 +309,7 @@ fn block_4() {
 
         // The PDU of a message you already have
         let message: InitialUEMessage = pdu.decode_value()?;
-        let again = S1AP_PDU::of_message(&message, InitialUEMessage::CRITICALITY)?;
+        let again = S1APPDU::of_message(&message, InitialUEMessage::CRITICALITY)?;
         println!("{}", again == pdu);
 
         // An IE that the message cannot have has no criticality to take
@@ -364,9 +366,9 @@ fn block_5() {
 
         // A Source-ToTarget-TransparentContainer, as the type it carries
         let octets = hex::decode("000201020002f83900012340200100")?;
-        let container: SourceeNBToTargeteNBTransparentContainer = decode_open_type(&octets)?;
+        let container: SourceeNBToTargeteNBTransparentContainer = oxirush_s1ap::decode(&octets)?;
         println!("{:?}", container.target_cell_id);
-        assert_eq!(encode_open_type(&container)?.as_ref(), &octets[..]);
+        assert_eq!(oxirush_s1ap::encode(&container)?, octets);
         Ok(())
     }
 
@@ -385,7 +387,8 @@ fn block_6() {
             IGNORE DefaultPagingDRX(PagingDRX::v128),
             REJECT TimeToWait(TimeToWait::v5s),
         )?;
-        let received = S1AP_PDU::decode(&request.encode()?)?;
+        let octets = request.encode()?;
+        let received = S1APPDU::decode(&octets)?;
         let deviations = received.check()?;
         for deviation in &deviations {
             println!("{deviation}");
@@ -407,12 +410,12 @@ fn block_6() {
 /// The Rust block 7 of README.md.
 #[rustfmt::skip]
 fn block_7() {
-    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU, tree};
+    use oxirush_s1ap::{inspect, s1ap::S1APPDU, tree};
 
     fn main() -> Result<(), Box<dyn std::error::Error>> {
         // A UE CONTEXT RELEASE REQUEST, as a tree
         let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
-        let pdu = S1AP_PDU::decode(&bytes)?;
+        let pdu = S1APPDU::decode(&bytes)?;
         println!("{}", pdu.to_tree());
 
         // Its view: each value with the path that selects it
@@ -439,7 +442,7 @@ fn block_7() {
 /// The Rust block 8 of README.md.
 #[rustfmt::skip]
 fn block_8() {
-    use oxirush_s1ap::{inspect, s1ap::S1AP_PDU, tree};
+    use oxirush_s1ap::{inspect, s1ap::S1APPDU, tree};
 
     fn main() -> Result<(), Box<dyn std::error::Error>> {
         let request = tree!({
@@ -454,7 +457,7 @@ fn block_8() {
                 {"65000": {"octets": "c0ffee"}, "criticality": "reject"},
             ],
         });
-        let pdu = S1AP_PDU::from_tree(&request)?;
+        let pdu = S1APPDU::from_tree(&request)?;
         println!("{}", hex::encode(pdu.encode()?));
 
         let view = pdu.to_view()?;

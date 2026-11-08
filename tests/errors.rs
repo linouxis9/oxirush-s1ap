@@ -9,8 +9,10 @@ use oxirush_s1ap::{
 /// A UE CONTEXT RELEASE REQUEST with its three IEs, the message of the README.
 const RELEASE_REQUEST: &str = "0012401500000300000002002a000800020007000240020280";
 
-fn release_request() -> S1AP_PDU {
-    S1AP_PDU::decode(&hex::decode(RELEASE_REQUEST).unwrap()).unwrap()
+fn release_request() -> S1APPDU<'static> {
+    S1APPDU::decode(&hex::decode(RELEASE_REQUEST).unwrap())
+        .unwrap()
+        .into_owned()
 }
 
 /// What an error has for the one who handles it.
@@ -26,10 +28,10 @@ fn a_pdu_is_decoded_as_the_message_that_it_holds_and_as_no_other() {
 
     // The octets of the message are those of an S1 SETUP REQUEST too, which is a list
     // of IEs as well: nothing but the procedure of the PDU says which message it is.
-    let S1AP_PDU::initiatingMessage(held) = &pdu else {
+    let S1APPDU::initiatingMessage(held) = &pdu else {
         panic!("an initiating message");
     };
-    let mistaken: S1SetupRequest = decode_open_type(&held.value).unwrap();
+    let mistaken: S1SetupRequest = oxirush_s1ap::decode(&held.value).unwrap();
     assert_eq!(mistaken.protocol_ies.0.len(), 3);
 
     let error = pdu.decode_value::<S1SetupRequest>().unwrap_err();
@@ -45,7 +47,9 @@ fn a_pdu_is_decoded_as_the_message_that_it_holds_and_as_no_other() {
 #[test]
 fn a_message_of_the_same_procedure_in_another_direction_is_another_message() {
     // An S1 SETUP FAILURE: the unsuccessful outcome of the procedure 17.
-    let failure = S1AP_PDU::decode(&hex::decode("401100080000010002400145").unwrap()).unwrap();
+    let failure = S1APPDU::decode(&hex::decode("401100080000010002400145").unwrap())
+        .unwrap()
+        .into_owned();
     assert!(failure.decode_value::<S1SetupFailure>().is_ok());
     for kind in [
         failure.decode_value::<S1SetupRequest>().unwrap_err().kind(),
@@ -60,11 +64,11 @@ fn a_message_of_the_same_procedure_in_another_direction_is_another_message() {
 
 #[test]
 fn a_pdu_of_a_procedure_that_the_specification_does_not_have_is_no_message() {
-    let S1AP_PDU::initiatingMessage(mut held) = release_request() else {
+    let S1APPDU::initiatingMessage(mut held) = release_request() else {
         panic!("an initiating message");
     };
     held.procedure_code = ProcedureCode(200);
-    let pdu = S1AP_PDU::initiatingMessage(held);
+    let pdu = S1APPDU::initiatingMessage(held);
     let error = pdu.decode_value::<UEContextReleaseRequest>().unwrap_err();
     assert_eq!(error.kind(), ErrorKind::WrongMessage);
     assert_eq!(
@@ -97,14 +101,14 @@ fn octets_that_are_no_pdu_are_a_decode_error() {
     let octets = hex::decode(RELEASE_REQUEST).unwrap();
 
     // No octet, octets that end early, and an octet after the PDU.
-    let none = S1AP_PDU::decode(&[]).unwrap_err();
+    let none = S1APPDU::decode(&[]).unwrap_err();
     assert_eq!(none.kind(), ErrorKind::Decode);
     assert_eq!(
         none.to_string(),
         "these octets do not decode as S1AP-PDU: there are no octets"
     );
     for cut in 1..octets.len() {
-        let short = S1AP_PDU::decode(&octets[..cut]).unwrap_err();
+        let short = S1APPDU::decode(&octets[..cut]).unwrap_err();
         assert_eq!(short.kind(), ErrorKind::Decode, "{cut}");
         let text = short.to_string();
         assert!(
@@ -114,7 +118,7 @@ fn octets_that_are_no_pdu_are_a_decode_error() {
         // The codec is that of the family: the error is whole, and has no source.
         assert_eq!(source(&short), None);
     }
-    let long = S1AP_PDU::decode(&[&octets[..], &[0]].concat()).unwrap_err();
+    let long = S1APPDU::decode(&[&octets[..], &[0]].concat()).unwrap_err();
     assert_eq!(long.kind(), ErrorKind::Decode);
     assert_eq!(
         long.to_string(),
@@ -126,15 +130,15 @@ fn octets_that_are_no_pdu_are_a_decode_error() {
 fn an_open_type_that_is_not_the_value_asked_for_is_a_decode_error() {
     // An MME UE S1AP ID is an INTEGER (0..4294967295): a length of one octet, then
     // the octet.
-    let id: MMEUES1APID = decode_open_type(&Octets::from(vec![0x00, 0x2a])).unwrap();
+    let id: MMEUES1APID = oxirush_s1ap::decode(&Octets::from(vec![0x00, 0x2a])).unwrap();
     assert_eq!(id.0, 42);
-    let short = decode_open_type::<MMEUES1APID>(&Octets::from(vec![0x40, 0x2a])).unwrap_err();
+    let short = oxirush_s1ap::decode::<MMEUES1APID>(&Octets::from(vec![0x40, 0x2a])).unwrap_err();
     assert_eq!(short.kind(), ErrorKind::Decode);
     assert_eq!(
         short.to_string(),
         "these octets do not decode as MME-UE-S1AP-ID: the octets end before the value does"
     );
-    let long = decode_open_type::<MMEUES1APID>(&Octets::from(vec![0x00, 0x2a, 0x00, 0x00]));
+    let long = oxirush_s1ap::decode::<MMEUES1APID>(&Octets::from(vec![0x00, 0x2a, 0x00, 0x00]));
     assert_eq!(
         long.unwrap_err().to_string(),
         "these octets do not decode as MME-UE-S1AP-ID: the value is followed by 2 octets"
@@ -144,7 +148,7 @@ fn an_open_type_that_is_not_the_value_asked_for_is_a_decode_error() {
 #[test]
 fn a_value_outside_its_constraint_is_an_encode_error() {
     // INTEGER (1..256), TS 36.413 clause 9.2.1.39.
-    let error = encode_open_type(&SubscriberProfileIDforRFP(1000)).unwrap_err();
+    let error = oxirush_s1ap::encode(&SubscriberProfileIDforRFP(1000)).unwrap_err();
     assert_eq!(error.kind(), ErrorKind::Encode);
     assert_eq!(
         error.to_string(),
@@ -163,7 +167,7 @@ fn a_member_that_does_not_encode_is_named_as_one_that_does_not_decode_is() {
         pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
         ie_extensions: None,
     };
-    let error = encode_open_type(&priority).unwrap_err();
+    let error = oxirush_s1ap::encode(&priority).unwrap_err();
     assert_eq!(error.kind(), ErrorKind::Encode);
     assert_eq!(
         error.to_string(),
@@ -180,7 +184,7 @@ fn a_member_that_does_not_encode_is_named_as_one_that_does_not_decode_is() {
         gbr_qos_information: None,
         ie_extensions: None,
     };
-    let error = encode_open_type(&parameters).unwrap_err();
+    let error = oxirush_s1ap::encode(&parameters).unwrap_err();
     assert_eq!(
         error.to_string(),
         "a value of E-RABLevelQoSParameters does not encode: 16 is outside its constraint \
@@ -194,7 +198,7 @@ fn a_member_that_does_not_encode_is_named_as_one_that_does_not_decode_is() {
         broadcast_plmns: BPLMNs(vec![]),
         ie_extensions: None,
     };
-    let error = encode_open_type(&area).unwrap_err();
+    let error = oxirush_s1ap::encode(&area).unwrap_err();
     assert_eq!(
         error.to_string(),
         "a value of SupportedTAs-Item does not encode: a size of 0 is outside its constraint \
@@ -206,10 +210,10 @@ fn a_member_that_does_not_encode_is_named_as_one_that_does_not_decode_is() {
 fn an_error_is_the_error_of_a_function_of_the_caller() {
     // With `?`, in a function whose error is this one or holds any error.
     fn code(octets: &[u8]) -> Result<u8, Error> {
-        Ok(S1AP_PDU::decode(octets)?.procedure_code())
+        Ok(S1APPDU::decode(octets)?.procedure_code())
     }
     fn boxed(octets: &[u8]) -> Result<u8, Box<dyn std::error::Error + Send + Sync>> {
-        Ok(S1AP_PDU::decode(octets)?.procedure_code())
+        Ok(S1APPDU::decode(octets)?.procedure_code())
     }
     assert_eq!(code(&hex::decode(RELEASE_REQUEST).unwrap()), Ok(18));
     assert_eq!(code(&[]).unwrap_err().kind(), ErrorKind::Decode);
@@ -301,7 +305,9 @@ fn an_ie_that_does_not_decode_is_an_error_for_a_required_and_for_an_optional_fie
 const SPOILED_CAUSE: &str = "0012401500000300000002002a000800020007000240027280";
 
 fn spoiled_request() -> UEContextReleaseRequest<'static> {
-    let pdu = S1AP_PDU::decode(&hex::decode(SPOILED_CAUSE).unwrap()).unwrap();
+    let pdu = S1APPDU::decode(&hex::decode(SPOILED_CAUSE).unwrap())
+        .unwrap()
+        .into_owned();
     let request: UEContextReleaseRequest = pdu.decode_value().unwrap();
     request.into_owned()
 }
@@ -509,19 +515,19 @@ mod inspect_errors {
     fn a_misspelled_name_is_refused_with_the_nearest_names() {
         let ie = "\"MME-UE-S1AP-IDD\" is not an IE of S1AP: the nearest names are MME-UE-S1AP-ID, MME-UE-S1AP-ID-2 and eNB-UE-S1AP-ID";
         let tree = tree!({"message": "UEContextReleaseRequest", "ies": [{"MME-UE-S1AP-IDD": 1}]});
-        assert_eq!(S1AP_PDU::from_tree(&tree).unwrap_err().to_string(), ie);
+        assert_eq!(S1APPDU::from_tree(&tree).unwrap_err().to_string(), ie);
         let view = release_request().to_view().unwrap();
         let error = inspect::select(&view, "/s1ap/MME-UE-S1AP-IDD").unwrap_err();
         assert_eq!(error.to_string(), format!("{ie}, at /s1ap/MME-UE-S1AP-IDD"));
         let tree = tree!({"message": "UEContextReleaseReq", "ies": []});
         assert_eq!(
-            S1AP_PDU::from_tree(&tree).unwrap_err().to_string(),
+            S1APPDU::from_tree(&tree).unwrap_err().to_string(),
             "\"UEContextReleaseReq\" is not a message of S1AP: the nearest name is \
              UEContextReleaseRequest"
         );
         // A name that is near none says none.
         let tree = tree!({"message": "UEContextReleaseRequest", "ies": [{"TimeToTravel": 1}]});
-        let error = S1AP_PDU::from_tree(&tree).unwrap_err().to_string();
+        let error = S1APPDU::from_tree(&tree).unwrap_err().to_string();
         assert_eq!(error, "\"TimeToTravel\" is not an IE of S1AP");
     }
 
@@ -532,13 +538,13 @@ mod inspect_errors {
             "ies": [{"MME-UE-S1AP-ID": 1}],
             "IES": [{"eNB-UE-S1AP-ID": 2}],
         });
-        let error = S1AP_PDU::from_tree(&tree).unwrap_err();
+        let error = S1APPDU::from_tree(&tree).unwrap_err();
         assert_eq!(
             error.to_string(),
             "the member \"ies\" of a tree is written twice, as \"ies\" and as \"IES\""
         );
         let tree = tree!({"Message": "UEContextReleaseRequest", "message": "x", "ies": []});
-        assert!(S1AP_PDU::from_tree(&tree).is_err());
+        assert!(S1APPDU::from_tree(&tree).is_err());
     }
 
     /// The view of the UE CONTEXT RELEASE REQUEST.
@@ -552,17 +558,17 @@ mod inspect_errors {
     }
 
     /// The PDU of a tree: a release request with these IEs.
-    fn written(ies: Value) -> Result<S1AP_PDU, Error> {
-        S1AP_PDU::from_tree(&tree!({"message": "UEContextReleaseRequest", "ies": ies}))
+    fn written(ies: Value) -> Result<S1APPDU<'static>, Error> {
+        S1APPDU::from_tree(&tree!({"message": "UEContextReleaseRequest", "ies": ies}))
     }
 
     /// A release request whose procedure code is one that the specification does not have.
-    fn of_no_procedure() -> S1AP_PDU {
-        let S1AP_PDU::initiatingMessage(mut held) = release_request() else {
+    fn of_no_procedure() -> S1APPDU<'static> {
+        let S1APPDU::initiatingMessage(mut held) = release_request() else {
             panic!("an initiating message");
         };
         held.procedure_code = ProcedureCode(200);
-        S1AP_PDU::initiatingMessage(held)
+        S1APPDU::initiatingMessage(held)
     }
 
     #[test]
@@ -573,7 +579,7 @@ mod inspect_errors {
         let names = inspect::enumerated_at("NoSuchMessage", "/s1ap/Cause");
         assert_eq!(kind(names), ErrorKind::UnknownMessage);
         let tree = tree!({"message": "NoSuchMessage", "ies": []});
-        let error = S1AP_PDU::from_tree(&tree).unwrap_err();
+        let error = S1APPDU::from_tree(&tree).unwrap_err();
         assert_eq!(error.kind(), ErrorKind::UnknownMessage);
         assert_eq!(
             error.to_string(),
@@ -591,7 +597,7 @@ mod inspect_errors {
         // Its code is no name of a message, and a message of the protocol is written by
         // its name alone.
         let by_code = tree!({"procedure_code": 18, "direction": "InitiatingMessage", "ies": []});
-        let error = S1AP_PDU::from_tree(&by_code).unwrap_err();
+        let error = S1APPDU::from_tree(&by_code).unwrap_err();
         assert_eq!(error.kind(), ErrorKind::Form);
         assert_eq!(
             error.to_string(),
@@ -694,7 +700,7 @@ mod inspect_errors {
         let checked = inspect::check_path("UEContextReleaseRequest", "/s1ap/GUMMEI-ID");
         assert_eq!(kind(checked), ErrorKind::NoSuchMember);
         // A member that the type of a written value does not have.
-        let error = S1AP_PDU::from_tree(
+        let error = S1APPDU::from_tree(
             &tree!({"message": "S1SetupRequest", "ies": [{"Global-ENB-ID": {
                 "pLMNidentity": "208-93",
                 "eNB-ID": {"macroENB-ID": "123450"},
@@ -736,7 +742,7 @@ mod inspect_errors {
                 "uE-HistoryInformation": [{"uTRAN-Cell": "00"}],
             }}},
         ]});
-        let pdu = S1AP_PDU::from_tree(&required).unwrap();
+        let pdu = S1APPDU::from_tree(&required).unwrap();
         let mut view = pdu.to_view().unwrap();
         let cell =
             format!("/s1ap/Source-ToTarget-TransparentContainer/{name}/targetCell-ID/cell-ID");
@@ -807,7 +813,7 @@ mod inspect_errors {
         // A value of a member, by the names that ASN.1 gives the members on the way:
         // a PLMN identity that is none, and a number where the type has a CHOICE.
         let setup = |plmn: Value, gnb: Value| {
-            S1AP_PDU::from_tree(
+            S1APPDU::from_tree(
                 &tree!({"message": "S1SetupRequest", "ies": [{"Global-ENB-ID": {
                     "pLMNidentity": plmn,
                     "eNB-ID": gnb,
@@ -870,7 +876,7 @@ mod inspect_errors {
             tree!({"message": message, "ies": [{"a": 1, "b": 2}]}),
             tree!({"message": message, "ies": [{"eNBname": "enb-1"}]}),
         ] {
-            let error = S1AP_PDU::from_tree(&tree).unwrap_err();
+            let error = S1APPDU::from_tree(&tree).unwrap_err();
             assert_eq!(error.kind(), ErrorKind::Form, "{tree}: {error}");
         }
 
@@ -896,7 +902,7 @@ mod inspect_errors {
             with("procedure_code", tree!(256)),
             with("other", tree!(1)),
         ] {
-            let error = S1AP_PDU::from_view(&view).unwrap_err();
+            let error = S1APPDU::from_view(&view).unwrap_err();
             assert_eq!(error.kind(), ErrorKind::Form, "{error}");
             // The PDU that the view is of refuses it as any PDU does.
             let error = release_request().with_view(&view).unwrap_err();
@@ -979,8 +985,9 @@ mod inspect_errors {
 
         // A private message has no list of IEs: its tree has its octets, and its view
         // its value.
-        let private =
-            S1AP_PDU::decode(&hex::decode("002740090000000000000001a1").unwrap()).unwrap();
+        let private = S1APPDU::decode(&hex::decode("002740090000000000000001a1").unwrap())
+            .unwrap()
+            .into_owned();
         assert_eq!(
             private.to_tree(),
             tree!({"message": "PrivateMessage", "octets": "0000000000000001a1"})
@@ -991,11 +998,11 @@ mod inspect_errors {
     #[test]
     fn a_message_that_does_not_decode_is_a_decode_error() {
         // A PDU whose octets are not the message of its procedure.
-        let S1AP_PDU::initiatingMessage(mut held) = release_request() else {
+        let S1APPDU::initiatingMessage(mut held) = release_request() else {
             panic!("an initiating message");
         };
         held.value = Octets::from(vec![0xff]);
-        let pdu = S1AP_PDU::initiatingMessage(held);
+        let pdu = S1APPDU::initiatingMessage(held);
         let error = pdu.to_view().unwrap_err();
         assert_eq!(error.kind(), ErrorKind::Decode);
         // Its tree has the octets of its message, which it sends back.
@@ -1008,6 +1015,6 @@ mod inspect_errors {
         let mut view = view();
         view["_raw_message"] = tree!("ff");
         inspect::set(&mut view, "/s1ap/Cause/nas", tree!("normal-release")).unwrap();
-        assert_eq!(kind(S1AP_PDU::from_view(&view)), ErrorKind::Decode);
+        assert_eq!(kind(S1APPDU::from_view(&view)), ErrorKind::Decode);
     }
 }

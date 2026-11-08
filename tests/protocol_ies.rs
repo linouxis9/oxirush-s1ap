@@ -24,7 +24,7 @@ const RELEASE_REQUEST: &str = "0012401500000300000002002a00080002000700024002028
 fn the_ies_of_every_message_are_read_and_put_back_as_the_same_octets() {
     let mut read = 0;
     for (name, wire) in fixtures() {
-        let mut pdu = S1AP_PDU::decode(&wire).unwrap();
+        let mut pdu = S1APPDU::decode(&wire).unwrap();
         // The private message has private IEs: see the test of the errors.
         if name.split('/').next() == Some("PrivateMessage") {
             continue;
@@ -59,7 +59,7 @@ fn a_message_that_the_macros_built_has_the_ies_that_it_was_built_with() -> Resul
     // They are those of the typed message, and of the octets of the README.
     let request: UEContextReleaseRequest = pdu.decode_value()?;
     assert_eq!(pdu.protocol_ies()?, request.protocol_ies);
-    let received = S1AP_PDU::decode(&hex::decode(RELEASE_REQUEST).unwrap())?;
+    let received = S1APPDU::decode(&hex::decode(RELEASE_REQUEST).unwrap())?.into_owned();
     assert_eq!(received.protocol_ies()?.0, built);
     Ok(())
 }
@@ -83,17 +83,17 @@ fn an_unknown_ie_and_a_repeated_one_are_kept_with_their_criticality() -> Result<
     ];
 
     // Put into a message that had three other IEs: the PDU is the same but for them.
-    let mut pdu = S1AP_PDU::decode(&hex::decode(RELEASE_REQUEST).unwrap())?;
+    let mut pdu = S1APPDU::decode(&hex::decode(RELEASE_REQUEST).unwrap())?.into_owned();
     pdu.set_protocol_ies(ProtocolIEContainer(ies.clone()))?;
     assert_eq!(pdu.kind(), S1apPduKind::UEContextReleaseRequest);
-    let S1AP_PDU::initiatingMessage(held) = &pdu else {
+    let S1APPDU::initiatingMessage(held) = &pdu else {
         panic!("{pdu}");
     };
     assert_eq!(held.criticality, Criticality::Ignore);
 
     // They are read back as they were written, from the PDU and from its octets.
     assert_eq!(pdu.protocol_ies()?.0, ies);
-    let received = S1AP_PDU::decode(&pdu.encode()?)?;
+    let received = S1APPDU::decode(&pdu.encode()?)?.into_owned();
     assert_eq!(received, pdu);
     let read = received.protocol_ies()?.0;
     assert_eq!(read, ies);
@@ -114,12 +114,12 @@ fn an_unknown_ie_and_a_repeated_one_are_kept_with_their_criticality() -> Result<
 fn the_message_of_an_unknown_procedure_is_read_as_a_container_of_protocol_ies() -> Result<(), Error>
 {
     // The IEs of the release request, under a procedure code that TS 36.413 does not have.
-    let known = S1AP_PDU::decode(&hex::decode(RELEASE_REQUEST).unwrap())?;
-    let S1AP_PDU::initiatingMessage(mut held) = known.clone() else {
+    let known = S1APPDU::decode(&hex::decode(RELEASE_REQUEST).unwrap())?.into_owned();
+    let S1APPDU::initiatingMessage(mut held) = known.clone() else {
         panic!("{known}");
     };
     held.procedure_code = ProcedureCode(200);
-    let mut pdu = S1AP_PDU::initiatingMessage(held);
+    let mut pdu = S1APPDU::initiatingMessage(held);
     assert!(matches!(pdu.kind(), S1apPduKind::Other { .. }));
     let mut ies = pdu.protocol_ies()?.into_owned();
     assert_eq!(ies, known.protocol_ies()?);
@@ -136,7 +136,7 @@ fn a_message_without_protocol_ies_and_octets_that_are_none_are_errors() -> Resul
     let (_, wire) = fixtures()
         .find(|(name, _)| *name == "PrivateMessage")
         .expect("the private message");
-    let mut private = S1AP_PDU::decode(&wire)?;
+    let mut private = S1APPDU::decode(&wire)?;
     let before = private.clone();
     let read = private.protocol_ies().unwrap_err();
     assert_eq!(read.kind(), ErrorKind::WrongMessage);
@@ -149,12 +149,12 @@ fn a_message_without_protocol_ies_and_octets_that_are_none_are_errors() -> Resul
     assert_eq!(private, before);
 
     // Octets that are no message: the message is named.
-    let request = S1AP_PDU::decode(&hex::decode(RELEASE_REQUEST).unwrap())?;
-    let S1AP_PDU::initiatingMessage(mut held) = request.clone() else {
+    let request = S1APPDU::decode(&hex::decode(RELEASE_REQUEST).unwrap())?.into_owned();
+    let S1APPDU::initiatingMessage(mut held) = request.clone() else {
         panic!("{request}");
     };
     held.value = Octets::from(vec![0x00, 0x00, 0x03, 0x00]);
-    let short = S1AP_PDU::initiatingMessage(held.clone());
+    let short = S1APPDU::initiatingMessage(held.clone());
     let error = short.protocol_ies().unwrap_err();
     assert_eq!(error.kind(), ErrorKind::Decode);
     assert_eq!(
@@ -164,9 +164,7 @@ fn a_message_without_protocol_ies_and_octets_that_are_none_are_errors() -> Resul
     );
     // The same octets under a procedure that the specification does not have.
     held.procedure_code = ProcedureCode(200);
-    let error = S1AP_PDU::initiatingMessage(held)
-        .protocol_ies()
-        .unwrap_err();
+    let error = S1APPDU::initiatingMessage(held).protocol_ies().unwrap_err();
     assert_eq!(error.kind(), ErrorKind::Decode);
     assert_eq!(
         error.to_string(),
@@ -269,7 +267,7 @@ fn an_item_of_a_list_of_single_containers_is_built_without_the_name_of_a_message
     assert_eq!(pdu.check()?, []);
 
     // Its receiver reads each item out of its container.
-    let received = S1AP_PDU::decode(&pdu.encode()?)?;
+    let received = S1APPDU::decode(&pdu.encode()?)?.into_owned();
     let message: InitialContextSetupRequest = received.decode_value()?;
     oxirush_s1ap::extract_s1ap_ies!(message, InitialContextSetupRequest,
         req list: ERABToBeSetupListCtxtSUReq = E_RABToBeSetupListCtxtSUReq(list),
@@ -280,7 +278,7 @@ fn an_item_of_a_list_of_single_containers_is_built_without_the_name_of_a_message
             (container.id.0, container.criticality),
             (52, Criticality::Reject)
         );
-        let item: ERABToBeSetupItemCtxtSUReq = decode_open_type(&container.value)?;
+        let item: ERABToBeSetupItemCtxtSUReq = oxirush_s1ap::decode(&container.value)?;
         ids.push(item.e_rab_id.0);
     }
     assert_eq!(ids, [5, 6]);

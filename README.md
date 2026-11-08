@@ -14,7 +14,7 @@ use oxirush_s1ap::{build_s1ap, extract_s1ap_ies, s1ap::*};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Decode a UE CONTEXT RELEASE REQUEST
     let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
-    let pdu = S1AP_PDU::decode(&bytes)?;
+    let pdu = S1APPDU::decode(&bytes)?;
     println!("{pdu}");
 
     // Read its IEs by name: `req` fails when the IE is missing, `opt` gives an Option
@@ -94,7 +94,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     // The MME reads it, and answers with its name and its GUMMEIs
-    let received = S1AP_PDU::decode(&request.encode()?)?;
+    let octets = request.encode()?;
+    let received = S1APPDU::decode(&octets)?;
     extract_s1ap_ies!(received, S1SetupRequest,
         opt name: String = eNBname(name) => name.0.into_owned(),
         req areas: SupportedTAs = SupportedTAs(areas) => areas,
@@ -125,7 +126,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // The MME reads the two IEs it needs, in place in the received octets
     let octets = initial.encode()?;
-    let received = S1AP_PDU::decode_borrowed(&octets)?;
+    let received = S1APPDU::decode(&octets)?;
     extract_s1ap_ies!(received, InitialUEMessage,
         req enb_id: u32 = eNB_UE_S1AP_ID(id),
         req nas: NASPDU = NAS_PDU(nas) => nas,
@@ -183,7 +184,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     // The eNB checks the message against the specification, and takes the key
-    let received = S1AP_PDU::decode(&setup.encode()?)?;
+    let octets = setup.encode()?;
+    let received = S1APPDU::decode(&octets)?;
     let deviations = received.check()?;
     extract_s1ap_ies!(received, InitialContextSetupRequest,
         req key: SecurityKey = SecurityKey(key) => key,
@@ -211,8 +213,8 @@ it: an IE that does not decode fails only the read that asks for it.
 use oxirush_s1ap::{S1apPduKind, extract_s1ap_ies, ie, s1ap::*};
 
 fn receive(octets: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
-    // `decode_borrowed` copies nothing: the PDU borrows from `octets`
-    let pdu = S1AP_PDU::decode_borrowed(octets)?;
+    // `decode` copies nothing: the PDU borrows from `octets`
+    let pdu = S1APPDU::decode(octets)?;
     match pdu.kind() {
         S1apPduKind::UEContextReleaseRequest => {
             // Only the IEs that a field asks for are decoded
@@ -247,7 +249,7 @@ S1SetupFailure is not handled here
 
 | Method | Does |
 |--------|------|
-| `decode`, `decode_borrowed` | Decode one PDU (`decode_borrowed` copies nothing) |
+| `decode` | Decode one PDU, which borrows from the octets and copies nothing |
 | `encode`, `encode_into` | Encode it |
 | `procedure_code`, `procedure_name`, `direction`, `kind` | `18`, `"UEContextReleaseRequest"`, `Direction::Initiating`, and an `S1apPduKind` (`Other` for a procedure that the specification lacks in that direction) |
 | `decode_value`, `message` | The message as its type |
@@ -278,11 +280,9 @@ and `ie::X::field(criticality, value)` builds one.
 | `Pre-emptionCapability`, `E-RAB-ID` (types) | `PreEmptionCapability`, `ERABID` |
 | `pLMNidentity` (a field) | `plmn_identity` |
 
-The two UE identifiers have types named after their IEs: `MME_UE_S1AP_ID`,
-and `ENB_UE_S1AP_ID` for the IE `eNB_UE_S1AP_ID`. Leave a criticality out
-and the macro takes the one that TS 36.413 assigns. A name that does not
-exist, or a message that the procedure does not have in that direction, does
-not compile.
+Leave a criticality out and the macro takes the one that TS 36.413 assigns.
+A name that does not exist, or a message that the procedure does not have in
+that direction, does not compile.
 
 ```rust
 use oxirush_s1ap::{Message, build_s1ap, s1ap::*};
@@ -297,7 +297,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // The PDU of a message you already have
     let message: InitialUEMessage = pdu.decode_value()?;
-    let again = S1AP_PDU::of_message(&message, InitialUEMessage::CRITICALITY)?;
+    let again = S1APPDU::of_message(&message, InitialUEMessage::CRITICALITY)?;
     println!("{}", again == pdu);
 
     // An IE that the message cannot have has no criticality to take
@@ -322,8 +322,8 @@ TimeToWait is no IE of the object set of InitialUEMessage, which assigns it no c
 An item of an E-RAB list is an IE alone in its container: `ie::X::field`
 builds it without naming a message, and `items::<L>()` reads each item of a
 list where it is in the PDU. A handover container carries another encoded
-value (TS 36.413, 9.2.1.56): `decode_open_type` reads it as the type you
-name, and `encode_open_type` writes it.
+value (TS 36.413, 9.2.1.56): `oxirush_s1ap::decode` reads it as the type you
+name, and `oxirush_s1ap::encode` writes it.
 
 ```rust
 use oxirush_s1ap::{BitString, build_s1ap, Ie, ie, s1ap::*};
@@ -364,9 +364,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // A Source-ToTarget-TransparentContainer, as the type it carries
     let octets = hex::decode("000201020002f83900012340200100")?;
-    let container: SourceeNBToTargeteNBTransparentContainer = decode_open_type(&octets)?;
+    let container: SourceeNBToTargeteNBTransparentContainer = oxirush_s1ap::decode(&octets)?;
     println!("{:?}", container.target_cell_id);
-    assert_eq!(encode_open_type(&container)?.as_ref(), &octets[..]);
+    assert_eq!(oxirush_s1ap::encode(&container)?, octets);
     Ok(())
 }
 ```
@@ -394,7 +394,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         IGNORE DefaultPagingDRX(PagingDRX::v128),
         REJECT TimeToWait(TimeToWait::v5s),
     )?;
-    let received = S1AP_PDU::decode(&request.encode()?)?;
+    let octets = request.encode()?;
+    let received = S1APPDU::decode(&octets)?;
     let deviations = received.check()?;
     for deviation in &deviations {
         println!("{deviation}");
@@ -435,12 +436,12 @@ received, and the [`inspect`] functions read and edit it by path, under
 KeNB in hexadecimal: do not log them.
 
 ```rust
-use oxirush_s1ap::{inspect, s1ap::S1AP_PDU, tree};
+use oxirush_s1ap::{inspect, s1ap::S1APPDU, tree};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // A UE CONTEXT RELEASE REQUEST, as a tree
     let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
-    let pdu = S1AP_PDU::decode(&bytes)?;
+    let pdu = S1APPDU::decode(&bytes)?;
     println!("{}", pdu.to_tree());
 
     // Its view: each value with the path that selects it
@@ -493,7 +494,7 @@ purpose. With the `serde` feature, `Serialize` and `Deserialize` go through
 the tree, in any format that serde has.
 
 ```rust
-use oxirush_s1ap::{inspect, s1ap::S1AP_PDU, tree};
+use oxirush_s1ap::{inspect, s1ap::S1APPDU, tree};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let request = tree!({
@@ -508,7 +509,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             {"65000": {"octets": "c0ffee"}, "criticality": "reject"},
         ],
     });
-    let pdu = S1AP_PDU::from_tree(&request)?;
+    let pdu = S1APPDU::from_tree(&request)?;
     println!("{}", hex::encode(pdu.encode()?));
 
     let view = pdu.to_view()?;
@@ -556,7 +557,7 @@ without allocating, and `check_structure()` takes 48 to 156 ns.
 
 Six common PDUs, decoded and encoded by this crate and four other S1AP
 codecs, at the same commit and on the same machine. Decoding is the PDU and
-each of its IEs as its type, as the others do; `S1AP_PDU::decode` alone
+each of its IEs as its type, as the others do; `S1APPDU::decode` alone
 takes 8 ns. A ratio is the time of the other implementation over this
 crate's:
 

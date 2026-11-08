@@ -5,7 +5,7 @@ use oxirush_s1ap::tree::Value;
 use oxirush_s1ap::{Criticality, Direction, Presence, S1ap, build_s1ap, inspect, s1ap::*};
 
 /// The name that ASN.1 gives the message of a PDU.
-fn name_of(pdu: &S1AP_PDU) -> Option<&'static str> {
+fn name_of(pdu: &S1APPDU<'_>) -> Option<&'static str> {
     S1ap::object_set(pdu.direction(), pdu.procedure_code()).map(|set| set.name)
 }
 
@@ -41,11 +41,11 @@ fn inspect_every_canonical_procedure_and_round_trip() {
     {
         let fields: Vec<_> = line.split('\t').collect();
         let wire = hex::decode(fields[1]).unwrap();
-        let pdu = S1AP_PDU::decode(&wire).unwrap();
+        let pdu = S1APPDU::decode(&wire).unwrap();
         let view = pdu.to_view().unwrap();
         assert!(view["message"].is_object(), "{}", fields[0]);
         assert_eq!(
-            S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
+            S1APPDU::from_view(&view).unwrap().encode().unwrap(),
             wire,
             "{}",
             fields[0]
@@ -61,14 +61,14 @@ fn the_view_of_a_pdu_that_was_edited_is_that_pdu_edited() {
 
     // UE CONTEXT RELEASE REQUEST
     let wire = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    let pdu = S1AP_PDU::decode(&wire).unwrap();
+    let pdu = S1APPDU::decode(&wire).unwrap();
     let mut view = pdu.to_view().unwrap();
     inspect::set(&mut view, "/s1ap/Cause/radioNetwork", tree!("unspecified")).unwrap();
     inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID").unwrap();
 
     // The edits, and the octets received for what was not edited.
     let edited = pdu.with_view(&view).unwrap();
-    assert_eq!(edited, S1AP_PDU::from_view(&view).unwrap());
+    assert_eq!(edited, S1APPDU::from_view(&view).unwrap());
     assert_eq!(
         hex::encode(edited.encode().unwrap()),
         "0012400f000002000800020007000240020000"
@@ -92,19 +92,19 @@ fn editing_a_known_ie_cannot_drop_unknown_sequence_additions() {
         "00240031000005006f00028000007000028000007140122000018002f83900010101000002f839000200720002000a007300020001",
     )
     .unwrap();
-    let pdu = S1AP_PDU::decode(&wire).unwrap();
+    let pdu = S1APPDU::decode(&wire).unwrap();
     let mut view = pdu.to_view().unwrap();
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
+    assert_eq!(S1APPDU::from_view(&view).unwrap().encode().unwrap(), wire);
     let path = "/message/protocolIEs/2/value/trackingAreaListforWarning/0/tAC";
     assert_eq!(view.pointer(path), Some(&oxirush_s1ap::tree!(1)));
     *view.pointer_mut(path).unwrap() = oxirush_s1ap::tree!(3);
     assert!(
-        S1AP_PDU::from_view(&view).is_err(),
+        S1APPDU::from_view(&view).is_err(),
         "a typed edit must not silently discard a future IE extension"
     );
 }
 
-fn release_request(enb_ue_id: u32) -> S1AP_PDU {
+fn release_request(enb_ue_id: u32) -> S1APPDU<'static> {
     build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(enb_ue_id),
@@ -119,11 +119,11 @@ fn a_typed_edit_is_encoded_and_the_other_ies_keep_their_octets() {
     assert_eq!(view.pointer(path), Some(&oxirush_s1ap::tree!(7)));
     *view.pointer_mut(path).unwrap() = oxirush_s1ap::tree!(9);
     assert_eq!(
-        S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
+        S1APPDU::from_view(&view).unwrap().encode().unwrap(),
         release_request(9).encode().unwrap()
     );
     view["typo"] = oxirush_s1ap::tree!(1);
-    assert!(S1AP_PDU::from_view(&view).is_err());
+    assert!(S1APPDU::from_view(&view).is_err());
 }
 
 #[test]
@@ -137,7 +137,7 @@ fn the_octets_of_an_ie_are_replaced_or_added_as_its_raw_value_without_value() {
     ies.as_array_mut()
         .unwrap()
         .push(oxirush_s1ap::tree!({"id": 60000, "criticality": "ignore", "_raw_value": "C0FFEE"}));
-    let edited = S1AP_PDU::from_view(&view).unwrap();
+    let edited = S1APPDU::from_view(&view).unwrap();
     let view = edited.to_view().unwrap();
     assert_eq!(
         view.pointer("/message/protocolIEs/1/value"),
@@ -163,7 +163,7 @@ fn a_new_ie_takes_a_typed_value_of_the_type_of_its_identifier() {
         ies.as_array_mut()
             .unwrap()
             .push(oxirush_s1ap::tree!({"id": id, "criticality": "ignore", "value": value}));
-        S1AP_PDU::from_view(&view)
+        S1APPDU::from_view(&view)
     };
     let cause = oxirush_s1ap::tree!({"radioNetwork": "user-inactivity"});
     assert_eq!(
@@ -200,13 +200,13 @@ fn a_new_ie_whose_value_is_a_string_is_typed_too() {
     ies.push(oxirush_s1ap::tree!({"id": 134, "criticality": "ignore", "value": "mo-Signalling"}));
     ies.push(oxirush_s1ap::tree!({"id": 26, "criticality": "reject", "value": "076a"}));
     assert_eq!(
-        S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
+        S1APPDU::from_view(&view).unwrap().encode().unwrap(),
         typed.encode().unwrap()
     );
     // Hexadecimal in lower case is the same octets.
     *view.pointer_mut("/message/protocolIEs/2/value").unwrap() = oxirush_s1ap::tree!("076a");
     assert_eq!(
-        S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
+        S1APPDU::from_view(&view).unwrap().encode().unwrap(),
         typed.encode().unwrap()
     );
 }
@@ -220,28 +220,28 @@ fn an_ie_that_does_not_decode_is_edited_as_its_octets() {
             value: vec![0xC0, 0xFF, 0xEE].into(),
         }]),
     };
-    let pdu = S1AP_PDU::initiatingMessage(InitiatingMessage {
+    let pdu = S1APPDU::initiatingMessage(InitiatingMessage {
         procedure_code: ProcedureCode(18),
         criticality: Criticality::Ignore,
-        value: encode_open_type(&request).unwrap(),
+        value: oxirush_s1ap::encode(&request).unwrap().into(),
     });
     let mut view = pdu.to_view().unwrap();
     let path = "/message/protocolIEs/0/value";
     assert_eq!(view.pointer(path), Some(&oxirush_s1ap::tree!("c0ffee")));
     assert!(view["message"]["protocolIEs"][0]["_decode_error"].is_string());
     assert_eq!(
-        S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
+        S1APPDU::from_view(&view).unwrap().encode().unwrap(),
         pdu.encode().unwrap()
     );
     *view.pointer_mut(path).unwrap() = oxirush_s1ap::tree!("DECAFBAD");
-    let edited = S1AP_PDU::from_view(&view).unwrap();
+    let edited = S1APPDU::from_view(&view).unwrap();
     assert_eq!(
         edited.to_view().unwrap().pointer(path),
         Some(&oxirush_s1ap::tree!("decafbad"))
     );
     // Its type is unknown, so a typed value has no encoding.
     *view.pointer_mut(path).unwrap() = oxirush_s1ap::tree!(5);
-    assert!(S1AP_PDU::from_view(&view).is_err());
+    assert!(S1APPDU::from_view(&view).is_err());
 }
 
 #[test]
@@ -252,7 +252,7 @@ fn a_changed_raw_value_alone_sends_nothing_else() {
     view["message"]["protocolIEs"][1]["_raw_value"] =
         other["message"]["protocolIEs"][1]["_raw_value"].clone();
     assert_eq!(
-        S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
+        S1APPDU::from_view(&view).unwrap().encode().unwrap(),
         pdu.encode().unwrap()
     );
 }
@@ -266,12 +266,12 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
     {
         let fields: Vec<_> = line.split('\t').collect();
         let wire = hex::decode(fields[1]).unwrap();
-        let shown = S1AP_PDU::decode(&wire).unwrap().to_tree();
+        let shown = S1APPDU::decode(&wire).unwrap().to_tree();
         // A private message has no IEs of the protocol to name: its octets.
         if shown.get("ies").is_none() {
             assert_eq!(shown["message"], tree!("PrivateMessage"));
             assert!(shown["octets"].is_string());
-            assert_eq!(S1AP_PDU::from_tree(&shown).unwrap().encode().unwrap(), wire);
+            assert_eq!(S1APPDU::from_tree(&shown).unwrap().encode().unwrap(), wire);
             continue;
         }
         assert!(
@@ -279,7 +279,7 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
             "{}",
             fields[0]
         );
-        let written = S1AP_PDU::from_tree(&shown);
+        let written = S1APPDU::from_tree(&shown);
         assert_eq!(
             written.unwrap().encode().unwrap(),
             wire,
@@ -298,7 +298,7 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
             {"65000": {"octets": "00"}, "criticality": "reject"},
         ],
     });
-    let pdu = S1AP_PDU::from_tree(&request).unwrap();
+    let pdu = S1APPDU::from_tree(&request).unwrap();
     assert_eq!(name_of(&pdu), Some("UEContextReleaseRequest"));
     let view = pdu.to_view().unwrap();
     assert_eq!(view["criticality"], tree!("ignore"));
@@ -317,7 +317,7 @@ fn a_message_is_shown_and_written_as_its_name_and_its_ies_by_name() {
     // What is not a message, not an IE, or an IE of another message without its
     // criticality, is refused with what is wrong.
     let refused =
-        |tree: oxirush_s1ap::tree::Value| S1AP_PDU::from_tree(&tree).unwrap_err().to_string();
+        |tree: oxirush_s1ap::tree::Value| S1APPDU::from_tree(&tree).unwrap_err().to_string();
     let named =
         |message: &str, ie: &str| oxirush_s1ap::tree!({"message": message, "ies": [{ie: 1}]});
     assert!(
@@ -358,9 +358,9 @@ fn redundant(value: &oxirush_s1ap::tree::Value, found: &mut Vec<String>) {
 #[test]
 fn a_message_is_shown_and_written_by_name_to_any_depth() {
     use oxirush_s1ap::tree;
-    let shown = |wire: &[u8]| S1AP_PDU::decode(wire).unwrap().to_tree();
+    let shown = |wire: &[u8]| S1APPDU::decode(wire).unwrap().to_tree();
     let written = |tree: &oxirush_s1ap::tree::Value| {
-        S1AP_PDU::from_tree(tree).map(|pdu| pdu.encode().unwrap())
+        S1APPDU::from_tree(tree).map(|pdu| pdu.encode().unwrap())
     };
     // The items of a list of E-RABs go by name, without the criticality that their
     // object set assigns.
@@ -411,7 +411,7 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
     let mut extended = bearer.clone();
     extended["iE-Extensions"] = tree!([{"BearerType": "non-IP", "criticality": "reject"}]);
     let extended = request(&tree!({"E-RABToBeSetupItemBearerSUReq": extended}));
-    let pdu = S1AP_PDU::from_tree(&extended).unwrap();
+    let pdu = S1APPDU::from_tree(&extended).unwrap();
     let view = pdu.to_view().unwrap();
     let extension = "/s1ap/E-RABToBeSetupListBearerSUReq/0/iE-Extensions/0";
     let value = inspect::select(&view, &format!("{extension}/extensionValue")).unwrap();
@@ -437,7 +437,7 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
     let error = written(&reset(&connection)).unwrap_err().to_string();
     assert!(error.contains("Item says its \"criticality\""), "{error}");
     connection["criticality"] = tree!("reject");
-    let pdu = S1AP_PDU::from_tree(&reset(&connection)).unwrap();
+    let pdu = S1APPDU::from_tree(&reset(&connection)).unwrap();
     assert_eq!(pdu.to_tree(), reset(&connection));
     // An IE that a value holds alone, as the alternative that extends a CHOICE, has
     // the criticality of its object set.
@@ -453,7 +453,7 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
             "sONInformation": {"sONInformation-Extension": {"SON-Information-Report": report}},
         }},
     ]});
-    let pdu = S1AP_PDU::from_tree(&transfer).unwrap();
+    let pdu = S1APPDU::from_tree(&transfer).unwrap();
     let view = pdu.to_view().unwrap();
     let held = "/s1ap/SONConfigurationTransferECT/sONInformation/sONInformation-Extension";
     let criticality = inspect::select(&view, &format!("{held}/criticality")).unwrap();
@@ -472,7 +472,11 @@ fn a_message_is_shown_and_written_by_name_to_any_depth() {
 fn the_value_of_an_ie_may_be_left_out_of_a_path() {
     use oxirush_s1ap::{tree, tree::Value};
     let name = "E-RABSetupRequest";
-    let view = S1AP_PDU::decode(&fixture(name)).unwrap().to_view().unwrap();
+    let view = S1APPDU::decode(&fixture(name))
+        .unwrap()
+        .into_owned()
+        .to_view()
+        .unwrap();
     let long = "/s1ap/E-RABToBeSetupListBearerSUReq/value/0/value";
     let list = "/s1ap/E-RABToBeSetupListBearerSUReq";
     let short = format!("{list}/0");
@@ -523,7 +527,7 @@ fn the_value_of_an_ie_may_be_left_out_of_a_path() {
     inspect::insert(&mut edited, &format!("{list}/0"), second).unwrap();
     inspect::set(&mut edited, &format!("{list}/0/nAS-PDU"), tree!("0760")).unwrap();
     inspect::remove(&mut edited, &format!("{list}/2")).unwrap();
-    let after = S1AP_PDU::from_view(&edited).unwrap().to_view().unwrap();
+    let after = S1APPDU::from_view(&edited).unwrap().to_view().unwrap();
     let bearers = inspect::select(&after, &format!("{list}/value/*/e-RAB-ID")).unwrap();
     assert_eq!(bearers, [&tree!(0), &tree!(5)]);
     let messages = inspect::select(&after, &format!("{list}/value/*/nAS-PDU")).unwrap();
@@ -597,11 +601,11 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
             {"Source-ToTarget-TransparentContainer": container},
         ]})
     };
-    let pdu = S1AP_PDU::from_tree(&required(tree!({name: &container}))).unwrap();
+    let pdu = S1APPDU::from_tree(&required(tree!({name: &container}))).unwrap();
     // The octets are the APER encoding of the type, which the bindings read.
     let message: HandoverRequired = pdu.decode_value().unwrap();
     let octets: SourceToTargetTransparentContainer =
-        decode_open_type(&message.protocol_ies.0[2].value).unwrap();
+        oxirush_s1ap::decode(&message.protocol_ies.0[2].value).unwrap();
     let carried: SourceeNBToTargeteNBTransparentContainer =
         oxirush_s1ap::aper::decode(&octets.0).unwrap();
     assert_eq!(carried.rrc_container.0, [1, 2]);
@@ -637,7 +641,7 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     // The octets that were received are kept, and are those of the transfer.
     let received = inspect::select(&view, &format!("{ie}/{name}/octets")).unwrap();
     assert_eq!(received, [&hexadecimal]);
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap(), pdu);
+    assert_eq!(S1APPDU::from_view(&view).unwrap(), pdu);
     // An edit changes what the view has: octets are opened before it goes into them.
     let mut view = pdu.to_view().unwrap();
     for path in [cell.clone(), cell.replace(name, &format!("value/{name}"))] {
@@ -656,7 +660,7 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
         cells,
     )
     .unwrap();
-    let mut after = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
+    let mut after = S1APPDU::from_view(&view).unwrap().to_view().unwrap();
     assert!(inspect::select(&after, &format!("{ie}/value")).unwrap()[0].is_string());
     inspect::open(&mut after, &cell).unwrap();
     assert_eq!(inspect::select(&after, &cell).unwrap(), [&tree!(7)]);
@@ -670,7 +674,7 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     let id = "Target-ToSource-TransparentContainer";
     let entry = tree!({"id": id, "criticality": "reject", "value": &back});
     inspect::insert(&mut after, "/s1ap/-", entry).unwrap();
-    let sent = S1AP_PDU::from_view(&after).unwrap().to_view().unwrap();
+    let sent = S1APPDU::from_view(&after).unwrap().to_view().unwrap();
     let octets = |ie: &str| inspect::select(&sent, &format!("/s1ap/{ie}/value")).unwrap();
     assert_eq!(
         octets("Source-ToTarget-TransparentContainer"),
@@ -682,19 +686,19 @@ fn the_container_of_a_handover_is_written_and_selected_by_the_type_that_it_carri
     );
     // Octets that are not of the type say so where they are selected, and are sent
     // as they came.
-    let other = S1AP_PDU::from_tree(&required(tree!("ff"))).unwrap();
+    let other = S1APPDU::from_tree(&required(tree!("ff"))).unwrap();
     let mut view = other.to_view().unwrap();
     inspect::open(&mut view, &cell).unwrap();
     let error = inspect::select(&view, &cell).unwrap_err().to_string();
     assert!(error.contains("the transfer did not decode"), "{error}");
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap(), other);
+    assert_eq!(S1APPDU::from_view(&view).unwrap(), other);
     // A path that goes through no such name opens nothing.
     let before = view.clone();
     inspect::open(&mut view, "/s1ap/eNB-UE-S1AP-ID/value").unwrap();
     assert_eq!(view, before);
     // The name is one of a type that the IE may carry, and the secondary container,
     // which a handover to GERAN has, carries none of this specification.
-    let written = S1AP_PDU::from_tree(&required(back));
+    let written = S1APPDU::from_tree(&required(back));
     let error = written.unwrap_err().to_string();
     assert!(
         error.contains(&format!("for a type that they carry: {name}")),
@@ -754,7 +758,9 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
         .filter(|line| !line.starts_with('#') && !line.is_empty())
     {
         let fields: Vec<_> = line.split('\t').collect();
-        let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
+        let pdu = S1APPDU::decode(&hex::decode(fields[1]).unwrap())
+            .unwrap()
+            .into_owned();
         // A private message has no IEs of the protocol to name.
         let shown = pdu.to_tree();
         if shown.get("ies").is_none() {
@@ -804,7 +810,11 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
 
     // An item of a list of E-RABs, by its position then its name.
     let name = "E-RABSetupRequest";
-    let mut view = S1AP_PDU::decode(&fixture(name)).unwrap().to_view().unwrap();
+    let mut view = S1APPDU::decode(&fixture(name))
+        .unwrap()
+        .into_owned()
+        .to_view()
+        .unwrap();
     let list = "/s1ap/E-RABToBeSetupListBearerSUReq";
     let tunnel = format!("{list}/0/E-RABToBeSetupItemBearerSUReq/gTP-TEID");
     assert_eq!(
@@ -846,7 +856,7 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
         &format!("{list}/1/E-RABToBeSetupItemBearerSUReq"),
     )
     .unwrap();
-    let sent = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
+    let sent = S1APPDU::from_view(&view).unwrap().to_view().unwrap();
     let tunnels = inspect::select(&sent, &format!("{list}/value/*/gTP-TEID")).unwrap();
     assert_eq!(tunnels, [&tree!(7)]);
     // A member of a value that is named as another IE is that member: an E-RAB has a
@@ -861,7 +871,7 @@ fn the_names_that_a_message_shows_join_into_the_path_of_each_value() {
     let limit = tree!({"uESidelinkAggregateMaximumBitRate": 5});
     let limit = tree!({"UESidelinkAggregateMaximumBitrate": limit, "criticality": "ignore"});
     let request = tree!({"message": "InitialContextSetupRequest", "ies": [limit]});
-    let view = S1AP_PDU::from_tree(&request).unwrap().to_view().unwrap();
+    let view = S1APPDU::from_tree(&request).unwrap().to_view().unwrap();
     for path in [
         "/s1ap/0/UESidelinkAggregateMaximumBitrate/uESidelinkAggregateMaximumBitRate",
         "/s1ap/UESidelinkAggregateMaximumBitrate/uESidelinkAggregateMaximumBitRate",
@@ -900,7 +910,7 @@ fn sent(
     .unwrap();
     let mut view = pdu.to_view()?;
     *view["message"]["protocolIEs"].as_array_mut().unwrap() = entries.to_vec();
-    S1AP_PDU::from_view(&view)?.to_view()
+    S1APPDU::from_view(&view)?.to_view()
 }
 
 #[test]
@@ -908,19 +918,19 @@ fn well_known_values_are_shown_and_taken_as_they_are_usually_written() {
     use oxirush_s1ap::tree;
     // S1 SETUP REQUEST: Global-ENB-ID is IE 59 and SupportedTAs IE 64.
     let wire = fixture("S1SetupRequest");
-    let mut view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
+    let mut view = S1APPDU::decode(&wire).unwrap().to_view().unwrap();
     let area = &ie(&mut view, 64)["value"][0];
     assert_eq!(area["tAC"], tree!(0x9302));
     assert_eq!(area["broadcastPLMNs"], tree!(["208-93"]));
     assert_eq!(ie(&mut view, 59)["value"]["pLMNidentity"], tree!("208-93"));
     // What is not edited keeps its octets.
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
+    assert_eq!(S1APPDU::from_view(&view).unwrap().encode().unwrap(), wire);
 
     // Edited as they are shown, a number in hexadecimal too.
     let area = &mut ie(&mut view, 64)["value"][0];
     area["tAC"] = tree!("0x7");
     area["broadcastPLMNs"] = tree!(["001-01", "310-410"]);
-    let edited = S1AP_PDU::from_view(&view).unwrap();
+    let edited = S1APPDU::from_view(&view).unwrap();
     let mut shown = edited.to_view().unwrap();
     let area = &ie(&mut shown, 64)["value"][0];
     assert_eq!(area["tAC"], tree!(7));
@@ -937,21 +947,21 @@ fn well_known_values_are_shown_and_taken_as_they_are_usually_written() {
     area["tAC"] = tree!("0x0007");
     area["broadcastPLMNs"] = tree!(["00f110", "0x134001"]);
     assert_eq!(
-        S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
+        S1APPDU::from_view(&view).unwrap().encode().unwrap(),
         edited.encode().unwrap()
     );
     // Digits alone are refused: read in two ways, with both, and where both are one
     // number, with that number as JSON writes it.
     let area = &mut ie(&mut view, 64)["value"][0];
     area["tAC"] = tree!("0010");
-    let error = S1AP_PDU::from_view(&view).unwrap_err().to_string();
+    let error = S1APPDU::from_view(&view).unwrap_err().to_string();
     assert!(
         error.contains("the number 10 ") && error.contains("the number 16"),
         "{error}"
     );
     let area = &mut ie(&mut view, 64)["value"][0];
     area["tAC"] = tree!("0007");
-    let error = S1AP_PDU::from_view(&view).unwrap_err().to_string();
+    let error = S1APPDU::from_view(&view).unwrap_err().to_string();
     assert!(
         error.contains("\"0007\" is a number in quotes: write 7 without quotes"),
         "{error}"
@@ -959,7 +969,7 @@ fn well_known_values_are_shown_and_taken_as_they_are_usually_written() {
     let area = &mut ie(&mut view, 64)["value"][0];
     area["tAC"] = tree!(7);
     area["broadcastPLMNs"] = tree!(["00f110", "134001"]);
-    let error = S1AP_PDU::from_view(&view).unwrap_err().to_string();
+    let error = S1APPDU::from_view(&view).unwrap_err().to_string();
     assert!(
         error.contains("134-001") && error.contains("310-410"),
         "{error}"
@@ -968,11 +978,11 @@ fn well_known_values_are_shown_and_taken_as_they_are_usually_written() {
     // Neither form, and a number that the type has no room for.
     for refused in [tree!("7"), tree!(1 << 16), tree!("0x10000")] {
         ie(&mut view, 64)["value"][0]["tAC"] = refused.clone();
-        assert!(S1AP_PDU::from_view(&view).is_err(), "{refused}");
+        assert!(S1APPDU::from_view(&view).is_err(), "{refused}");
     }
     ie(&mut view, 64)["value"][0]["tAC"] = tree!(7);
     ie(&mut view, 64)["value"][0]["broadcastPLMNs"] = tree!(["208-9"]);
-    assert!(S1AP_PDU::from_view(&view).is_err());
+    assert!(S1APPDU::from_view(&view).is_err());
 }
 
 #[test]
@@ -980,23 +990,23 @@ fn the_parts_of_a_gummei_are_numbers() {
     use oxirush_s1ap::tree;
     // S1 SETUP RESPONSE: ServedGUMMEIs is IE 105.
     let wire = fixture("S1SetupResponse");
-    let mut view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
+    let mut view = S1APPDU::decode(&wire).unwrap().to_view().unwrap();
     let served = &mut ie(&mut view, 105)["value"][0];
     assert_eq!(served["servedPLMNs"], tree!(["208-93"]));
     assert_eq!(served["servedGroupIDs"], tree!([0xB8A3]));
     assert_eq!(served["servedMMECs"], tree!([0x89]));
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
+    assert_eq!(S1APPDU::from_view(&view).unwrap().encode().unwrap(), wire);
     let served = &mut ie(&mut view, 105)["value"][0];
     served["servedGroupIDs"] = tree!([2, "0x8000"]);
     served["servedMMECs"] = tree!([1]);
-    let edited = S1AP_PDU::from_view(&view).unwrap();
+    let edited = S1APPDU::from_view(&view).unwrap();
     let mut shown = edited.to_view().unwrap();
     let served = &ie(&mut shown, 105)["value"][0];
     assert_eq!(served["servedGroupIDs"], tree!([2, 0x8000]));
     assert_eq!(served["servedMMECs"], tree!([1]));
     // An MME code has one octet.
     ie(&mut view, 105)["value"][0]["servedMMECs"] = tree!([256]);
-    assert!(S1AP_PDU::from_view(&view).is_err());
+    assert!(S1APPDU::from_view(&view).is_err());
 }
 
 #[test]
@@ -1022,13 +1032,13 @@ fn a_tunnel_endpoint_and_the_identities_of_a_ue_are_readable() {
     };
     assert_eq!(
         item["_raw_value"],
-        octets(&encode_open_type(&expected).unwrap())
+        octets(&oxirush_s1ap::encode(&expected).unwrap())
     );
 
     // UEPagingID is IE 43: an IMSI by its digits, or an S-TMSI by its numbers.
     let mut shown = added(43, tree!({"iMSI": "208930000000001"})).unwrap();
     let imsi = IMSI(vec![0x02, 0x98, 0x03, 0x00, 0x00, 0x00, 0x00, 0xF1].into());
-    let expected = encode_open_type(&UEPagingID::iMSI(imsi)).unwrap();
+    let expected = oxirush_s1ap::encode(&UEPagingID::iMSI(imsi)).unwrap();
     assert_eq!(
         ie(&mut shown, 43)["value"]["iMSI"],
         tree!("208930000000001")
@@ -1070,7 +1080,7 @@ fn an_enumerated_value_is_named_whatever_its_case_and_separators() {
 }
 
 /// A UE CONTEXT RELEASE REQUEST: two UE S1AP IDs and a cause.
-fn release_with_cause() -> S1AP_PDU {
+fn release_with_cause() -> S1APPDU<'static> {
     build_s1ap!(IGNORE UEContextReleaseRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(7u32),
@@ -1129,7 +1139,9 @@ fn every_path_of_every_canonical_procedure_selects_its_value() {
         .filter(|line| !line.starts_with('#') && !line.is_empty())
     {
         let fields: Vec<_> = line.split('\t').collect();
-        let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
+        let pdu = S1APPDU::decode(&hex::decode(fields[1]).unwrap())
+            .unwrap()
+            .into_owned();
         let view = pdu.to_view().unwrap();
         for (path, value) in inspect::paths(&view) {
             // The list that holds the IEs of a message is never named.
@@ -1208,7 +1220,7 @@ fn an_ie_that_is_there_twice_goes_by_its_position() {
     let both = inspect::select(&view, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
     assert_eq!(both, [&tree!(1), &tree!(2)]);
     inspect::set(&mut view, "/s1ap/2/value", tree!(3)).unwrap();
-    let edited = S1AP_PDU::from_view(&view).unwrap();
+    let edited = S1APPDU::from_view(&view).unwrap();
     let view = edited.to_view().unwrap();
     let both = inspect::select(&view, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
     assert_eq!(both, [&tree!(1), &tree!(3)]);
@@ -1226,7 +1238,7 @@ fn a_value_set_at_a_path_changes_the_octets_of_its_ie_alone() {
     inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9)).unwrap();
     let cause = tree!("Release Due To EUTRAN Generated Reason");
     inspect::set(&mut view, "/s1ap/Cause/value/radioNetwork", cause).unwrap();
-    let view = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
+    let view = S1APPDU::from_view(&view).unwrap().to_view().unwrap();
     let after = octets(&view);
     assert_eq!(after[0], before[0]);
     assert_eq!(after[1], tree!("0009"));
@@ -1247,7 +1259,7 @@ fn ies_are_added_taken_out_and_given_their_octets_at_a_path() {
     inspect::insert(&mut view, "/s1ap/Cause", unknown).unwrap();
     inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID").unwrap();
     inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/octets", tree!("400102")).unwrap();
-    let view = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
+    let view = S1APPDU::from_view(&view).unwrap().to_view().unwrap();
     let ids: Vec<_> = (inspect::select(&view, "/s1ap/*/id").unwrap().into_iter())
         .map(|id| id.as_u64().unwrap())
         .collect();
@@ -1263,14 +1275,16 @@ fn ies_are_added_taken_out_and_given_their_octets_at_a_path() {
 #[test]
 fn the_entries_of_a_list_of_ies_go_by_name_too() {
     use oxirush_s1ap::tree;
-    let pdu = S1AP_PDU::decode(&fixture("E-RABSetupRequest")).unwrap();
+    let pdu = S1APPDU::decode(&fixture("E-RABSetupRequest"))
+        .unwrap()
+        .into_owned();
     let mut view = pdu.to_view().unwrap();
     let list = "/s1ap/E-RABToBeSetupListBearerSUReq/value";
     let by_name = format!("{list}/E-RABToBeSetupItemBearerSUReq/value/e-RAB-ID");
     let by_position = format!("{list}/0/value/e-RAB-ID");
     assert_eq!(inspect::select(&view, &by_name).unwrap(), [&tree!(0)]);
     inspect::set(&mut view, &by_name, tree!(5)).unwrap();
-    let view = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
+    let view = S1APPDU::from_view(&view).unwrap().to_view().unwrap();
     assert_eq!(inspect::select(&view, &by_position).unwrap(), [&tree!(5)]);
     // The IEs of a message that a view contains are selected in its place: no S1AP
     // type has one, so this is a view of that shape, in an IE that the tables do not
@@ -1362,7 +1376,9 @@ fn a_message_goes_by_the_name_that_asn1_gives_it() {
         .filter(|line| !line.starts_with('#') && !line.is_empty())
     {
         let fields: Vec<_> = line.split('\t').collect();
-        let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
+        let pdu = S1APPDU::decode(&hex::decode(fields[1]).unwrap())
+            .unwrap()
+            .into_owned();
         assert_eq!(name_of(&pdu), Some(fields[0]));
     }
     // A name finds its message again, however it is written, and no other does.
@@ -1404,7 +1420,7 @@ fn a_message_goes_by_the_name_that_asn1_gives_it() {
         tree!({"id": "eNB-UE-S1AP-ID", "criticality": "reject", "value": 7}),
     )
     .unwrap();
-    let pdu = S1AP_PDU::from_view(&view).unwrap();
+    let pdu = S1APPDU::from_view(&view).unwrap();
     assert_eq!(name_of(&pdu), Some("UEContextReleaseRequest"));
     assert_eq!(pdu.direction(), Direction::Initiating);
 }
@@ -1443,7 +1459,7 @@ fn an_edit_changes_what_is_sent_or_is_refused() {
             .iter()
             .all(|(path, _)| !path.contains("_edited"))
     );
-    let sent = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
+    let sent = S1APPDU::from_view(&view).unwrap().to_view().unwrap();
     assert_ne!(inspect::select(&sent, octets).unwrap(), [&received]);
     assert_eq!(
         inspect::select(&sent, "/s1ap/eNB-UE-S1AP-ID/value").unwrap(),
@@ -1452,19 +1468,21 @@ fn an_edit_changes_what_is_sent_or_is_refused() {
     // Octets that are set are those of the IE again.
     inspect::set(&mut view, octets, received.clone()).unwrap();
     assert_eq!(inspect::select(&view, octets).unwrap(), [&received]);
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap(), release_request(7));
+    assert_eq!(S1APPDU::from_view(&view).unwrap(), release_request(7));
     // The name of an ENUMERATED value of the PDU itself is taken as any other.
     inspect::set(&mut view, "/criticality", tree!("Reject")).unwrap();
-    let pdu = S1AP_PDU::from_view(&view).unwrap();
+    let pdu = S1APPDU::from_view(&view).unwrap();
     assert_eq!(pdu.to_view().unwrap()["criticality"], tree!("reject"));
 }
 
 #[test]
 fn null_takes_an_optional_member_out() {
     use oxirush_s1ap::{tree, tree::Value};
-    let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
+    let pdu = S1APPDU::decode(&fixture("InitialContextSetupRequest"))
+        .unwrap()
+        .into_owned();
     let view = pdu.to_view().unwrap();
-    let sent = |view: &Value| S1AP_PDU::from_view(view)?.to_view();
+    let sent = |view: &Value| S1APPDU::from_view(view)?.to_view();
     // An optional member that is there is taken out, and one that is not is not
     // selected.
     let nas = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/0/value/nAS-PDU";
@@ -1560,7 +1578,9 @@ fn the_messages_of_the_fixtures_have_the_criticality_that_asn1_assigns() {
         .filter(|line| !line.starts_with('#') && !line.is_empty())
     {
         let fields: Vec<_> = line.split('\t').collect();
-        let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
+        let pdu = S1APPDU::decode(&hex::decode(fields[1]).unwrap())
+            .unwrap()
+            .into_owned();
         let view = pdu.to_view().unwrap();
         let set = S1ap::object_set_named(fields[0]).unwrap();
         assert_eq!(
@@ -1634,7 +1654,9 @@ fn an_ie_that_a_value_holds_alone_has_the_criticality_of_its_object_sets() {
         .filter(|line| !line.starts_with('#') && !line.is_empty())
     {
         let fields: Vec<_> = line.split('\t').collect();
-        let pdu = S1AP_PDU::decode(&hex::decode(fields[1]).unwrap()).unwrap();
+        let pdu = S1APPDU::decode(&hex::decode(fields[1]).unwrap())
+            .unwrap()
+            .into_owned();
         let view = pdu.to_view().unwrap();
         let entries = view["message"]["protocolIEs"].as_array();
         for ie in entries.into_iter().flatten() {
@@ -1696,7 +1718,7 @@ fn the_identifiers_of_the_registry_are_the_constants_of_the_bindings() {
 
 #[test]
 fn a_kind_that_the_specification_does_not_have_says_the_direction_of_its_pdu() {
-    let pdu = S1AP_PDU::unsuccessfulOutcome(UnsuccessfulOutcome {
+    let pdu = S1APPDU::unsuccessfulOutcome(UnsuccessfulOutcome {
         procedure_code: ProcedureCode(13),
         criticality: Criticality::Ignore,
         value: oxirush_s1ap::Octets::from(vec![0]),
@@ -1739,7 +1761,9 @@ fn a_member_that_is_absent_selects_nothing_and_one_that_its_type_has_not_is_an_e
     let error = select("/s1ap/*/value/misspelled").unwrap_err().to_string();
     assert!(error.contains("is not a member of"), "{error}");
     // An optional member that is not there, and a list of values that has no IEs to name.
-    let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
+    let pdu = S1APPDU::decode(&fixture("InitialContextSetupRequest"))
+        .unwrap()
+        .into_owned();
     let setup = pdu.to_view().unwrap();
     let item = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/E-RABToBeSetupItemCtxtSUReq/value";
     let nas = inspect::select(&setup, &format!("{item}/nAS-PDU")).unwrap();
@@ -1751,7 +1775,9 @@ fn a_member_that_is_absent_selects_nothing_and_one_that_its_type_has_not_is_an_e
         error.contains("is not a member of ERABToBeSetupItemCtxtSUReq, which has e-RAB-ID"),
         "{error}"
     );
-    let pdu = S1AP_PDU::decode(&fixture("S1SetupRequest")).unwrap();
+    let pdu = S1APPDU::decode(&fixture("S1SetupRequest"))
+        .unwrap()
+        .into_owned();
     let setup = pdu.to_view().unwrap();
     let error = inspect::select(&setup, "/s1ap/SupportedTAs/value/Cause/value")
         .unwrap_err()
@@ -1767,7 +1793,7 @@ fn a_procedure_that_the_specification_does_not_have_has_a_view_of_its_ies() {
     // specification does not have: the second octet of a PDU.
     let mut octets = release_request(7).encode().unwrap();
     octets[1] = 200;
-    let pdu = S1AP_PDU::decode(&octets).unwrap();
+    let pdu = S1APPDU::decode(&octets).unwrap();
     assert_eq!(pdu.procedure_code(), 200);
     let mut view = pdu.to_view().unwrap();
     assert_eq!(view["procedure_code"], tree!(200));
@@ -1782,10 +1808,7 @@ fn a_procedure_that_the_specification_does_not_have_has_a_view_of_its_ies() {
     );
     // The view is the PDU, and an edit of it is sent under the same procedure code.
     assert_eq!(pdu.with_view(&view).unwrap(), pdu);
-    assert_eq!(
-        S1AP_PDU::from_view(&view).unwrap().encode().unwrap(),
-        octets
-    );
+    assert_eq!(S1APPDU::from_view(&view).unwrap().encode().unwrap(), octets);
     inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9)).unwrap();
     let edited = pdu.with_view(&view).unwrap();
     assert_eq!(edited.procedure_code(), 200);
@@ -1797,7 +1820,7 @@ fn a_procedure_that_the_specification_does_not_have_has_a_view_of_its_ies() {
         "procedure_code": 200, "direction": "InitiatingMessage", "criticality": "ignore",
         "message": {"protocolIEs": [{"id": 8, "criticality": "reject", "value": 9}]},
     });
-    let written = S1AP_PDU::from_view(&written).unwrap();
+    let written = S1APPDU::from_view(&written).unwrap();
     assert_eq!(written.protocol_ies().unwrap().0.len(), 1);
     // Its tree has its procedure code and its direction in the place of a name, and
     // the criticality of the PDU, which no table assigns: it is the PDU again.
@@ -1810,15 +1833,15 @@ fn a_procedure_that_the_specification_does_not_have_has_a_view_of_its_ies() {
         ),
         (&tree!(200), &tree!("InitiatingMessage"), &tree!("ignore"))
     );
-    assert_eq!(S1AP_PDU::from_tree(&tree).unwrap(), pdu);
+    assert_eq!(S1APPDU::from_tree(&tree).unwrap(), pdu);
     // Without the criticality, which no table has for it, it is refused.
     let mut unsaid = tree.clone();
     unsaid.as_object_mut().unwrap().shift_remove("criticality");
-    let error = S1AP_PDU::from_tree(&unsaid).unwrap_err();
+    let error = S1APPDU::from_tree(&unsaid).unwrap_err();
     assert_eq!(error.kind(), ErrorKind::Form);
     // A message that is no container of protocol IEs does not decode, and has no view:
     // one IE is claimed, and none is there. Its tree has its octets.
-    let pdu = S1AP_PDU::decode(&[0x00, 200, 0x00, 0x03, 0x00, 0x00, 0x01]).unwrap();
+    let pdu = S1APPDU::decode(&[0x00, 200, 0x00, 0x03, 0x00, 0x00, 0x01]).unwrap();
     assert!(pdu.to_view().is_err());
     let tree = pdu.to_tree();
     assert_eq!(
@@ -1826,7 +1849,7 @@ fn a_procedure_that_the_specification_does_not_have_has_a_view_of_its_ies() {
         tree!({"procedure_code": 200, "direction": "InitiatingMessage", "octets": "000001",
                "criticality": "reject"})
     );
-    assert_eq!(S1AP_PDU::from_tree(&tree).unwrap(), pdu);
+    assert_eq!(S1APPDU::from_tree(&tree).unwrap(), pdu);
 }
 
 #[test]
@@ -1890,11 +1913,13 @@ fn an_edit_names_a_member_that_the_type_has_and_keeps_what_it_always_has() {
     assert_eq!(view, before);
     // An alternative takes the place of the one that is there.
     inspect::set(&mut view, "/s1ap/Cause/value/nas", tree!("detach")).unwrap();
-    let sent = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
+    let sent = S1APPDU::from_view(&view).unwrap().to_view().unwrap();
     let cause = inspect::select(&sent, "/s1ap/Cause/value").unwrap();
     assert_eq!(cause, [&tree!({"nas": "detach"})]);
     // A member that the type always has stays, and an optional one is added by its name.
-    let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
+    let pdu = S1APPDU::decode(&fixture("InitialContextSetupRequest"))
+        .unwrap()
+        .into_owned();
     let mut setup = pdu.to_view().unwrap();
     let item = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/0/value";
     let error = inspect::remove(&mut setup, &format!("{item}/e-RAB-ID"))
@@ -1906,7 +1931,7 @@ fn an_edit_names_a_member_that_the_type_has_and_keeps_what_it_always_has() {
         .to_string();
     assert!(error.contains("its type always has it"), "{error}");
     inspect::set(&mut setup, &format!("{item}/nas_pdu"), tree!("0102")).unwrap();
-    let sent = S1AP_PDU::from_view(&setup).unwrap().to_view().unwrap();
+    let sent = S1APPDU::from_view(&setup).unwrap().to_view().unwrap();
     let nas = inspect::select(&sent, &format!("{item}/nAS-PDU")).unwrap();
     assert_eq!(nas, [&tree!("0102")]);
 }
@@ -1944,7 +1969,7 @@ fn a_name_is_its_letters_and_its_digits() {
     inspect::set(&mut edited, "/s1ap/cause/value/NAS", tree!("detach")).unwrap();
     let cause = inspect::select(&edited, "/s1ap/Cause/value").unwrap();
     assert_eq!(cause, [&tree!({"nas": "detach"})]);
-    assert!(S1AP_PDU::from_view(&edited).is_ok());
+    assert!(S1APPDU::from_view(&edited).is_ok());
     assert_eq!(
         S1ap::object_set_named("ue context-release_REQUEST")
             .map(|set| (set.direction, set.procedure_code)),
@@ -1960,7 +1985,7 @@ fn a_path_is_checked_against_a_message_without_a_view() {
         .filter(|line| !line.starts_with('#') && !line.is_empty())
     {
         let wire = hex::decode(line.split('\t').nth(1).unwrap()).unwrap();
-        let pdu = S1AP_PDU::decode(&wire).unwrap();
+        let pdu = S1APPDU::decode(&wire).unwrap();
         let name = name_of(&pdu).unwrap();
         let view = pdu.to_view().unwrap();
         for (path, _) in inspect::paths(&view) {
@@ -2115,10 +2140,12 @@ fn a_path_is_checked_against_a_message_without_a_view() {
 #[test]
 fn an_ie_is_written_by_its_name_and_its_octets_wherever_a_view_has_ies() {
     use oxirush_s1ap::tree;
-    let pdu = S1AP_PDU::decode(&fixture("InitialContextSetupRequest")).unwrap();
+    let pdu = S1APPDU::decode(&fixture("InitialContextSetupRequest"))
+        .unwrap()
+        .into_owned();
     let view = pdu.to_view().unwrap();
     let list = "/s1ap/E-RABToBeSetupListCtxtSUReq/value";
-    let sent = |view: &oxirush_s1ap::tree::Value| S1AP_PDU::from_view(view)?.to_view();
+    let sent = |view: &oxirush_s1ap::tree::Value| S1APPDU::from_view(view)?.to_view();
     let item = inspect::select(&view, &format!("{list}/0/value")).unwrap()[0].clone();
     let named = tree!({
         "id": "E-RABToBeSetupItemCtxtSUReq", "criticality": "reject", "value": item,
@@ -2171,11 +2198,11 @@ fn an_ie_is_written_by_its_name_and_its_octets_wherever_a_view_has_ies() {
     // A name that no IE has is refused, and so are a value and octets together.
     let mut edited = view.clone();
     edited["message"]["protocolIEs"][0]["id"] = tree!("NoSuchIE");
-    let error = S1AP_PDU::from_view(&edited).unwrap_err().to_string();
+    let error = S1APPDU::from_view(&edited).unwrap_err().to_string();
     assert!(error.contains("is not an IE of S1AP"), "{error}");
     let mut edited = view.clone();
     edited["message"]["protocolIEs"][0]["octets"] = tree!("00");
-    let error = S1AP_PDU::from_view(&edited).unwrap_err().to_string();
+    let error = S1APPDU::from_view(&edited).unwrap_err().to_string();
     assert!(
         error.contains("its value or its octets, not both"),
         "{error}"
@@ -2202,7 +2229,9 @@ fn the_octets_of_an_ie_without_a_value_have_a_path() {
 
 #[test]
 fn a_private_message_has_no_ies_under_the_root() {
-    let pdu = S1AP_PDU::decode(&fixture("PrivateMessage")).unwrap();
+    let pdu = S1APPDU::decode(&fixture("PrivateMessage"))
+        .unwrap()
+        .into_owned();
     let view = pdu.to_view().unwrap();
     let error = inspect::select(&view, "/s1ap/Cause")
         .unwrap_err()
@@ -2224,7 +2253,7 @@ fn the_identifier_that_the_octets_were_decoded_as_is_a_number() {
     let mut view = release_with_cause().to_view().unwrap();
     inspect::set(&mut view, "/s1ap/Cause/value/nas", tree!("detach")).unwrap();
     ie(&mut view, 2)["_original_id"] = tree!("two");
-    let error = S1AP_PDU::from_view(&view).unwrap_err().to_string();
+    let error = S1APPDU::from_view(&view).unwrap_err().to_string();
     assert!(error.contains("_original_id is the identifier"), "{error}");
 }
 
@@ -2256,7 +2285,7 @@ fn an_integer_of_two_to_the_63_or_more_is_a_number() {
     let count = format!("{report}/usageCountUL");
 
     // The octets of the largest count of 63 bits, which has eight octets as these have.
-    let below = S1AP_PDU::from_tree(&usage_report((1 << 63) - 1)).unwrap();
+    let below = S1APPDU::from_tree(&usage_report((1 << 63) - 1)).unwrap();
     let below = hex::encode(below.encode().unwrap());
     assert_eq!(below.matches("7fffffffffffffff").count(), 1);
 
@@ -2265,7 +2294,7 @@ fn an_integer_of_two_to_the_63_or_more_is_a_number() {
         (u64::MAX, "ffffffffffffffff"),
     ] {
         // Written, it is the eight octets of the count in the same message.
-        let pdu = S1AP_PDU::from_tree(&usage_report(number)).unwrap();
+        let pdu = S1APPDU::from_tree(&usage_report(number)).unwrap();
         let wire = pdu.encode().unwrap();
         assert_eq!(
             hex::encode(&wire),
@@ -2273,22 +2302,22 @@ fn an_integer_of_two_to_the_63_or_more_is_a_number() {
         );
 
         // Received, it is the number that it is, and the bindings read the same.
-        let mut view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
+        let mut view = S1APPDU::decode(&wire).unwrap().to_view().unwrap();
         let list = &view["message"]["protocolIEs"][2]["value"][0]["value"]["e-RABUsageReportList"];
         let entry = list[0].clone();
         assert!(entry.get("_decode_error").is_none(), "{entry}");
         assert_eq!(inspect::select(&view, &count).unwrap(), [&tree!(number)]);
         let item = hex::decode(entry["_raw_value"].as_str().unwrap()).unwrap();
-        let item: ERABUsageReportItem = decode_open_type(&item).unwrap();
+        let item: ERABUsageReportItem = oxirush_s1ap::decode(&item).unwrap();
         assert_eq!(item.usage_count_ul, number);
 
         // A tree has it, and both forms are the same octets.
         assert_eq!(pdu.to_tree(), usage_report(number));
-        assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
+        assert_eq!(S1APPDU::from_view(&view).unwrap().encode().unwrap(), wire);
 
         // Edited, it is the tree of the other number.
         inspect::set(&mut view, &count, tree!(number - 1)).unwrap();
-        let edited = S1AP_PDU::from_view(&view).unwrap();
+        let edited = S1APPDU::from_view(&view).unwrap();
         assert_eq!(edited.to_tree(), usage_report(number - 1));
     }
 
@@ -2298,7 +2327,7 @@ fn an_integer_of_two_to_the_63_or_more_is_a_number() {
     let item = &mut beyond["ies"][2]["SecondaryRATDataUsageReportList"][0];
     let entry = &mut item["SecondaryRATDataUsageReportItem"]["e-RABUsageReportList"][0];
     entry["E-RABUsageReportItem"]["usageCountUL"] = tree!("18446744073709551616");
-    let error = S1AP_PDU::from_tree(&beyond).unwrap_err();
+    let error = S1APPDU::from_tree(&beyond).unwrap_err();
     assert_eq!(error.kind(), oxirush_s1ap::ErrorKind::Value);
     assert_eq!(
         error.to_string(),
@@ -2326,7 +2355,7 @@ fn an_ie_with_an_integer_beyond_64_bits_keeps_the_octets_received() {
         paging_attempt_information: Some(attempts),
         ie_extensions: None,
     };
-    let largest = encode_open_type(&largest).unwrap();
+    let largest = oxirush_s1ap::encode(&largest).unwrap();
     // The octets of the largest count that the bindings hold, with the nine octets of
     // 2^64 in the place of its own nine.
     let nine = [0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff];
@@ -2337,7 +2366,7 @@ fn an_ie_with_an_integer_beyond_64_bits_keeps_the_octets_received() {
     assert_eq!(largest[at - 1], 9);
     let mut beyond = largest.to_vec();
     beyond[at..at + 9].copy_from_slice(&[0x01, 0, 0, 0, 0, 0, 0, 0, 0]);
-    let error = decode_open_type::<AssistanceDataForPaging>(&beyond).unwrap_err();
+    let error = oxirush_s1ap::decode::<AssistanceDataForPaging>(&beyond).unwrap_err();
     assert_eq!(
         error.to_string(),
         "these octets do not decode as AssistanceDataForPaging: the number does not fit in 64 \
@@ -2345,7 +2374,7 @@ fn an_ie_with_an_integer_beyond_64_bits_keeps_the_octets_received() {
     );
 
     // A PAGING with these octets as its assistance data.
-    let mut pdu = S1AP_PDU::from_tree(&tree!({"message": "Paging", "ies": [
+    let mut pdu = S1APPDU::from_tree(&tree!({"message": "Paging", "ies": [
         {"UEIdentityIndexValue": "0a40"},
         {"UEPagingID": {"s-TMSI": {"mMEC": 1, "m-TMSI": 1}}},
         {"CNDomain": "ps"},
@@ -2362,7 +2391,7 @@ fn an_ie_with_an_integer_beyond_64_bits_keeps_the_octets_received() {
     let wire = pdu.encode().unwrap();
 
     // The IE is the octets that were received, and the others are read.
-    let view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
+    let view = S1APPDU::decode(&wire).unwrap().to_view().unwrap();
     let entry = &view["message"]["protocolIEs"][4];
     assert_eq!(entry["_raw_value"], tree!(hex::encode(&beyond)));
     assert_eq!(entry["value"], entry["_raw_value"]);
@@ -2370,14 +2399,14 @@ fn an_ie_with_an_integer_beyond_64_bits_keeps_the_octets_received() {
     assert!(why.contains("the number does not fit in 64 bits"), "{why}");
     assert_eq!(view["message"]["protocolIEs"][2]["value"], tree!("ps"));
     // The view and the tree give the octets back.
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
+    assert_eq!(S1APPDU::from_view(&view).unwrap().encode().unwrap(), wire);
     let tree = pdu.to_tree();
-    assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
+    assert_eq!(S1APPDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
 }
 
 /// A request to modify a UE context, with UE security capabilities whose encryption
 /// algorithms are this many bits.
-fn modification(bits: usize) -> S1AP_PDU {
+fn modification(bits: usize) -> S1APPDU<'static> {
     // The first two bits of a string of this length.
     let mask = |length: usize| {
         let mut octets = vec![0; length.div_ceil(8)];
@@ -2415,7 +2444,7 @@ fn a_bit_string_of_another_size_than_its_type_gives_has_its_length() {
         [&tree!("c000")]
     );
     inspect::set(&mut view, &algorithms, tree!("8000")).unwrap();
-    let edited = S1AP_PDU::from_view(&view).unwrap().to_view().unwrap();
+    let edited = S1APPDU::from_view(&view).unwrap().to_view().unwrap();
     assert_eq!(
         inspect::select(&edited, &algorithms).unwrap(),
         [&tree!("8000")]
@@ -2425,7 +2454,7 @@ fn a_bit_string_of_another_size_than_its_type_gives_has_its_length() {
     for bits in [20, 24] {
         let pdu = modification(bits);
         let wire = pdu.encode().unwrap();
-        let mut view = S1AP_PDU::decode(&wire).unwrap().to_view().unwrap();
+        let mut view = S1APPDU::decode(&wire).unwrap().to_view().unwrap();
         let entry = &view["message"]["protocolIEs"][2];
         assert!(entry.get("_decode_error").is_none(), "{entry}");
         let shown = tree!({"value": "c00000", "length": bits});
@@ -2443,26 +2472,26 @@ fn a_bit_string_of_another_size_than_its_type_gives_has_its_length() {
         let tree = pdu.to_tree();
         let written = &tree["ies"][2]["UESecurityCapabilities"];
         assert_eq!(written["encryptionAlgorithms"], shown);
-        assert_eq!(S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
-        assert_eq!(S1AP_PDU::from_view(&view).unwrap().encode().unwrap(), wire);
+        assert_eq!(S1APPDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
+        assert_eq!(S1APPDU::from_view(&view).unwrap().encode().unwrap(), wire);
 
         // Edited to the size of the type, it is what the bindings encode for that.
         inspect::set(&mut view, &algorithms, tree!("c000")).unwrap();
-        assert_eq!(S1AP_PDU::from_view(&view).unwrap(), modification(16));
+        assert_eq!(S1APPDU::from_view(&view).unwrap(), modification(16));
     }
 
     // From the size of the type to another one, by the whole value and by its length.
     let mut view = modification(16).to_view().unwrap();
     let longer = tree!({"value": "c00000", "length": 24});
     inspect::set(&mut view, &algorithms, longer).unwrap();
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap(), modification(24));
+    assert_eq!(S1APPDU::from_view(&view).unwrap(), modification(24));
     inspect::set(&mut view, &format!("{algorithms}/length"), tree!(20)).unwrap();
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap(), modification(20));
+    assert_eq!(S1APPDU::from_view(&view).unwrap(), modification(20));
 
     // What is not the string that it says is refused: three octets without a length
     // are not the 16 bits of the type, and 20 bits are not two octets.
     let written = |algorithms: oxirush_s1ap::tree::Value| {
-        S1AP_PDU::from_tree(&tree!({"message": message, "ies": [
+        S1APPDU::from_tree(&tree!({"message": message, "ies": [
             {"MME-UE-S1AP-ID": 1},
             {"eNB-UE-S1AP-ID": 1},
             {"UESecurityCapabilities": {
@@ -2487,7 +2516,7 @@ fn a_bit_string_of_another_size_than_its_type_gives_has_its_length() {
 /// X.691, have a `_decode_error`, and those that a typed value has no place for `_lossy`.
 fn agree(wire: &[u8]) -> usize {
     use oxirush_s1ap::tree::Value;
-    let Ok(pdu) = S1AP_PDU::decode(wire) else {
+    let Ok(pdu) = S1APPDU::decode(wire) else {
         return 0;
     };
     let (tree, Ok(view)) = (pdu.to_tree(), pdu.to_view()) else {
@@ -2542,7 +2571,7 @@ fn the_tree_and_the_paths_of_a_view_read_the_octets_of_an_ie_alike() {
         for line in lines {
             let wire = hex::decode(line.split('\t').nth(1).unwrap()).unwrap();
             said += agree(&wire);
-            let Ok(pdu) = S1AP_PDU::decode(&wire) else {
+            let Ok(pdu) = S1APPDU::decode(&wire) else {
                 continue;
             };
             let Ok(ies) = pdu.protocol_ies() else {
@@ -2577,7 +2606,7 @@ fn a_container_of_the_other_protocol_says_the_call_that_registers_its_tables() {
         {"eNB-UE-S1AP-ID": 7},
         {"Source-ToTarget-TransparentContainer": {"SourceNGRANNode-ToTargetNGRANNode-TransparentContainer": {}}},
     ]});
-    let error = S1AP_PDU::from_tree(&tree).unwrap_err().to_string();
+    let error = S1APPDU::from_tree(&tree).unwrap_err().to_string();
     let call = "SourceNGRANNode-ToTargetNGRANNode-TransparentContainer is a type of NGAP: call oxirush_ngap::inspect::register()";
     assert!(error.contains(call), "{error}");
     let path = "/s1ap/Source-ToTarget-TransparentContainer/SourceNGRANNode-ToTargetNGRANNode-TransparentContainer/rRC";

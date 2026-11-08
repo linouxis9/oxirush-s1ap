@@ -1,7 +1,7 @@
 //! Encode and decode S1AP PDUs **without macros** using the codec and the generated types.
 //!
 //! This example demonstrates the complete raw-codec workflow:
-//! - Constructing an `S1AP_PDU` by hand (`ProtocolIEID`, `Criticality`, the octets of
+//! - Constructing an `S1APPDU` by hand (`ProtocolIEID`, `Criticality`, the octets of
 //!   an open type)
 //! - Encoding and decoding with the functions of the aligned PER runtime
 //! - Decoding and pattern-matching open protocol IE values
@@ -38,17 +38,23 @@ fn main() {
         ProtocolIEField {
             id: ID_MMENAME,
             criticality: Criticality::Ignore,
-            value: encode_open_type(&mme_name).expect("encode MME name"),
+            value: oxirush_s1ap::encode(&mme_name)
+                .expect("encode MME name")
+                .into(),
         },
         ProtocolIEField {
             id: ID_SERVED_GUMMEIS,
             criticality: Criticality::Reject,
-            value: encode_open_type(&served_gummeis).expect("encode served GUMMEIs"),
+            value: oxirush_s1ap::encode(&served_gummeis)
+                .expect("encode served GUMMEIs")
+                .into(),
         },
         ProtocolIEField {
             id: ID_RELATIVE_MMECAPACITY,
             criticality: Criticality::Ignore,
-            value: encode_open_type(&RelativeMMECapacity(255)).expect("encode MME capacity"),
+            value: oxirush_s1ap::encode(&RelativeMMECapacity(255))
+                .expect("encode MME capacity")
+                .into(),
         },
     ];
     let response = S1SetupResponse {
@@ -57,10 +63,12 @@ fn main() {
 
     // The outer PDU wraps the APER-encoded message in its direction and
     // ASN.1-derived procedure code.
-    let pdu = S1AP_PDU::successfulOutcome(SuccessfulOutcome {
+    let pdu = S1APPDU::successfulOutcome(SuccessfulOutcome {
         procedure_code: ID_S1_SETUP,
         criticality: Criticality::Reject,
-        value: encode_open_type(&response).expect("encode S1 Setup Response"),
+        value: oxirush_s1ap::encode(&response)
+            .expect("encode S1 Setup Response")
+            .into(),
     });
 
     // ── 2. Encode to APER ───────────────────────────────────────────────────
@@ -72,7 +80,7 @@ fn main() {
     println!("APER hex: {}", hex::encode(&aper_bytes));
 
     // ── 3. Decode from APER ─────────────────────────────────────────────────
-    // `S1AP_PDU::decode(&bytes)` is the equivalent convenience API.
+    // `S1APPDU::decode(&bytes)` is the equivalent convenience API.
 
     // The PDU borrows the octets of its message from `aper_bytes`: nothing is copied.
     let decoded: S1APPDU = aper::decode(&aper_bytes).expect("APER decode failed");
@@ -90,33 +98,32 @@ fn main() {
     // type, iterate `protocol_ies`, then decode each recognized IE open type.
 
     match &decoded {
-        // `S1AP_PDU` is the PDU that owns its octets, `S1APPDU<'static>`: a PDU that
-        // borrows is matched by the name of its type.
         S1APPDU::successfulOutcome(outcome) => {
             println!("Type:           SuccessfulOutcome");
             println!("Procedure code: {}", outcome.procedure_code.0);
             println!("Criticality:    {:?}", outcome.criticality);
 
             let response: S1SetupResponse =
-                decode_open_type(&outcome.value).expect("decode S1 Setup Response");
+                oxirush_s1ap::decode(&outcome.value).expect("decode S1 Setup Response");
 
             for ie in &response.protocol_ies.0 {
                 match ie.id {
                     ID_MMENAME => {
-                        let name: MMEname = decode_open_type(&ie.value).expect("decode MME name");
+                        let name: MMEname =
+                            oxirush_s1ap::decode(&ie.value).expect("decode MME name");
                         println!("MME Name:       {}", name.0);
                     }
 
                     ID_RELATIVE_MMECAPACITY => {
                         let capacity: RelativeMMECapacity =
-                            decode_open_type(&ie.value).expect("decode MME capacity");
+                            oxirush_s1ap::decode(&ie.value).expect("decode MME capacity");
 
                         println!("MME Capacity:   {}", capacity.0);
                     }
 
                     ID_SERVED_GUMMEIS => {
                         let list: ServedGUMMEIs =
-                            decode_open_type(&ie.value).expect("decode served GUMMEIs");
+                            oxirush_s1ap::decode(&ie.value).expect("decode served GUMMEIs");
 
                         println!("Served GUMMEIs: {} entries", list.0.len());
                         for item in &list.0 {

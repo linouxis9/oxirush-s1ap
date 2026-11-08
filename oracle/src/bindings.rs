@@ -12445,24 +12445,18 @@ pub mod s1_ap_pdu_descriptions {
     }
 }
 
-// The names of the modules at the root, and the aliases of the crate.
+// The names of the modules at the root.
+#[allow(unused_imports)]
+use rasn::prelude::{
+    BitString, FixedBitString, FixedOctetString, Integer, OctetString, PrintableString, SequenceOf,
+    Utf8String, VisibleString,
+};
 pub use s1_ap_common_data_types::*;
 pub use s1_ap_constants::*;
 pub use s1_ap_containers::*;
 pub use s1_ap_ies::*;
 pub use s1_ap_pdu_contents::*;
 pub use s1_ap_pdu_descriptions::*;
-#[allow(non_camel_case_types)]
-pub type S1AP_PDU = S1APPDU;
-#[allow(non_camel_case_types)]
-pub type MME_UE_S1AP_ID = MMEUES1APID;
-#[allow(non_camel_case_types)]
-pub type ENB_UE_S1AP_ID = ENBUES1APID;
-#[allow(unused_imports)]
-use rasn::prelude::{
-    BitString, FixedBitString, FixedOctetString, Integer, OctetString, PrintableString, SequenceOf,
-    Utf8String, VisibleString,
-};
 
 // The conversions of the types that have a name.
 impl From<FixedBitString<32usize>> for AdditionalRRMPriorityIndex {

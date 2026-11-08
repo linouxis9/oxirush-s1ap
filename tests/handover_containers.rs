@@ -8,9 +8,9 @@
 //! a view opens, reads and edits it: NGAP encodes it as it encodes the container of its
 //! own HANDOVER REQUEST.
 
-use oxirush_ngap::ngap::NGAP_PDU;
+use oxirush_ngap::ngap::NGAPPDU;
 use oxirush_s1ap::inspect::Value;
-use oxirush_s1ap::{inspect, s1ap::S1AP_PDU, tree};
+use oxirush_s1ap::{inspect, s1ap::S1APPDU, tree};
 
 const SOURCE: &str = "SourceNGRANNode-ToTargetNGRANNode-TransparentContainer";
 const TARGET: &str = "TargetNGRANNode-ToSourceNGRANNode-TransparentContainer";
@@ -33,7 +33,7 @@ fn source() -> Value {
 /// The octets that oxirush-ngap writes for the container `name` with the value `value`,
 /// in the IE `ie` of its own message `message`.
 fn by_ngap(message: &str, ie: &str, name: &str, value: Value) -> Value {
-    let pdu = NGAP_PDU::from_tree(&tree!({"message": message, "ies": [
+    let pdu = NGAPPDU::from_tree(&tree!({"message": message, "ies": [
         {"AMF-UE-NGAP-ID": 1},
         {(ie): {(name): (value)}},
     ]}))
@@ -42,7 +42,7 @@ fn by_ngap(message: &str, ie: &str, name: &str, value: Value) -> Value {
 }
 
 /// The octets of the IE `ie` of a tree of S1AP.
-fn octets(pdu: &S1AP_PDU, ie: &str) -> Value {
+fn octets(pdu: &S1APPDU<'_>, ie: &str) -> Value {
     let tree = pdu.to_tree();
     let ies = tree["ies"].as_array().unwrap();
     let found = ies.iter().find(|entry| entry.get(ie).is_some());
@@ -52,7 +52,7 @@ fn octets(pdu: &S1AP_PDU, ie: &str) -> Value {
 #[test]
 fn the_handover_required_to_5gs_carries_the_container_of_the_source_node() {
     oxirush_ngap::inspect::register();
-    let required = S1AP_PDU::from_tree(&tree!({"message": "HandoverRequired", "ies": [
+    let required = S1APPDU::from_tree(&tree!({"message": "HandoverRequired", "ies": [
         {"MME-UE-S1AP-ID": 42},
         {"eNB-UE-S1AP-ID": 7},
         {"HandoverType": "eps-to-5gs"},
@@ -85,11 +85,11 @@ fn the_handover_required_to_5gs_carries_the_container_of_the_source_node() {
     for (path, value) in inspect::paths(&view) {
         assert_eq!(inspect::select(&view, &path).unwrap(), [&value], "{path}");
     }
-    assert_eq!(S1AP_PDU::from_view(&view).unwrap(), required);
+    assert_eq!(S1APPDU::from_view(&view).unwrap(), required);
 
     // Edited by the type of NGAP
     inspect::set(&mut view, &size, tree!("verysmall")).unwrap();
-    let edited = S1AP_PDU::from_view(&view).unwrap();
+    let edited = S1APPDU::from_view(&view).unwrap();
     let mut small = source();
     let visited = &mut small["uEHistoryInformation"][0]["lastVisitedCellInformation"];
     visited["nGRANCell"]["cellType"]["cellSize"] = tree!("verysmall");
@@ -101,14 +101,14 @@ fn the_handover_required_to_5gs_carries_the_container_of_the_source_node() {
     );
     assert_eq!(octets(&edited, container), expected);
     inspect::set(&mut view, &size, tree!("huge")).unwrap();
-    assert!(S1AP_PDU::from_view(&view).is_err());
+    assert!(S1APPDU::from_view(&view).is_err());
 }
 
 #[test]
 fn the_handover_command_to_5gs_carries_the_container_of_the_target_node() {
     oxirush_ngap::inspect::register();
     let target = tree!({"rRCContainer": "0a0b0c"});
-    let command = S1AP_PDU::from_tree(&tree!({"message": "HandoverCommand", "ies": [
+    let command = S1APPDU::from_tree(&tree!({"message": "HandoverCommand", "ies": [
         {"MME-UE-S1AP-ID": 42},
         {"eNB-UE-S1AP-ID": 7},
         {"HandoverType": "eps-to-5gs"},
@@ -130,11 +130,11 @@ fn the_handover_command_to_5gs_carries_the_container_of_the_target_node() {
     inspect::open(&mut view, &rrc).unwrap();
     assert_eq!(inspect::select(&view, &rrc).unwrap(), [&tree!("0a0b0c")]);
     inspect::set(&mut view, &rrc, tree!("ff")).unwrap();
-    let edited = S1AP_PDU::from_view(&view).unwrap();
+    let edited = S1APPDU::from_view(&view).unwrap();
     assert_eq!(octets(&edited, container), tree!("0001ff"));
     // A container of E-UTRAN is still written by the name of its type
     let own = "TargeteNB-ToSourceeNB-TransparentContainer";
-    let written = S1AP_PDU::from_tree(&tree!({"message": "HandoverCommand", "ies": [
+    let written = S1APPDU::from_tree(&tree!({"message": "HandoverCommand", "ies": [
         {"MME-UE-S1AP-ID": 42},
         {"eNB-UE-S1AP-ID": 7},
         {"HandoverType": "intralte"},

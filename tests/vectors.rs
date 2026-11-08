@@ -8,7 +8,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use oxirush_s1ap::S1ap;
 use oxirush_s1ap::inspect;
-use oxirush_s1ap::s1ap::S1AP_PDU;
+use oxirush_s1ap::s1ap::S1APPDU;
 use oxirush_s1ap::tree;
 use oxirush_s1ap::tree::Value;
 
@@ -44,7 +44,7 @@ fn vectors(file: &'static str) -> impl Iterator<Item = (&'static str, Vec<u8>)> 
 
 /// The view of a PDU, with the containers of a handover decoded as the types that they
 /// carry.
-fn opened(pdu: &S1AP_PDU) -> Value {
+fn opened(pdu: &S1APPDU<'_>) -> Value {
     let mut view = pdu.to_view().unwrap();
     for (ie, carried) in CARRIED {
         let ies = view["message"]["protocolIEs"].as_array();
@@ -96,7 +96,7 @@ fn identifiers(value: &Value, found: &mut BTreeSet<u16>, unread: &mut Vec<String
 
 /// The octets of the PDU of a view, or why it has none.
 fn octets(view: &Value) -> Result<String, String> {
-    let pdu = S1AP_PDU::from_view(view).map_err(|error| error.to_string())?;
+    let pdu = S1APPDU::from_view(view).map_err(|error| error.to_string())?;
     let octets = pdu.encode().map_err(|error| error.to_string())?;
     Ok(hex::encode(octets))
 }
@@ -106,9 +106,9 @@ fn each_vector_is_read_with_its_types_and_written_to_the_same_octets() {
     let mut count = 0;
     for (name, wire) in vectors(VECTORS) {
         count += 1;
-        let pdu = S1AP_PDU::decode(&wire).unwrap();
+        let pdu = S1APPDU::decode(&wire).unwrap();
         let view = opened(&pdu);
-        let wire = Ok(hex::encode(wire));
+        let wire = Ok(hex::encode(&wire));
 
         // Every IE and every transfer is read with its type.
         let (mut found, mut unread) = (BTreeSet::new(), Vec::new());
@@ -124,7 +124,7 @@ fn each_vector_is_read_with_its_types_and_written_to_the_same_octets() {
         // And so is its tree, for a message that has IEs to name.
         if !name.starts_with("PrivateMessage/") {
             let tree = pdu.to_tree();
-            let again = S1AP_PDU::from_tree(&tree).unwrap().encode().unwrap();
+            let again = S1APPDU::from_tree(&tree).unwrap().encode().unwrap();
             assert_eq!(Ok(hex::encode(again)), wire, "{name}: its tree");
         }
     }
@@ -138,7 +138,7 @@ fn the_vectors_hold_each_message_and_each_ie_of_the_registry() {
     let held = |file| {
         let (mut found, mut unread) = (BTreeSet::new(), Vec::new());
         for (_, wire) in vectors(file) {
-            let view = opened(&S1AP_PDU::decode(&wire).unwrap());
+            let view = opened(&S1APPDU::decode(&wire).unwrap());
             identifiers(&view["message"], &mut found, &mut unread);
         }
         found
@@ -184,7 +184,9 @@ fn the_additions_of_a_later_release_are_skipped_as_pycrate_writes_them() {
         count += 1;
 
         // The PDU keeps the octets of its IEs, the additions among them.
-        let pdu = S1AP_PDU::decode(&hex::decode(later).unwrap()).unwrap();
+        let pdu = S1APPDU::decode(&hex::decode(later).unwrap())
+            .unwrap()
+            .into_owned();
         assert_eq!(hex::encode(pdu.encode().unwrap()), later, "{name}");
 
         // Each IE is read with its type, as the same value as without the additions.
@@ -192,7 +194,11 @@ fn the_additions_of_a_later_release_are_skipped_as_pycrate_writes_them() {
         let (mut found, mut unread) = (BTreeSet::new(), Vec::new());
         identifiers(&view, &mut found, &mut unread);
         assert_eq!(unread, Vec::<String>::new(), "{name}");
-        let without = opened(&S1AP_PDU::decode(&hex::decode(known).unwrap()).unwrap());
+        let without = opened(
+            &S1APPDU::decode(&hex::decode(known).unwrap())
+                .unwrap()
+                .into_owned(),
+        );
         assert_eq!(written(&view), written(&without), "{name}");
 
         // And its values are written as the message without them.
@@ -219,7 +225,7 @@ fn each_alternative_of_the_type_null_is_listed_and_selected() {
         if let Some(code) = fields.next() {
             octets[1] = code.parse().unwrap();
         }
-        let pdu = S1AP_PDU::decode(&octets).unwrap();
+        let pdu = S1APPDU::decode(&octets).unwrap();
         let mut view = pdu.to_view().unwrap();
         assert_eq!(
             inspect::select(&view, path),
@@ -277,13 +283,13 @@ fn a_view_in_the_json_encoding_rules_is_read_as_its_octets() {
         }]},
         {"id": 137, "criticality": "ignore", "value": "v128"},
     ]));
-    let error = S1AP_PDU::from_view(&jer).unwrap_err().to_string();
+    let error = S1APPDU::from_view(&jer).unwrap_err().to_string();
     assert!(
         error.contains(r#""0001" is a number in quotes: write 1 without quotes"#),
         "{error}"
     );
-    let read = S1AP_PDU::from_view(&inspect::__view_of_jer(&jer).unwrap()).unwrap();
-    assert_eq!(read, S1AP_PDU::from_view(&readable).unwrap());
+    let read = S1APPDU::from_view(&inspect::__view_of_jer(&jer).unwrap()).unwrap();
+    assert_eq!(read, S1APPDU::from_view(&readable).unwrap());
 }
 
 /// The values of the vectors as the reference has them: `generate.py --values FILE` of
@@ -329,9 +335,9 @@ fn a_pdu_written_from_the_values_of_the_reference_is_the_octets_of_the_reference
 fn the_pdus_that_a_fuzzer_found_a_fault_with_hold_to_the_properties_of_its_target() {
     let mut count = 0;
     for (name, octets) in vectors(FUZZED) {
-        let pdu = S1AP_PDU::decode(&octets).unwrap();
+        let pdu = S1APPDU::decode(&octets).unwrap();
         assert_eq!(
-            S1AP_PDU::from_tree(&pdu.to_tree()).as_ref(),
+            S1APPDU::from_tree(&pdu.to_tree()).as_ref(),
             Ok(&pdu),
             "{name}"
         );

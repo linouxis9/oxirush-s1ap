@@ -23,7 +23,7 @@ fn fixtures() -> impl Iterator<Item = (&'static str, Vec<u8>)> {
 }
 
 /// A UE CONTEXT RELEASE REQUEST of these IEs.
-fn release_request() -> S1AP_PDU {
+fn release_request() -> S1APPDU<'static> {
     build_s1ap!(
         UEContextReleaseRequest,
         MME_UE_S1AP_ID(42u32),
@@ -36,7 +36,7 @@ fn release_request() -> S1AP_PDU {
 #[test]
 fn an_ie_is_read_from_the_pdu_as_from_its_message() -> Result<(), Error> {
     let octets = release_request().encode()?;
-    let pdu = S1AP_PDU::decode_borrowed(&octets)?;
+    let pdu = S1APPDU::decode(&octets)?;
     assert_eq!(pdu.ie::<ie::eNB_UE_S1AP_ID>().unwrap()?, ENBUES1APID(7));
     assert_eq!(pdu.ie::<ie::MME_UE_S1AP_ID>().unwrap()?, MMEUES1APID(42));
     assert!(pdu.ie::<ie::NAS_PDU>().is_none());
@@ -49,7 +49,7 @@ fn an_ie_is_read_from_the_pdu_as_from_its_message() -> Result<(), Error> {
 
 #[test]
 fn the_macro_reads_a_pdu_without_decode_value() -> Result<(), Error> {
-    fn read(pdu: &S1AP_PDU) -> Result<(u32, u32), Error> {
+    fn read(pdu: &S1APPDU<'_>) -> Result<(u32, u32), Error> {
         extract_s1ap_ies!(pdu, UEContextReleaseRequest,
             req mme: u32 = MME_UE_S1AP_ID(id),
             req enb: u32 = eNB_UE_S1AP_ID(id),
@@ -75,7 +75,7 @@ fn a_nas_pdu_in_fragments_is_read_and_kept() -> Result<(), Error> {
         NAS_PDU(nas.clone()),
     )?;
     let octets = pdu.encode()?;
-    let pdu = S1AP_PDU::decode_borrowed(&octets)?;
+    let pdu = S1APPDU::decode(&octets)?;
     assert_eq!(pdu.ie::<ie::NAS_PDU>().unwrap()?.0[..], nas[..]);
     fn read(pdu: &S1APPDU<'_>) -> Result<Vec<u8>, Error> {
         extract_s1ap_ies!(pdu, DownlinkNASTransport,
@@ -92,7 +92,7 @@ fn a_nas_pdu_in_fragments_is_read_and_kept() -> Result<(), Error> {
 fn every_ie_of_the_fixtures_is_read_as_the_codec_of_its_message_reads_it() -> Result<(), Error> {
     let mut read = 0;
     for (name, octets) in fixtures() {
-        let pdu = S1AP_PDU::decode(&octets)?;
+        let pdu = S1APPDU::decode(&octets)?;
         let Ok(ies) = pdu.protocol_ies() else {
             continue;
         };
@@ -100,14 +100,14 @@ fn every_ie_of_the_fixtures_is_read_as_the_codec_of_its_message_reads_it() -> Re
         // decode is an error of the kind `UndecodableIe` of the reader.
         let of = |id: u16| ies.0.iter().filter(move |ie| ie.id.0 == id);
         let nas: Vec<Result<NASPDU, ErrorKind>> = of(26)
-            .map(|ie| decode_open_type(&ie.value).map_err(|_| ErrorKind::UndecodableIe))
+            .map(|ie| oxirush_s1ap::decode(&ie.value).map_err(|_| ErrorKind::UndecodableIe))
             .collect();
         let read_nas = pdu
             .ies::<ie::NAS_PDU>()
             .map(|nas| nas.map_err(|error| error.kind()));
         assert_eq!(read_nas.collect::<Vec<_>>(), nas, "{name}");
         let causes: Vec<Result<Cause, ErrorKind>> = of(2)
-            .map(|ie| decode_open_type(&ie.value).map_err(|_| ErrorKind::UndecodableIe))
+            .map(|ie| oxirush_s1ap::decode(&ie.value).map_err(|_| ErrorKind::UndecodableIe))
             .collect();
         let read_causes = pdu
             .ies::<ie::Cause>()
@@ -131,7 +131,7 @@ fn check_structure_reports_what_check_reports_of_the_container() -> Result<(), E
     };
     let mut compared = 0;
     for (name, octets) in fixtures() {
-        let pdu = S1AP_PDU::decode(&octets)?;
+        let pdu = S1APPDU::decode(&octets)?;
         let (Ok(all), Ok(structure)) = (pdu.check(), pdu.check_structure()) else {
             assert_eq!(
                 pdu.check().is_err(),
@@ -192,7 +192,7 @@ fn octets_of_the_message_that_end_early_are_an_error_of_every_reader() -> Result
     let ids: Vec<_> = cut.ies::<ie::eNB_UE_S1AP_ID>().collect();
     assert_eq!(ids[0], Ok(ENBUES1APID(7)));
     assert_eq!(ids[1].as_ref().unwrap_err().kind(), ErrorKind::Decode);
-    fn read(pdu: &S1AP_PDU) -> Result<u32, Error> {
+    fn read(pdu: &S1APPDU<'_>) -> Result<u32, Error> {
         extract_s1ap_ies!(pdu, UEContextReleaseRequest, req enb: u32 = eNB_UE_S1AP_ID(id));
         Ok(enb)
     }
@@ -233,7 +233,7 @@ fn the_items_of_an_e_rab_list_are_walked_without_building_the_list() -> Result<(
         E_RABToBeSetupListCtxtSUReq(vec![bearer(5)?, bearer(6)?]),
     )?;
     let octets = pdu.encode()?;
-    let pdu = S1AP_PDU::decode_borrowed(&octets)?;
+    let pdu = S1APPDU::decode(&octets)?;
     let ids: Vec<u64> = pdu
         .items::<ie::E_RABToBeSetupListCtxtSUReq>()
         .map(|item| item.map(|item| item.e_rab_id.0))
@@ -245,7 +245,7 @@ fn the_items_of_an_e_rab_list_are_walked_without_building_the_list() -> Result<(
     let items: Vec<ERABToBeSetupItemCtxtSUReq> = list
         .0
         .iter()
-        .map(|item| decode_open_type(&item.value).unwrap())
+        .map(|item| oxirush_s1ap::decode(&item.value).unwrap())
         .collect();
     let walked: Vec<_> = message
         .items::<ie::E_RABToBeSetupListCtxtSUReq>()
