@@ -62,7 +62,7 @@ impl<'a> Decode<'a> for FollowingTAI {
     fn decode(reader: &mut Reader<'a>) -> Result<Self, Error> {
         Ok(Self {
             value: TAI::decode(reader)?,
-            following: reader.unsigned(0, 255)? as u8,
+            following: reader.unsigned(0, 255, false)? as u8,
         })
     }
 }
