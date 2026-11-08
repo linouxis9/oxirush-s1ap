@@ -1,6 +1,6 @@
 [package]
 name = "oxirush-s1ap"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 description = "4G LTE/EPS S1AP between an eNB and an MME (3GPP TS 36.413, Release 19) in Rust, generated from the ASN.1: aligned PER, IEs read and built by name, message checks with their causes, JSON trees and serde. No unsafe code."
 license = "Apache-2.0"
