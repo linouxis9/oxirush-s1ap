@@ -39,8 +39,8 @@ pub type Pdu = s1ap::S1APPDU<'static>;
 /// A PDU that borrows its message from the octets that it is decoded from.
 pub type Borrowed<'a> = s1ap::S1APPDU<'a>;
 
-/// A PDU of the rasn bindings of `oracle/`, its message an open type.
-pub type TheirPdu = oracle::bindings::S1APPDU;
+/// A PDU of the rasn bindings of `rasn/`, its message an open type.
+pub type TheirPdu = rasn_bindings::bindings::S1APPDU;
 
 /// The root of the paths of the IEs of a message.
 pub const ROOT: &str = "/s1ap";

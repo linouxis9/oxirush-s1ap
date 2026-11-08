@@ -19,8 +19,7 @@
 //! the MME of Open5GS, captured on the wire. Nothing of them was written or chosen
 //! with this crate. Each is read, and written back as the octets that its sender sent.
 //! With `inspect`, each is the same octets through its tree, in which every IE is read
-//! with its type, and has the name that tshark gives it. The tests of `oracle/` compare
-//! what the codec of rasn makes of each.
+//! with its type, and has the name that tshark gives it.
 
 use std::collections::BTreeMap;
 

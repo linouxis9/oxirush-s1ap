@@ -70,6 +70,12 @@ All notable changes to `oxirush-s1ap` are recorded here.
 
 ### Removed
 
+- The oracle of the tests, rasn, which the benchmarks alone keep: the tests of
+  `oracle/` (`compare`, `codec` and `allocation`), the list of its types
+  `oracle/src/types.rs`, the comparison of the fuzz targets with rasn, and the
+  hooks that the oracle took. The bindings for rasn are in `rasn/`, a package of
+  its own that the benchmarks build and the crate does not; the vectors of
+  pycrate, the captures and the comparison with Wireshark stay.
 - The view of a PDU: `to_view`, `from_view` and `with_view`, with the paths of
   views (`/s1ap/X/value`, `octets` of an IE that has a value, `_raw_value`,
   `_edited`, `_decode_error`, `_lossy`, `decoded`, entries with an `id`). A tree and
