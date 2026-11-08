@@ -47,16 +47,17 @@
 use oxirush_aper::{BitString, Bits};
 use oxirush_utils::identity::Plmn;
 
-use crate::Error;
 use crate::s1ap::*;
+use crate::{Error, ErrorKind};
 
 /// `value`, which is `what`, when it fits in `bits` bits.
 fn fits(what: &str, value: u64, bits: u32) -> Result<u64, Error> {
     match bits >= 64 || value >> bits == 0 {
         true => Ok(value),
-        false => Err(Error::argument(format!(
-            "{what} {value} does not fit in {bits} bits"
-        ))),
+        false => Err(Error::new(
+            ErrorKind::Argument,
+            format!("{what} {value} does not fit in {bits} bits"),
+        )),
     }
 }
 
@@ -79,7 +80,8 @@ fn fits(what: &str, value: u64, bits: u32) -> Result<u64, Error> {
 /// # Ok::<(), oxirush_s1ap::Error>(())
 /// ```
 pub fn plmn(mcc: &str, mnc: &str) -> Result<PLMNidentity, Error> {
-    let plmn = Plmn::new(mcc, mnc).map_err(|error| Error::argument(error.to_string()))?;
+    let plmn =
+        Plmn::new(mcc, mnc).map_err(|error| Error::new(ErrorKind::Argument, error.to_string()))?;
     Ok(PLMNidentity::from(plmn))
 }
 
