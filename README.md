@@ -81,7 +81,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // The eNB: its identity, its name and the tracking area it serves
     let enb = global_enb_id(network, EnbKind::Macro, 0x12345)?;
-    let area = SupportedTAsItem::new(TAC([0, 1]), BPLMNs(vec![network]), None);
+    let area = SupportedTAsItem {
+        tac: TAC([0, 1]),
+        broadcast_plmns: BPLMNs(vec![network]),
+        ie_extensions: None,
+    };
     let request = build_s1ap!(S1SetupRequest,
         Global_ENB_ID(enb),
         eNBname("enb-1"),
@@ -96,12 +100,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         req areas: SupportedTAs = SupportedTAs(areas) => areas,
     );
     println!("{received}: {}, {} tracking area", name.unwrap_or_default(), areas.0.len());
-    let served = ServedGUMMEIsItem::new(
-        ServedPLMNs(vec![network]),
-        ServedGroupIDs(vec![MMEGroupID([0, 1])]),
-        ServedMMECs(vec![MMECode([1])]),
-        None,
-    );
+    let served = ServedGUMMEIsItem {
+        served_plmns: ServedPLMNs(vec![network]),
+        served_group_ids: ServedGroupIDs(vec![MMEGroupID([0, 1])]),
+        served_mmecs: ServedMMECs(vec![MMECode([1])]),
+        ie_extensions: None,
+    };
     let response = build_s1ap!(S1SetupResponse,
         MMEname("mme-1"),
         ServedGUMMEIs(ServedGUMMEIs(vec![served])),
@@ -141,23 +145,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // After the security mode: the default bearer, whose item carries the
     // ATTACH ACCEPT, and the UE's security capabilities and KeNB
-    let priority = AllocationAndRetentionPriority::new(
-        PriorityLevel(8),
-        PreEmptionCapability::shall_not_trigger_pre_emption,
-        PreEmptionVulnerability::not_pre_emptable,
-        None,
-    );
+    let priority = AllocationAndRetentionPriority {
+        priority_level: PriorityLevel(8),
+        pre_emption_capability: PreEmptionCapability::shall_not_trigger_pre_emption,
+        pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
+        ie_extensions: None,
+    };
     let accept = hex::decode("07420121060002f839000100155201c101090908696e7465726e657405010a000001")?;
-    let bearer = ERABToBeSetupItemCtxtSUReq::new(
-        ERABID(5),
-        ERABLevelQoSParameters::new(QCI(9), priority, None, None),
-        TransportLayerAddress(BitString::from([10, 0, 0, 1])),
-        GTPTEID([0, 0, 0, 1]),
-        Some(NASPDU::from(accept)),
-        None,
-    );
+    let bearer = ERABToBeSetupItemCtxtSUReq {
+        e_rab_id: ERABID(5),
+        e_rab_level_qos_parameters: ERABLevelQoSParameters {
+            qci: QCI(9),
+            allocation_retention_priority: priority,
+            gbr_qos_information: None,
+            ie_extensions: None,
+        },
+        transport_layer_address: TransportLayerAddress(BitString::from([10, 0, 0, 1])),
+        gtp_teid: GTPTEID([0, 0, 0, 1]),
+        nas_pdu: Some(NASPDU::from(accept)),
+        ie_extensions: None,
+    };
     let bearers = vec![ie::E_RABToBeSetupItemCtxtSUReq::field(Criticality::Reject, bearer)?];
-    let rates = UEAggregateMaximumBitrate::new(BitRate(100_000_000), BitRate(50_000_000), None);
+    let rates = UEAggregateMaximumBitrate {
+        ue_aggregate_maximum_bit_rate_dl: BitRate(100_000_000),
+        ue_aggregate_maximum_bit_rate_ul: BitRate(50_000_000),
+        ie_extensions: None,
+    };
     let mut k_enb = [0; 32];
     hex::decode_to_slice("cd49a4ae7001cf3c810a89f47ced1b130f7b3f9b42bc9707431b3fb4e62b20fc", &mut k_enb)?;
     let setup = build_s1ap!(InitialContextSetupRequest,
@@ -317,20 +330,25 @@ use oxirush_s1ap::{BitString, build_s1ap, Ie, ie, s1ap::*};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // One E-RAB to set up, as the item of its list
-    let priority = AllocationAndRetentionPriority::new(
-        PriorityLevel(1),
-        PreEmptionCapability::shall_not_trigger_pre_emption,
-        PreEmptionVulnerability::not_pre_emptable,
-        None,
-    );
-    let bearer = ERABToBeSetupItemCtxtSUReq::new(
-        ERABID(5),
-        ERABLevelQoSParameters::new(QCI(9), priority, None, None),
-        TransportLayerAddress(BitString::from([10, 0, 0, 1])),
-        GTPTEID([0, 0, 0, 1]),
-        None,
-        None,
-    );
+    let priority = AllocationAndRetentionPriority {
+        priority_level: PriorityLevel(1),
+        pre_emption_capability: PreEmptionCapability::shall_not_trigger_pre_emption,
+        pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
+        ie_extensions: None,
+    };
+    let bearer = ERABToBeSetupItemCtxtSUReq {
+        e_rab_id: ERABID(5),
+        e_rab_level_qos_parameters: ERABLevelQoSParameters {
+            qci: QCI(9),
+            allocation_retention_priority: priority,
+            gbr_qos_information: None,
+            ie_extensions: None,
+        },
+        transport_layer_address: TransportLayerAddress(BitString::from([10, 0, 0, 1])),
+        gtp_teid: GTPTEID([0, 0, 0, 1]),
+        nas_pdu: None,
+        ie_extensions: None,
+    };
     let item = ie::E_RABToBeSetupItemCtxtSUReq::field(Criticality::Reject, bearer)?;
     let pdu = build_s1ap!(InitialContextSetupRequest,
         MME_UE_S1AP_ID(1u32),

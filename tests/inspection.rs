@@ -213,16 +213,18 @@ fn a_new_ie_whose_value_is_a_string_is_typed_too() {
 
 #[test]
 fn an_ie_that_does_not_decode_is_edited_as_its_octets() {
-    let request = UEContextReleaseRequest::new(ProtocolIEContainer(vec![ProtocolIEField::new(
-        ProtocolIEID(60000),
-        Criticality::Ignore,
-        vec![0xC0, 0xFF, 0xEE].into(),
-    )]));
-    let pdu = S1AP_PDU::initiatingMessage(InitiatingMessage::new(
-        ProcedureCode(18),
-        Criticality::Ignore,
-        encode_open_type(&request).unwrap(),
-    ));
+    let request = UEContextReleaseRequest {
+        protocol_ies: ProtocolIEContainer(vec![ProtocolIEField {
+            id: ProtocolIEID(60000),
+            criticality: Criticality::Ignore,
+            value: vec![0xC0, 0xFF, 0xEE].into(),
+        }]),
+    };
+    let pdu = S1AP_PDU::initiatingMessage(InitiatingMessage {
+        procedure_code: ProcedureCode(18),
+        criticality: Criticality::Ignore,
+        value: encode_open_type(&request).unwrap(),
+    });
     let mut view = pdu.to_view().unwrap();
     let path = "/message/protocolIEs/0/value";
     assert_eq!(view.pointer(path), Some(&oxirush_s1ap::tree!("c0ffee")));
@@ -1010,12 +1012,14 @@ fn a_tunnel_endpoint_and_the_identities_of_a_ue_are_readable() {
     let mut shown = added(51, bearers).unwrap();
     let item = &mut ie(&mut shown, 51)["value"][0];
     assert_eq!(item["value"], bearer);
-    let expected = ERABSetupItemCtxtSURes::new(
-        ERABID(5),
-        TransportLayerAddress(oxirush_s1ap::BitString::from([10, 0, 0, 2])),
-        GTPTEID::from([0, 0, 0, 2]),
-        None,
-    );
+    let expected = ERABSetupItemCtxtSURes {
+        e_rab_id: ERABID(5),
+        transport_layer_address: TransportLayerAddress(oxirush_s1ap::BitString::from([
+            10, 0, 0, 2,
+        ])),
+        gtp_teid: GTPTEID::from([0, 0, 0, 2]),
+        ie_extensions: None,
+    };
     assert_eq!(
         item["_raw_value"],
         octets(&encode_open_type(&expected).unwrap())
@@ -1692,11 +1696,11 @@ fn the_identifiers_of_the_registry_are_the_constants_of_the_bindings() {
 
 #[test]
 fn a_kind_that_the_specification_does_not_have_says_the_direction_of_its_pdu() {
-    let pdu = S1AP_PDU::unsuccessfulOutcome(UnsuccessfulOutcome::new(
-        ProcedureCode(13),
-        Criticality::Ignore,
-        oxirush_s1ap::Octets::from(vec![0]),
-    ));
+    let pdu = S1AP_PDU::unsuccessfulOutcome(UnsuccessfulOutcome {
+        procedure_code: ProcedureCode(13),
+        criticality: Criticality::Ignore,
+        value: oxirush_s1ap::Octets::from(vec![0]),
+    });
     let oxirush_s1ap::S1apPduKind::Other {
         direction,
         procedure_code,
@@ -2310,13 +2314,18 @@ fn an_integer_of_two_to_the_63_or_more_is_a_number() {
 fn an_ie_with_an_integer_beyond_64_bits_keeps_the_octets_received() {
     use oxirush_s1ap::tree;
     // The count of the paging attempts has an extension marker: INTEGER (1..16, ...).
-    let attempts = PagingAttemptInformation::new(
-        PagingAttemptCount(u64::MAX),
-        IntendedNumberOfPagingAttempts(1),
-        None,
-        None,
-    );
-    let largest = AssistanceDataForPaging::new(None, None, Some(attempts), None);
+    let attempts = PagingAttemptInformation {
+        paging_attempt_count: PagingAttemptCount(u64::MAX),
+        intended_number_of_paging_attempts: IntendedNumberOfPagingAttempts(1),
+        next_paging_area_scope: None,
+        ie_extensions: None,
+    };
+    let largest = AssistanceDataForPaging {
+        assistance_data_for_recommended_cells: None,
+        assistance_data_for_ce_capable_ues: None,
+        paging_attempt_information: Some(attempts),
+        ie_extensions: None,
+    };
     let largest = encode_open_type(&largest).unwrap();
     // The octets of the largest count that the bindings hold, with the nine octets of
     // 2^64 in the place of its own nine.
@@ -2375,11 +2384,11 @@ fn modification(bits: usize) -> S1AP_PDU {
         octets[0] = 0xc0;
         oxirush_s1ap::BitString::new(octets, length).unwrap()
     };
-    let capabilities = UESecurityCapabilities::new(
-        EncryptionAlgorithms(mask(bits)),
-        IntegrityProtectionAlgorithms(mask(16)),
-        None,
-    );
+    let capabilities = UESecurityCapabilities {
+        encryption_algorithms: EncryptionAlgorithms(mask(bits)),
+        integrity_protection_algorithms: IntegrityProtectionAlgorithms(mask(16)),
+        ie_extensions: None,
+    };
     build_s1ap!(REJECT UEContextModificationRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(1u32),

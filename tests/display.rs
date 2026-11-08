@@ -15,7 +15,11 @@ fn a_pdu_shows_the_identifiers_of_its_ue_however_its_message_carries_them() -> R
     let cause = || Cause::nas(CauseNas::normal_release);
 
     // UE CONTEXT RELEASE COMMAND, with the pair
-    let pair = UES1APIDPair::new(MMEUES1APID(42), ENBUES1APID(7), None);
+    let pair = UES1APIDPair {
+        mme_ue_s1ap_id: MMEUES1APID(42),
+        enb_ue_s1ap_id: ENBUES1APID(7),
+        ie_extensions: None,
+    };
     let command = build_s1ap!(
         UEContextReleaseCommand,
         UE_S1AP_IDs(UES1APIDs::uE_S1AP_ID_pair(pair)),

@@ -99,11 +99,11 @@ fn tracking_areas() -> SupportedTAs {
         plmn("208", "93").unwrap(),
         plmn("310", "410").unwrap(),
     ]);
-    SupportedTAs(vec![SupportedTAsItem::new(
-        TAC::from([0, 1]),
-        broadcast,
-        None,
-    )])
+    SupportedTAs(vec![SupportedTAsItem {
+        tac: TAC::from([0, 1]),
+        broadcast_plmns: broadcast,
+        ie_extensions: None,
+    }])
 }
 
 #[test]

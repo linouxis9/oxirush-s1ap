@@ -213,17 +213,15 @@ fn root_fields_keep_the_original_sequence_layout() {
 #[test]
 fn optional_root_extension_container_is_preserved() {
     let wire = hex::decode("4002f83900010000fde840015a").unwrap();
-    let value = TAI::new(
-        oxirush_s1ap::helpers::plmn("208", "93").unwrap(),
-        TAC([0, 1]),
-        Some(ProtocolExtensionContainer(vec![
-            ProtocolExtensionField::new(
-                ProtocolExtensionID(65000),
-                Criticality::Ignore,
-                vec![0x5a].into(),
-            ),
-        ])),
-    );
+    let value = TAI {
+        plmn_identity: oxirush_s1ap::helpers::plmn("208", "93").unwrap(),
+        tac: TAC([0, 1]),
+        ie_extensions: Some(ProtocolExtensionContainer(vec![ProtocolExtensionField {
+            id: ProtocolExtensionID(65000),
+            criticality: Criticality::Ignore,
+            extension_value: vec![0x5a].into(),
+        }])),
+    };
     assert_eq!(decode::<TAI>(&wire).unwrap(), value);
     assert_eq!(encode(&value).unwrap(), wire);
 }

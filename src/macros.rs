@@ -147,10 +147,10 @@
 //!     Ok(nas_pdu)
 //! }
 //!
-//! let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
+//! let mut message = UplinkNASTransport { protocol_ies: ProtocolIEContainer(vec![
 //!     ie::MME_UE_S1AP_ID::field(Criticality::Reject, 1u32)?,
 //!     ie::NAS_PDU::field(Criticality::Reject, vec![0x07, 0x6a])?,
-//! ]));
+//! ]) };
 //! assert_eq!(handle(&message)?, [0x07, 0x6a]);
 //!
 //! // Without the NAS-PDU, which a field requires
@@ -172,9 +172,9 @@
 //! ```
 //! use oxirush_s1ap::{Ie, ie, s1ap::*};
 //!
-//! let mut message = UplinkNASTransport::new(ProtocolIEContainer(vec![
+//! let mut message = UplinkNASTransport { protocol_ies: ProtocolIEContainer(vec![
 //!     ie::MME_UE_S1AP_ID::field(Criticality::Reject, 1u32)?,
-//! ]));
+//! ]) };
 //! assert_eq!(message.set_ie::<ie::MME_UE_S1AP_ID>(42u32), Ok(true));
 //! # Ok::<(), oxirush_s1ap::Error>(())
 //! ```
@@ -359,8 +359,9 @@ mod tests {
             ies.map(|ie| ie.value.to_vec()).collect()
         };
         let entry = |id: u32| ie::MME_UE_S1AP_ID::field(Criticality::Reject, id);
-        let mut request =
-            UEContextReleaseRequest::new(ProtocolIEContainer(vec![entry(1)?, entry(2)?]));
+        let mut request = UEContextReleaseRequest {
+            protocol_ies: ProtocolIEContainer(vec![entry(1)?, entry(2)?]),
+        };
         // The first one is read, and is the one that is changed.
         assert_eq!(id(&request)?, 1);
         let before = ids(&request);
@@ -379,20 +380,26 @@ mod tests {
         // after one that decodes and before it.
         let undecodable = || {
             let octets = crate::Octets::from(vec![0xff]);
-            ProtocolIEField::new(0u16, Criticality::Reject, octets)
+            ProtocolIEField {
+                id: ProtocolIEID(0),
+                criticality: Criticality::Reject,
+                value: octets,
+            }
         };
         let entry = ie::MME_UE_S1AP_ID::field(Criticality::Reject, 1u32)?;
         // The first one decodes: the macro and `set_ie` take it, and decode no other.
-        let mut request =
-            UEContextReleaseRequest::new(ProtocolIEContainer(vec![entry.clone(), undecodable()]));
+        let mut request = UEContextReleaseRequest {
+            protocol_ies: ProtocolIEContainer(vec![entry.clone(), undecodable()]),
+        };
         assert_eq!(id(&request)?, 1);
         let changed = request.set_ie::<ie::MME_UE_S1AP_ID>(42u32);
         assert_eq!(changed, Ok(true));
         assert_eq!(id(&request)?, 42);
         // The first one does not decode: it is the error of the macro, and `set_ie`
         // replaces it, without reading it.
-        let mut request =
-            UEContextReleaseRequest::new(ProtocolIEContainer(vec![undecodable(), entry.clone()]));
+        let mut request = UEContextReleaseRequest {
+            protocol_ies: ProtocolIEContainer(vec![undecodable(), entry.clone()]),
+        };
         assert_eq!(id(&request).unwrap_err().kind(), ErrorKind::UndecodableIe);
         assert_eq!(request.set_ie::<ie::MME_UE_S1AP_ID>(42u32), Ok(true));
         assert_eq!(id(&request)?, 42);

@@ -46,16 +46,31 @@ which `items()` of a PDU walks.
 
 ```
 use oxirush_s1ap::aper::BitString;
-use oxirush_s1ap::{build_s1ap, Ie, ie, s1ap::*};
+use oxirush_s1ap::{Ie, build_s1ap, ie, s1ap::*};
 
 // The default bearer: E-RAB 5 of QCI 9, and the S-GW's end of its tunnel
-let priority = AllocationAndRetentionPriority::new(PriorityLevel(15),
-    PreEmptionCapability::shall_not_trigger_pre_emption,
-    PreEmptionVulnerability::not_pre_emptable, None);
-let qos = ERABLevelQoSParameters::new(QCI(9), priority, None, None);
-let bearer = ERABToBeSetupItemCtxtSUReq::new(ERABID(5), qos,
-    TransportLayerAddress(BitString::from([10, 0, 0, 1])), GTPTEID([0, 0, 0, 1]), None, None);
-let request = build_s1ap!(InitialContextSetupRequest,
+let priority = AllocationAndRetentionPriority {
+    priority_level: PriorityLevel(15),
+    pre_emption_capability: PreEmptionCapability::shall_not_trigger_pre_emption,
+    pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
+    ie_extensions: None,
+};
+let qos = ERABLevelQoSParameters {
+    qci: QCI(9),
+    allocation_retention_priority: priority,
+    gbr_qos_information: None,
+    ie_extensions: None,
+};
+let bearer = ERABToBeSetupItemCtxtSUReq {
+    e_rab_id: ERABID(5),
+    e_rab_level_qos_parameters: qos,
+    transport_layer_address: TransportLayerAddress(BitString::from([10, 0, 0, 1])),
+    gtp_teid: GTPTEID([0, 0, 0, 1]),
+    nas_pdu: None,
+    ie_extensions: None,
+};
+let request = build_s1ap!(
+    InitialContextSetupRequest,
     MME_UE_S1AP_ID(1u32),
     eNB_UE_S1AP_ID(7u32),
     E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(vec![
@@ -66,7 +81,10 @@ let request = build_s1ap!(InitialContextSetupRequest,
 // Each item, where it is in the octets of the PDU
 for item in request.items::<ie::E_RABToBeSetupListCtxtSUReq>() {
     let item = item?;
-    assert_eq!((item.e_rab_id, item.gtp_teid), (ERABID(5), GTPTEID([0, 0, 0, 1])));
+    assert_eq!(
+        (item.e_rab_id, item.gtp_teid),
+        (ERABID(5), GTPTEID([0, 0, 0, 1]))
+    );
 }
 # Ok::<(), oxirush_s1ap::Error>(())
 ```"#,

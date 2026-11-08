@@ -23,43 +23,45 @@ fn main() {
     // and MMECs.
 
     let plmn_identity = PLMNidentity(TBCDSTRING([0x02, 0xF8, 0x39]));
-    let served_gummeis = ServedGUMMEIs(vec![ServedGUMMEIsItem::new(
-        ServedPLMNs(vec![plmn_identity]),
-        ServedGroupIDs(vec![MMEGroupID::from([0x00, 0x01])]),
-        ServedMMECs(vec![MMECode::from([0x01])]),
-        None,
-    )]);
+    let served_gummeis = ServedGUMMEIs(vec![ServedGUMMEIsItem {
+        served_plmns: ServedPLMNs(vec![plmn_identity]),
+        served_group_ids: ServedGroupIDs(vec![MMEGroupID::from([0x00, 0x01])]),
+        served_mmecs: ServedMMECs(vec![MMECode::from([0x01])]),
+        ie_extensions: None,
+    }]);
 
     let mme_name = MMEname("mme-1".into());
 
     // The value of an IE is an open type: every entry holds its numeric ID, its
     // criticality, and the APER octets of its concrete S1AP value.
     let ies = vec![
-        ProtocolIEField::new(
-            ID_MMENAME,
-            Criticality::Ignore,
-            encode_open_type(&mme_name).expect("encode MME name"),
-        ),
-        ProtocolIEField::new(
-            ID_SERVED_GUMMEIS,
-            Criticality::Reject,
-            encode_open_type(&served_gummeis).expect("encode served GUMMEIs"),
-        ),
-        ProtocolIEField::new(
-            ID_RELATIVE_MMECAPACITY,
-            Criticality::Ignore,
-            encode_open_type(&RelativeMMECapacity(255)).expect("encode MME capacity"),
-        ),
+        ProtocolIEField {
+            id: ID_MMENAME,
+            criticality: Criticality::Ignore,
+            value: encode_open_type(&mme_name).expect("encode MME name"),
+        },
+        ProtocolIEField {
+            id: ID_SERVED_GUMMEIS,
+            criticality: Criticality::Reject,
+            value: encode_open_type(&served_gummeis).expect("encode served GUMMEIs"),
+        },
+        ProtocolIEField {
+            id: ID_RELATIVE_MMECAPACITY,
+            criticality: Criticality::Ignore,
+            value: encode_open_type(&RelativeMMECapacity(255)).expect("encode MME capacity"),
+        },
     ];
-    let response = S1SetupResponse::new(ProtocolIEContainer(ies));
+    let response = S1SetupResponse {
+        protocol_ies: ProtocolIEContainer(ies),
+    };
 
     // The outer PDU wraps the APER-encoded message in its direction and
     // ASN.1-derived procedure code.
-    let pdu = S1AP_PDU::successfulOutcome(SuccessfulOutcome::new(
-        ID_S1_SETUP,
-        Criticality::Reject,
-        encode_open_type(&response).expect("encode S1 Setup Response"),
-    ));
+    let pdu = S1AP_PDU::successfulOutcome(SuccessfulOutcome {
+        procedure_code: ID_S1_SETUP,
+        criticality: Criticality::Reject,
+        value: encode_open_type(&response).expect("encode S1 Setup Response"),
+    });
 
     // ── 2. Encode to APER ───────────────────────────────────────────────────
     // `pdu.encode()` is the convenience API; this deliberately uses the runtime.

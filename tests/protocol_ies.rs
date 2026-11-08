@@ -68,11 +68,11 @@ fn a_message_that_the_macros_built_has_the_ies_that_it_was_built_with() -> Resul
 fn an_unknown_ie_and_a_repeated_one_are_kept_with_their_criticality() -> Result<(), Error> {
     // An IE of the message, an IE that the protocol does not have, the first again with
     // another value and another criticality, and an IE of another message.
-    let unknown = ProtocolIEField::new(
-        60000u16,
-        Criticality::Notify,
-        Octets::from(vec![0xc0, 0xff]),
-    );
+    let unknown = ProtocolIEField {
+        id: ProtocolIEID(60000),
+        criticality: Criticality::Notify,
+        value: Octets::from(vec![0xc0, 0xff]),
+    };
     let mut again = ie::MME_UE_S1AP_ID::field(Criticality::Reject, 2u32)?;
     again.criticality = Criticality::Ignore;
     let ies = vec![
@@ -228,24 +228,35 @@ fn a_field_takes_the_value_of_an_ie_as_its_type_or_as_the_value_that_it_names() 
 fn an_item_of_a_list_of_single_containers_is_built_without_the_name_of_a_message()
 -> Result<(), Error> {
     let bearer = |id: u64| -> Result<ProtocolIEField<'static>, Error> {
-        let priority = AllocationAndRetentionPriority::new(
-            PriorityLevel(8),
-            PreEmptionCapability::shall_not_trigger_pre_emption,
-            PreEmptionVulnerability::not_pre_emptable,
-            None,
-        );
-        let item = ERABToBeSetupItemCtxtSUReq::new(
-            ERABID(id),
-            ERABLevelQoSParameters::new(QCI(9), priority, None, None),
-            TransportLayerAddress(oxirush_s1ap::BitString::from([10, 0, 0, 1])),
-            GTPTEID([0, 0, 0, id as u8]),
-            None,
-            None,
-        );
+        let priority = AllocationAndRetentionPriority {
+            priority_level: PriorityLevel(8),
+            pre_emption_capability: PreEmptionCapability::shall_not_trigger_pre_emption,
+            pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
+            ie_extensions: None,
+        };
+        let item = ERABToBeSetupItemCtxtSUReq {
+            e_rab_id: ERABID(id),
+            e_rab_level_qos_parameters: ERABLevelQoSParameters {
+                qci: QCI(9),
+                allocation_retention_priority: priority,
+                gbr_qos_information: None,
+                ie_extensions: None,
+            },
+            transport_layer_address: TransportLayerAddress(oxirush_s1ap::BitString::from([
+                10, 0, 0, 1,
+            ])),
+            gtp_teid: GTPTEID([0, 0, 0, id as u8]),
+            nas_pdu: None,
+            ie_extensions: None,
+        };
         ie::E_RABToBeSetupItemCtxtSUReq::field(Criticality::Reject, item)
     };
     let bearers = ERABToBeSetupListCtxtSUReq(vec![bearer(5)?, bearer(6)?]);
-    let rates = UEAggregateMaximumBitrate::new(BitRate(100_000_000), BitRate(50_000_000), None);
+    let rates = UEAggregateMaximumBitrate {
+        ue_aggregate_maximum_bit_rate_dl: BitRate(100_000_000),
+        ue_aggregate_maximum_bit_rate_ul: BitRate(50_000_000),
+        ie_extensions: None,
+    };
     let pdu = build_s1ap!(REJECT InitialContextSetupRequest,
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT eNB_UE_S1AP_ID(7u32),

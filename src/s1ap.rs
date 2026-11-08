@@ -799,17 +799,6 @@ pub mod s1_ap_containers {
         pub value: Octets<'a>,
     }
     impl<'a> ProtocolIEField<'a> {
-        pub fn new(
-            id: impl Into<ProtocolIEID>,
-            criticality: Criticality,
-            value: Octets<'a>,
-        ) -> Self {
-            Self {
-                id: id.into(),
-                criticality,
-                value,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ProtocolIEField<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         #[inline]
@@ -959,17 +948,6 @@ pub mod s1_ap_containers {
         pub extension_value: Octets<'a>,
     }
     impl<'a> ProtocolExtensionField<'a> {
-        pub fn new(
-            id: impl Into<ProtocolExtensionID>,
-            criticality: Criticality,
-            extension_value: Octets<'a>,
-        ) -> Self {
-            Self {
-                id: id.into(),
-                criticality,
-                extension_value,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ProtocolExtensionField<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         #[inline]
@@ -1122,19 +1100,6 @@ pub mod s1_ap_ies {
         pub gummei: GUMMEI,
         pub m_tmsi: MTMSI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl AdditionalGUTI {
-        pub fn new(
-            gummei: GUMMEI,
-            m_tmsi: MTMSI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                gummei,
-                m_tmsi,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for AdditionalGUTI {
         const NAME: &'static str = "Additional-GUTI";
@@ -1354,21 +1319,6 @@ pub mod s1_ap_ies {
         pub pre_emption_capability: PreEmptionCapability,
         pub pre_emption_vulnerability: PreEmptionVulnerability,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl AllocationAndRetentionPriority {
-        pub fn new(
-            priority_level: PriorityLevel,
-            pre_emption_capability: PreEmptionCapability,
-            pre_emption_vulnerability: PreEmptionVulnerability,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                priority_level,
-                pre_emption_capability,
-                pre_emption_vulnerability,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for AllocationAndRetentionPriority {
         const NAME: &'static str = "AllocationAndRetentionPriority";
@@ -1670,15 +1620,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> AssistanceDataForCECapableUEs<'a> {
-        pub fn new(
-            cell_identifier_and_ce_level_for_ce_capable_ues: CellIdentifierAndCELevelForCECapableUEs<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                cell_identifier_and_ce_level_for_ce_capable_ues,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `AssistanceDataForCECapableUEs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AssistanceDataForCECapableUEs<'static> {
@@ -1776,19 +1717,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> AssistanceDataForPaging<'a> {
-        pub fn new(
-            assistance_data_for_recommended_cells: Option<AssistanceDataForRecommendedCells<'a>>,
-            assistance_data_for_ce_capable_ues: Option<AssistanceDataForCECapableUEs<'a>>,
-            paging_attempt_information: Option<PagingAttemptInformation>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                assistance_data_for_recommended_cells,
-                assistance_data_for_ce_capable_ues,
-                paging_attempt_information,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `AssistanceDataForPaging<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AssistanceDataForPaging<'static> {
@@ -1951,15 +1879,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> AssistanceDataForRecommendedCells<'a> {
-        pub fn new(
-            recommended_cells_for_paging: RecommendedCellsForPaging<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                recommended_cells_for_paging,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `AssistanceDataForRecommendedCells<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AssistanceDataForRecommendedCells<'static> {
@@ -2146,19 +2065,6 @@ pub mod s1_ap_ies {
         pub dl_discarding: DLDiscarding,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl BearersSubjectToDLDiscardingItem {
-        pub fn new(
-            e_rab_id: ERABID,
-            dl_discarding: DLDiscarding,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                dl_discarding,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for BearersSubjectToDLDiscardingItem {
         const NAME: &'static str = "Bearers-SubjectToDLDiscarding-Item";
     }
@@ -2300,19 +2206,6 @@ pub mod s1_ap_ies {
         pub e_rab_id: ERABID,
         pub dl_count_pdcp_sn_length: DLCOUNTPDCPSNlength,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl BearersSubjectToEarlyStatusTransferItem {
-        pub fn new(
-            e_rab_id: ERABID,
-            dl_count_pdcp_sn_length: DLCOUNTPDCPSNlength,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                dl_count_pdcp_sn_length,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for BearersSubjectToEarlyStatusTransferItem {
         const NAME: &'static str = "Bearers-SubjectToEarlyStatusTransfer-Item";
@@ -2466,21 +2359,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> BearersSubjectToStatusTransferItem<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            ul_count_value: COUNTvalue,
-            dl_count_value: COUNTvalue,
-            receive_statusof_ul_pdcp_sdus: Option<ReceiveStatusofULPDCPSDUs<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                ul_count_value,
-                dl_count_value,
-                receive_statusof_ul_pdcp_sdus,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `BearersSubjectToStatusTransferItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BearersSubjectToStatusTransferItem<'static> {
@@ -2863,19 +2741,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> BluetoothMeasurementConfiguration<'a> {
-        pub fn new(
-            bluetooth_meas_config: BluetoothMeasConfig,
-            bluetooth_meas_config_name_list: Option<BluetoothMeasConfigNameList<'a>>,
-            bt_rssi: Option<BluetoothMeasurementConfigurationBtRssi>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                bluetooth_meas_config,
-                bluetooth_meas_config_name_list,
-                bt_rssi,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `BluetoothMeasurementConfiguration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> BluetoothMeasurementConfiguration<'static> {
@@ -3411,23 +3276,6 @@ pub mod s1_ap_ies {
         pub rac: Option<RAC>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl CGI {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            lac: LAC,
-            ci: CI,
-            rac: Option<RAC>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                lac,
-                ci,
-                rac,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for CGI {
         const NAME: &'static str = "CGI";
     }
@@ -3723,19 +3571,6 @@ pub mod s1_ap_ies {
         pub cn_type: CNType,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl CNTypeRestrictionsItem {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            cn_type: CNType,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                cn_type,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for CNTypeRestrictionsItem {
         const NAME: &'static str = "CNTypeRestrictions-Item";
     }
@@ -3816,19 +3651,6 @@ pub mod s1_ap_ies {
         pub pdcp_sn_extended: PDCPSNExtended,
         pub hfn_modified: HFNModified,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl COUNTValueExtended {
-        pub fn new(
-            pdcp_sn_extended: PDCPSNExtended,
-            hfn_modified: HFNModified,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                pdcp_sn_extended,
-                hfn_modified,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for COUNTValueExtended {
         const NAME: &'static str = "COUNTValueExtended";
@@ -3914,19 +3736,6 @@ pub mod s1_ap_ies {
         pub hfn: HFN,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl COUNTvalue {
-        pub fn new(
-            pdcp_sn: PDCPSN,
-            hfn: HFN,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                pdcp_sn,
-                hfn,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for COUNTvalue {
         const NAME: &'static str = "COUNTvalue";
     }
@@ -4004,19 +3813,6 @@ pub mod s1_ap_ies {
         pub pdcp_sn_length18: PDCPSNlength18,
         pub hfn_for_pdcp_sn_length18: HFNforPDCPSNlength18,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl COUNTvaluePDCPSNlength18 {
-        pub fn new(
-            pdcp_sn_length18: PDCPSNlength18,
-            hfn_for_pdcp_sn_length18: HFNforPDCPSNlength18,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                pdcp_sn_length18,
-                hfn_for_pdcp_sn_length18,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for COUNTvaluePDCPSNlength18 {
         const NAME: &'static str = "COUNTvaluePDCP-SNlength18";
@@ -4258,17 +4054,6 @@ pub mod s1_ap_ies {
         pub csg_id: CSGId,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl CSGIdListItem {
-        pub fn new(
-            csg_id: CSGId,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                csg_id,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for CSGIdListItem {
         const NAME: &'static str = "CSG-IdList-Item";
     }
@@ -4436,19 +4221,6 @@ pub mod s1_ap_ies {
         pub number_of_broadcasts: NumberOfBroadcasts,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl CancelledCellinEAIItem {
-        pub fn new(
-            ecgi: EUTRANCGI,
-            number_of_broadcasts: NumberOfBroadcasts,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ecgi,
-                number_of_broadcasts,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for CancelledCellinEAIItem {
         const NAME: &'static str = "CancelledCellinEAI-Item";
     }
@@ -4585,19 +4357,6 @@ pub mod s1_ap_ies {
         pub ecgi: EUTRANCGI,
         pub number_of_broadcasts: NumberOfBroadcasts,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl CancelledCellinTAIItem {
-        pub fn new(
-            ecgi: EUTRANCGI,
-            number_of_broadcasts: NumberOfBroadcasts,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ecgi,
-                number_of_broadcasts,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for CancelledCellinTAIItem {
         const NAME: &'static str = "CancelledCellinTAI-Item";
@@ -5471,19 +5230,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> Cdma2000OneXSRVCCInfo<'a> {
-        pub fn new(
-            cdma2000_one_xmeid: Cdma2000OneXMEID<'a>,
-            cdma2000_one_xmsi: Cdma2000OneXMSI<'a>,
-            cdma2000_one_x_pilot: Cdma2000OneXPilot<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                cdma2000_one_xmeid,
-                cdma2000_one_xmsi,
-                cdma2000_one_x_pilot,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `Cdma2000OneXSRVCCInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Cdma2000OneXSRVCCInfo<'static> {
@@ -5844,17 +5590,6 @@ pub mod s1_ap_ies {
         pub cell_id_listfor_mdt: CellIdListforMDT,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl CellBasedMDT {
-        pub fn new(
-            cell_id_listfor_mdt: CellIdListforMDT,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                cell_id_listfor_mdt,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for CellBasedMDT {
         const NAME: &'static str = "CellBasedMDT";
     }
@@ -5929,17 +5664,6 @@ pub mod s1_ap_ies {
     pub struct CellBasedQMC {
         pub cell_id_listfor_qmc: CellIdListforQMC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl CellBasedQMC {
-        pub fn new(
-            cell_id_listfor_qmc: CellIdListforQMC,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                cell_id_listfor_qmc,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for CellBasedQMC {
         const NAME: &'static str = "CellBasedQMC";
@@ -6068,17 +5792,6 @@ pub mod s1_ap_ies {
         pub ecgi: EUTRANCGI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl CellIDBroadcastItem {
-        pub fn new(
-            ecgi: EUTRANCGI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ecgi,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for CellIDBroadcastItem {
         const NAME: &'static str = "CellID-Broadcast-Item";
     }
@@ -6202,19 +5915,6 @@ pub mod s1_ap_ies {
         pub ecgi: EUTRANCGI,
         pub number_of_broadcasts: NumberOfBroadcasts,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl CellIDCancelledItem {
-        pub fn new(
-            ecgi: EUTRANCGI,
-            number_of_broadcasts: NumberOfBroadcasts,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ecgi,
-                number_of_broadcasts,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for CellIDCancelledItem {
         const NAME: &'static str = "CellID-Cancelled-Item";
@@ -6406,17 +6106,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> CellIdentifierAndCELevelForCECapableUEs<'a> {
-        pub fn new(
-            global_cell_id: EUTRANCGI,
-            ce_level: CELevel<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                global_cell_id,
-                ce_level,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `CellIdentifierAndCELevelForCECapableUEs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellIdentifierAndCELevelForCECapableUEs<'static> {
@@ -6559,17 +6248,6 @@ pub mod s1_ap_ies {
     pub struct CellType {
         pub cell_size: CellSize,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl CellType {
-        pub fn new(
-            cell_size: CellSize,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                cell_size,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for CellType {
         const NAME: &'static str = "CellType";
@@ -6799,17 +6477,6 @@ pub mod s1_ap_ies {
         pub ecgi: EUTRANCGI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl CompletedCellinEAIItem {
-        pub fn new(
-            ecgi: EUTRANCGI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ecgi,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for CompletedCellinEAIItem {
         const NAME: &'static str = "CompletedCellinEAI-Item";
     }
@@ -6933,17 +6600,6 @@ pub mod s1_ap_ies {
         pub ecgi: EUTRANCGI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl CompletedCellinTAIItem {
-        pub fn new(
-            ecgi: EUTRANCGI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ecgi,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for CompletedCellinTAIItem {
         const NAME: &'static str = "CompletedCellinTAI-Item";
     }
@@ -7059,17 +6715,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ConnectedengNBItem<'a> {
-        pub fn new(
-            en_gnb_id: EnGNBID<'a>,
-            supported_tas: SupportedTAs,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                en_gnb_id,
-                supported_tas,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ConnectedengNBItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ConnectedengNBItem<'static> {
@@ -7221,19 +6866,6 @@ pub mod s1_ap_ies {
         pub source_ng_ran_node_id: GlobalRANNODEID,
         pub ran_ue_ngap_id: RANUENGAPID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl ContextatSource {
-        pub fn new(
-            source_ng_ran_node_id: GlobalRANNODEID,
-            ran_ue_ngap_id: RANUENGAPID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                source_ng_ran_node_id,
-                ran_ue_ngap_id,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for ContextatSource {
         const NAME: &'static str = "ContextatSource";
@@ -7420,23 +7052,6 @@ pub mod s1_ap_ies {
         pub ies_criticality_diagnostics: Option<CriticalityDiagnosticsIEList>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl CriticalityDiagnostics {
-        pub fn new(
-            procedure_code: Option<ProcedureCode>,
-            triggering_message: Option<TriggeringMessage>,
-            procedure_criticality: Option<Criticality>,
-            ies_criticality_diagnostics: Option<CriticalityDiagnosticsIEList>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                procedure_code,
-                triggering_message,
-                procedure_criticality,
-                ies_criticality_diagnostics,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for CriticalityDiagnostics {
         const NAME: &'static str = "CriticalityDiagnostics";
     }
@@ -7589,21 +7204,6 @@ pub mod s1_ap_ies {
         pub ie_id: ProtocolIEID,
         pub type_of_error: TypeOfError,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl CriticalityDiagnosticsIEItem {
-        pub fn new(
-            ie_criticality: Criticality,
-            ie_id: ProtocolIEID,
-            type_of_error: TypeOfError,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ie_criticality,
-                ie_id,
-                type_of_error,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for CriticalityDiagnosticsIEItem {
         const NAME: &'static str = "CriticalityDiagnostics-IE-Item";
@@ -7788,17 +7388,6 @@ pub mod s1_ap_ies {
         pub daps_indicator: DAPSRequestInfoDAPSIndicator,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl DAPSRequestInfo {
-        pub fn new(
-            daps_indicator: DAPSRequestInfoDAPSIndicator,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                daps_indicator,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for DAPSRequestInfo {
         const NAME: &'static str = "DAPSRequestInfo";
     }
@@ -7921,17 +7510,6 @@ pub mod s1_ap_ies {
         pub dapsresponseindicator: DAPSResponseInfoDapsresponseindicator,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl DAPSResponseInfo {
-        pub fn new(
-            dapsresponseindicator: DAPSResponseInfoDapsresponseindicator,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                dapsresponseindicator,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for DAPSResponseInfo {
         const NAME: &'static str = "DAPSResponseInfo";
     }
@@ -8013,19 +7591,6 @@ pub mod s1_ap_ies {
         pub e_rab_id: ERABID,
         pub daps_response_info: DAPSResponseInfo,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl DAPSResponseInfoItem {
-        pub fn new(
-            e_rab_id: ERABID,
-            daps_response_info: DAPSResponseInfo,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                daps_response_info,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for DAPSResponseInfoItem {
         const NAME: &'static str = "DAPSResponseInfoItem";
@@ -8212,17 +7777,6 @@ pub mod s1_ap_ies {
     pub struct DLCPSecurityInformation {
         pub dl_nas_mac: DLNASMAC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl DLCPSecurityInformation {
-        pub fn new(
-            dl_nas_mac: DLNASMAC,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                dl_nas_mac,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for DLCPSecurityInformation {
         const NAME: &'static str = "DL-CP-SecurityInformation";
@@ -8905,19 +8459,6 @@ pub mod s1_ap_ies {
         pub dl_forwarding: Option<DLForwarding>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ERABInformationListItem {
-        pub fn new(
-            e_rab_id: ERABID,
-            dl_forwarding: Option<DLForwarding>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                dl_forwarding,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ERABInformationListItem {
         const NAME: &'static str = "E-RABInformationListItem";
     }
@@ -9007,19 +8548,6 @@ pub mod s1_ap_ies {
         pub cause: Cause,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ERABItem {
-        pub fn new(
-            e_rab_id: ERABID,
-            cause: Cause,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                cause,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ERABItem {
         const NAME: &'static str = "E-RABItem";
     }
@@ -9098,21 +8626,6 @@ pub mod s1_ap_ies {
         pub allocation_retention_priority: AllocationAndRetentionPriority,
         pub gbr_qos_information: Option<GBRQosInformation>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl ERABLevelQoSParameters {
-        pub fn new(
-            qci: QCI,
-            allocation_retention_priority: AllocationAndRetentionPriority,
-            gbr_qos_information: Option<GBRQosInformation>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                qci,
-                allocation_retention_priority,
-                gbr_qos_information,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for ERABLevelQoSParameters {
         const NAME: &'static str = "E-RABLevelQoSParameters";
@@ -9282,19 +8795,6 @@ pub mod s1_ap_ies {
         pub security_result: SecurityResult,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ERABSecurityResultItem {
-        pub fn new(
-            e_rab_id: ERABID,
-            security_result: SecurityResult,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                security_result,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ERABSecurityResultItem {
         const NAME: &'static str = "E-RABSecurityResultItem";
     }
@@ -9437,23 +8937,6 @@ pub mod s1_ap_ies {
         pub usage_count_ul: u64,
         pub usage_count_dl: u64,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl ERABUsageReportItem {
-        pub fn new(
-            start_timestamp: [u8; 4],
-            end_timestamp: [u8; 4],
-            usage_count_ul: u64,
-            usage_count_dl: u64,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                start_timestamp,
-                end_timestamp,
-                usage_count_ul,
-                usage_count_dl,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for ERABUsageReportItem {
         const NAME: &'static str = "E-RABUsageReportItem";
@@ -9923,19 +9406,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENDCSONConfigurationTransfer<'a> {
-        pub fn new(
-            transfertype: ENDCSONTransferType<'a>,
-            son_information: SONInformation<'a>,
-            x2_tnl_config_info: Option<X2TNLConfigurationInfo<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                transfertype,
-                son_information,
-                x2_tnl_config_info,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENDCSONConfigurationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENDCSONConfigurationTransfer<'static> {
@@ -10138,19 +9608,6 @@ pub mod s1_ap_ies {
         pub selected_tai: TAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ENDCSONeNBIdentification {
-        pub fn new(
-            global_enb_id: GlobalENBID,
-            selected_tai: TAI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                global_enb_id,
-                selected_tai,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ENDCSONeNBIdentification {
         const NAME: &'static str = "EN-DCSONeNBIdentification";
     }
@@ -10234,17 +9691,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENDCSONengNBIdentification<'a> {
-        pub fn new(
-            globalen_gnb_id: GlobalEnGNBID<'a>,
-            selected_tai: TAI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                globalen_gnb_id,
-                selected_tai,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENDCSONengNBIdentification<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENDCSONengNBIdentification<'static> {
@@ -10340,17 +9786,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENDCTransferTypeReply<'a> {
-        pub fn new(
-            source_en_gnb: ENDCSONengNBIdentification<'a>,
-            target_enb: ENDCSONeNBIdentification,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                source_en_gnb,
-                target_enb,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENDCTransferTypeReply<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENDCTransferTypeReply<'static> {
@@ -10454,23 +9889,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENDCTransferTypeRequest<'a> {
-        pub fn new(
-            source_enb: ENDCSONeNBIdentification,
-            target_en_gnb: ENDCSONengNBIdentification<'a>,
-            target_enb: Option<ENDCSONeNBIdentification>,
-            associated_tai: Option<TAI>,
-            broadcast_5gs_tai: Option<FiveGSTAI>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                source_enb,
-                target_en_gnb,
-                target_enb,
-                associated_tai,
-                broadcast_5gs_tai,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENDCTransferTypeRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENDCTransferTypeRequest<'static> {
@@ -10626,17 +10044,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENBEarlyStatusTransferTransparentContainer<'a> {
-        pub fn new(
-            bearers_subject_to_early_status_transfer_list: BearersSubjectToEarlyStatusTransferList<
-                'a,
-            >,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                bearers_subject_to_early_status_transfer_list,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBEarlyStatusTransferTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBEarlyStatusTransferTransparentContainer<'static> {
@@ -10836,15 +10243,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENBStatusTransferTransparentContainer<'a> {
-        pub fn new(
-            bearers_subject_to_status_transfer_list: BearersSubjectToStatusTransferList<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                bearers_subject_to_status_transfer_list,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBStatusTransferTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBStatusTransferTransparentContainer<'static> {
@@ -11047,17 +10445,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ENBX2ExtTLA<'a> {
-        pub fn new(
-            ipsec_tla: Option<TransportLayerAddress<'a>>,
-            gtp_tlaa: Option<ENBX2GTPTLAs<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ipsec_tla,
-                gtp_tlaa,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBX2ExtTLA<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBX2ExtTLA<'static> {
@@ -11460,19 +10847,6 @@ pub mod s1_ap_ies {
         pub cell_id: CellIdentity,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl EUTRANCGI {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            cell_id: CellIdentity,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                cell_id,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for EUTRANCGI {
         const NAME: &'static str = "EUTRAN-CGI";
     }
@@ -11707,19 +11081,6 @@ pub mod s1_ap_ies {
         pub completed_cellin_eai: CompletedCellinEAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl EmergencyAreaIDBroadcastItem {
-        pub fn new(
-            emergency_area_id: EmergencyAreaID,
-            completed_cellin_eai: CompletedCellinEAI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                emergency_area_id,
-                completed_cellin_eai,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for EmergencyAreaIDBroadcastItem {
         const NAME: &'static str = "EmergencyAreaID-Broadcast-Item";
     }
@@ -11860,19 +11221,6 @@ pub mod s1_ap_ies {
         pub emergency_area_id: EmergencyAreaID,
         pub cancelled_cellin_eai: CancelledCellinEAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl EmergencyAreaIDCancelledItem {
-        pub fn new(
-            emergency_area_id: EmergencyAreaID,
-            cancelled_cellin_eai: CancelledCellinEAI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                emergency_area_id,
-                cancelled_cellin_eai,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for EmergencyAreaIDCancelledItem {
         const NAME: &'static str = "EmergencyAreaID-Cancelled-Item";
@@ -12341,21 +11689,6 @@ pub mod s1_ap_ies {
         pub time_to_trigger: TimeToTrigger,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl EventL1LoggedMDTConfig {
-        pub fn new(
-            l1_threshold: MeasurementThresholdL1LoggedMDT,
-            hysteresis: Hysteresis,
-            time_to_trigger: TimeToTrigger,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                l1_threshold,
-                hysteresis,
-                time_to_trigger,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for EventL1LoggedMDTConfig {
         const NAME: &'static str = "EventL1LoggedMDTConfig";
     }
@@ -12778,23 +12111,6 @@ pub mod s1_ap_ies {
             Option<SourceOfUEActivityBehaviourInformation>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ExpectedUEActivityBehaviour {
-        pub fn new(
-            expected_activity_period: Option<ExpectedActivityPeriod>,
-            expected_idle_period: Option<ExpectedIdlePeriod>,
-            sourceof_ue_activity_behaviour_information: Option<
-                SourceOfUEActivityBehaviourInformation,
-            >,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                expected_activity_period,
-                expected_idle_period,
-                sourceof_ue_activity_behaviour_information,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ExpectedUEActivityBehaviour {
         const NAME: &'static str = "ExpectedUEActivityBehaviour";
     }
@@ -12938,19 +12254,6 @@ pub mod s1_ap_ies {
         pub expected_activity: Option<ExpectedUEActivityBehaviour>,
         pub expected_ho_interval: Option<ExpectedHOInterval>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl ExpectedUEBehaviour {
-        pub fn new(
-            expected_activity: Option<ExpectedUEActivityBehaviour>,
-            expected_ho_interval: Option<ExpectedHOInterval>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                expected_activity,
-                expected_ho_interval,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for ExpectedUEBehaviour {
         const NAME: &'static str = "ExpectedUEBehaviour";
@@ -13309,19 +12612,6 @@ pub mod s1_ap_ies {
         pub five_gs_tac: FiveGSTAC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl FiveGSTAI {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            five_gs_tac: FiveGSTAC,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                five_gs_tac,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for FiveGSTAI {
         const NAME: &'static str = "FiveGSTAI";
     }
@@ -13606,19 +12896,6 @@ pub mod s1_ap_ies {
         pub forbidden_lacs: ForbiddenLACs,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ForbiddenLAsItem {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            forbidden_lacs: ForbiddenLACs,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                forbidden_lacs,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ForbiddenLAsItem {
         const NAME: &'static str = "ForbiddenLAs-Item";
     }
@@ -13808,19 +13085,6 @@ pub mod s1_ap_ies {
         pub forbidden_tacs: ForbiddenTACs,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ForbiddenTAsItem {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            forbidden_tacs: ForbiddenTACs,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                forbidden_tacs,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ForbiddenTAsItem {
         const NAME: &'static str = "ForbiddenTAs-Item";
     }
@@ -13907,23 +13171,6 @@ pub mod s1_ap_ies {
         pub e_rab_guaranteed_bitrate_dl: BitRate,
         pub e_rab_guaranteed_bitrate_ul: BitRate,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl GBRQosInformation {
-        pub fn new(
-            e_rab_maximum_bitrate_dl: BitRate,
-            e_rab_maximum_bitrate_ul: BitRate,
-            e_rab_guaranteed_bitrate_dl: BitRate,
-            e_rab_guaranteed_bitrate_ul: BitRate,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_maximum_bitrate_dl,
-                e_rab_maximum_bitrate_ul,
-                e_rab_guaranteed_bitrate_dl,
-                e_rab_guaranteed_bitrate_ul,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for GBRQosInformation {
         const NAME: &'static str = "GBR-QosInformation";
@@ -14044,21 +13291,6 @@ pub mod s1_ap_ies {
         pub ci: CI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl GERANCellID {
-        pub fn new(
-            lai: LAI,
-            rac: RAC,
-            ci: CI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                lai,
-                rac,
-                ci,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for GERANCellID {
         const NAME: &'static str = "GERAN-Cell-ID";
     }
@@ -14141,17 +13373,6 @@ pub mod s1_ap_ies {
     pub struct GNB {
         pub global_gnb_id: GlobalGNBID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl GNB {
-        pub fn new(
-            global_gnb_id: GlobalGNBID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                global_gnb_id,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for GNB {
         const NAME: &'static str = "GNB";
@@ -14379,21 +13600,6 @@ pub mod s1_ap_ies {
         pub mme_group_id: MMEGroupID,
         pub mme_code: MMECode,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl GUMMEI {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            mme_group_id: MMEGroupID,
-            mme_code: MMECode,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                mme_group_id,
-                mme_code,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for GUMMEI {
         const NAME: &'static str = "GUMMEI";
@@ -14624,19 +13830,6 @@ pub mod s1_ap_ies {
         pub enb_id: ENBID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl GlobalENBID {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            enb_id: ENBID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                enb_id,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for GlobalENBID {
         const NAME: &'static str = "Global-ENB-ID";
     }
@@ -14717,19 +13910,6 @@ pub mod s1_ap_ies {
         pub plmn_identity: PLMNidentity,
         pub gnb_id: GNBIdentity,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl GlobalGNBID {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            gnb_id: GNBIdentity,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                gnb_id,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for GlobalGNBID {
         const NAME: &'static str = "Global-GNB-ID";
@@ -14875,17 +14055,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> GlobalEnGNBID<'a> {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            en_gnb_id: EnGNBID<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                en_gnb_id,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `GlobalEnGNBID<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> GlobalEnGNBID<'static> {
@@ -15162,25 +14331,6 @@ pub mod s1_ap_ies {
         pub forbidden_las: Option<ForbiddenLAs>,
         pub forbidden_inter_rats: Option<ForbiddenInterRATs>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl HandoverRestrictionList {
-        pub fn new(
-            serving_plmn: PLMNidentity,
-            equivalent_plmns: Option<EPLMNs>,
-            forbidden_tas: Option<ForbiddenTAs>,
-            forbidden_las: Option<ForbiddenLAs>,
-            forbidden_inter_rats: Option<ForbiddenInterRATs>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                serving_plmn,
-                equivalent_plmns,
-                forbidden_tas,
-                forbidden_las,
-                forbidden_inter_rats,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for HandoverRestrictionList {
         const NAME: &'static str = "HandoverRestrictionList";
@@ -15760,23 +14910,6 @@ pub mod s1_ap_ies {
         pub m1_periodic_reporting: Option<M1PeriodicReporting>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ImmediateMDT {
-        pub fn new(
-            measurements_to_activate: MeasurementsToActivate,
-            m1_reporting_trigger: M1ReportingTrigger,
-            m1_thresholdevent_a2: Option<M1ThresholdEventA2>,
-            m1_periodic_reporting: Option<M1PeriodicReporting>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                measurements_to_activate,
-                m1_reporting_trigger,
-                m1_thresholdevent_a2,
-                m1_periodic_reporting,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ImmediateMDT {
         const NAME: &'static str = "ImmediateMDT";
     }
@@ -15924,17 +15057,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> InformationOnRecommendedCellsAndENBsForPaging<'a> {
-        pub fn new(
-            recommended_cells_for_paging: RecommendedCellsForPaging<'a>,
-            recommend_enbs_for_paging: RecommendedENBsForPaging<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                recommended_cells_for_paging,
-                recommend_enbs_for_paging,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `InformationOnRecommendedCellsAndENBsForPaging<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InformationOnRecommendedCellsAndENBsForPaging<'static> {
@@ -16292,33 +15414,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> InterSystemMeasurementItem<'a> {
-        pub fn new(
-            freq_band_indicator_nr: u16,
-            ssb_frequencies: u32,
-            subcarrier_spacing_ssb: InterSystemMeasurementItemSubcarrierSpacingSSB,
-            max_rs_index_cell_qual: Option<u8>,
-            smtc: Option<Octets<'a>>,
-            thresh_rs_index_r15: Option<Octets<'a>>,
-            ssb_to_measure: Option<Octets<'a>>,
-            ss_rssi_measurement: Option<Octets<'a>>,
-            quantity_config_nr_r15: Option<Octets<'a>>,
-            excluded_cells_to_add_mod_list: Option<Octets<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                freq_band_indicator_nr,
-                ssb_frequencies,
-                subcarrier_spacing_ssb,
-                max_rs_index_cell_qual,
-                smtc,
-                thresh_rs_index_r15,
-                ssb_to_measure,
-                ss_rssi_measurement,
-                quantity_config_nr_r15,
-                excluded_cells_to_add_mod_list,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `InterSystemMeasurementItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InterSystemMeasurementItem<'static> {
@@ -16694,17 +15789,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> InterSystemMeasurementParameters<'a> {
-        pub fn new(
-            measurement_duration: u8,
-            inter_system_measurement_list: Option<InterSystemMeasurementList<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                measurement_duration,
-                inter_system_measurement_list,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `InterSystemMeasurementParameters<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InterSystemMeasurementParameters<'static> {
@@ -16882,21 +15966,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> IntersystemMeasurementConfiguration<'a> {
-        pub fn new(
-            rsrp: Option<u8>,
-            rsrq: Option<u8>,
-            sinr: Option<u8>,
-            inter_system_measurement_parameters: InterSystemMeasurementParameters<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                rsrp,
-                rsrq,
-                sinr,
-                inter_system_measurement_parameters,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `IntersystemMeasurementConfiguration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> IntersystemMeasurementConfiguration<'static> {
@@ -17278,19 +16347,6 @@ pub mod s1_ap_ies {
         pub lac: LAC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl LAI {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            lac: LAC,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                lac,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for LAI {
         const NAME: &'static str = "LAI";
     }
@@ -17537,21 +16593,6 @@ pub mod s1_ap_ies {
         pub ue_location_derived_tac: Option<TAC>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl LTENTNTAIInformation {
-        pub fn new(
-            serving_plmn: PLMNidentity,
-            tac_list_in_lte_ntn: TACListInLTENTN,
-            ue_location_derived_tac: Option<TAC>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                serving_plmn,
-                tac_list_in_lte_ntn,
-                ue_location_derived_tac,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for LTENTNTAIInformation {
         const NAME: &'static str = "LTE-NTN-TAI-Information";
     }
@@ -17789,21 +16830,6 @@ pub mod s1_ap_ies {
         pub time_ue_stayed_in_cell: TimeUEStayedInCell,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl LastVisitedEUTRANCellInformation {
-        pub fn new(
-            global_cell_id: EUTRANCGI,
-            cell_type: CellType,
-            time_ue_stayed_in_cell: TimeUEStayedInCell,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                global_cell_id,
-                cell_type,
-                time_ue_stayed_in_cell,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for LastVisitedEUTRANCellInformation {
         const NAME: &'static str = "LastVisitedEUTRANCellInformation";
     }
@@ -18017,19 +17043,6 @@ pub mod s1_ap_ies {
         pub ps_cell_id: Option<PSCellInformation>,
         pub time_stay: u16,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl LastVisitedPSCellInformation {
-        pub fn new(
-            ps_cell_id: Option<PSCellInformation>,
-            time_stay: u16,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ps_cell_id,
-                time_stay,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for LastVisitedPSCellInformation {
         const NAME: &'static str = "LastVisitedPSCellInformation";
@@ -18333,19 +17346,6 @@ pub mod s1_ap_ies {
         pub pattern_offset: u64,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ListeningSubframePattern {
-        pub fn new(
-            pattern_period: ListeningSubframePatternPatternPeriod,
-            pattern_offset: u64,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                pattern_period,
-                pattern_offset,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ListeningSubframePattern {
         const NAME: &'static str = "ListeningSubframePattern";
     }
@@ -18437,21 +17437,6 @@ pub mod s1_ap_ies {
         pub logging_duration: LoggingDuration,
         pub mbsfn_result_to_log: Option<MBSFNResultToLog>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl LoggedMBSFNMDT {
-        pub fn new(
-            logging_interval: LoggingInterval,
-            logging_duration: LoggingDuration,
-            mbsfn_result_to_log: Option<MBSFNResultToLog>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                logging_interval,
-                logging_duration,
-                mbsfn_result_to_log,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for LoggedMBSFNMDT {
         const NAME: &'static str = "LoggedMBSFNMDT";
@@ -18559,19 +17544,6 @@ pub mod s1_ap_ies {
         pub logging_interval: LoggingInterval,
         pub logging_duration: LoggingDuration,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl LoggedMDT {
-        pub fn new(
-            logging_interval: LoggingInterval,
-            logging_duration: LoggingDuration,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                logging_interval,
-                logging_duration,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for LoggedMDT {
         const NAME: &'static str = "LoggedMDT";
@@ -18894,19 +17866,6 @@ pub mod s1_ap_ies {
         pub report_amount: ReportAmountMDT,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl M1PeriodicReporting {
-        pub fn new(
-            report_interval: ReportIntervalMDT,
-            report_amount: ReportAmountMDT,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                report_interval,
-                report_amount,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for M1PeriodicReporting {
         const NAME: &'static str = "M1PeriodicReporting";
     }
@@ -19042,17 +18001,6 @@ pub mod s1_ap_ies {
         pub measurement_threshold: MeasurementThresholdA2,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl M1ThresholdEventA2 {
-        pub fn new(
-            measurement_threshold: MeasurementThresholdA2,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                measurement_threshold,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for M1ThresholdEventA2 {
         const NAME: &'static str = "M1ThresholdEventA2";
     }
@@ -19130,17 +18078,6 @@ pub mod s1_ap_ies {
     pub struct M3Configuration {
         pub m3_period: M3period,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl M3Configuration {
-        pub fn new(
-            m3_period: M3period,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                m3_period,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for M3Configuration {
         const NAME: &'static str = "M3Configuration";
@@ -19278,19 +18215,6 @@ pub mod s1_ap_ies {
         pub m4_period: M4period,
         pub m4_links_to_log: LinksToLog,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl M4Configuration {
-        pub fn new(
-            m4_period: M4period,
-            m4_links_to_log: LinksToLog,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                m4_period,
-                m4_links_to_log,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for M4Configuration {
         const NAME: &'static str = "M4Configuration";
@@ -19488,19 +18412,6 @@ pub mod s1_ap_ies {
         pub m5_links_to_log: LinksToLog,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl M5Configuration {
-        pub fn new(
-            m5_period: M5period,
-            m5_links_to_log: LinksToLog,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                m5_period,
-                m5_links_to_log,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for M5Configuration {
         const NAME: &'static str = "M5Configuration";
     }
@@ -19697,21 +18608,6 @@ pub mod s1_ap_ies {
         pub m6_delay_threshold: Option<M6delayThreshold>,
         pub m6_links_to_log: LinksToLog,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl M6Configuration {
-        pub fn new(
-            m6_report_interval: M6reportInterval,
-            m6_delay_threshold: Option<M6delayThreshold>,
-            m6_links_to_log: LinksToLog,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                m6_report_interval,
-                m6_delay_threshold,
-                m6_links_to_log,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for M6Configuration {
         const NAME: &'static str = "M6Configuration";
@@ -19993,19 +18889,6 @@ pub mod s1_ap_ies {
         pub m7_links_to_log: LinksToLog,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl M7Configuration {
-        pub fn new(
-            m7_period: M7period,
-            m7_links_to_log: LinksToLog,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                m7_period,
-                m7_links_to_log,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for M7Configuration {
         const NAME: &'static str = "M7Configuration";
     }
@@ -20243,19 +19126,6 @@ pub mod s1_ap_ies {
         pub carrier_freq: EARFCN,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl MBSFNResultToLogInfo {
-        pub fn new(
-            mbsfn_area_id: Option<u8>,
-            carrier_freq: EARFCN,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                mbsfn_area_id,
-                carrier_freq,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for MBSFNResultToLogInfo {
         const NAME: &'static str = "MBSFN-ResultToLogInfo";
     }
@@ -20409,19 +19279,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> MDTConfiguration<'a> {
-        pub fn new(
-            mdt_activation: MDTActivation,
-            area_scope_of_mdt: AreaScopeOfMDT,
-            mdt_mode: MDTMode<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                mdt_activation,
-                area_scope_of_mdt,
-                mdt_mode,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `MDTConfiguration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MDTConfiguration<'static> {
@@ -21763,19 +20620,6 @@ pub mod s1_ap_ies {
         pub muting_pattern_offset: Option<u64>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl MutingPatternInformation {
-        pub fn new(
-            muting_pattern_period: MutingPatternInformationMutingPatternPeriod,
-            muting_pattern_offset: Option<u64>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                muting_pattern_period,
-                muting_pattern_offset,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for MutingPatternInformation {
         const NAME: &'static str = "MutingPatternInformation";
     }
@@ -22182,19 +21026,6 @@ pub mod s1_ap_ies {
         pub nb_iot_paging_time_window: Option<NBIoTPagingTimeWindow>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl NBIoTPagingEDRXInformation {
-        pub fn new(
-            nb_iot_paging_edrx_cycle: NBIoTPagingEDRXCycle,
-            nb_iot_paging_time_window: Option<NBIoTPagingTimeWindow>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                nb_iot_paging_edrx_cycle,
-                nb_iot_paging_time_window,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for NBIoTPagingEDRXInformation {
         const NAME: &'static str = "NB-IoT-Paging-eDRXInformation";
     }
@@ -22545,17 +21376,6 @@ pub mod s1_ap_ies {
         pub global_ng_enb_id: GlobalENBID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl NGENB {
-        pub fn new(
-            global_ng_enb_id: GlobalENBID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                global_ng_enb_id,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for NGENB {
         const NAME: &'static str = "NG-eNB";
     }
@@ -22631,19 +21451,6 @@ pub mod s1_ap_ies {
         pub plmn_identity: PLMNidentity,
         pub nr_cell_identity: NRCellIdentity,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl NRCGI {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            nr_cell_identity: NRCellIdentity,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                nr_cell_identity,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for NRCGI {
         const NAME: &'static str = "NR-CGI";
@@ -22784,17 +21591,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> NRUESecurityCapabilities<'a> {
-        pub fn new(
-            nr_encryption_algorithms: NRencryptionAlgorithms<'a>,
-            nr_integrity_protection_algorithms: NRintegrityProtectionAlgorithms<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                nr_encryption_algorithms,
-                nr_integrity_protection_algorithms,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `NRUESecurityCapabilities<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NRUESecurityCapabilities<'static> {
@@ -22905,17 +21701,6 @@ pub mod s1_ap_ies {
         pub ue_aggregate_maximum_bit_rate: BitRate,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl NRUESidelinkAggregateMaximumBitrate {
-        pub fn new(
-            ue_aggregate_maximum_bit_rate: BitRate,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ue_aggregate_maximum_bit_rate,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for NRUESidelinkAggregateMaximumBitrate {
         const NAME: &'static str = "NRUESidelinkAggregateMaximumBitrate";
     }
@@ -22994,19 +21779,6 @@ pub mod s1_ap_ies {
         pub vehicle_ue: Option<VehicleUE>,
         pub pedestrian_ue: Option<PedestrianUE>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl NRV2XServicesAuthorized {
-        pub fn new(
-            vehicle_ue: Option<VehicleUE>,
-            pedestrian_ue: Option<PedestrianUE>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                vehicle_ue,
-                pedestrian_ue,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for NRV2XServicesAuthorized {
         const NAME: &'static str = "NRV2XServicesAuthorized";
@@ -23640,19 +22412,6 @@ pub mod s1_ap_ies {
         pub maximum_flow_bit_rate: BitRate,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl PC5FlowBitRates {
-        pub fn new(
-            guaranteed_flow_bit_rate: BitRate,
-            maximum_flow_bit_rate: BitRate,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                guaranteed_flow_bit_rate,
-                maximum_flow_bit_rate,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for PC5FlowBitRates {
         const NAME: &'static str = "PC5FlowBitRates";
     }
@@ -23742,21 +22501,6 @@ pub mod s1_ap_ies {
         pub pc5_flow_bit_rates: Option<PC5FlowBitRates>,
         pub range: Option<Range>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl PC5QoSFlowItem {
-        pub fn new(
-            pqi: FiveQI,
-            pc5_flow_bit_rates: Option<PC5FlowBitRates>,
-            range: Option<Range>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                pqi,
-                pc5_flow_bit_rates,
-                range,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for PC5QoSFlowItem {
         const NAME: &'static str = "PC5QoSFlowItem";
@@ -23915,19 +22659,6 @@ pub mod s1_ap_ies {
         pub pc5_qos_flow_list: PC5QoSFlowList,
         pub pc5_link_aggregated_bit_rates: Option<BitRate>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl PC5QoSParameters {
-        pub fn new(
-            pc5_qos_flow_list: PC5QoSFlowList,
-            pc5_link_aggregated_bit_rates: Option<BitRate>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                pc5_qos_flow_list,
-                pc5_link_aggregated_bit_rates,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for PC5QoSParameters {
         const NAME: &'static str = "PC5QoSParameters";
@@ -24162,17 +22893,6 @@ pub mod s1_ap_ies {
     pub struct PLMNAreaBasedQMC {
         pub plmn_listfor_qmc: PLMNListforQMC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl PLMNAreaBasedQMC {
-        pub fn new(
-            plmn_listfor_qmc: PLMNListforQMC,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_listfor_qmc,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for PLMNAreaBasedQMC {
         const NAME: &'static str = "PLMNAreaBasedQMC";
@@ -24418,17 +23138,6 @@ pub mod s1_ap_ies {
         pub ncgi: NRCGI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl PSCellInformation {
-        pub fn new(
-            ncgi: NRCGI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ncgi,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for PSCellInformation {
         const NAME: &'static str = "PSCellInformation";
     }
@@ -24670,19 +23379,6 @@ pub mod s1_ap_ies {
         pub paging_time_window: Option<PagingTimeWindow>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl PagingEDRXInformation {
-        pub fn new(
-            paging_edrx_cycle: PagingEDRXCycle,
-            paging_time_window: Option<PagingTimeWindow>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                paging_edrx_cycle,
-                paging_time_window,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for PagingEDRXInformation {
         const NAME: &'static str = "Paging-eDRXInformation";
     }
@@ -24822,21 +23518,6 @@ pub mod s1_ap_ies {
         pub intended_number_of_paging_attempts: IntendedNumberOfPagingAttempts,
         pub next_paging_area_scope: Option<NextPagingAreaScope>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl PagingAttemptInformation {
-        pub fn new(
-            paging_attempt_count: PagingAttemptCount,
-            intended_number_of_paging_attempts: IntendedNumberOfPagingAttempts,
-            next_paging_area_scope: Option<NextPagingAreaScope>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                paging_attempt_count,
-                intended_number_of_paging_attempts,
-                next_paging_area_scope,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for PagingAttemptInformation {
         const NAME: &'static str = "PagingAttemptInformation";
@@ -25588,19 +24269,6 @@ pub mod s1_ap_ies {
         pub prose_direct_communication: Option<ProSeDirectCommunication>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ProSeAuthorized {
-        pub fn new(
-            prose_direct_discovery: Option<ProSeDirectDiscovery>,
-            prose_direct_communication: Option<ProSeDirectCommunication>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                prose_direct_discovery,
-                prose_direct_communication,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ProSeAuthorized {
         const NAME: &'static str = "ProSeAuthorized";
     }
@@ -26102,17 +24770,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> RATRestrictionsItem<'a> {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            rat_restriction_information: BitString<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                rat_restriction_information,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `RATRestrictionsItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RATRestrictionsItem<'static> {
@@ -26437,17 +25094,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> RIMTransfer<'a> {
-        pub fn new(
-            rim_information: RIMInformation<'a>,
-            rim_routing_address: Option<RIMRoutingAddress>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                rim_information,
-                rim_routing_address,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `RIMTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RIMTransfer<'static> {
@@ -26557,19 +25203,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> RLFReportInformation<'a> {
-        pub fn new(
-            ue_rlf_report_container: UERLFReportContainer<'a>,
-            ue_rlf_report_container_for_extended_bands: Option<
-                UERLFReportContainerForExtendedBands<'a>,
-            >,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ue_rlf_report_container,
-                ue_rlf_report_container_for_extended_bands,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `RLFReportInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RLFReportInformation<'static> {
@@ -27078,19 +25711,6 @@ pub mod s1_ap_ies {
         pub time_stayed_in_cell: Option<u16>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl RecommendedCellItem {
-        pub fn new(
-            eutran_cgi: EUTRANCGI,
-            time_stayed_in_cell: Option<u16>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                eutran_cgi,
-                time_stayed_in_cell,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for RecommendedCellItem {
         const NAME: &'static str = "RecommendedCellItem";
     }
@@ -27251,15 +25871,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> RecommendedCellsForPaging<'a> {
-        pub fn new(
-            recommended_cell_list: RecommendedCellList<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                recommended_cell_list,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `RecommendedCellsForPaging<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RecommendedCellsForPaging<'static> {
@@ -27346,17 +25957,6 @@ pub mod s1_ap_ies {
     pub struct RecommendedENBItem {
         pub mme_paging_target: MMEPagingTarget,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl RecommendedENBItem {
-        pub fn new(
-            mme_paging_target: MMEPagingTarget,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                mme_paging_target,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for RecommendedENBItem {
         const NAME: &'static str = "RecommendedENBItem";
@@ -27493,15 +26093,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> RecommendedENBsForPaging<'a> {
-        pub fn new(
-            recommended_enb_list: RecommendedENBList<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                recommended_enb_list,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `RecommendedENBsForPaging<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RecommendedENBsForPaging<'static> {
@@ -27892,19 +26483,6 @@ pub mod s1_ap_ies {
         pub report_area: ReportArea,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl RequestType {
-        pub fn new(
-            event_type: EventType,
-            report_area: ReportArea,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                event_type,
-                report_area,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for RequestType {
         const NAME: &'static str = "RequestType";
     }
@@ -28029,17 +26607,6 @@ pub mod s1_ap_ies {
         pub plmn_identity: PLMNidentity,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl RequestedTNLInfo {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for RequestedTNLInfo {
         const NAME: &'static str = "RequestedTNLInfo";
     }
@@ -28159,19 +26726,6 @@ pub mod s1_ap_ies {
         pub m_tmsi: MTMSI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl STMSI {
-        pub fn new(
-            mmec: MMECode,
-            m_tmsi: MTMSI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                mmec,
-                m_tmsi,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for STMSI {
         const NAME: &'static str = "S-TMSI";
     }
@@ -28252,19 +26806,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> SONConfigurationTransfer<'a> {
-        pub fn new(
-            target_enb_id: TargeteNBID,
-            source_enb_id: SourceeNBID,
-            son_information: SONInformation<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                target_enb_id,
-                source_enb_id,
-                son_information,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `SONConfigurationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SONConfigurationTransfer<'static> {
@@ -28491,15 +27032,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> SONInformationReply<'a> {
-        pub fn new(
-            x2_tnl_configuration_info: Option<X2TNLConfigurationInfo<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                x2_tnl_configuration_info,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `SONInformationReply<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SONInformationReply<'static> {
@@ -28854,21 +27386,6 @@ pub mod s1_ap_ies {
         pub timeof_day_end: Option<u64>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ScheduledCommunicationTime {
-        pub fn new(
-            dayof_week: Option<Bits>,
-            timeof_day_start: Option<u64>,
-            timeof_day_end: Option<u64>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                dayof_week,
-                timeof_day_start,
-                timeof_day_end,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ScheduledCommunicationTime {
         const NAME: &'static str = "ScheduledCommunicationTime";
     }
@@ -29012,19 +27529,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> SecondaryRATDataUsageReportItem<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            secondary_rat_type: SecondaryRATType,
-            e_rab_usage_report_list: ERABUsageReportList<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                secondary_rat_type,
-                e_rab_usage_report_list,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `SecondaryRATDataUsageReportItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SecondaryRATDataUsageReportItem<'static> {
@@ -29283,17 +27787,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> SecurityContext<'a> {
-        pub fn new(
-            next_hop_chaining_count: u8,
-            next_hop_parameter: SecurityKey<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                next_hop_chaining_count,
-                next_hop_parameter,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `SecurityContext<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SecurityContext<'static> {
@@ -29395,17 +27888,6 @@ pub mod s1_ap_ies {
     pub struct SecurityIndication {
         pub integrity_protection_indication: IntegrityProtectionIndication,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl SecurityIndication {
-        pub fn new(
-            integrity_protection_indication: IntegrityProtectionIndication,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                integrity_protection_indication,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for SecurityIndication {
         const NAME: &'static str = "SecurityIndication";
@@ -29550,17 +28032,6 @@ pub mod s1_ap_ies {
         pub integrity_protection_result: IntegrityProtectionResult,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl SecurityResult {
-        pub fn new(
-            integrity_protection_result: IntegrityProtectionResult,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                integrity_protection_result,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for SecurityResult {
         const NAME: &'static str = "SecurityResult";
     }
@@ -29684,17 +28155,6 @@ pub mod s1_ap_ies {
     pub struct SensorMeasConfigNameItem {
         pub sensor_name_config: SensorNameConfig,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl SensorMeasConfigNameItem {
-        pub fn new(
-            sensor_name_config: SensorNameConfig,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                sensor_name_config,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for SensorMeasConfigNameItem {
         const NAME: &'static str = "SensorMeasConfigNameItem";
@@ -29823,19 +28283,6 @@ pub mod s1_ap_ies {
         pub sensor_meas_config: SensorMeasConfig,
         pub sensor_meas_config_name_list: Option<SensorMeasConfigNameList>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl SensorMeasurementConfiguration {
-        pub fn new(
-            sensor_meas_config: SensorMeasConfig,
-            sensor_meas_config_name_list: Option<SensorMeasConfigNameList>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                sensor_meas_config,
-                sensor_meas_config_name_list,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for SensorMeasurementConfiguration {
         const NAME: &'static str = "SensorMeasurementConfiguration";
@@ -30165,19 +28612,6 @@ pub mod s1_ap_ies {
         pub relative_dcn_capacity: RelativeMMECapacity,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ServedDCNsItem {
-        pub fn new(
-            dcn_id: DCNID,
-            relative_dcn_capacity: RelativeMMECapacity,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                dcn_id,
-                relative_dcn_capacity,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ServedDCNsItem {
         const NAME: &'static str = "ServedDCNsItem";
     }
@@ -30316,21 +28750,6 @@ pub mod s1_ap_ies {
         pub served_group_ids: ServedGroupIDs,
         pub served_mmecs: ServedMMECs,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl ServedGUMMEIsItem {
-        pub fn new(
-            served_plmns: ServedPLMNs,
-            served_group_ids: ServedGroupIDs,
-            served_mmecs: ServedMMECs,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                served_plmns,
-                served_group_ids,
-                served_mmecs,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for ServedGUMMEIsItem {
         const NAME: &'static str = "ServedGUMMEIsItem";
@@ -30747,19 +29166,6 @@ pub mod s1_ap_ies {
         pub selected_tai: FiveGSTAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl SourceNgRanNodeID {
-        pub fn new(
-            global_ran_node_id: GlobalRANNODEID,
-            selected_tai: FiveGSTAI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                global_ran_node_id,
-                selected_tai,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for SourceNgRanNodeID {
         const NAME: &'static str = "SourceNgRanNode-ID";
     }
@@ -31098,19 +29504,6 @@ pub mod s1_ap_ies {
         pub selected_tai: TAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl SourceeNBID {
-        pub fn new(
-            global_enb_id: GlobalENBID,
-            selected_tai: TAI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                global_enb_id,
-                selected_tai,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for SourceeNBID {
         const NAME: &'static str = "SourceeNB-ID";
     }
@@ -31193,23 +29586,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> SourceeNBToTargeteNBTransparentContainer<'a> {
-        pub fn new(
-            rrc_container: RRCContainer<'a>,
-            e_rab_information_list: Option<ERABInformationList<'a>>,
-            target_cell_id: EUTRANCGI,
-            subscriber_profile_id_for_rfp: Option<SubscriberProfileIDforRFP>,
-            ue_history_information: UEHistoryInformation<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                rrc_container,
-                e_rab_information_list,
-                target_cell_id,
-                subscriber_profile_id_for_rfp,
-                ue_history_information,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `SourceeNBToTargeteNBTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SourceeNBToTargeteNBTransparentContainer<'static> {
@@ -31683,31 +30059,6 @@ pub mod s1_ap_ies {
         pub battery_indication: Option<SubscriptionBasedUEDifferentiationInfoBatteryIndication>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl SubscriptionBasedUEDifferentiationInfo {
-        pub fn new(
-            periodic_communication_indicator: Option<
-                SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator,
-            >,
-            periodic_time: Option<u64>,
-            scheduled_communication_time: Option<ScheduledCommunicationTime>,
-            stationary_indication: Option<
-                SubscriptionBasedUEDifferentiationInfoStationaryIndication,
-            >,
-            traffic_profile: Option<SubscriptionBasedUEDifferentiationInfoTrafficProfile>,
-            battery_indication: Option<SubscriptionBasedUEDifferentiationInfoBatteryIndication>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                periodic_communication_indicator,
-                periodic_time,
-                scheduled_communication_time,
-                stationary_indication,
-                traffic_profile,
-                battery_indication,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for SubscriptionBasedUEDifferentiationInfo {
         const NAME: &'static str = "Subscription-Based-UE-DifferentiationInfo";
     }
@@ -31985,19 +30336,6 @@ pub mod s1_ap_ies {
         pub broadcast_plmns: BPLMNs,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl SupportedTAsItem {
-        pub fn new(
-            tac: TAC,
-            broadcast_plmns: BPLMNs,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                tac,
-                broadcast_plmns,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for SupportedTAsItem {
         const NAME: &'static str = "SupportedTAs-Item";
     }
@@ -32078,21 +30416,6 @@ pub mod s1_ap_ies {
         pub listening_subframe_pattern: Option<ListeningSubframePattern>,
         pub aggressor_ecgi_list: Option<ECGI_List>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl SynchronisationInformation {
-        pub fn new(
-            source_stratum_level: Option<StratumLevel>,
-            listening_subframe_pattern: Option<ListeningSubframePattern>,
-            aggressor_ecgi_list: Option<ECGI_List>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                source_stratum_level,
-                listening_subframe_pattern,
-                aggressor_ecgi_list,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for SynchronisationInformation {
         const NAME: &'static str = "SynchronisationInformation";
@@ -32272,17 +30595,6 @@ pub mod s1_ap_ies {
         pub ta_listfor_mdt: TAListforMDT,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl TABasedMDT {
-        pub fn new(
-            ta_listfor_mdt: TAListforMDT,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ta_listfor_mdt,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for TABasedMDT {
         const NAME: &'static str = "TABasedMDT";
     }
@@ -32357,17 +30669,6 @@ pub mod s1_ap_ies {
     pub struct TABasedQMC {
         pub ta_listfor_qmc: TAListforQMC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl TABasedQMC {
-        pub fn new(
-            ta_listfor_qmc: TAListforQMC,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ta_listfor_qmc,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for TABasedQMC {
         const NAME: &'static str = "TABasedQMC";
@@ -32553,19 +30854,6 @@ pub mod s1_ap_ies {
         pub tac: TAC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl TAI {
-        pub fn new(
-            plmn_identity: PLMNidentity,
-            tac: TAC,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                plmn_identity,
-                tac,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for TAI {
         const NAME: &'static str = "TAI";
     }
@@ -32698,19 +30986,6 @@ pub mod s1_ap_ies {
         pub tai: TAI,
         pub completed_cellin_tai: CompletedCellinTAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl TAIBroadcastItem {
-        pub fn new(
-            tai: TAI,
-            completed_cellin_tai: CompletedCellinTAI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                tai,
-                completed_cellin_tai,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for TAIBroadcastItem {
         const NAME: &'static str = "TAI-Broadcast-Item";
@@ -32849,19 +31124,6 @@ pub mod s1_ap_ies {
         pub cancelled_cellin_tai: CancelledCellinTAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl TAICancelledItem {
-        pub fn new(
-            tai: TAI,
-            cancelled_cellin_tai: CancelledCellinTAI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                tai,
-                cancelled_cellin_tai,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for TAICancelledItem {
         const NAME: &'static str = "TAI-Cancelled-Item";
     }
@@ -32946,17 +31208,6 @@ pub mod s1_ap_ies {
         pub tai_listfor_mdt: TAIListforMDT,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl TAIBasedMDT {
-        pub fn new(
-            tai_listfor_mdt: TAIListforMDT,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                tai_listfor_mdt,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for TAIBasedMDT {
         const NAME: &'static str = "TAIBasedMDT";
     }
@@ -33031,17 +31282,6 @@ pub mod s1_ap_ies {
     pub struct TAIBasedQMC {
         pub tai_listfor_qmc: TAIListforQMC,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl TAIBasedQMC {
-        pub fn new(
-            tai_listfor_qmc: TAIListforQMC,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                tai_listfor_qmc,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for TAIBasedQMC {
         const NAME: &'static str = "TAIBasedQMC";
@@ -33715,19 +31955,6 @@ pub mod s1_ap_ies {
         pub selected_tai: FiveGSTAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl TargetNgRanNodeID {
-        pub fn new(
-            global_ran_node_id: GlobalRANNODEID,
-            selected_tai: FiveGSTAI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                global_ran_node_id,
-                selected_tai,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for TargetNgRanNodeID {
         const NAME: &'static str = "TargetNgRanNode-ID";
     }
@@ -33874,23 +32101,6 @@ pub mod s1_ap_ies {
         pub rnc_id: RNCID,
         pub extended_rnc_id: Option<ExtendedRNCID>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl TargetRNCID {
-        pub fn new(
-            lai: LAI,
-            rac: Option<RAC>,
-            rnc_id: RNCID,
-            extended_rnc_id: Option<ExtendedRNCID>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                lai,
-                rac,
-                rnc_id,
-                extended_rnc_id,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for TargetRNCID {
         const NAME: &'static str = "TargetRNC-ID";
@@ -34062,19 +32272,6 @@ pub mod s1_ap_ies {
         pub selected_tai: TAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl TargeteNBID {
-        pub fn new(
-            global_enb_id: GlobalENBID,
-            selected_tai: TAI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                global_enb_id,
-                selected_tai,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for TargeteNBID {
         const NAME: &'static str = "TargeteNB-ID";
     }
@@ -34158,15 +32355,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> TargeteNBToSourceeNBTransparentContainer<'a> {
-        pub fn new(
-            rrc_container: RRCContainer<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                rrc_container,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `TargeteNBToSourceeNBTransparentContainer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TargeteNBToSourceeNBTransparentContainer<'static> {
@@ -34432,19 +32620,6 @@ pub mod s1_ap_ies {
         pub ho_window_duration: HandoverWindowDuration,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl TimeBasedHandoverInformation {
-        pub fn new(
-            ho_window_start: HandoverWindowStart,
-            ho_window_duration: HandoverWindowDuration,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ho_window_start,
-                ho_window_duration,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for TimeBasedHandoverInformation {
         const NAME: &'static str = "TimeBasedHandoverInformation";
     }
@@ -34631,19 +32806,6 @@ pub mod s1_ap_ies {
         pub stratum_level: StratumLevel,
         pub synchronisation_status: SynchronisationStatus,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl TimeSynchronisationInfo {
-        pub fn new(
-            stratum_level: StratumLevel,
-            synchronisation_status: SynchronisationStatus,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                stratum_level,
-                synchronisation_status,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for TimeSynchronisationInfo {
         const NAME: &'static str = "TimeSynchronisationInfo";
@@ -34868,21 +33030,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> TraceActivation<'a> {
-        pub fn new(
-            e_utran_trace_id: EUTRANTraceID,
-            interfaces_to_trace: InterfacesToTrace,
-            trace_depth: TraceDepth,
-            trace_collection_entity_ip_address: TransportLayerAddress<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_utran_trace_id,
-                interfaces_to_trace,
-                trace_depth,
-                trace_collection_entity_ip_address,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `TraceActivation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TraceActivation<'static> {
@@ -35106,15 +33253,6 @@ pub mod s1_ap_ies {
         pub ul_gtp_teid: GTPTEID,
     }
     impl<'a> TransportInformation<'a> {
-        pub fn new(
-            transport_layer_address: TransportLayerAddress<'a>,
-            ul_gtp_teid: GTPTEID,
-        ) -> Self {
-            Self {
-                transport_layer_address,
-                ul_gtp_teid,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `TransportInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TransportInformation<'static> {
@@ -35241,17 +33379,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> TunnelInformation<'a> {
-        pub fn new(
-            transport_layer_address: TransportLayerAddress<'a>,
-            udp_port_number: Option<PortNumber>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                transport_layer_address,
-                udp_port_number,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `TunnelInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TunnelInformation<'static> {
@@ -35739,19 +33866,6 @@ pub mod s1_ap_ies {
         pub enb_ue_s1ap_id: ENBUES1APID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl UES1APIDPair {
-        pub fn new(
-            mme_ue_s1ap_id: MMEUES1APID,
-            enb_ue_s1ap_id: ENBUES1APID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                mme_ue_s1ap_id,
-                enb_ue_s1ap_id,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for UES1APIDPair {
         const NAME: &'static str = "UE-S1AP-ID-pair";
     }
@@ -35952,19 +34066,6 @@ pub mod s1_ap_ies {
         pub enb_ue_s1ap_id: Option<ENBUES1APID>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl UEAssociatedLogicalS1ConnectionItem {
-        pub fn new(
-            mme_ue_s1ap_id: Option<MMEUES1APID>,
-            enb_ue_s1ap_id: Option<ENBUES1APID>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                mme_ue_s1ap_id,
-                enb_ue_s1ap_id,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for UEAssociatedLogicalS1ConnectionItem {
         const NAME: &'static str = "UE-associatedLogicalS1-ConnectionItem";
     }
@@ -36065,19 +34166,6 @@ pub mod s1_ap_ies {
         pub ue_aggregate_maximum_bit_rate_ul: BitRate,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl UEAggregateMaximumBitrate {
-        pub fn new(
-            ue_aggregate_maximum_bit_rate_dl: BitRate,
-            ue_aggregate_maximum_bit_rate_ul: BitRate,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ue_aggregate_maximum_bit_rate_dl,
-                ue_aggregate_maximum_bit_rate_ul,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for UEAggregateMaximumBitrate {
         const NAME: &'static str = "UEAggregateMaximumBitrate";
     }
@@ -36171,17 +34259,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> UEAppLayerMeasConfig<'a> {
-        pub fn new(
-            container_for_app_layer_meas_config: Octets<'a>,
-            area_scope_of_qmc: AreaScopeOfQMC,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                container_for_app_layer_meas_config,
-                area_scope_of_qmc,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEAppLayerMeasConfig<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEAppLayerMeasConfig<'static> {
@@ -36635,17 +34712,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> UESecurityCapabilities<'a> {
-        pub fn new(
-            encryption_algorithms: EncryptionAlgorithms<'a>,
-            integrity_protection_algorithms: IntegrityProtectionAlgorithms<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                encryption_algorithms,
-                integrity_protection_algorithms,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UESecurityCapabilities<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UESecurityCapabilities<'static> {
@@ -36749,17 +34815,6 @@ pub mod s1_ap_ies {
     pub struct UESidelinkAggregateMaximumBitrate {
         pub ue_sidelink_aggregate_maximum_bit_rate: BitRate,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl UESidelinkAggregateMaximumBitrate {
-        pub fn new(
-            ue_sidelink_aggregate_maximum_bit_rate: BitRate,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ue_sidelink_aggregate_maximum_bit_rate,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for UESidelinkAggregateMaximumBitrate {
         const NAME: &'static str = "UESidelinkAggregateMaximumBitrate";
@@ -36885,19 +34940,6 @@ pub mod s1_ap_ies {
         pub ul_nas_mac: ULNASMAC,
         pub ul_nas_count: ULNASCount,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl ULCPSecurityInformation {
-        pub fn new(
-            ul_nas_mac: ULNASMAC,
-            ul_nas_count: ULNASCount,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                ul_nas_mac,
-                ul_nas_count,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for ULCPSecurityInformation {
         const NAME: &'static str = "UL-CP-SecurityInformation";
@@ -37193,19 +35235,6 @@ pub mod s1_ap_ies {
         pub tai: TAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl UserLocationInformation {
-        pub fn new(
-            eutran_cgi: EUTRANCGI,
-            tai: TAI,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                eutran_cgi,
-                tai,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for UserLocationInformation {
         const NAME: &'static str = "UserLocationInformation";
     }
@@ -37285,19 +35314,6 @@ pub mod s1_ap_ies {
         pub vehicle_ue: Option<VehicleUE>,
         pub pedestrian_ue: Option<PedestrianUE>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl V2XServicesAuthorized {
-        pub fn new(
-            vehicle_ue: Option<VehicleUE>,
-            pedestrian_ue: Option<PedestrianUE>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                vehicle_ue,
-                pedestrian_ue,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for V2XServicesAuthorized {
         const NAME: &'static str = "V2XServicesAuthorized";
@@ -37678,21 +35694,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> WLANMeasurementConfiguration<'a> {
-        pub fn new(
-            wlan_meas_config: WLANMeasConfig,
-            wlan_meas_config_name_list: Option<WLANMeasConfigNameList<'a>>,
-            wlan_rssi: Option<WLANMeasurementConfigurationWlanRssi>,
-            wlan_rtt: Option<WLANMeasurementConfigurationWlanRtt>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                wlan_meas_config,
-                wlan_meas_config_name_list,
-                wlan_rssi,
-                wlan_rtt,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `WLANMeasurementConfiguration<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WLANMeasurementConfiguration<'static> {
@@ -37914,17 +35915,6 @@ pub mod s1_ap_ies {
     pub struct WUSAssistanceInformation {
         pub paging_probability_information: PagingProbabilityInformation,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl WUSAssistanceInformation {
-        pub fn new(
-            paging_probability_information: PagingProbabilityInformation,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                paging_probability_information,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for WUSAssistanceInformation {
         const NAME: &'static str = "WUS-Assistance-Information";
@@ -38325,15 +36315,6 @@ pub mod s1_ap_ies {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> X2TNLConfigurationInfo<'a> {
-        pub fn new(
-            enb_x2_transport_layer_addresses: ENBX2TLAs<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                enb_x2_transport_layer_addresses,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `X2TNLConfigurationInfo<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> X2TNLConfigurationInfo<'static> {
@@ -38449,23 +36430,6 @@ pub mod s1_ap_pdu_contents {
         pub cell_access_mode: Option<CellAccessMode>,
         pub plmn_identity: Option<PLMNidentity>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl CSGMembershipInfo {
-        pub fn new(
-            csg_membership_status: CSGMembershipStatus,
-            csg_id: CSGId,
-            cell_access_mode: Option<CellAccessMode>,
-            plmn_identity: Option<PLMNidentity>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                csg_membership_status,
-                csg_id,
-                cell_access_mode,
-                plmn_identity,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for CSGMembershipInfo {
         const NAME: &'static str = "CSGMembershipInfo";
@@ -38585,9 +36549,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> CellTrafficTrace<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `CellTrafficTrace<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> CellTrafficTrace<'static> {
@@ -38642,9 +36603,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ConnectionEstablishmentIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ConnectionEstablishmentIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ConnectionEstablishmentIndication<'static> {
@@ -38699,9 +36657,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> DeactivateTrace<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `DeactivateTrace<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DeactivateTrace<'static> {
@@ -38756,9 +36711,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> DownlinkNASTransport<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `DownlinkNASTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DownlinkNASTransport<'static> {
@@ -38813,9 +36765,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> DownlinkNonUEAssociatedLPPaTransport<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `DownlinkNonUEAssociatedLPPaTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DownlinkNonUEAssociatedLPPaTransport<'static> {
@@ -38870,9 +36819,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> DownlinkS1cdma2000tunnelling<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `DownlinkS1cdma2000tunnelling<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DownlinkS1cdma2000tunnelling<'static> {
@@ -38927,9 +36873,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> DownlinkUEAssociatedLPPaTransport<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `DownlinkUEAssociatedLPPaTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> DownlinkUEAssociatedLPPaTransport<'static> {
@@ -38991,27 +36934,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABAdmittedItem<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            transport_layer_address: TransportLayerAddress<'a>,
-            gtp_teid: GTPTEID,
-            dl_transport_layer_address: Option<TransportLayerAddress<'a>>,
-            dl_gtp_teid: Option<GTPTEID>,
-            ul_transport_layer_address: Option<TransportLayerAddress<'a>>,
-            ul_gtp_teid: Option<GTPTEID>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                dl_transport_layer_address,
-                dl_gtp_teid,
-                ul_transport_layer_address,
-                ul_gtp_teid,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABAdmittedItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABAdmittedItem<'static> {
@@ -39274,23 +37196,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABDataForwardingItem<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            dl_transport_layer_address: Option<TransportLayerAddress<'a>>,
-            dl_gtp_teid: Option<GTPTEID>,
-            ul_transport_layer_address: Option<TransportLayerAddress<'a>>,
-            ul_gtp_teid: Option<GTPTEID>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                dl_transport_layer_address,
-                dl_gtp_teid,
-                ul_transport_layer_address,
-                ul_gtp_teid,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABDataForwardingItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABDataForwardingItem<'static> {
@@ -39466,19 +37371,6 @@ pub mod s1_ap_pdu_contents {
         pub cause: Cause,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ERABFailedToResumeItemResumeReq {
-        pub fn new(
-            e_rab_id: ERABID,
-            cause: Cause,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                cause,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ERABFailedToResumeItemResumeReq {
         const NAME: &'static str = "E-RABFailedToResumeItemResumeReq";
     }
@@ -39556,19 +37448,6 @@ pub mod s1_ap_pdu_contents {
         pub e_rab_id: ERABID,
         pub cause: Cause,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl ERABFailedToResumeItemResumeRes {
-        pub fn new(
-            e_rab_id: ERABID,
-            cause: Cause,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                cause,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for ERABFailedToResumeItemResumeRes {
         const NAME: &'static str = "E-RABFailedToResumeItemResumeRes";
@@ -39770,19 +37649,6 @@ pub mod s1_ap_pdu_contents {
         pub cause: Cause,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ERABFailedToSetupItemHOReqAck {
-        pub fn new(
-            e_rab_id: ERABID,
-            cause: Cause,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                cause,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ERABFailedToSetupItemHOReqAck {
         const NAME: &'static str = "E-RABFailedToSetupItemHOReqAck";
     }
@@ -39921,9 +37787,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ERABModificationConfirm<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModificationConfirm<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModificationConfirm<'static> {
@@ -39978,9 +37841,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ERABModificationIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModificationIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModificationIndication<'static> {
@@ -40034,17 +37894,6 @@ pub mod s1_ap_pdu_contents {
     pub struct ERABModifyItemBearerModConf {
         pub e_rab_id: ERABID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl ERABModifyItemBearerModConf {
-        pub fn new(
-            e_rab_id: ERABID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for ERABModifyItemBearerModConf {
         const NAME: &'static str = "E-RABModifyItemBearerModConf";
@@ -40116,17 +37965,6 @@ pub mod s1_ap_pdu_contents {
     pub struct ERABModifyItemBearerModRes {
         pub e_rab_id: ERABID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl ERABModifyItemBearerModRes {
-        pub fn new(
-            e_rab_id: ERABID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for ERABModifyItemBearerModRes {
         const NAME: &'static str = "E-RABModifyItemBearerModRes";
@@ -40317,9 +38155,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ERABModifyRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModifyRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModifyRequest<'static> {
@@ -40374,9 +38209,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ERABModifyResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABModifyResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABModifyResponse<'static> {
@@ -40434,19 +38266,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABNotToBeModifiedItemBearerModInd<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            transport_layer_address: TransportLayerAddress<'a>,
-            dl_gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                transport_layer_address,
-                dl_gtp_teid,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABNotToBeModifiedItemBearerModInd<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABNotToBeModifiedItemBearerModInd<'static> {
@@ -40614,9 +38433,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ERABReleaseCommand<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABReleaseCommand<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABReleaseCommand<'static> {
@@ -40671,9 +38487,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ERABReleaseIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABReleaseIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABReleaseIndication<'static> {
@@ -40727,17 +38540,6 @@ pub mod s1_ap_pdu_contents {
     pub struct ERABReleaseItemBearerRelComp {
         pub e_rab_id: ERABID,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl ERABReleaseItemBearerRelComp {
-        pub fn new(
-            e_rab_id: ERABID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                ie_extensions,
-            }
-        }
     }
     impl AsnType for ERABReleaseItemBearerRelComp {
         const NAME: &'static str = "E-RABReleaseItemBearerRelComp";
@@ -40869,9 +38671,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ERABReleaseResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABReleaseResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABReleaseResponse<'static> {
@@ -40929,19 +38728,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABSetupItemBearerSURes<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            transport_layer_address: TransportLayerAddress<'a>,
-            gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSetupItemBearerSURes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSetupItemBearerSURes<'static> {
@@ -41049,19 +38835,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABSetupItemCtxtSURes<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            transport_layer_address: TransportLayerAddress<'a>,
-            gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSetupItemCtxtSURes<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSetupItemCtxtSURes<'static> {
@@ -41284,9 +39057,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ERABSetupRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSetupRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSetupRequest<'static> {
@@ -41341,9 +39111,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ERABSetupResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABSetupResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABSetupResponse<'static> {
@@ -41462,19 +39229,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeModifiedItemBearerModInd<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            transport_layer_address: TransportLayerAddress<'a>,
-            dl_gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                transport_layer_address,
-                dl_gtp_teid,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeModifiedItemBearerModInd<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeModifiedItemBearerModInd<'static> {
@@ -41584,19 +39338,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeModifiedItemBearerModReq<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            e_rab_level_qos_parameters: ERABLevelQoSParameters,
-            nas_pdu: NASPDU<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                e_rab_level_qos_parameters,
-                nas_pdu,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeModifiedItemBearerModReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeModifiedItemBearerModReq<'static> {
@@ -41828,23 +39569,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeSetupItemBearerSUReq<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            e_rab_level_qos_parameters: ERABLevelQoSParameters,
-            transport_layer_address: TransportLayerAddress<'a>,
-            gtp_teid: GTPTEID,
-            nas_pdu: NASPDU<'a>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                e_rab_level_qos_parameters,
-                transport_layer_address,
-                gtp_teid,
-                nas_pdu,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSetupItemBearerSUReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSetupItemBearerSUReq<'static> {
@@ -41974,16 +39698,31 @@ pub mod s1_ap_pdu_contents {
     ///
     /// ```
     /// use oxirush_s1ap::aper::BitString;
-    /// use oxirush_s1ap::{build_s1ap, Ie, ie, s1ap::*};
+    /// use oxirush_s1ap::{Ie, build_s1ap, ie, s1ap::*};
     ///
     /// // The default bearer: E-RAB 5 of QCI 9, and the S-GW's end of its tunnel
-    /// let priority = AllocationAndRetentionPriority::new(PriorityLevel(15),
-    ///     PreEmptionCapability::shall_not_trigger_pre_emption,
-    ///     PreEmptionVulnerability::not_pre_emptable, None);
-    /// let qos = ERABLevelQoSParameters::new(QCI(9), priority, None, None);
-    /// let bearer = ERABToBeSetupItemCtxtSUReq::new(ERABID(5), qos,
-    ///     TransportLayerAddress(BitString::from([10, 0, 0, 1])), GTPTEID([0, 0, 0, 1]), None, None);
-    /// let request = build_s1ap!(InitialContextSetupRequest,
+    /// let priority = AllocationAndRetentionPriority {
+    ///     priority_level: PriorityLevel(15),
+    ///     pre_emption_capability: PreEmptionCapability::shall_not_trigger_pre_emption,
+    ///     pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
+    ///     ie_extensions: None,
+    /// };
+    /// let qos = ERABLevelQoSParameters {
+    ///     qci: QCI(9),
+    ///     allocation_retention_priority: priority,
+    ///     gbr_qos_information: None,
+    ///     ie_extensions: None,
+    /// };
+    /// let bearer = ERABToBeSetupItemCtxtSUReq {
+    ///     e_rab_id: ERABID(5),
+    ///     e_rab_level_qos_parameters: qos,
+    ///     transport_layer_address: TransportLayerAddress(BitString::from([10, 0, 0, 1])),
+    ///     gtp_teid: GTPTEID([0, 0, 0, 1]),
+    ///     nas_pdu: None,
+    ///     ie_extensions: None,
+    /// };
+    /// let request = build_s1ap!(
+    ///     InitialContextSetupRequest,
     ///     MME_UE_S1AP_ID(1u32),
     ///     eNB_UE_S1AP_ID(7u32),
     ///     E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(vec![
@@ -41994,7 +39733,10 @@ pub mod s1_ap_pdu_contents {
     /// // Each item, where it is in the octets of the PDU
     /// for item in request.items::<ie::E_RABToBeSetupListCtxtSUReq>() {
     ///     let item = item?;
-    ///     assert_eq!((item.e_rab_id, item.gtp_teid), (ERABID(5), GTPTEID([0, 0, 0, 1])));
+    ///     assert_eq!(
+    ///         (item.e_rab_id, item.gtp_teid),
+    ///         (ERABID(5), GTPTEID([0, 0, 0, 1]))
+    ///     );
     /// }
     /// # Ok::<(), oxirush_s1ap::Error>(())
     /// ```
@@ -42008,23 +39750,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeSetupItemCtxtSUReq<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            e_rab_level_qos_parameters: ERABLevelQoSParameters,
-            transport_layer_address: TransportLayerAddress<'a>,
-            gtp_teid: GTPTEID,
-            nas_pdu: Option<NASPDU<'a>>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                e_rab_level_qos_parameters,
-                transport_layer_address,
-                gtp_teid,
-                nas_pdu,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSetupItemCtxtSUReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSetupItemCtxtSUReq<'static> {
@@ -42167,21 +39892,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeSetupItemHOReq<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            transport_layer_address: TransportLayerAddress<'a>,
-            gtp_teid: GTPTEID,
-            e_rab_level_qos_parameters: ERABLevelQoSParameters,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                e_rab_level_qos_parameters,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSetupItemHOReq<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSetupItemHOReq<'static> {
@@ -42483,19 +40193,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeSwitchedDLItem<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            transport_layer_address: TransportLayerAddress<'a>,
-            gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSwitchedDLItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSwitchedDLItem<'static> {
@@ -42662,19 +40359,6 @@ pub mod s1_ap_pdu_contents {
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
     impl<'a> ERABToBeSwitchedULItem<'a> {
-        pub fn new(
-            e_rab_id: ERABID,
-            transport_layer_address: TransportLayerAddress<'a>,
-            gtp_teid: GTPTEID,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                ie_extensions,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ERABToBeSwitchedULItem<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ERABToBeSwitchedULItem<'static> {
@@ -42839,19 +40523,6 @@ pub mod s1_ap_pdu_contents {
         pub security_indication: Option<SecurityIndication>,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
     }
-    impl ERABToBeUpdatedItem {
-        pub fn new(
-            e_rab_id: ERABID,
-            security_indication: Option<SecurityIndication>,
-            ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-        ) -> Self {
-            Self {
-                e_rab_id,
-                security_indication,
-                ie_extensions,
-            }
-        }
-    }
     impl AsnType for ERABToBeUpdatedItem {
         const NAME: &'static str = "E-RABToBeUpdatedItem";
     }
@@ -43006,9 +40677,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ENBCPRelocationIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBCPRelocationIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBCPRelocationIndication<'static> {
@@ -43063,9 +40731,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ENBConfigurationTransfer<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBConfigurationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBConfigurationTransfer<'static> {
@@ -43120,9 +40785,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ENBConfigurationUpdate<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBConfigurationUpdate<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBConfigurationUpdate<'static> {
@@ -43177,9 +40839,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ENBConfigurationUpdateAcknowledge<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBConfigurationUpdateAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBConfigurationUpdateAcknowledge<'static> {
@@ -43234,9 +40893,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ENBConfigurationUpdateFailure<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBConfigurationUpdateFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBConfigurationUpdateFailure<'static> {
@@ -43291,9 +40947,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ENBDirectInformationTransfer<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBDirectInformationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBDirectInformationTransfer<'static> {
@@ -43348,9 +41001,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ENBEarlyStatusTransfer<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBEarlyStatusTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBEarlyStatusTransfer<'static> {
@@ -43405,9 +41055,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ENBStatusTransfer<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ENBStatusTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ENBStatusTransfer<'static> {
@@ -43462,9 +41109,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ErrorIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ErrorIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ErrorIndication<'static> {
@@ -43519,9 +41163,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> HandoverCancel<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverCancel<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverCancel<'static> {
@@ -43576,9 +41217,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> HandoverCancelAcknowledge<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverCancelAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverCancelAcknowledge<'static> {
@@ -43633,9 +41271,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> HandoverCommand<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverCommand<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverCommand<'static> {
@@ -43690,9 +41325,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> HandoverFailure<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverFailure<'static> {
@@ -43747,9 +41379,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> HandoverNotify<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverNotify<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverNotify<'static> {
@@ -43804,9 +41433,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> HandoverPreparationFailure<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverPreparationFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverPreparationFailure<'static> {
@@ -43861,9 +41487,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> HandoverRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverRequest<'static> {
@@ -43918,9 +41541,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> HandoverRequestAcknowledge<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverRequestAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverRequestAcknowledge<'static> {
@@ -43975,9 +41595,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> HandoverRequired<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverRequired<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverRequired<'static> {
@@ -44032,9 +41649,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> HandoverSuccess<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `HandoverSuccess<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> HandoverSuccess<'static> {
@@ -44089,9 +41703,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> InitialContextSetupFailure<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `InitialContextSetupFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InitialContextSetupFailure<'static> {
@@ -44146,9 +41757,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> InitialContextSetupRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `InitialContextSetupRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InitialContextSetupRequest<'static> {
@@ -44203,9 +41811,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> InitialContextSetupResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `InitialContextSetupResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InitialContextSetupResponse<'static> {
@@ -44260,9 +41865,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> InitialUEMessage<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `InitialUEMessage<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> InitialUEMessage<'static> {
@@ -44384,9 +41986,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> KillRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `KillRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> KillRequest<'static> {
@@ -44441,9 +42040,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> KillResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `KillResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> KillResponse<'static> {
@@ -44498,9 +42094,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> LocationReport<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `LocationReport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LocationReport<'static> {
@@ -44555,9 +42148,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> LocationReportingControl<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `LocationReportingControl<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LocationReportingControl<'static> {
@@ -44612,9 +42202,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> LocationReportingFailureIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `LocationReportingFailureIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> LocationReportingFailureIndication<'static> {
@@ -44669,9 +42256,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> MMECPRelocationIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `MMECPRelocationIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMECPRelocationIndication<'static> {
@@ -44726,9 +42310,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> MMEConfigurationTransfer<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEConfigurationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEConfigurationTransfer<'static> {
@@ -44783,9 +42364,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> MMEConfigurationUpdate<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEConfigurationUpdate<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEConfigurationUpdate<'static> {
@@ -44840,9 +42418,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> MMEConfigurationUpdateAcknowledge<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEConfigurationUpdateAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEConfigurationUpdateAcknowledge<'static> {
@@ -44897,9 +42472,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> MMEConfigurationUpdateFailure<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEConfigurationUpdateFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEConfigurationUpdateFailure<'static> {
@@ -44954,9 +42526,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> MMEDirectInformationTransfer<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEDirectInformationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEDirectInformationTransfer<'static> {
@@ -45011,9 +42580,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> MMEEarlyStatusTransfer<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEEarlyStatusTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEEarlyStatusTransfer<'static> {
@@ -45068,9 +42634,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> MMEStatusTransfer<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `MMEStatusTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> MMEStatusTransfer<'static> {
@@ -45125,9 +42688,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> NASDeliveryIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `NASDeliveryIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NASDeliveryIndication<'static> {
@@ -45182,9 +42742,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> NASNonDeliveryIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `NASNonDeliveryIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> NASNonDeliveryIndication<'static> {
@@ -45239,9 +42796,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> OverloadStart<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `OverloadStart<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> OverloadStart<'static> {
@@ -45296,9 +42850,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> OverloadStop<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `OverloadStop<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> OverloadStop<'static> {
@@ -45353,9 +42904,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> PWSFailureIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `PWSFailureIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PWSFailureIndication<'static> {
@@ -45410,9 +42958,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> PWSRestartIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `PWSRestartIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PWSRestartIndication<'static> {
@@ -45467,9 +43012,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> Paging<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `Paging<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Paging<'static> {
@@ -45524,9 +43066,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> PathSwitchRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `PathSwitchRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PathSwitchRequest<'static> {
@@ -45581,9 +43120,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> PathSwitchRequestAcknowledge<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `PathSwitchRequestAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PathSwitchRequestAcknowledge<'static> {
@@ -45638,9 +43174,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> PathSwitchRequestFailure<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `PathSwitchRequestFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PathSwitchRequestFailure<'static> {
@@ -45697,13 +43230,6 @@ pub mod s1_ap_pdu_contents {
         pub value: Octets<'a>,
     }
     impl<'a> AnonymousPrivateMessagePrivateIEs<'a> {
-        pub fn new(id: PrivateIEID, criticality: Criticality, value: Octets<'a>) -> Self {
-            Self {
-                id,
-                criticality,
-                value,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `AnonymousPrivateMessagePrivateIEs<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> AnonymousPrivateMessagePrivateIEs<'static> {
@@ -45830,9 +43356,6 @@ pub mod s1_ap_pdu_contents {
         pub private_ies: PrivateMessagePrivateIEs<'a>,
     }
     impl<'a> PrivateMessage<'a> {
-        pub fn new(private_ies: PrivateMessagePrivateIEs<'a>) -> Self {
-            Self { private_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `PrivateMessage<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> PrivateMessage<'static> {
@@ -45887,9 +43410,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> RerouteNASRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `RerouteNASRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RerouteNASRequest<'static> {
@@ -45944,9 +43464,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> Reset<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `Reset<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> Reset<'static> {
@@ -46001,9 +43518,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> ResetAcknowledge<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `ResetAcknowledge<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> ResetAcknowledge<'static> {
@@ -46187,9 +43701,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> RetrieveUEInformation<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `RetrieveUEInformation<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> RetrieveUEInformation<'static> {
@@ -46244,9 +43755,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> S1RemovalFailure<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `S1RemovalFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1RemovalFailure<'static> {
@@ -46301,9 +43809,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> S1RemovalRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `S1RemovalRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1RemovalRequest<'static> {
@@ -46358,9 +43863,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> S1RemovalResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `S1RemovalResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1RemovalResponse<'static> {
@@ -46415,9 +43917,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> S1SetupFailure<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `S1SetupFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1SetupFailure<'static> {
@@ -46472,9 +43971,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> S1SetupRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `S1SetupRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1SetupRequest<'static> {
@@ -46529,9 +44025,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> S1SetupResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `S1SetupResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> S1SetupResponse<'static> {
@@ -46586,9 +44079,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> SecondaryRATDataUsageReport<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `SecondaryRATDataUsageReport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> SecondaryRATDataUsageReport<'static> {
@@ -46642,11 +44132,6 @@ pub mod s1_ap_pdu_contents {
     pub struct TAIItem {
         pub tai: TAI,
         pub ie_extensions: Option<ProtocolExtensionContainer<'static>>,
-    }
-    impl TAIItem {
-        pub fn new(tai: TAI, ie_extensions: Option<ProtocolExtensionContainer<'static>>) -> Self {
-            Self { tai, ie_extensions }
-        }
     }
     impl AsnType for TAIItem {
         const NAME: &'static str = "TAIItem";
@@ -46772,9 +44257,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> TraceFailureIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `TraceFailureIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TraceFailureIndication<'static> {
@@ -46829,9 +44311,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> TraceStart<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `TraceStart<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> TraceStart<'static> {
@@ -47008,9 +44487,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UECapabilityInfoIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UECapabilityInfoIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UECapabilityInfoIndication<'static> {
@@ -47065,9 +44541,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextModificationConfirm<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextModificationConfirm<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextModificationConfirm<'static> {
@@ -47122,9 +44595,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextModificationFailure<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextModificationFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextModificationFailure<'static> {
@@ -47179,9 +44649,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextModificationIndication<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextModificationIndication<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextModificationIndication<'static> {
@@ -47236,9 +44703,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextModificationRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextModificationRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextModificationRequest<'static> {
@@ -47293,9 +44757,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextModificationResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextModificationResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextModificationResponse<'static> {
@@ -47350,9 +44811,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextReleaseCommand<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextReleaseCommand<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextReleaseCommand<'static> {
@@ -47407,9 +44865,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextReleaseComplete<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextReleaseComplete<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextReleaseComplete<'static> {
@@ -47464,9 +44919,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextReleaseRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextReleaseRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextReleaseRequest<'static> {
@@ -47521,9 +44973,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextResumeFailure<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextResumeFailure<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextResumeFailure<'static> {
@@ -47578,9 +45027,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextResumeRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextResumeRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextResumeRequest<'static> {
@@ -47635,9 +45081,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextResumeResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextResumeResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextResumeResponse<'static> {
@@ -47692,9 +45135,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextSuspendRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextSuspendRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextSuspendRequest<'static> {
@@ -47749,9 +45189,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEContextSuspendResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEContextSuspendResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEContextSuspendResponse<'static> {
@@ -47806,9 +45243,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UEInformationTransfer<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UEInformationTransfer<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UEInformationTransfer<'static> {
@@ -47863,9 +45297,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UERadioCapabilityIDMappingRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UERadioCapabilityIDMappingRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERadioCapabilityIDMappingRequest<'static> {
@@ -47920,9 +45351,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UERadioCapabilityIDMappingResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UERadioCapabilityIDMappingResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERadioCapabilityIDMappingResponse<'static> {
@@ -47977,9 +45405,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UERadioCapabilityMatchRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UERadioCapabilityMatchRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERadioCapabilityMatchRequest<'static> {
@@ -48034,9 +45459,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UERadioCapabilityMatchResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UERadioCapabilityMatchResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UERadioCapabilityMatchResponse<'static> {
@@ -48091,9 +45513,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UplinkNASTransport<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UplinkNASTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UplinkNASTransport<'static> {
@@ -48148,9 +45567,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UplinkNonUEAssociatedLPPaTransport<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UplinkNonUEAssociatedLPPaTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UplinkNonUEAssociatedLPPaTransport<'static> {
@@ -48205,9 +45621,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UplinkS1cdma2000tunnelling<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UplinkS1cdma2000tunnelling<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UplinkS1cdma2000tunnelling<'static> {
@@ -48262,9 +45675,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> UplinkUEAssociatedLPPaTransport<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UplinkUEAssociatedLPPaTransport<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> UplinkUEAssociatedLPPaTransport<'static> {
@@ -48319,9 +45729,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> WriteReplaceWarningRequest<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `WriteReplaceWarningRequest<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WriteReplaceWarningRequest<'static> {
@@ -48376,9 +45783,6 @@ pub mod s1_ap_pdu_contents {
         pub protocol_ies: ProtocolIEContainer<'a>,
     }
     impl<'a> WriteReplaceWarningResponse<'a> {
-        pub fn new(protocol_ies: ProtocolIEContainer<'a>) -> Self {
-            Self { protocol_ies }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `WriteReplaceWarningResponse<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         pub fn into_owned(self) -> WriteReplaceWarningResponse<'static> {
@@ -48472,17 +45876,6 @@ pub mod s1_ap_pdu_descriptions {
         pub value: Octets<'a>,
     }
     impl<'a> InitiatingMessage<'a> {
-        pub fn new(
-            procedure_code: ProcedureCode,
-            criticality: Criticality,
-            value: Octets<'a>,
-        ) -> Self {
-            Self {
-                procedure_code,
-                criticality,
-                value,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `InitiatingMessage<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         #[inline]
@@ -48682,17 +46075,6 @@ pub mod s1_ap_pdu_descriptions {
         pub value: Octets<'a>,
     }
     impl<'a> SuccessfulOutcome<'a> {
-        pub fn new(
-            procedure_code: ProcedureCode,
-            criticality: Criticality,
-            value: Octets<'a>,
-        ) -> Self {
-            Self {
-                procedure_code,
-                criticality,
-                value,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `SuccessfulOutcome<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         #[inline]
@@ -48785,17 +46167,6 @@ pub mod s1_ap_pdu_descriptions {
         pub value: Octets<'a>,
     }
     impl<'a> UnsuccessfulOutcome<'a> {
-        pub fn new(
-            procedure_code: ProcedureCode,
-            criticality: Criticality,
-            value: Octets<'a>,
-        ) -> Self {
-            Self {
-                procedure_code,
-                criticality,
-                value,
-            }
-        }
         /// The same value, which borrows nothing and is kept as long as it is needed: a `UnsuccessfulOutcome<'static>`, which is the type to write in a struct. What the value borrowed from the octets that it was decoded from is copied.
         #[doc(alias("to_owned", "owned", "keep"))]
         #[inline]

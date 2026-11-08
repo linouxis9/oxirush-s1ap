@@ -45,8 +45,11 @@ fn main() -> Result<(), Error> {
 
     let network = plmn("208", "93")?;
     let erabs = erab_to_be_setup_list(vec![0x07, 0x41, 0x00]);
-    let bit_rate =
-        UEAggregateMaximumBitrate::new(BitRate(1_000_000_000), BitRate(500_000_000), None);
+    let bit_rate = UEAggregateMaximumBitrate {
+        ue_aggregate_maximum_bit_rate_dl: BitRate(1_000_000_000),
+        ue_aggregate_maximum_bit_rate_ul: BitRate(500_000_000),
+        ie_extensions: None,
+    };
 
     let pdu = build_s1ap!(REJECT InitialContextSetupRequest,
         // The UE, on each side of the interface
@@ -76,7 +79,11 @@ fn main() -> Result<(), Error> {
 
     let target_enb = global_enb_id(network, EnbKind::Macro, 0x12345)?;
     let target_area = tai(network, [0x00, 0x01]);
-    let target = TargetID::targeteNB_ID(TargeteNBID::new(target_enb, target_area, None));
+    let target = TargetID::targeteNB_ID(TargeteNBID {
+        global_enb_id: target_enb,
+        selected_tai: target_area,
+        ie_extensions: None,
+    });
     let cause = Cause::radioNetwork(CauseRadioNetwork::handover_desirable_for_radio_reason);
 
     let pdu = build_s1ap!(REJECT HandoverRequired,
@@ -131,95 +138,95 @@ fn main() -> Result<(), Error> {
     // ── Equivalent hand-written code (for comparison) ──────────────────────
     // Without macros, the same InitialContextSetupResponse (example 1) is:
     //
-    //   let response = InitialContextSetupResponse::new(
-    //       ProtocolIEContainer(vec![
-    //           ProtocolIEField::new(
-    //               ProtocolIEID(0),
-    //               Criticality::Ignore,
-    //               encode_open_type(&MMEUES1APID(1))?,
-    //           ),
-    //           ProtocolIEField::new(
-    //               ProtocolIEID(8),
-    //               Criticality::Ignore,
-    //               encode_open_type(&ENBUES1APID(0))?,
-    //           ),
-    //           ProtocolIEField::new(
-    //               ProtocolIEID(51),
-    //               Criticality::Ignore,
-    //               encode_open_type(&erab_setup_list())?,
-    //           ),
+    //   let response = InitialContextSetupResponse {
+    //       protocol_ies: ProtocolIEContainer(vec![
+    //           ProtocolIEField {
+    //               id: ProtocolIEID(0),
+    //               criticality: Criticality::Ignore,
+    //               value: encode_open_type(&MMEUES1APID(1))?,
+    //           },
+    //           ProtocolIEField {
+    //               id: ProtocolIEID(8),
+    //               criticality: Criticality::Ignore,
+    //               value: encode_open_type(&ENBUES1APID(0))?,
+    //           },
+    //           ProtocolIEField {
+    //               id: ProtocolIEID(51),
+    //               criticality: Criticality::Ignore,
+    //               value: encode_open_type(&erab_setup_list())?,
+    //           },
     //       ]),
-    //   );
-    //   let pdu = S1AP_PDU::successfulOutcome(SuccessfulOutcome::new(
-    //       ProcedureCode(9),
-    //       Criticality::Reject,
-    //       encode_open_type(&response)?,
-    //   ));
+    //   };
+    //   let pdu = S1AP_PDU::successfulOutcome(SuccessfulOutcome {
+    //       procedure_code: ProcedureCode(9),
+    //       criticality: Criticality::Reject,
+    //       value: encode_open_type(&response)?,
+    //   });
     Ok(())
 }
 
 fn erab_setup_list() -> ERABSetupListCtxtSURes<'static> {
-    let item = ERABSetupItemCtxtSURes::new(
-        ERABID(5),
-        TransportLayerAddress([10, 0, 0, 2].into()),
-        GTPTEID::from([0, 0, 0, 2]),
-        None,
-    );
+    let item = ERABSetupItemCtxtSURes {
+        e_rab_id: ERABID(5),
+        transport_layer_address: TransportLayerAddress([10, 0, 0, 2].into()),
+        gtp_teid: GTPTEID::from([0, 0, 0, 2]),
+        ie_extensions: None,
+    };
 
     // An item of the list is an IE itself, alone in its container.
-    ERABSetupListCtxtSURes(vec![ProtocolIEField::new(
-        ID_E_RABSETUP_ITEM_CTXT_SURES.0,
-        Criticality::Ignore,
-        encode_open_type(&item).expect("encode E-RAB setup item"),
-    )])
+    ERABSetupListCtxtSURes(vec![ProtocolIEField {
+        id: ID_E_RABSETUP_ITEM_CTXT_SURES,
+        criticality: Criticality::Ignore,
+        value: encode_open_type(&item).expect("encode E-RAB setup item"),
+    }])
 }
 
 fn erab_admitted_list() -> ERABAdmittedList<'static> {
-    let item = ERABAdmittedItem::new(
-        ERABID(5),
-        TransportLayerAddress([10, 0, 0, 3].into()),
-        GTPTEID::from([0, 0, 0, 3]),
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let item = ERABAdmittedItem {
+        e_rab_id: ERABID(5),
+        transport_layer_address: TransportLayerAddress([10, 0, 0, 3].into()),
+        gtp_teid: GTPTEID::from([0, 0, 0, 3]),
+        dl_transport_layer_address: None,
+        dl_gtp_teid: None,
+        ul_transport_layer_address: None,
+        ul_gtp_teid: None,
+        ie_extensions: None,
+    };
 
-    ERABAdmittedList(vec![ProtocolIEField::new(
-        ID_E_RABADMITTED_ITEM.0,
-        Criticality::Ignore,
-        encode_open_type(&item).expect("encode admitted E-RAB item"),
-    )])
+    ERABAdmittedList(vec![ProtocolIEField {
+        id: ID_E_RABADMITTED_ITEM,
+        criticality: Criticality::Ignore,
+        value: encode_open_type(&item).expect("encode admitted E-RAB item"),
+    }])
 }
 
 fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq<'static> {
-    let qos = ERABLevelQoSParameters::new(
-        QCI(9),
-        AllocationAndRetentionPriority::new(
-            PriorityLevel(15),
-            PreEmptionCapability::shall_not_trigger_pre_emption,
-            PreEmptionVulnerability::not_pre_emptable,
-            None,
-        ),
-        None,
-        None,
-    );
+    let qos = ERABLevelQoSParameters {
+        qci: QCI(9),
+        allocation_retention_priority: AllocationAndRetentionPriority {
+            priority_level: PriorityLevel(15),
+            pre_emption_capability: PreEmptionCapability::shall_not_trigger_pre_emption,
+            pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
+            ie_extensions: None,
+        },
+        gbr_qos_information: None,
+        ie_extensions: None,
+    };
 
-    let item = ERABToBeSetupItemCtxtSUReq::new(
-        ERABID(5),
-        qos,
-        TransportLayerAddress([10, 0, 0, 1].into()),
-        GTPTEID::from([0, 0, 0, 1]),
-        Some(NASPDU::from(nas)),
-        None,
-    );
+    let item = ERABToBeSetupItemCtxtSUReq {
+        e_rab_id: ERABID(5),
+        e_rab_level_qos_parameters: qos,
+        transport_layer_address: TransportLayerAddress([10, 0, 0, 1].into()),
+        gtp_teid: GTPTEID::from([0, 0, 0, 1]),
+        nas_pdu: Some(NASPDU::from(nas)),
+        ie_extensions: None,
+    };
 
-    ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField::new(
-        ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ.0,
-        Criticality::Reject,
-        encode_open_type(&item).expect("encode E-RAB item"),
-    )])
+    ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField {
+        id: ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ,
+        criticality: Criticality::Reject,
+        value: encode_open_type(&item).expect("encode E-RAB item"),
+    }])
 }
 
 fn print_and_encode(pdu: &S1AP_PDU) -> Result<(), Error> {

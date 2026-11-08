@@ -125,8 +125,11 @@ fn main() -> Result<(), Error> {
 
     // 3. InitialContextSetupRequest. The NAS PDU is nested in its E-RAB item,
     // as specified by TS 36.413 rather than as a top-level message IE.
-    let bit_rate =
-        UEAggregateMaximumBitrate::new(BitRate(1_000_000_000), BitRate(500_000_000), None);
+    let bit_rate = UEAggregateMaximumBitrate {
+        ue_aggregate_maximum_bit_rate_dl: BitRate(1_000_000_000),
+        ue_aggregate_maximum_bit_rate_ul: BitRate(500_000_000),
+        ie_extensions: None,
+    };
     let erabs = erab_to_be_setup_list(vec![0x07, 0x41, 0x00, 0x01]);
     let ics_pdu = build_s1ap!(REJECT InitialContextSetupRequest,
         REJECT MME_UE_S1AP_ID(200u32),
@@ -181,37 +184,41 @@ fn target_enb() -> Result<TargetID, Error> {
     let enb = global_enb_id(network, EnbKind::Macro, 0x12345)?;
     let area = tai(network, [0x00, 0x01]);
 
-    Ok(TargetID::targeteNB_ID(TargeteNBID::new(enb, area, None)))
+    Ok(TargetID::targeteNB_ID(TargeteNBID {
+        global_enb_id: enb,
+        selected_tai: area,
+        ie_extensions: None,
+    }))
 }
 
 fn erab_to_be_setup_list(nas: Vec<u8>) -> ERABToBeSetupListCtxtSUReq<'static> {
-    let qos = ERABLevelQoSParameters::new(
-        QCI(9),
-        AllocationAndRetentionPriority::new(
-            PriorityLevel(15),
-            PreEmptionCapability::shall_not_trigger_pre_emption,
-            PreEmptionVulnerability::not_pre_emptable,
-            None,
-        ),
-        None,
-        None,
-    );
+    let qos = ERABLevelQoSParameters {
+        qci: QCI(9),
+        allocation_retention_priority: AllocationAndRetentionPriority {
+            priority_level: PriorityLevel(15),
+            pre_emption_capability: PreEmptionCapability::shall_not_trigger_pre_emption,
+            pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
+            ie_extensions: None,
+        },
+        gbr_qos_information: None,
+        ie_extensions: None,
+    };
 
-    let item = ERABToBeSetupItemCtxtSUReq::new(
-        ERABID(5),
-        qos,
-        TransportLayerAddress([10, 0, 0, 1].into()),
-        GTPTEID::from([0, 0, 0, 1]),
-        Some(NASPDU::from(nas)),
-        None,
-    );
+    let item = ERABToBeSetupItemCtxtSUReq {
+        e_rab_id: ERABID(5),
+        e_rab_level_qos_parameters: qos,
+        transport_layer_address: TransportLayerAddress([10, 0, 0, 1].into()),
+        gtp_teid: GTPTEID::from([0, 0, 0, 1]),
+        nas_pdu: Some(NASPDU::from(nas)),
+        ie_extensions: None,
+    };
 
     // An item of the list is an IE itself, alone in its container.
-    ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField::new(
-        ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ.0,
-        Criticality::Reject,
-        encode_open_type(&item).expect("encode E-RAB item"),
-    )])
+    ERABToBeSetupListCtxtSUReq(vec![ProtocolIEField {
+        id: ID_E_RABTO_BE_SETUP_ITEM_CTXT_SUREQ,
+        criticality: Criticality::Reject,
+        value: encode_open_type(&item).expect("encode E-RAB item"),
+    }])
 }
 
 fn nested_nas_len(list: &ERABToBeSetupListCtxtSUReq) -> Option<usize> {

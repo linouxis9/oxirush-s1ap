@@ -40,20 +40,20 @@ fn public_macros_round_trip_typed_open_message() -> Result<(), Error> {
 /// SIZE(1..256) (X.691 (02/2021) §11.9.3.3), as Wireshark decodes it.
 #[test]
 fn every_constrained_list_encodes_its_length_per_x691() -> Result<(), Error> {
-    let diagnostics = CriticalityDiagnostics::new(
-        Some(ProcedureCode(9)),
-        Some(TriggeringMessage::initiating_message),
-        Some(Criticality::Reject),
-        Some(CriticalityDiagnosticsIEList(vec![
-            CriticalityDiagnosticsIEItem::new(
-                Criticality::Reject,
-                ProtocolIEID(26),
-                TypeOfError::missing,
-                None,
-            ),
+    let diagnostics = CriticalityDiagnostics {
+        procedure_code: Some(ProcedureCode(9)),
+        triggering_message: Some(TriggeringMessage::initiating_message),
+        procedure_criticality: Some(Criticality::Reject),
+        ies_criticality_diagnostics: Some(CriticalityDiagnosticsIEList(vec![
+            CriticalityDiagnosticsIEItem {
+                ie_criticality: Criticality::Reject,
+                ie_id: ProtocolIEID(26),
+                type_of_error: TypeOfError::missing,
+                ie_extensions: None,
+            },
         ])),
-        None,
-    );
+        ie_extensions: None,
+    };
     let error = build_s1ap!(IGNORE ErrorIndication,
         IGNORE Cause(Cause::protocol(CauseProtocol::abstract_syntax_error_reject)),
         IGNORE CriticalityDiagnostics(diagnostics),
@@ -73,21 +73,23 @@ fn every_constrained_list_encodes_its_length_per_x691() -> Result<(), Error> {
 /// Wireshark decodes E-RABAdmittedList.
 #[test]
 fn e_rab_container_lists_encode_their_size_constraint() -> Result<(), Error> {
-    let item = ERABAdmittedItem::new(
-        ERABID(5u8.into()),
-        TransportLayerAddress(oxirush_s1ap::BitString::from([10, 0, 0, 3])),
-        GTPTEID::from([0, 0, 0, 3]),
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
-    let admitted = ERABAdmittedList(vec![ProtocolIEField::new(
-        ID_E_RABADMITTED_ITEM.0,
-        Criticality::Ignore,
-        encode_open_type(&item).expect("encode E-RAB admitted item"),
-    )]);
+    let item = ERABAdmittedItem {
+        e_rab_id: ERABID(5u8.into()),
+        transport_layer_address: TransportLayerAddress(oxirush_s1ap::BitString::from([
+            10, 0, 0, 3,
+        ])),
+        gtp_teid: GTPTEID::from([0, 0, 0, 3]),
+        dl_transport_layer_address: None,
+        dl_gtp_teid: None,
+        ul_transport_layer_address: None,
+        ul_gtp_teid: None,
+        ie_extensions: None,
+    };
+    let admitted = ERABAdmittedList(vec![ProtocolIEField {
+        id: ID_E_RABADMITTED_ITEM,
+        criticality: Criticality::Ignore,
+        value: encode_open_type(&item).expect("encode E-RAB admitted item"),
+    }]);
     let acknowledge = build_s1ap!(REJECT HandoverRequestAcknowledge,
         IGNORE MME_UE_S1AP_ID(1u32),
         IGNORE eNB_UE_S1AP_ID(2u32),
@@ -146,8 +148,12 @@ fn each_ecgi_list_encodes_its_own_size_constraint() -> Result<(), Error> {
     );
     assert_eq!(S1AP_PDU::decode(&wire).expect("decode"), request);
 
-    let synchronisation =
-        SynchronisationInformation::new(None, None, Some(ECGI_List(vec![cell])), None);
+    let synchronisation = SynchronisationInformation {
+        source_stratum_level: None,
+        listening_subframe_pattern: None,
+        aggressor_ecgi_list: Some(ECGI_List(vec![cell])),
+        ie_extensions: None,
+    };
     let wire = encode(&synchronisation).expect("encode SynchronisationInformation");
     assert_eq!(hex::encode(&wire), "10000002f83912345010");
     assert_eq!(
@@ -276,7 +282,9 @@ fn the_alias_of_the_enb_ue_s1ap_id_names_its_ie_in_each_macro() -> Result<(), Er
 fn release_request(id: Option<u32>) -> UEContextReleaseRequest<'static> {
     let ie = |id: u32| oxirush_s1ap::ie::MME_UE_S1AP_ID::field(Criticality::Reject, id);
     let ies = id.map(|id| ie(id).expect("an identifier"));
-    UEContextReleaseRequest::new(ProtocolIEContainer(ies.into_iter().collect()))
+    UEContextReleaseRequest {
+        protocol_ies: ProtocolIEContainer(ies.into_iter().collect()),
+    }
 }
 
 /// A `req` field that is not there is the error of the enclosing function: the
@@ -350,7 +358,12 @@ fn a_missing_required_ie_is_an_error_of_the_crate() {
 fn a_number_between_the_ranges_of_an_extensible_root_is_written_in_the_root() {
     let period = |value: u8| -> ExpectedUEActivityBehaviour {
         let period = ExpectedActivityPeriod(u64::from(value));
-        ExpectedUEActivityBehaviour::new(Some(period), None, None, None)
+        ExpectedUEActivityBehaviour {
+            expected_activity_period: Some(period),
+            expected_idle_period: None,
+            sourceof_ue_activity_behaviour_information: None,
+            ie_extensions: None,
+        }
     };
     let written = |value| hex::encode(encode(&period(value)).unwrap());
     let read = |octets: &str| {
@@ -410,17 +423,15 @@ fn a_string_with_a_length_of_two_octets_is_written_as_pycrate_writes_it() {
 /// decoded from, and keeps the container.
 #[test]
 fn a_value_keeps_its_extension_container_after_its_octets() {
-    let sent = TAI::new(
-        PLMNidentity(TBCDSTRING::from([0x02, 0xf8, 0x39])),
-        TAC([0x00, 0x01]),
-        Some(ProtocolExtensionContainer(vec![
-            ProtocolExtensionField::new(
-                ProtocolExtensionID(1),
-                Criticality::Ignore,
-                Octets::from(vec![0x00]),
-            ),
-        ])),
-    );
+    let sent = TAI {
+        plmn_identity: PLMNidentity(TBCDSTRING::from([0x02, 0xf8, 0x39])),
+        tac: TAC([0x00, 0x01]),
+        ie_extensions: Some(ProtocolExtensionContainer(vec![ProtocolExtensionField {
+            id: ProtocolExtensionID(1),
+            criticality: Criticality::Ignore,
+            extension_value: Octets::from(vec![0x00]),
+        }])),
+    };
     let octets = encode(&sent).unwrap();
     let kept: TAI = decode(&octets).unwrap();
     drop(octets);
@@ -442,5 +453,12 @@ fn a_sequence_is_built_by_a_literal() {
         tac,
         ie_extensions: None,
     };
-    assert_eq!(literal, TAI::new(plmn_identity, tac, None));
+    assert_eq!(
+        literal,
+        TAI {
+            plmn_identity,
+            tac,
+            ie_extensions: None
+        }
+    );
 }

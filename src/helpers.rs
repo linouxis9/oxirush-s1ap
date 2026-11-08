@@ -145,12 +145,12 @@ pub fn plmn_from(identity: &PLMNidentity) -> Option<(String, String)> {
 /// # Ok::<(), oxirush_s1ap::Error>(())
 /// ```
 pub fn gummei(plmn_identity: PLMNidentity, mme_group_id: u16, mme_code: u8) -> GUMMEI {
-    GUMMEI::new(
+    GUMMEI {
         plmn_identity,
-        MMEGroupID(mme_group_id.to_be_bytes()),
-        MMECode([mme_code]),
-        None,
-    )
+        mme_group_id: MMEGroupID(mme_group_id.to_be_bytes()),
+        mme_code: MMECode([mme_code]),
+        ie_extensions: None,
+    }
 }
 
 /// Build an LTE Tracking Area Identity: a PLMN and the two octets of a TAC.
@@ -165,7 +165,11 @@ pub fn gummei(plmn_identity: PLMNidentity, mme_group_id: u16, mme_code: u8) -> G
 /// # Ok::<(), oxirush_s1ap::Error>(())
 /// ```
 pub fn tai(plmn_identity: PLMNidentity, tac: [u8; 2]) -> TAI {
-    TAI::new(plmn_identity, TAC(tac), None)
+    TAI {
+        plmn_identity,
+        tac: TAC(tac),
+        ie_extensions: None,
+    }
 }
 
 /// The kinds of eNB ID of TS 36.413 clause 9.2.1.37, each of the bits that it has: the
@@ -248,11 +252,11 @@ pub fn eutran_cgi(
     let enb_id = fits(kind.name(), enb_id.into(), bits)?;
     let cell_id = fits("the cell of the eNB", cell_id.into(), 28 - bits)?;
     let eci = (enb_id << (28 - bits)) | cell_id;
-    Ok(EUTRANCGI::new(
+    Ok(EUTRANCGI {
         plmn_identity,
-        CellIdentity(Bits::low(eci, 28)),
-        None,
-    ))
+        cell_id: CellIdentity(Bits::low(eci, 28)),
+        ie_extensions: None,
+    })
 }
 
 /// Build a `GlobalENBID` for an eNB ID of a kind (TS 36.413 clause 9.2.1.37).
@@ -264,11 +268,11 @@ pub fn global_enb_id(
     kind: EnbKind,
     enb_id: u32,
 ) -> Result<GlobalENBID, Error> {
-    Ok(GlobalENBID::new(
+    Ok(GlobalENBID {
         plmn_identity,
-        self::enb_id(kind, enb_id)?,
-        None,
-    ))
+        enb_id: self::enb_id(kind, enb_id)?,
+        ie_extensions: None,
+    })
 }
 
 /// Build LTE UE security capabilities from the first octet of the encryption
@@ -281,11 +285,11 @@ pub fn global_enb_id(
 pub fn ue_security_capabilities(encryption: u8, integrity: u8) -> UESecurityCapabilities<'static> {
     // Sixteen bits, of which the first eight are the algorithms.
     let algorithms = |byte: u8| BitString::from([byte, 0]);
-    UESecurityCapabilities::new(
-        EncryptionAlgorithms(algorithms(encryption)),
-        IntegrityProtectionAlgorithms(algorithms(integrity)),
-        None,
-    )
+    UESecurityCapabilities {
+        encryption_algorithms: EncryptionAlgorithms(algorithms(encryption)),
+        integrity_protection_algorithms: IntegrityProtectionAlgorithms(algorithms(integrity)),
+        ie_extensions: None,
+    }
 }
 
 #[cfg(test)]

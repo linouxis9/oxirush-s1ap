@@ -22,7 +22,11 @@ const DEFAULT_PAGING_DRX: u16 = 137;
 
 fn areas() -> Result<SupportedTAs, Error> {
     let networks = BPLMNs(vec![plmn("208", "93")?]);
-    let area = SupportedTAsItem::new(TAC([0x00, 0x01]), networks, None);
+    let area = SupportedTAsItem {
+        tac: TAC([0x00, 0x01]),
+        broadcast_plmns: networks,
+        ie_extensions: None,
+    };
     Ok(SupportedTAs(vec![area]))
 }
 
@@ -78,14 +82,20 @@ fn diagnostics(
 ) -> CriticalityDiagnostics {
     let items = (!items.is_empty()).then_some(CriticalityDiagnosticsIEList(items));
     match indication {
-        true => CriticalityDiagnostics::new(
-            Some(ProcedureCode(17)),
-            Some(TriggeringMessage::initiating_message),
-            Some(Criticality::Reject),
-            items,
-            None,
-        ),
-        false => CriticalityDiagnostics::new(None, None, None, items, None),
+        true => CriticalityDiagnostics {
+            procedure_code: Some(ProcedureCode(17)),
+            triggering_message: Some(TriggeringMessage::initiating_message),
+            procedure_criticality: Some(Criticality::Reject),
+            ies_criticality_diagnostics: items,
+            ie_extensions: None,
+        },
+        false => CriticalityDiagnostics {
+            procedure_code: None,
+            triggering_message: None,
+            procedure_criticality: None,
+            ies_criticality_diagnostics: items,
+            ie_extensions: None,
+        },
     }
 }
 
@@ -173,12 +183,12 @@ fn the_error_of_a_missing_ie_has_the_criticality_that_is_assigned() -> Result<()
         Some(CauseProtocol::abstract_syntax_error_reject)
     );
     assert_eq!(missing.type_of_error(), Some(TypeOfError::missing));
-    let item = CriticalityDiagnosticsIEItem::new(
-        Criticality::Reject,
-        ProtocolIEID(SUPPORTED_TAS),
-        TypeOfError::missing,
-        None,
-    );
+    let item = CriticalityDiagnosticsIEItem {
+        ie_criticality: Criticality::Reject,
+        ie_id: ProtocolIEID(SUPPORTED_TAS),
+        type_of_error: TypeOfError::missing,
+        ie_extensions: None,
+    };
     assert_eq!(missing.diagnostics_item(), Some(item.clone()));
     let cause = Cause::protocol(CauseProtocol::abstract_syntax_error_reject);
     assert_eq!(
@@ -269,12 +279,12 @@ fn an_ie_of_the_criticality_ignore_is_in_no_item_of_the_diagnostics() -> Result<
         name: "DefaultPagingDRX",
         criticality: Criticality::Reject,
     };
-    let item = CriticalityDiagnosticsIEItem::new(
-        Criticality::Reject,
-        ProtocolIEID(DEFAULT_PAGING_DRX),
-        TypeOfError::missing,
-        None,
-    );
+    let item = CriticalityDiagnosticsIEItem {
+        ie_criticality: Criticality::Reject,
+        ie_id: ProtocolIEID(DEFAULT_PAGING_DRX),
+        type_of_error: TypeOfError::missing,
+        ie_extensions: None,
+    };
     assert_eq!(reject.diagnostics_item(), Some(item));
     Ok(())
 }
@@ -312,12 +322,12 @@ fn check_reports_every_ie_that_is_missing_or_does_not_decode() -> Result<(), Err
     let items: Vec<_> = (deviations.iter())
         .filter_map(Deviation::diagnostics_item)
         .collect();
-    let missing = CriticalityDiagnosticsIEItem::new(
-        Criticality::Reject,
-        ProtocolIEID(SUPPORTED_TAS),
-        TypeOfError::missing,
-        None,
-    );
+    let missing = CriticalityDiagnosticsIEItem {
+        ie_criticality: Criticality::Reject,
+        ie_id: ProtocolIEID(SUPPORTED_TAS),
+        type_of_error: TypeOfError::missing,
+        ie_extensions: None,
+    };
     assert_eq!(items, [missing]);
     Ok(())
 }
@@ -329,8 +339,11 @@ fn check_reports_every_ie_that_is_missing_or_does_not_decode() -> Result<(), Err
 fn each_deviation_has_the_cause_of_its_clause() -> Result<(), Error> {
     // An UPLINK NAS TRANSPORT with an IE of no message, received as `notify`, another
     // as `ignore`, and its identifiers in the other order.
-    let ie =
-        |id: u16, criticality| ProtocolIEField::new(ProtocolIEID(id), criticality, vec![0].into());
+    let ie = |id: u16, criticality| ProtocolIEField {
+        id: ProtocolIEID(id),
+        criticality,
+        value: vec![0].into(),
+    };
     let network = plmn("208", "93")?;
     let mut pdu = build_s1ap!(IGNORE UplinkNASTransport,
         REJECT eNB_UE_S1AP_ID(7u32),
@@ -358,13 +371,11 @@ fn each_deviation_has_the_cause_of_its_clause() -> Result<(), Error> {
     let items: Vec<_> = (deviations.iter())
         .filter_map(Deviation::diagnostics_item)
         .collect();
-    let item = |id: u16, criticality| {
-        CriticalityDiagnosticsIEItem::new(
-            criticality,
-            ProtocolIEID(id),
-            TypeOfError::not_understood,
-            None,
-        )
+    let item = |id: u16, criticality| CriticalityDiagnosticsIEItem {
+        ie_criticality: criticality,
+        ie_id: ProtocolIEID(id),
+        type_of_error: TypeOfError::not_understood,
+        ie_extensions: None,
     };
     // The IE received as `ignore` has none.
     assert_eq!(items, [item(60_000, Criticality::Notify)]);
@@ -391,12 +402,12 @@ fn a_value_outside_the_root_of_an_extensible_constraint_is_reported() -> Result<
 
     // An S1 SETUP RESPONSE with that name is built as any other, and `check` says it.
     let response = |name: &'static str| {
-        let served = ServedGUMMEIsItem::new(
-            ServedPLMNs(vec![plmn("208", "93")?]),
-            ServedGroupIDs(vec![MMEGroupID([0x00, 0x01])]),
-            ServedMMECs(vec![MMECode([0x01])]),
-            None,
-        );
+        let served = ServedGUMMEIsItem {
+            served_plmns: ServedPLMNs(vec![plmn("208", "93")?]),
+            served_group_ids: ServedGroupIDs(vec![MMEGroupID([0x00, 0x01])]),
+            served_mmecs: ServedMMECs(vec![MMECode([0x01])]),
+            ie_extensions: None,
+        };
         build_s1ap!(REJECT S1SetupResponse,
             IGNORE MMEname(MMEname(name.into())),
             REJECT ServedGUMMEIs(ServedGUMMEIs(vec![served])),

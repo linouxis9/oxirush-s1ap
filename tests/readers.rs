@@ -202,20 +202,25 @@ fn octets_of_the_message_that_end_early_are_an_error_of_every_reader() -> Result
 
 /// An E-RAB to set up, as the item of its list.
 fn bearer(id: u64) -> Result<ProtocolIEField<'static>, Error> {
-    let priority = AllocationAndRetentionPriority::new(
-        PriorityLevel(8),
-        PreEmptionCapability::shall_not_trigger_pre_emption,
-        PreEmptionVulnerability::not_pre_emptable,
-        None,
-    );
-    let item = ERABToBeSetupItemCtxtSUReq::new(
-        ERABID(id),
-        ERABLevelQoSParameters::new(QCI(9), priority, None, None),
-        TransportLayerAddress(BitString::from([10, 0, 0, 1])),
-        GTPTEID([0, 0, 0, id as u8]),
-        None,
-        None,
-    );
+    let priority = AllocationAndRetentionPriority {
+        priority_level: PriorityLevel(8),
+        pre_emption_capability: PreEmptionCapability::shall_not_trigger_pre_emption,
+        pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
+        ie_extensions: None,
+    };
+    let item = ERABToBeSetupItemCtxtSUReq {
+        e_rab_id: ERABID(id),
+        e_rab_level_qos_parameters: ERABLevelQoSParameters {
+            qci: QCI(9),
+            allocation_retention_priority: priority,
+            gbr_qos_information: None,
+            ie_extensions: None,
+        },
+        transport_layer_address: TransportLayerAddress(BitString::from([10, 0, 0, 1])),
+        gtp_teid: GTPTEID([0, 0, 0, id as u8]),
+        nas_pdu: None,
+        ie_extensions: None,
+    };
     ie::E_RABToBeSetupItemCtxtSUReq::field(Criticality::Reject, item)
 }
 

@@ -115,7 +115,11 @@ fn a_type_of_the_bindings_is_serialized_as_the_tree_of_a_pdu_shows_it() {
     // A PLMN identity is its MCC and its MNC, a TAC a number, and the parts of a GUMMEI
     // numbers.
     let network = PLMNidentity(TBCDSTRING([0x02, 0xf8, 0x39]));
-    let area = TAI::new(network, TAC([0, 0xab]), None);
+    let area = TAI {
+        plmn_identity: network,
+        tac: TAC([0, 0xab]),
+        ie_extensions: None,
+    };
     let shown = tree!({"pLMNidentity": "208-93", "tAC": 171});
     assert_eq!(written(&area), shown);
     assert_eq!(read::<TAI>(&shown).unwrap(), area);

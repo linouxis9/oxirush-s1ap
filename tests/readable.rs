@@ -18,7 +18,14 @@ fn a_plmn_identity_prints_as_its_mcc_and_its_mnc() {
     assert_eq!(plmn("208", "093").unwrap().to_string(), "208-093");
 
     // In a value that holds one
-    let printed = format!("{:?}", TAI::new(identity, TAC([0x00, 0x01]), None));
+    let printed = format!(
+        "{:?}",
+        TAI {
+            plmn_identity: identity,
+            tac: TAC([0x00, 0x01]),
+            ie_extensions: None
+        }
+    );
     assert!(printed.contains("PLMNidentity(208-93)"), "{printed}");
     assert!(printed.contains("TAC(0001)"), "{printed}");
 
@@ -52,7 +59,11 @@ fn a_fixed_number_of_octets_prints_in_hexadecimal() {
     assert_eq!(format!("{:?}", GTPTEID([0, 0, 0, 1])), "GTPTEID(00000001)");
 
     // An S-TMSI is printed whole, with its M-TMSI as it is read
-    let identity = STMSI::new(MMECode([0x01]), tmsi, None);
+    let identity = STMSI {
+        mmec: MMECode([0x01]),
+        m_tmsi: tmsi,
+        ie_extensions: None,
+    };
     let printed = format!("{identity:?}");
     assert!(printed.contains("MMECode(01)"), "{printed}");
     assert!(printed.contains("MTMSI(deadbeef)"), "{printed}");

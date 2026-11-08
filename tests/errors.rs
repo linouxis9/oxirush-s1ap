@@ -157,12 +157,12 @@ fn a_value_outside_its_constraint_is_an_encode_error() {
 #[test]
 fn a_member_that_does_not_encode_is_named_as_one_that_does_not_decode_is() {
     // The priority level is an INTEGER (0..15), TS 36.413 clause 9.2.1.60.
-    let priority = AllocationAndRetentionPriority::new(
-        PriorityLevel(16),
-        PreEmptionCapability::shall_not_trigger_pre_emption,
-        PreEmptionVulnerability::not_pre_emptable,
-        None,
-    );
+    let priority = AllocationAndRetentionPriority {
+        priority_level: PriorityLevel(16),
+        pre_emption_capability: PreEmptionCapability::shall_not_trigger_pre_emption,
+        pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
+        ie_extensions: None,
+    };
     let error = encode_open_type(&priority).unwrap_err();
     assert_eq!(error.kind(), ErrorKind::Encode);
     assert_eq!(
@@ -174,7 +174,12 @@ fn a_member_that_does_not_encode_is_named_as_one_that_does_not_decode_is() {
 
     // In a value that holds it, the fields are those on the way to the member: the
     // QoS parameters of an E-RAB, clause 9.2.1.15.
-    let parameters = ERABLevelQoSParameters::new(QCI(9), priority, None, None);
+    let parameters = ERABLevelQoSParameters {
+        qci: QCI(9),
+        allocation_retention_priority: priority,
+        gbr_qos_information: None,
+        ie_extensions: None,
+    };
     let error = encode_open_type(&parameters).unwrap_err();
     assert_eq!(
         error.to_string(),
@@ -184,7 +189,11 @@ fn a_member_that_does_not_encode_is_named_as_one_that_does_not_decode_is() {
 
     // A list of no item where the type has one at least: the PLMNs that a tracking
     // area broadcasts are 1 to 6.
-    let area = SupportedTAsItem::new(TAC([0x00, 0x01]), BPLMNs(vec![]), None);
+    let area = SupportedTAsItem {
+        tac: TAC([0x00, 0x01]),
+        broadcast_plmns: BPLMNs(vec![]),
+        ie_extensions: None,
+    };
     let error = encode_open_type(&area).unwrap_err();
     assert_eq!(
         error.to_string(),
@@ -222,7 +231,9 @@ fn ids(request: &UEContextReleaseRequest) -> Result<(u32, Option<u32>), Error> {
 }
 
 fn request(ies: Vec<ProtocolIEField>) -> UEContextReleaseRequest {
-    UEContextReleaseRequest::new(ProtocolIEContainer(ies))
+    UEContextReleaseRequest {
+        protocol_ies: ProtocolIEContainer(ies),
+    }
 }
 
 /// The entry of an MME UE S1AP ID and that of an eNB UE S1AP ID.
@@ -234,7 +245,11 @@ fn mme_and_enb() -> (ProtocolIEField<'static>, ProtocolIEField<'static>) {
 
 /// An entry with the identifier of an IE, whose octets are not the value of that IE.
 fn undecodable(id: u16) -> ProtocolIEField<'static> {
-    ProtocolIEField::new(id, Criticality::Reject, Octets::from(vec![0xff]))
+    ProtocolIEField {
+        id: ProtocolIEID(id),
+        criticality: Criticality::Reject,
+        value: Octets::from(vec![0xff]),
+    }
 }
 
 #[test]

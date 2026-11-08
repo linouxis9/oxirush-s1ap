@@ -37,7 +37,11 @@ const BOUND: Duration = Duration::from_secs(60);
 
 /// An UPLINK NAS TRANSPORT of `count` IEs of the identifier `id`, each of `value`.
 fn message_of(count: usize, id: u16, value: &[u8]) -> S1AP_PDU {
-    let ie = ProtocolIEField::new(ProtocolIEID(id), Criticality::Reject, value.to_vec().into());
+    let ie = ProtocolIEField {
+        id: ProtocolIEID(id),
+        criticality: Criticality::Reject,
+        value: value.to_vec().into(),
+    };
     let mut pdu = S1AP_PDU::decode(&hex::decode("000d4003000000").unwrap()).unwrap();
     pdu.set_protocol_ies(ProtocolIEContainer(vec![ie; count]))
         .unwrap();
