@@ -77,24 +77,15 @@ SupportedTAs (IE 64) is mandatory, and the message does not have it
 S1SetupFailure (procedure 17, unsuccessful outcome): 401100180000020002400131003a400c190200004100003b40004040
 "#),
     (block_7, r#"{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
-/procedure_code = 18
-/direction = "InitiatingMessage"
-/criticality = "ignore"
-/s1ap/MME-UE-S1AP-ID/id = 0
-/s1ap/MME-UE-S1AP-ID/criticality = "reject"
-/s1ap/MME-UE-S1AP-ID/value = 42
-/s1ap/eNB-UE-S1AP-ID/id = 8
-/s1ap/eNB-UE-S1AP-ID/criticality = "reject"
-/s1ap/eNB-UE-S1AP-ID/value = 7
-/s1ap/Cause/id = 2
-/s1ap/Cause/criticality = "ignore"
-/s1ap/Cause/value/radioNetwork = "user-inactivity"
+/s1ap/MME-UE-S1AP-ID = 42
+/s1ap/eNB-UE-S1AP-ID = 7
+/s1ap/Cause/radioNetwork = "user-inactivity"
 {"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":9},{"Cause":{"nas":"normal-release"}}]}
-"radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
+"radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, at /s1ap/Cause/radioNetwrok
 "#),
     (block_8, r#"0012402700000500000002002a000800020007000240020280003c40070200656e622d31fde80003c0ffee
-"InitiatingMessage" 18 "ignore"
-["reject","reject","ignore","ignore","reject"]
+UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7
+["ignore","reject"]
 "#),
 ];
 
@@ -416,22 +407,21 @@ fn block_7() {
     fn main() -> Result<(), Box<dyn std::error::Error>> {
         // A UE CONTEXT RELEASE REQUEST, as a tree
         let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
-        let pdu = S1APPDU::decode(&bytes)?;
-        println!("{}", pdu.to_tree());
+        let mut tree = S1APPDU::decode(&bytes)?.to_tree();
+        println!("{tree}");
 
-        // Its view: each value with the path that selects it
-        let mut view = pdu.to_view()?;
-        for (path, value) in inspect::paths(&view) {
+        // Each value with the path that selects it
+        for (path, value) in inspect::paths(&tree) {
             println!("{path} = {value}");
         }
 
         // Set a value, and pick another alternative of a CHOICE
-        inspect::set(&mut view, "/s1ap/eNB-UE-S1AP-ID/value", tree!(9))?;
-        inspect::set(&mut view, "/s1ap/Cause/nas", tree!("Normal Release"))?;
-        println!("{}", pdu.with_view(&view)?.to_tree());
+        inspect::set(&mut tree, "/s1ap/eNB-UE-S1AP-ID", tree!(9))?;
+        inspect::set(&mut tree, "/s1ap/Cause/nas", tree!("Normal Release"))?;
+        println!("{}", S1APPDU::from_tree(&tree)?.to_tree());
 
-        // A misspelt name is refused, and the view stays as it was
-        if let Err(error) = inspect::set(&mut view, "/s1ap/Cause/radioNetwrok", tree!("unspecified")) {
+        // A misspelt name is refused, and the tree stays as it was
+        if let Err(error) = inspect::set(&mut tree, "/s1ap/Cause/radioNetwrok", tree!("unspecified")) {
             println!("{error}");
         }
         Ok(())
@@ -461,9 +451,10 @@ fn block_8() {
         let pdu = S1APPDU::from_tree(&request)?;
         println!("{}", hex::encode(pdu.encode()?));
 
-        let view = pdu.to_view()?;
-        println!("{} {} {}", view["direction"], view["procedure_code"], view["criticality"]);
-        println!("{}", tree!(inspect::select(&view, "/s1ap/*/criticality")?));
+        // The name gave the procedure and the criticalities, which the tree writes
+        // where the message does not assign them
+        println!("{pdu}");
+        println!("{}", tree!(inspect::select(&pdu.to_tree(), "/s1ap/*/criticality")?));
         Ok(())
     }
 

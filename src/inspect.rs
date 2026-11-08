@@ -1,103 +1,31 @@
-//! Decoded PDUs as JSON, in two forms: a view, which is read and edited by paths and
-//! encoded again, and a tree, the short form in which a message is shown and written.
+//! Decoded PDUs as JSON trees, which paths read and edit.
 //!
-//! The two forms are methods of the PDU, [`S1APPDU`], and the functions of this module
-//! read and edit a view by its paths, and say what the messages of the protocol have.
+//! The tree of a PDU, which [`to_tree`] gives and [`from_tree`] reads, is the name of its
+//! message and its IEs by name, in their order:
 //!
-//! | | Tree | View |
-//! | --- | --- | --- |
-//! | From a PDU | [`to_tree`] | [`to_view`] |
-//! | Back to a PDU | [`from_tree`]: a message written from the tree alone | [`with_view`]: this PDU, edited; [`from_view`]: the PDU of any view |
+//! ```json
+//! {"message": "UEContextReleaseRequest",
+//!  "ies": [{"MME-UE-S1AP-ID": 42}, {"eNB-UE-S1AP-ID": 7}, {"Cause": {"radioNetwork": "user-inactivity"}}]}
+//! ```
 //!
-//! The tree of a PDU is the name of its message and its IEs by name. The view of a PDU
-//! keeps what was received, and the rest of this page is about it. With the feature
-//! `serde`, a PDU is serialized as its tree in every format of serde, and each other
-//! type of the bindings as its own tree, the form in which a tree of a PDU shows it.
-//! A tree and a view are a [`Value`] of `oxirush-utils`, which the crate has as
-//! [`tree::Value`](crate::tree::Value), with `tree!` to write one.
+//! The functions of this module select and edit the values of a tree by their paths, and
+//! say what the messages of the protocol have. With the feature `serde`, a PDU is
+//! serialized as its tree in every format of serde, and each other type of the bindings
+//! as its own tree, the form in which a tree of a PDU shows it. A tree is a [`Value`] of
+//! `oxirush-utils`, which the crate has as [`tree::Value`](crate::tree::Value), with
+//! `tree!` to write one.
 //!
-//! A tree, a view and the serde form show each value as it is, keys too: the
-//! `SecurityKey` of an INITIAL CONTEXT SETUP REQUEST, KeNB, and the next hop NH are
-//! strings of hexadecimal digits in them, so that they are encoded back to the same
-//! octets. They are no form for a log: `Debug` and `Display` of the bindings print no
-//! key, and the length of the octets of a message that may hold one.
+//! A tree and the serde form show each value as it is, keys too: the `SecurityKey` of an
+//! INITIAL CONTEXT SETUP REQUEST, KeNB, and the next hop NH are strings of hexadecimal
+//! digits in them, so that they are encoded back to the same octets. They are no form for
+//! a log: `Debug` and `Display` of the bindings print no key, and the length of the octets
+//! of a message that may hold one.
 //!
-//! [`to_view`] returns `procedure_code`, `direction`, `criticality` and `message`: the
-//! message in JSON, each value in the form of its ASN.1 type, which [Values](#values)
-//! lists. An IE whose identifier is known has its typed
-//! `value` (`extensionValue` in an extension container) in place of its octets. Its type
-//! is that of its identifier: no identifier of TS 36.413 has another type for each type
-//! that it extends. A contained transfer, and the value of an IE declared
-//! `OCTET STRING (CONTAINING ...)`, is its `decoded` value beside its `_raw_transfer`.
-//! Repeated IEs stay ordered array entries.
-//!
-//! The values of some well-known types are shown as they are usually written, in a view,
-//! in a tree and alone:
-//!
-//! - a PLMN identity as its MCC and MNC, `"208-93"`;
-//! - a transport layer address as an IP address, `"10.0.0.1"` or `"2001:db8::1"`, or as
-//!   the two with a comma when it holds both;
-//! - an IMSI as its digits;
-//! - an identifier or a counter, such as a TAC, a GTP-TEID, an M-TMSI, a cell identity or
-//!   the parts of a GUMMEI, as a number.
-//!
-//! [`from_view`] takes them in this form, a number also as a `"0x…"` string, and
-//! in the form of their ASN.1 type. It takes the name of an ENUMERATED value as any other name: see
-//! [Names](#names). An IMSI of an even number of digits is taken as its digits only. A
-//! value that does not fit its form, such as a transport layer address of another length,
-//! stays in the form of its type. The other strings stay in hexadecimal: keys and algorithm
-//! masks, the NAS-PDU and the other containers, and the node identifiers, whose length
-//! says which kind they are.
-//!
-//! The members that start with `_` say what was received:
-//!
-//! - `_raw_value`, `_raw_transfer` and `_raw_message`: the octets, in hexadecimal;
-//! - `_original_id` and `_ie_name`: the identifier that the octets were decoded as, and the
-//!   name that ASN.1 gives it. An entry whose `id` was changed is encoded as the type of
-//!   its new identifier;
-//! - `_decode_error`: why an IE's `value` is still its octets in hexadecimal, or why a
-//!   transfer has no `decoded` member. The identifier is unknown, the octets do not
-//!   decode, or the IE is nested deeper than 64 levels. The rest of the PDU is read all
-//!   the same;
-//! - `_edited`: [`set`], [`remove`] or [`insert`] changed something under the value, whose
-//!   octets are no longer those beside it;
-//! - `_lossy`: the typed value encodes to other octets than those beside it: they hold
-//!   what a later version of its type adds, which the value has no place for, or, for
-//!   the container of the message, are in another form than the canonical one. A tree
-//!   has the octets in the place of the value, so that it gives them back.
-//!
-//! The value of an IE and a transfer in another form than the one that X.691 gives them,
-//! as with padding bits that are not zero, are their octets, with the `_decode_error` of
-//! a reader of that one form: the tree has their octets too. A path list has
-//! `_decode_error` and `_lossy`, which say why the tree has octets.
-//!
-//! [`from_view`] encodes the view, and [`with_view`] the view of a PDU that is at hand.
-//! What was not edited keeps the octets received. To edit:
-//!
-//! - change a typed `value` or the `decoded` member of a transfer, which is encoded again.
-//!   This is refused when the octets received do not decode and encode back to themselves,
-//!   as with an extension addition that the typed value does not keep;
-//! - to add an IE, write an entry with its `id`, its `criticality` and its `value`, and no
-//!   `_raw_value`: the value is encoded as the type of the IE, whatever JSON it is.
-//!   The `id` is a number, or the name of the IE. An IE is written this way wherever a
-//!   view has IEs: in the items of a list of IEs, in a value that is set whole, and in a
-//!   view written by hand;
-//! - to send given octets as an IE, write them in hexadecimal as its `octets`, or as
-//!   `_raw_value`, and leave `value` out. For a transfer, replace the member with its
-//!   octets, or with an object that has them as its `octets` alone;
-//! - to add a transfer, or the value of an IE that contains a type, write it as an object
-//!   with its `decoded` value alone, which is encoded as the type contained, or as that
-//!   value itself: an object that has no member of a transfer, which are `decoded`,
-//!   `octets` and those that start with `_`, is its decoded value;
-//! - an IE with a `_decode_error` has its octets as `value`: change them there;
-//! - the octets of an IE whose content the specification gives by reference are also
-//!   written as the type that they carry, by its name: see
-//!   [Octets that carry a type](#octets-that-carry-a-type).
-//!
-//! Beside a `value`, `_raw_value` is what the value is compared with, as `_raw_message` is
-//! for the message, so changing one alone sends nothing else. A member that the ASN.1 type
-//! does not have is refused, and so is one beside the `decoded` value of a transfer.
-//! Hexadecimal is written in lower case and taken in either.
+//! Every PDU that decodes has a tree, which [`from_tree`] makes the same octets again. An
+//! IE whose value does not encode back to the octets received is its octets in the tree,
+//! `{"octets": "…"}`: one that did not decode, one that holds what a later version of its
+//! type adds, which the value has no place for, and one in another form than X.691 gives
+//! it. An edit of a tree changes the octets of the IEs that it changes, and of no other.
 //!
 //! # Examples
 //!
@@ -113,21 +41,20 @@
 //! use oxirush_s1ap::tree;
 //!
 //! let bytes = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-//! let pdu = S1APPDU::decode(&bytes).unwrap();
-//! let mut view = pdu.to_view().unwrap();
+//! let mut tree = S1APPDU::decode(&bytes).unwrap().to_tree();
 //!
-//! // An IE is added at the end, by its name and its typed value
-//! let name = tree!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
-//! inspect::insert(&mut view, "/s1ap/-", name).unwrap();
+//! // An IE is added at the end, by its name and its value
+//! let name = tree!({"eNBname": "enb-1", "criticality": "ignore"});
+//! inspect::insert(&mut tree, "/s1ap/-", name).unwrap();
 //!
 //! // Before another IE, by its number and its octets
-//! let unknown = tree!({"id": 60000, "criticality": "ignore", "octets": "c0ffee"});
-//! inspect::insert(&mut view, "/s1ap/Cause", unknown).unwrap();
+//! let unknown = tree!({"60000": {"octets": "c0ffee"}, "criticality": "ignore"});
+//! inspect::insert(&mut tree, "/s1ap/Cause", unknown).unwrap();
 //!
 //! // An IE is taken out by its name
-//! inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID").unwrap();
+//! inspect::remove(&mut tree, "/s1ap/MME-UE-S1AP-ID").unwrap();
 //!
-//! let edited = pdu.with_view(&view).unwrap();
+//! let edited = S1APPDU::from_tree(&tree).unwrap();
 //! println!("{}", edited.to_tree()["ies"]);
 //! # assert_eq!(printed, r##"[{"eNB-UE-S1AP-ID":7},{"60000":{"octets":"c0ffee"},"criticality":"ignore"},{"Cause":{"radioNetwork":"user-inactivity"}},{"eNBname":"enb-1","criticality":"ignore"}]
 //! # "##);
@@ -147,42 +74,38 @@
 //! use oxirush_s1ap::tree;
 //!
 //! // A message that has one IE twice
-//! let twice = tree!({"message": "UEContextReleaseRequest", "ies": [
+//! let mut tree = tree!({"message": "UEContextReleaseRequest", "ies": [
 //!     {"MME-UE-S1AP-ID": 1},
 //!     {"eNB-UE-S1AP-ID": 7},
 //!     {"MME-UE-S1AP-ID": 2},
 //! ]});
-//! let pdu = S1APPDU::from_tree(&twice).unwrap();
-//! let mut view = pdu.to_view().unwrap();
 //!
 //! // The name selects both, in the order of the message
-//! let both = inspect::select(&view, "/s1ap/MME-UE-S1AP-ID/value").unwrap();
+//! let both = inspect::select(&tree, "/s1ap/MME-UE-S1AP-ID").unwrap();
 //! assert_eq!(both, [&tree!(1), &tree!(2)]);
 //!
 //! // Each has its position, which is how `paths` names it, and its name may follow
-//! inspect::set(&mut view, "/s1ap/2/MME-UE-S1AP-ID/value", tree!(3)).unwrap();
+//! inspect::set(&mut tree, "/s1ap/2/MME-UE-S1AP-ID", tree!(3)).unwrap();
 //!
 //! // After a position, the name of another IE is an error that says which IE is there
-//! println!("{}", inspect::select(&view, "/s1ap/2/eNB-UE-S1AP-ID/value").unwrap_err());
+//! println!("{}", inspect::select(&tree, "/s1ap/2/eNB-UE-S1AP-ID").unwrap_err());
 //!
 //! // The values, each with its path
-//! for (path, value) in inspect::paths(&view) {
-//!     if path.ends_with("/value") {
-//!         println!("{path} = {value}");
-//!     }
+//! for (path, value) in inspect::paths(&tree) {
+//!     println!("{path} = {value}");
 //! }
-//! # assert_eq!(printed, r##"this IE is MME-UE-S1AP-ID, not eNB-UE-S1AP-ID: "eNB-UE-S1AP-ID" is not a member of this value, which has none, at /s1ap/2/eNB-UE-S1AP-ID/value
-//! # /s1ap/0/value = 1
-//! # /s1ap/eNB-UE-S1AP-ID/value = 7
-//! # /s1ap/2/value = 3
+//! # assert_eq!(printed, r##"this IE is MME-UE-S1AP-ID, not eNB-UE-S1AP-ID: "eNB-UE-S1AP-ID" is not a member of this value, which has none, at /s1ap/2/eNB-UE-S1AP-ID
+//! # /s1ap/0 = 1
+//! # /s1ap/eNB-UE-S1AP-ID = 7
+//! # /s1ap/2 = 3
 //! # "##);
 //! ```
 //!
 //! ```text
-//! this IE is MME-UE-S1AP-ID, not eNB-UE-S1AP-ID: "eNB-UE-S1AP-ID" is not a member of this value, which has none, at /s1ap/2/eNB-UE-S1AP-ID/value
-//! /s1ap/0/value = 1
-//! /s1ap/eNB-UE-S1AP-ID/value = 7
-//! /s1ap/2/value = 3
+//! this IE is MME-UE-S1AP-ID, not eNB-UE-S1AP-ID: "eNB-UE-S1AP-ID" is not a member of this value, which has none, at /s1ap/2/eNB-UE-S1AP-ID
+//! /s1ap/0 = 1
+//! /s1ap/eNB-UE-S1AP-ID = 7
+//! /s1ap/2 = 3
 //! ```
 //!
 //! ## An item of a list
@@ -194,47 +117,42 @@
 //! use oxirush_s1ap::{inspect, s1ap::S1APPDU};
 //! use oxirush_s1ap::{tree, tree::Value};
 //!
-//! // A message whose one IE is a list of two items
-//! let command = tree!({"message": "E-RABReleaseCommand", "ies": [
+//! // A message whose one IE is a list of two items, each an IE of a single container
+//! let mut tree = tree!({"message": "E-RABReleaseCommand", "ies": [
 //!     {"E-RABToBeReleasedList": [
 //!         {"E-RABItem": {"e-RAB-ID": 5, "cause": {"nas": "normal-release"}}},
 //!         {"E-RABItem": {"e-RAB-ID": 6, "cause": {"nas": "normal-release"}}},
 //!     ]},
 //! ]});
-//! let pdu = S1APPDU::from_tree(&command).unwrap();
-//! let mut view = pdu.to_view().unwrap();
 //!
 //! // An item by its position or by its name, which selects each item of that name
-//! let select = |view, path| -> Vec<Value> {
-//!     let selected = inspect::select(view, path).unwrap();
+//! let select = |tree, path| -> Vec<Value> {
+//!     let selected = inspect::select(tree, path).unwrap();
 //!     selected.into_iter().cloned().collect()
 //! };
-//! assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/e-RAB-ID"), [tree!(6)]);
-//! assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/E-RABItem/e-RAB-ID"), [tree!(5), tree!(6)]);
-//!
-//! // The same value by the path that says each `value`
-//! assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/value/1/value/e-RAB-ID"), [tree!(6)]);
+//! assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/1/e-RAB-ID"), [tree!(6)]);
+//! assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/E-RABItem/e-RAB-ID"), [tree!(5), tree!(6)]);
 //!
 //! // And by the names that the tree shows, joined: the item by its position, then its name
-//! assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/1/E-RABItem/e-RAB-ID"), [tree!(6)]);
-//!
-//! // The criticality of an item is the one of its object set
-//! assert_eq!(select(&view, "/s1ap/E-RABToBeReleasedList/0/criticality"), [tree!("ignore")]);
+//! assert_eq!(select(&tree, "/s1ap/E-RABToBeReleasedList/1/E-RABItem/e-RAB-ID"), [tree!(6)]);
 //!
 //! // An item is added at the end, as the IE that it is, and one is taken out
-//! let item = tree!({"e-RAB-ID": 7, "cause": {"radioNetwork": "unspecified"}});
-//! let item = tree!({"id": "E-RABItem", "criticality": "ignore", "value": item});
-//! inspect::insert(&mut view, "/s1ap/E-RABToBeReleasedList/-", item).unwrap();
-//! inspect::remove(&mut view, "/s1ap/E-RABToBeReleasedList/0").unwrap();
+//! let item = tree!({"E-RABItem": {"e-RAB-ID": 7, "cause": {"radioNetwork": "unspecified"}}});
+//! inspect::insert(&mut tree, "/s1ap/E-RABToBeReleasedList/-", item).unwrap();
+//! inspect::remove(&mut tree, "/s1ap/E-RABToBeReleasedList/0").unwrap();
 //!
-//! let edited = pdu.with_view(&view).unwrap();
+//! // The criticality of an item is beside it, where it is not the one of its object set
+//! let path = "/s1ap/E-RABToBeReleasedList/0/criticality";
+//! inspect::set(&mut tree, path, tree!("reject")).unwrap();
+//!
+//! let edited = S1APPDU::from_tree(&tree).unwrap();
 //! println!("{}", edited.to_tree());
-//! # assert_eq!(printed, r##"{"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}}},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
+//! # assert_eq!(printed, r##"{"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}},"criticality":"reject"},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
 //! # "##);
 //! ```
 //!
 //! ```text
-//! {"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}}},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
+//! {"message":"E-RABReleaseCommand","ies":[{"E-RABToBeReleasedList":[{"E-RABItem":{"e-RAB-ID":6,"cause":{"nas":"normal-release"}},"criticality":"reject"},{"E-RABItem":{"e-RAB-ID":7,"cause":{"radioNetwork":"unspecified"}}}]}]}
 //! ```
 //!
 //! ## The names of an ENUMERATED
@@ -250,7 +168,7 @@
 //! println!("{:?}", names.unwrap());
 //!
 //! // A value of another type has none
-//! let choice = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause/value");
+//! let choice = inspect::enumerated_at("UEContextReleaseRequest", "/s1ap/Cause");
 //! assert_eq!(choice, Ok(None));
 //! # assert_eq!(printed, r##"["normal-release", "authentication-failure", "detach", "unspecified", "csg-subscription-expiry", "uE-not-in-PLMN-serving-area", "iab-not-authorized"]
 //! # "##);
@@ -260,8 +178,8 @@
 //! ["normal-release", "authentication-failure", "detach", "unspecified", "csg-subscription-expiry", "uE-not-in-PLMN-serving-area", "iab-not-authorized"]
 //! ```
 //!
-//! A name is read in any case and with any separators, as `"Normal Release"`
-//! above, and shown as the specification spells it.
+//! A name is read in any case and with any separators, as `"Normal Release"`, and shown
+//! as the specification spells it.
 //!
 //! ## Check a path before use
 //!
@@ -271,24 +189,24 @@
 //! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
 //! use oxirush_s1ap::inspect;
 //!
-//! // Whether a path can select anything in a message of a name, without a view
+//! // Whether a path can select anything in a message of a name, without a tree
 //! let check = |path| inspect::check_path("UEContextReleaseRequest", path);
 //! assert_eq!(check("/s1ap/Cause/nas"), Ok(()));
 //! assert_eq!(check("/s1ap/*/radioNetwork"), Ok(()));
 //!
 //! // A name that is written wrong, and an IE that the message does not have
-//! for wrong in ["/s1ap/Cause/radioNetwrok", "/s1ap/eNB-UE-S1AP-ID/valeu", "/s1ap/GUMMEI-ID"] {
+//! for wrong in ["/s1ap/Cause/radioNetwrok", "/s1ap/eNB-UE-S1AP-ID/value", "/s1ap/GUMMEI-ID"] {
 //!     println!("{}", check(wrong).unwrap_err());
 //! }
-//! # assert_eq!(printed, r##""radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
-//! # "valeu" is not a member of this value, which has none; an IE itself has id, criticality, value, octets, at /s1ap/eNB-UE-S1AP-ID/valeu
+//! # assert_eq!(printed, r##""radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, at /s1ap/Cause/radioNetwrok
+//! # "value" is not a member of this value, which has none, at /s1ap/eNB-UE-S1AP-ID/value
 //! # "GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
 //! # "##);
 //! ```
 //!
 //! ```text
-//! "radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc; an IE itself has id, criticality, value, octets, at /s1ap/Cause/radioNetwrok
-//! "valeu" is not a member of this value, which has none; an IE itself has id, criticality, value, octets, at /s1ap/eNB-UE-S1AP-ID/valeu
+//! "radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, at /s1ap/Cause/radioNetwrok
+//! "value" is not a member of this value, which has none, at /s1ap/eNB-UE-S1AP-ID/value
 //! "GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
 //! ```
 //!
@@ -319,28 +237,24 @@
 //!     }}},
 //! ]});
 //!
-//! // A tree shows the octets that the container was encoded as
-//! let pdu = S1APPDU::from_tree(&required).unwrap();
-//! println!("{}", pdu.to_tree()["ies"][2]);
+//! // The tree of the PDU shows the octets that the container was encoded as
+//! let mut tree = S1APPDU::from_tree(&required).unwrap().to_tree();
+//! println!("{}", tree["ies"][2]);
 //!
 //! // Read: a path goes through the name of the type
-//! let mut view = pdu.to_view().unwrap();
 //! let container = format!("/s1ap/Source-ToTarget-TransparentContainer/{name}");
 //! let cell = format!("{container}/targetCell-ID/cell-ID");
 //! assert_eq!(inspect::check_path("HandoverRequired", &cell), Ok(()));
 //!
 //! // The path is an error until `open` has decoded the octets, and selects the value after that
-//! assert_eq!(inspect::select(&view, &cell).unwrap_err().kind(), ErrorKind::Path);
-//! inspect::open(&mut view, &cell).unwrap();
-//! assert_eq!(inspect::select(&view, &cell).unwrap(), [&tree!(4660)]);
+//! assert_eq!(inspect::select(&tree, &cell).unwrap_err().kind(), ErrorKind::Path);
+//! inspect::open(&mut tree, &cell).unwrap();
+//! assert_eq!(inspect::select(&tree, &cell).unwrap(), [&tree!(4660)]);
+//! println!("{}", inspect::select(&tree, &container).unwrap()[0]);
 //!
-//! // What the octets carry, decoded
-//! let decoded = format!("{container}/decoded");
-//! println!("{}", inspect::select(&view, &decoded).unwrap()[0]);
-//!
-//! // An edit goes into it, and what is not edited is sent as it was received
-//! inspect::set(&mut view, &cell, tree!(7)).unwrap();
-//! let edited = pdu.with_view(&view).unwrap();
+//! // An edit goes into it
+//! inspect::set(&mut tree, &cell, tree!(7)).unwrap();
+//! let edited = S1APPDU::from_tree(&tree).unwrap();
 //! println!("{}", edited.to_tree()["ies"][2]);
 //! # assert_eq!(printed, r##"{"Source-ToTarget-TransparentContainer":"000201020002f83900012340200100"}
 //! # {"rRC-Container":"0102","targetCell-ID":{"pLMNidentity":"208-93","cell-ID":4660},"uE-HistoryInformation":[{"uTRAN-Cell":"00"}]}
@@ -356,79 +270,41 @@
 //!
 //! # Paths
 //!
-//! [`paths`] gives each value of a view with the path that selects it, [`select`] the
-//! values at a path, and [`set`], [`remove`] and [`insert`] edit a view at a path:
+//! [`paths`] gives each value of a tree with the path that selects it, [`select`] the
+//! values at a path, and [`set`], [`remove`] and [`insert`] edit a tree at a path:
 //!
 //! ```text
-//! /procedure_code = 18
-//! /s1ap/MME-UE-S1AP-ID/criticality = "reject"
-//! /s1ap/MME-UE-S1AP-ID/value = 1
-//! /s1ap/Cause/value/radioNetwork = "user-inactivity"
+//! /s1ap/MME-UE-S1AP-ID = 1
+//! /s1ap/Cause/radioNetwork = "user-inactivity"
+//! /s1ap/Cause/criticality = "reject"
 //! ```
 //!
-//! A path is a JSON pointer into the view, where `/s1ap` stands for the IEs of the
-//! message. The segment after it selects among them:
+//! A path is a JSON pointer into the tree, where `/s1ap` stands for `/ies`, the IEs of
+//! the message. The segment after it selects the value of an IE:
 //!
-//! - the name of an IE, as ASN.1 has it after `id-`: `/s1ap/eNB-UE-S1AP-ID`. An IE that is
+//! - by its name, as ASN.1 has it after `id-`: `/s1ap/eNB-UE-S1AP-ID`. An IE that is
 //!   there twice is selected twice;
-//! - a position, `/s1ap/0`, which is how [`paths`] names an IE that has no name or is
-//!   there twice. A position is a number as decimal writes it: `0`, `12`;
-//! - `@id=N`, the IEs with that identifier, whether it has a name or not, and `*`, each
-//!   of them;
-//! - `-`, the end of the list, where [`insert`] adds an IE.
+//! - by its position, `/s1ap/0`, which is how [`paths`] names an IE that has no name or
+//!   is there twice. A position is a number as decimal writes it: `0`, `12`;
+//! - by `@id=N`, the IEs with that identifier, whether it has a name or not, and `*`,
+//!   each of them;
+//! - `-` is the end of the list, where [`insert`] adds an IE.
 //!
-//! Under an IE are its `criticality`, its typed `value`, and its `octets`: what it was
-//! received as, in hexadecimal. The IEs that a value holds, as the items of a list of
-//! E-RABs, are selected the same way in their place:
-//!
-//! ```text
-//! /s1ap/E-RABToBeSetupListCtxtSUReq/value/E-RABToBeSetupItemCtxtSUReq/value/e-RAB-ID = 5
-//! ```
-//!
-//! Any other list selects by position and `*`.
-//!
-//! `value` may be left out of a path. A segment that names no member of an IE, which has
-//! `id`, `criticality`, `value`, `octets` and the members that start with `_`, is taken
-//! in its value, and one that names no member of a transfer, which has `decoded`,
-//! `octets` and the members that start with `_`, in its decoded value. So
-//! `/s1ap/Cause/radioNetwork` is `/s1ap/Cause/value/radioNetwork`, and these two paths
-//! select the same value:
+//! After the value of an IE, `criticality` is the criticality beside it, which a tree has
+//! where it is not the one that the message assigns, and the name of the IE may follow
+//! once: `/s1ap/0/MME-UE-S1AP-ID` is the first IE when it is that one, and the name of
+//! another IE is an error that says which IE it is. A member of the value that is spelled
+//! as the name of the IE is that member. The IEs of a container go by
+//! name in its place, and those of an extension container or of a list of single
+//! containers by name in the list:
 //!
 //! ```text
-//! /s1ap/E-RABToBeSetupListCtxtSUReq/value/E-RABToBeSetupItemCtxtSUReq/value/e-RAB-ID
-//! /s1ap/E-RABToBeSetupListCtxtSUReq/E-RABToBeSetupItemCtxtSUReq/e-RAB-ID
+//! /s1ap/E-RABToBeReleasedList/E-RABItem/e-RAB-ID
+//! /s1ap/E-RABToBeReleasedList/1/E-RABItem/e-RAB-ID
 //! ```
 //!
-//! What an IE or a transfer has itself comes first: `/s1ap/Cause/value` is the value of
-//! the IE and `/s1ap/Cause/*` each of its members, so the entries of a list that is the
-//! value of an IE are `value/*`. If a value has a member with the same name as a member
-//! of its IE, write `value` before it: only a bit string whose size varies has such a
-//! member, its own `value`, as in `/s1ap/TraceCollectionEntityIPAddress/value/value`.
-//! The value of an IE of an extension container is its `extensionValue`, and is left
-//! out the same way.
-//!
-//! After an entry of a list of IEs, or an IE that a value holds alone, a segment may be
-//! the name of that IE, and the path goes on from the IE:
-//!
-//! ```text
-//! /s1ap/E-RABToBeSetupListCtxtSUReq/0/E-RABToBeSetupItemCtxtSUReq/e-RAB-ID
-//! ```
-//!
-//! So the names and the positions that [`to_tree`] shows, joined after the root,
-//! are the path of a value in the view of the same PDU. A path that ends with the name
-//! of an IE selects the IE, as its name alone does in a list, and `value` after it its
-//! value.
-//!
-//! Under an IE, a segment is a member of the IE, then the name of the IE, then a member
-//! of its value. A member that is named as another IE is that member, as the `nAS-PDU`
-//! of an E-RAB. One value of TS 36.413 has a member that is named as its own IE, the
-//! `uESidelinkAggregateMaximumBitRate` of `UESidelinkAggregateMaximumBitrate`: there
-//! the segment is the IE where it spells the name as ASN.1 spells that of the IE, which
-//! is how [`to_tree`] shows it, and the member otherwise, as it was before an IE
-//! could be named there. So the order changes the meaning of no path into a value. An
-//! IE of the same name that the value holds, in a list, is reached after `value`. The
-//! name of another IE, where the value has no such member, is an error that says which
-//! IE the entry is.
+//! So the names and the positions that a tree shows, joined after the root, are the path
+//! of a value in it. Any other list selects by position and `*`.
 //!
 //! ## Names
 //!
@@ -436,9 +312,8 @@
 //! them: `/s1ap/eNB-UE-S1AP-ID`, `/S1AP/enb_ue_s1ap_id` and `/s1ap/enbues1apid` are one
 //! path. The root, the name of an IE, the members of a value, the name of a message
 //! ([`S1ap::object_set_named`](crate::S1ap::object_set_named), [`check_path`]) and the
-//! name of an ENUMERATED value are all taken
-//! this way, and no two of them that could be taken for each other are the same. A
-//! member that starts with `_` is named as it is.
+//! name of an ENUMERATED value are all taken this way, and no two of them that could be
+//! taken for each other are the same.
 //!
 //! ## What is not there
 //!
@@ -447,34 +322,29 @@
 //! - an IE that the message does not have;
 //! - an OPTIONAL member that is absent, and another alternative of a CHOICE (one of the
 //!   type `NULL` that is there has its `null`, which a path selects):
-//!   `/s1ap/Cause/value/nas` when the cause is one of the radio network;
+//!   `/s1ap/Cause/nas` when the cause is one of the radio network;
 //! - what follows in the path, which is still checked against the type.
 //!
 //! A name that the type of a value cannot have is an error, which lists the members
 //! that the type has: a member that is written wrong is not taken for one that is not
-//! there. Under an IE or a transfer, it lists those of its value, then those of the IE
-//! or of the transfer itself. So are a member of a value that has none, a path into a
-//! value that did not decode, and the name of an IE in a list whose entries are no IEs.
-//! After `*`, a segment is an error when none of the values that it is applied to can
-//! have it.
+//! there. So are a member of a value that has none, a path into a value that is its
+//! octets, and the name of an IE in a list whose entries are no IEs. After `*`, a
+//! segment is an error when none of the values that it is applied to can have it.
 //!
-//! [`check_path`] says the same of a path without a view: whether it can select
+//! [`check_path`] says the same of a path without a tree: whether it can select
 //! anything in a message of a name, whose IEs are those of its object set
 //! ([`S1ap::object_set_named`](crate::S1ap::object_set_named)).
 //!
 //! ## Edits
 //!
-//! [`paths`] lists the values of a view without the members that start with `_`, except
-//! `_decode_error`. The octets of an IE or of a transfer are selected as its `octets`,
-//! which [`paths`] lists only for one that has no value beside them, and set there in
-//! place of its value. Those of a value that an edit changed are an error to select:
-//! [`from_view`] gives the PDU its octets.
-//!
 //! [`set`] writes a member by the name that ASN.1 gives it, and refuses a name that the
 //! type does not have. `null` takes an optional member out, as [`remove`] does; a member
 //! that its type always has is not taken out, and an alternative of a CHOICE takes the
-//! place of the one that is there. The value of an IE or of a transfer is not taken out
-//! either, as its octets would be sent in its place.
+//! place of the one that is there. The value of an IE is set whole at its name, as a
+//! tree writes it or as its `{"octets": "…"}`, and [`remove`] at its name takes the IE
+//! out. An IE that the message does not have is inserted, as `{"NAME": VALUE}` with its
+//! `criticality` where the message does not assign one. A path that selects nothing is an
+//! error, and the tree is then as it was.
 //!
 //! ```
 //! use oxirush_s1ap::{build_s1ap, inspect, s1ap::*};
@@ -485,15 +355,22 @@
 //!     REJECT eNB_UE_S1AP_ID(7u32),
 //!     IGNORE Cause(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)),
 //! )?;
-//! let mut view = pdu.to_view()?;
-//! assert_eq!(inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/value")?, [&tree!(7)]);
+//! let mut tree = pdu.to_tree();
+//! assert_eq!(inspect::select(&tree, "/s1ap/eNB-UE-S1AP-ID")?, [&tree!(7)]);
 //!
-//! inspect::set(&mut view, "/s1ap/Cause/value", tree!({"nas": "detach"}))?;
-//! inspect::remove(&mut view, "/s1ap/MME-UE-S1AP-ID")?;
-//! let name = tree!({"id": "eNBname", "criticality": "ignore", "value": "enb-1"});
-//! inspect::insert(&mut view, "/s1ap/-", name)?;
-//! let edited = pdu.with_view(&view)?.to_view()?;
-//! assert_eq!(inspect::select(&edited, "/s1ap/*/id")?, [&tree!(8), &tree!(2), &tree!(60)]);
+//! inspect::set(&mut tree, "/s1ap/Cause", tree!({"nas": "normal-release"}))?;
+//! inspect::remove(&mut tree, "/s1ap/MME-UE-S1AP-ID")?;
+//! let name = tree!({"eNBname": "enb-1", "criticality": "ignore"});
+//! inspect::insert(&mut tree, "/s1ap/-", name)?;
+//! let edited = S1APPDU::from_tree(&tree)?.to_tree();
+//! assert_eq!(
+//!     edited["ies"],
+//!     tree!([
+//!         {"eNB-UE-S1AP-ID": 7},
+//!         {"Cause": {"nas": "normal-release"}},
+//!         {"eNBname": "enb-1", "criticality": "ignore"},
+//!     ])
+//! );
 //! # Ok::<(), oxirush_s1ap::Error>(())
 //! ```
 //!
@@ -515,7 +392,7 @@
 //! | `SEQUENCE` | An object with a member for each component that is there, by the name that ASN.1 gives it |
 //! | `SEQUENCE OF` | A list |
 //! | `CHOICE` | An object with one member, the name of the alternative with its value |
-//! | An open type | Its octets in hexadecimal, where X.697 has the value that they hold: a view shows that value in their place |
+//! | An open type | Its octets in hexadecimal, where X.697 has the value that they hold: a tree shows that value in their place |
 //!
 //! A `BIT STRING` member that may be absent and that has its size where the member is
 //! declared, and not in a type of its own, has its length whatever that size is, as
@@ -529,8 +406,9 @@
 //!
 //! ## Values as they are usually written
 //!
-//! A tree, a view and a value alone show the values of some types as they are
-//! usually written, and take them so or in the form of their ASN.1 type. A string
+//! A tree and a value alone show the values of some types as they are usually written,
+//! and take them so or in the form of their ASN.1 type. A value that does not fit its
+//! form, as a transport layer address of another length, stays in the form of its type. A string
 //! of decimal digits is never read as octets: octets whose hexadecimal has no
 //! letter are written after `0x`.
 //!
@@ -556,11 +434,11 @@
 //! | `UnknownMessage` | A name of a message, or a direction and a procedure code, that the protocol does not have |
 //! | `UnknownIe` | A name or an identifier of an IE that the protocol does not have, or has no type for where it is: its octets are written in its place |
 //! | `Path` | A path that is not well formed (no `/` before its first segment, `~` before what is no `0` and no `1`, `@id=` before what is no identifier), a name that the type at that place cannot have (a member of a value, an IE of the object set of a message, a name where a list goes by position), an edit whose path selects nothing, a path through the type that octets carry before [`open`] decoded them, a path of more than 64 segments or 4096 octets, a selection of more than 65,536 values |
-//! | `Value` | A JSON value that is not a value of its ASN.1 type (of another form than [Values](#values) lists, a name that an `ENUMERATED` does not have, a number outside its constraint, octets that are no hexadecimal: the message says at which member), JSON that is not written as a tree or as a view, a member that its type does not have, a tree nested deeper than 256 levels, and an edit that is refused: a member that its type always has, the value of an IE or the alternative of a `CHOICE` taken out, an insertion where there is no list, the octets of a value that was edited since |
-//! | `UndecodableIe` | A path into an IE or a transfer that did not decode |
-//! | `Decode` | A PDU whose message does not decode, and octets of a view that are not what they were decoded as |
+//! | `Value` | A JSON value that is not a value of its ASN.1 type (of another form than [Values](#values) lists, a name that an `ENUMERATED` does not have, a number outside its constraint, octets that are no hexadecimal: the message says at which member), JSON that is not written as a tree, a member that its type does not have, a tree nested deeper than 256 levels, and an edit that is refused: a member that its type always has or the alternative of a `CHOICE` taken out, an insertion where there is no list |
+//! | `UndecodableIe` | A path into a value that is its octets |
+//! | `Decode` | A PDU whose message does not decode |
 //!
-//! The view is as it was after an edit that returns an error.
+//! The tree is as it was after an edit that returns an error.
 //!
 //! # Octets that carry a type
 //!
@@ -582,34 +460,25 @@
 //!
 //! Before that call such a name is an error that says to make it. For another target
 //! system the octets are those of its own specification, as are those of the secondary
-//! containers, and nothing in a message says which they are. So a view
-//! and a tree show such an IE by its octets, and the one that writes or reads it names
-//! the type, in any case:
+//! containers, and nothing in a message says which they are. So a tree shows such an IE
+//! by its octets, and the one that writes or reads it names the type, in any case:
 //!
 //! - written, the value of the IE is an object with one member, the name of the type
 //!   with its value, which is encoded as that type:
 //!   `{"SourceeNB-ToTargeteNB-TransparentContainer": {"rRC-Container": "…", …}}`.
-//!   [`from_tree`] takes it, and so does [`from_view`] for a value that [`set`] or
-//!   [`insert`] wrote and for a view written by hand;
-//! - read, a path goes through the name of the type, after the IE or its `value`:
+//!   [`from_tree`] takes it;
+//! - read, a path goes through the name of the type, after the IE:
 //!   `/s1ap/Source-ToTarget-TransparentContainer/SourceeNB-ToTargeteNB-TransparentContainer/targetCell-ID`.
-//!   [`check_path`] and [`enumerated_at`] read it against the types. In a view,
-//!   [`open`] decodes the octets that a path takes so, and nothing else does:
-//!   [`select`] gives values of the view, and an edit changes what the view has. On
-//!   octets that were not opened, such a path is an error that says so.
+//!   [`check_path`] and [`enumerated_at`] read it against the types. In a tree, [`open`]
+//!   decodes the octets that a path takes so, and nothing else does. On octets that were
+//!   not opened, such a path is an error that says so.
 //!
-//! Once it is opened or written so, the value of the IE is the transfer of that type
-//! under its name, with what any transfer has. Its `decoded` may be left out of a
-//! path, its `octets` are those that were received, and [`paths`] lists what it has.
-//! Octets that are not of the type have a `_decode_error`, which a path into them
-//! reports, and what is not edited is sent as the octets received. The `rRC-Container`
-//! in it stays octets: it is a message of RRC.
+//! Once it is opened or written so, the value of the IE is that type under its name, or
+//! `{"octets": "…"}` under it for octets that are not of the type. The `rRC-Container` in
+//! it stays octets: it is a message of RRC.
 //!
 //! [`to_tree`]: S1APPDU::to_tree
 //! [`from_tree`]: S1APPDU::from_tree
-//! [`to_view`]: S1APPDU::to_view
-//! [`from_view`]: S1APPDU::from_view
-//! [`with_view`]: S1APPDU::with_view
 
 // The tables, the paths and the functions of the module, which oxirush-aper writes for
 // both protocols.
@@ -619,12 +488,10 @@ oxirush_aper::__inspect! {
 
 use crate::s1ap::S1APPDU;
 use oxirush_aper::Octets;
-use oxirush_aper::inspect::Parts;
 use oxirush_aper::protocol::Pdu;
 
-/// The two JSON forms of a PDU, with the `inspect` feature: its tree, the short form in
-/// which a message is shown and written, and its view, which keeps what was received and
-/// is read and edited by the paths of [`inspect`](crate::inspect).
+/// The tree of a PDU, with the `inspect` feature: the short form in which a message is
+/// shown and written, which the paths of [`inspect`](crate::inspect) read and edit.
 impl S1APPDU<'_> {
     /// The tree of this PDU, which is the name of its message and its IEs by name, in
     /// their order:
@@ -635,7 +502,7 @@ impl S1APPDU<'_> {
     /// ```
     ///
     /// ```
-    /// use oxirush_s1ap::s1ap::S1APPDU;
+    /// use oxirush_s1ap::{inspect, s1ap::S1APPDU};
     /// use oxirush_s1ap::tree;
     ///
     /// // A UE CONTEXT RELEASE REQUEST
@@ -643,7 +510,7 @@ impl S1APPDU<'_> {
     /// let pdu = S1APPDU::decode(&octets)?;
     /// let tree = pdu.to_tree();
     /// assert_eq!(tree["message"], tree!("UEContextReleaseRequest"));
-    /// assert_eq!(tree["ies"][2]["Cause"]["radioNetwork"], tree!("user-inactivity"));
+    /// assert_eq!(inspect::select(&tree, "/s1ap/Cause/radioNetwork")?, [&tree!("user-inactivity")]);
     ///
     /// // The tree is a PDU again, of the same octets
     /// assert_eq!(S1APPDU::from_tree(&tree)?.encode()?, octets);
@@ -651,32 +518,37 @@ impl S1APPDU<'_> {
     /// ```
     ///
     /// An IE is one member: the name that ASN.1 gives it, or its identifier in digits when
-    /// it has none, with its value. One that did not decode, and one whose typed value
-    /// has no place for what it was received with, which a later version of its type
-    /// adds, has its octets, as `{"octets": "…"}`. What the specification assigns is left out: the `criticality` of
-    /// the PDU is there when it is not that of the procedure, and that of an IE, beside its
-    /// name, when it is not the one that the message assigns it.
-    /// [`from_tree`](Self::from_tree) reads this form back.
+    /// it has none, with its value in the form of its type, which [Values](crate::inspect#values)
+    /// lists. Its type is that of its identifier: no identifier of TS 36.413 has another
+    /// type for each type that it extends. One that did not decode, and one whose typed value has no
+    /// place for what it was received with, which a later version of its type adds, has its
+    /// octets, as `{"octets": "…"}`. What the specification assigns is left out: the
+    /// `criticality` of the PDU is there when it is not that of the procedure, and that of
+    /// an IE, beside its name, when it is not the one that the message assigns it.
     ///
-    /// A value is as [`to_view`](Self::to_view) shows it, without what a view keeps of
-    /// what was received, to any depth. A transfer is its decoded value, or
-    /// `{"octets": "…"}` when it did not decode or its value has no place for all of it. The IEs that a value holds, alone, as the
-    /// entries of a list or in an extension container, are each a name with a value too:
+    /// A transfer, and the value of an IE declared `OCTET STRING (CONTAINING ...)`, is its
+    /// decoded value, or `{"octets": "…"}` when it did not decode or its value has no place
+    /// for all of it. The IEs that a value holds, alone, as the entries of a list, in an
+    /// extension container or as the message that a transfer contains, are each a name
+    /// with a value too:
     ///
     /// ```json
-    /// {"E-RABToBeSetupListCtxtSUReq": [{"E-RABToBeSetupItemCtxtSUReq":
-    ///   {"e-RAB-ID": 5, "transportLayerAddress": "10.0.0.1", "gTP-TEID": 1}}]}
+    /// {"E-RABToBeReleasedList": [{"E-RABItem": {"e-RAB-ID": 5, "cause": {"nas": "normal-release"}}}]}
     /// ```
     ///
     /// The `criticality` of an IE that a value holds alone or as an entry of a list is
-    /// left out when it is the one that the single containers gives. That of an IE of an
-    /// extension container is always there: the tables have the criticality that an object
-    /// set assigns for the messages of the procedures and for the single containers only.
+    /// left out when it is the one that the single containers gives, and that of an IE of
+    /// a message that a transfer contains when it is the one that the object set of the
+    /// transfer assigns it. That of an IE of an extension container is always there: the
+    /// tables have the criticality that an object set assigns for the messages, the
+    /// transfers and the single containers only. An IE nested deeper than 64 levels has its
+    /// octets.
     ///
     /// Every PDU that decodes has a tree, which [`from_tree`](Self::from_tree) makes the
     /// same PDU again. A procedure that the specification does not have in that direction
     /// has its `procedure_code` and its `direction` in the place of the name of a message,
-    /// and its `criticality`, which no table assigns:
+    /// and its `criticality`, which no table assigns: its message is read as a container
+    /// of protocol IEs, which every message of the protocol but the private one is.
     ///
     /// ```json
     /// {"procedure_code": 200, "direction": "InitiatingMessage", "ies": [...], "criticality": "ignore"}
@@ -685,6 +557,12 @@ impl S1APPDU<'_> {
     /// A message that has no list of IEs, as the private one, one that does not decode,
     /// and one whose typed value has no place for what it was received with, has its
     /// `octets` in the place of its IEs: `{"message": "PrivateMessage", "octets": "…"}`.
+    ///
+    /// A tree takes up to 142 octets of memory for each octet of the PDU while it is made:
+    /// that of a message of 65,535 IEs of an identifier that the crate does not know, each
+    /// of no octet, 262 KB, which takes 37 MB. IEs that decode take less for each octet: 93
+    /// for 65,535 MME UE S1AP IDs. The crate has no limit on the octets of a PDU: the caller
+    /// bounds them.
     pub fn to_tree(&self) -> Value {
         let (direction, code) = (self.direction(), self.procedure_code());
         let criticality = self.criticality().to_tree();
@@ -707,11 +585,10 @@ impl S1APPDU<'_> {
     ///
     /// A value is written as [`to_tree`](Self::to_tree) shows it: a transfer as its
     /// decoded value, or as its `octets`, and each IE that the value holds as its name
-    /// with its value. Such an IE says its `criticality` where
-    /// [`to_tree`](Self::to_tree) always shows it, and where the single containers has
-    /// none for it. A value is also written as [`to_view`](Self::to_view) shows it, with
-    /// `decoded` for the value of a transfer and an entry with its `id`, its
-    /// `criticality` and its `value` for an IE, and the two forms are taken in one tree.
+    /// with its value. Such an IE says its `criticality` where no table has one for it:
+    /// in an extension container, and where the object set of the transfer, or the single
+    /// containers, has none for it. An edit of the tree of a PDU changes the octets of the
+    /// IEs that it changes and of no other.
     ///
     /// ```
     /// use oxirush_s1ap::s1ap::S1APPDU;
@@ -727,11 +604,7 @@ impl S1APPDU<'_> {
     /// # Ok::<(), oxirush_s1ap::Error>(())
     /// ```
     pub fn from_tree(tree: &Value) -> Result<S1APPDU<'static>, Error> {
-        S1APPDU::of_parts(shared::tree_parts(&TABLES, tree)?)
-    }
-
-    /// The PDU of what a view or a tree writes.
-    fn of_parts(parts: Parts) -> Result<S1APPDU<'static>, Error> {
+        let parts = shared::tree_parts(&TABLES, tree)?;
         let criticality = json::from_value(&parts.criticality)?;
         let value = Octets::owned(parts.message);
         Ok(S1APPDU::__of(
@@ -740,95 +613,6 @@ impl S1APPDU<'_> {
             criticality,
             value,
         ))
-    }
-
-    /// The view of this PDU: its `procedure_code`, its `direction`, its `criticality` and
-    /// its `message`, each IE of which has its typed value and what it was received as.
-    /// The functions of [`inspect`](crate::inspect) read and edit it by paths, and its
-    /// documentation says what a view has.
-    ///
-    /// An error when the message does not decode. A procedure that the specification
-    /// does not have in that direction has a view too: its message is read as a container
-    /// of protocol IEs, which every message of the protocol but the private one is, and
-    /// each IE with the type of its identifier, as
-    /// [`protocol_ies`](Self::protocol_ies) reads them whatever the message is. Its tree
-    /// has its procedure code and its direction in the place of the name of a message.
-    ///
-    /// A view takes up to 143 octets of memory for each octet of the PDU, and
-    /// [`with_view`](Self::with_view) 177: those of a message of 65,535 IEs of an
-    /// identifier that the crate does not know, each of no octet, 262 KB, which takes 37
-    /// MB and 46 MB. IEs that decode take less for each octet: 94 and 120 octets for
-    /// 65,535 MME UE S1AP IDs. The crate has no limit on the octets of a PDU: the
-    /// caller bounds them.
-    ///
-    /// ```
-    /// use oxirush_s1ap::{inspect, s1ap::S1APPDU};
-    /// use oxirush_s1ap::tree;
-    ///
-    /// // A UE CONTEXT RELEASE REQUEST
-    /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    /// let view = S1APPDU::decode(&octets)?.to_view()?;
-    /// assert_eq!(view["procedure_code"], tree!(18));
-    /// assert_eq!(inspect::select(&view, "/s1ap/eNB-UE-S1AP-ID/value")?, [&tree!(7)]);
-    /// # Ok::<(), oxirush_s1ap::Error>(())
-    /// ```
-    pub fn to_view(&self) -> Result<Value, Error> {
-        let (direction, code) = (self.direction(), self.procedure_code());
-        let criticality = self.criticality().to_tree();
-        shared::view(&TABLES, direction, code, criticality, self.value())
-    }
-
-    /// The PDU of a view, as [`to_view`](Self::to_view) gives one and the edits leave
-    /// it, with the octets received for what was not edited. A view that is written by
-    /// hand, without what a view keeps of what was received, is encoded from its values.
-    ///
-    /// [`with_view`](Self::with_view) is this for the view of a PDU that is at hand, and
-    /// refuses the view of another message.
-    ///
-    /// ```
-    /// use oxirush_s1ap::s1ap::S1APPDU;
-    ///
-    /// // A view, kept as JSON text and read back
-    /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    /// let view = S1APPDU::decode(&octets)?.to_view()?;
-    /// let text = view.to_string();
-    /// let read: oxirush_s1ap::tree::Value = text.parse().unwrap();
-    /// assert_eq!(S1APPDU::from_view(&read)?.encode()?, octets);
-    /// # Ok::<(), oxirush_s1ap::Error>(())
-    /// ```
-    pub fn from_view(view: &Value) -> Result<S1APPDU<'static>, Error> {
-        S1APPDU::of_parts(shared::view_parts(&TABLES, view)?)
-    }
-
-    /// The PDU of a view of this PDU, as [`to_view`](Self::to_view) gives it and the
-    /// edits leave it: this message, edited. What was not edited keeps the octets
-    /// received.
-    ///
-    /// An error of the kind `Form` when the view is of another message, which has
-    /// another direction or another procedure code than this PDU:
-    /// [`from_view`](Self::from_view) gives the PDU of any view.
-    ///
-    /// ```
-    /// use oxirush_s1ap::{ErrorKind, inspect, s1ap::S1APPDU};
-    /// use oxirush_s1ap::tree;
-    ///
-    /// // A UE CONTEXT RELEASE REQUEST, and its view with another cause
-    /// let octets = hex::decode("0012401500000300000002002a000800020007000240020280").unwrap();
-    /// let pdu = S1APPDU::decode(&octets)?;
-    /// let mut view = pdu.to_view()?;
-    /// inspect::set(&mut view, "/s1ap/Cause/nas", tree!("normal-release"))?;
-    /// let edited = pdu.with_view(&view)?;
-    /// assert_eq!(edited.to_tree()["ies"][2], tree!({"Cause": {"nas": "normal-release"}}));
-    ///
-    /// // A view that says another procedure is not a view of this PDU
-    /// view["procedure_code"] = tree!(17);
-    /// assert_eq!(pdu.with_view(&view).unwrap_err().kind(), ErrorKind::Value);
-    /// # Ok::<(), oxirush_s1ap::Error>(())
-    /// ```
-    pub fn with_view(&self, view: &Value) -> Result<S1APPDU<'static>, Error> {
-        let (direction, code) = (self.direction(), self.procedure_code());
-        shared::of_the_pdu(&TABLES, view, direction, code)?;
-        S1APPDU::from_view(view)
     }
 }
 

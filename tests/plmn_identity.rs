@@ -205,28 +205,22 @@ fn octets_that_are_no_plmn_identity_are_shown_as_octets() {
     for octets in ["abcdef", "02f8f9", "0ff839", "02f83f", "02a839"] {
         let wire = hex::decode(S1_SETUP.replacen("134001", octets, 1)).unwrap();
         let pdu = S1APPDU::decode(&wire).unwrap();
-        let view = pdu.to_view().unwrap();
-        let shown = inspect::select(&view, "/s1ap/Global-ENB-ID/pLMNidentity").unwrap();
-        assert_eq!(shown, [&tree!(octets)]);
         let tree = pdu.to_tree();
-        assert_eq!(
-            tree["ies"][0]["Global-ENB-ID"]["pLMNidentity"],
-            tree!(octets)
-        );
-        assert_eq!(S1APPDU::from_view(&view).unwrap().encode().unwrap(), wire);
+        let shown = inspect::select(&tree, "/s1ap/Global-ENB-ID/pLMNidentity").unwrap();
+        assert_eq!(shown, [&tree!(octets)]);
         assert_eq!(S1APPDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
     }
 }
 
 /// With the `inspect` feature a PLMN identity is written and shown as its MCC and its
-/// MNC, `"310-410"`, in a view and in a tree: the same octets.
+/// MNC, `"310-410"`, in a tree: the same octets.
 #[cfg(feature = "inspect")]
 #[test]
 fn the_notation_of_a_plmn_identity_has_the_octets_of_the_clause() {
     use oxirush_s1ap::inspect;
     use oxirush_s1ap::tree;
 
-    // Shown: the tree and the view of the request name the networks that tshark reads.
+    // Shown: the tree of the request names the networks that tshark reads.
     let wire = hex::decode(S1_SETUP).unwrap();
     let pdu = S1APPDU::decode(&wire).unwrap();
     let tree = pdu.to_tree();
@@ -236,23 +230,23 @@ fn the_notation_of_a_plmn_identity_has_the_octets_of_the_clause() {
     );
     let broadcast = &tree["ies"][1]["SupportedTAs"][0]["broadcastPLMNs"];
     assert_eq!(*broadcast, tree!(["208-93", "310-410"]));
-    let mut view = pdu.to_view().unwrap();
+    let mut edited = tree.clone();
     let of_the_enb = "/s1ap/Global-ENB-ID/pLMNidentity";
     assert_eq!(
-        inspect::select(&view, of_the_enb).unwrap(),
+        inspect::select(&tree, of_the_enb).unwrap(),
         [&tree!("310-410")]
     );
 
     // Written: the tree is the octets of the message, and so is each identity of the
-    // vectors, set through the view.
+    // vectors, set through a path.
     assert_eq!(S1APPDU::from_tree(&tree).unwrap().encode().unwrap(), wire);
     for (mcc, mnc, octets) in IDENTITIES {
-        inspect::set(&mut view, of_the_enb, tree!(format!("{mcc}-{mnc}"))).unwrap();
-        let edited = S1APPDU::from_view(&view).unwrap();
-        let request: S1SetupRequest = edited.decode_value().unwrap();
+        inspect::set(&mut edited, of_the_enb, tree!(format!("{mcc}-{mnc}"))).unwrap();
+        let written = S1APPDU::from_tree(&edited).unwrap();
+        let request: S1SetupRequest = written.decode_value().unwrap();
         let enb: GlobalENBID = oxirush_s1ap::decode(&request.protocol_ies.0[0].value).unwrap();
         assert_eq!(&enb.plmn_identity.0.0[..], octets, "{mcc}-{mnc}");
-        let shown = edited.to_view().unwrap();
+        let shown = written.to_tree();
         let shown = inspect::select(&shown, of_the_enb).unwrap();
         assert_eq!(shown, [&tree!(format!("{mcc}-{mnc}"))]);
     }

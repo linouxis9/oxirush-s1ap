@@ -5,7 +5,7 @@
 //! in the HANDOVER REQUIRED, and the MME the Target NG-RAN Node to Source NG-RAN Node
 //! Transparent Container in the HANDOVER COMMAND. Once the program registers the tables
 //! of oxirush-ngap, a tree writes each by the name of its type and the names of NGAP, and
-//! a view opens, reads and edits it: NGAP encodes it as it encodes the container of its
+//! a tree opens, reads and edits it: NGAP encodes it as it encodes the container of its
 //! own HANDOVER REQUEST.
 
 use oxirush_ngap::ngap::NGAPPDU;
@@ -77,19 +77,19 @@ fn the_handover_required_to_5gs_carries_the_container_of_the_source_node() {
     assert_eq!(inspect::check_path("HandoverRequired", &size), Ok(()));
     let sizes = inspect::enumerated_at("HandoverRequired", &size).unwrap();
     assert_eq!(sizes, Some(&["verysmall", "small", "medium", "large"][..]));
-    let mut view = required.to_view().unwrap();
-    inspect::open(&mut view, &size).unwrap();
-    assert_eq!(inspect::select(&view, &size).unwrap(), [&tree!("medium")]);
+    let mut tree = required.to_tree();
+    inspect::open(&mut tree, &size).unwrap();
+    assert_eq!(inspect::select(&tree, &size).unwrap(), [&tree!("medium")]);
     let cell = format!("{path}/targetCell-ID/nR-CGI/nRCellIdentity");
-    assert_eq!(inspect::select(&view, &cell).unwrap(), [&tree!(4660)]);
-    for (path, value) in inspect::paths(&view) {
-        assert_eq!(inspect::select(&view, &path).unwrap(), [&value], "{path}");
+    assert_eq!(inspect::select(&tree, &cell).unwrap(), [&tree!(4660)]);
+    for (path, value) in inspect::paths(&tree) {
+        assert_eq!(inspect::select(&tree, &path).unwrap(), [&value], "{path}");
     }
-    assert_eq!(S1APPDU::from_view(&view).unwrap(), required);
+    assert_eq!(S1APPDU::from_tree(&tree).unwrap(), required);
 
     // Edited by the type of NGAP
-    inspect::set(&mut view, &size, tree!("verysmall")).unwrap();
-    let edited = S1APPDU::from_view(&view).unwrap();
+    inspect::set(&mut tree, &size, tree!("verysmall")).unwrap();
+    let edited = S1APPDU::from_tree(&tree).unwrap();
     let mut small = source();
     let visited = &mut small["uEHistoryInformation"][0]["lastVisitedCellInformation"];
     visited["nGRANCell"]["cellType"]["cellSize"] = tree!("verysmall");
@@ -100,8 +100,8 @@ fn the_handover_required_to_5gs_carries_the_container_of_the_source_node() {
         small,
     );
     assert_eq!(octets(&edited, container), expected);
-    inspect::set(&mut view, &size, tree!("huge")).unwrap();
-    assert!(S1APPDU::from_view(&view).is_err());
+    inspect::set(&mut tree, &size, tree!("huge")).unwrap();
+    assert!(S1APPDU::from_tree(&tree).is_err());
 }
 
 #[test]
@@ -126,11 +126,11 @@ fn the_handover_command_to_5gs_carries_the_container_of_the_target_node() {
     assert_eq!(expected, tree!("00030a0b0c"));
 
     let rrc = format!("/s1ap/{container}/{TARGET}/rRCContainer");
-    let mut view = command.to_view().unwrap();
-    inspect::open(&mut view, &rrc).unwrap();
-    assert_eq!(inspect::select(&view, &rrc).unwrap(), [&tree!("0a0b0c")]);
-    inspect::set(&mut view, &rrc, tree!("ff")).unwrap();
-    let edited = S1APPDU::from_view(&view).unwrap();
+    let mut tree = command.to_tree();
+    inspect::open(&mut tree, &rrc).unwrap();
+    assert_eq!(inspect::select(&tree, &rrc).unwrap(), [&tree!("0a0b0c")]);
+    inspect::set(&mut tree, &rrc, tree!("ff")).unwrap();
+    let edited = S1APPDU::from_tree(&tree).unwrap();
     assert_eq!(octets(&edited, container), tree!("0001ff"));
     // A container of E-UTRAN is still written by the name of its type
     let own = "TargeteNB-ToSourceeNB-TransparentContainer";

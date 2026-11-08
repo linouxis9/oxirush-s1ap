@@ -251,35 +251,35 @@ mod tests {
     use super::*;
     use codec::inspect;
 
-    /// How many octets a string of a view is, which has them in hexadecimal.
-    fn length(view: &Value, path: &str) -> usize {
-        let selected = inspect::select(view, path).unwrap();
+    /// How many octets a string of a tree is, which has them in hexadecimal.
+    fn length(tree: &Value, path: &str) -> usize {
+        let selected = inspect::select(tree, path).unwrap();
         selected[0].as_str().unwrap().len() / 2
     }
 
-    /// How many entries a list of a view has.
-    fn entries(view: &Value, path: &str) -> usize {
-        inspect::select(view, path).unwrap().len()
+    /// How many entries a list of a tree has.
+    fn entries(tree: &Value, path: &str) -> usize {
+        inspect::select(tree, path).unwrap().len()
     }
 
     /// The messages have the sizes that their inputs are named after.
     #[test]
     fn the_written_messages_have_the_sizes_that_they_say() {
-        let view = |written: Written| Pdu::from_tree(&written.tree).unwrap().to_view().unwrap();
+        let tree = |written: Written| Pdu::from_tree(&written.tree).unwrap().to_tree();
 
-        let setup = view(initial_context_setup_request());
-        let e_rabs = "/s1ap/E-RABToBeSetupListCtxtSUReq/value/*";
+        let setup = tree(initial_context_setup_request());
+        let e_rabs = "/s1ap/E-RABToBeSetupListCtxtSUReq/*";
         assert_eq!(entries(&setup, e_rabs), 8);
 
-        let e_rabs = view(e_rab_setup_request());
-        let listed = "/s1ap/E-RABToBeSetupListBearerSUReq/value/*";
+        let e_rabs = tree(e_rab_setup_request());
+        let listed = "/s1ap/E-RABToBeSetupListBearerSUReq/*";
         assert_eq!(entries(&e_rabs, listed), 8);
 
-        let handover = view(handover_required());
-        let container = "/s1ap/Source-ToTarget-TransparentContainer/value";
+        let handover = tree(handover_required());
+        let container = "/s1ap/Source-ToTarget-TransparentContainer";
         assert_eq!(length(&handover, container), 4_000);
 
-        let paging = view(paging());
-        assert_eq!(entries(&paging, "/s1ap/TAIList/value/*"), 16);
+        let paging = tree(paging());
+        assert_eq!(entries(&paging, "/s1ap/TAIList/*"), 16);
     }
 }

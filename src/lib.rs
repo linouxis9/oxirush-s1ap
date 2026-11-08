@@ -75,7 +75,7 @@
 //! | Read the IEs of a message | [`extract_s1ap_ies!`], [`ie`], [`Ie::field`], `set_ie` |
 //! | A list of single containers, and a handover container, typed | [`S1APPDU::items`](s1ap::S1APPDU::items), [`decode`], [`encode`] |
 //! | Check a message, and answer one that is faulty | [`S1APPDU::check`](s1ap::S1APPDU::check), [`S1APPDU::check_structure`](s1ap::S1APPDU::check_structure), [`Deviation`], [`S1APPDU::criticality_diagnostics_for_response`](s1ap::S1APPDU::criticality_diagnostics_for_response) |
-//! | A PDU as JSON | [`S1APPDU::to_tree`](s1ap::S1APPDU::to_tree), [`S1APPDU::to_view`](s1ap::S1APPDU::to_view), [`S1APPDU::with_view`](s1ap::S1APPDU::with_view), [`inspect`] |
+//! | A PDU as JSON | [`S1APPDU::to_tree`](s1ap::S1APPDU::to_tree), [`S1APPDU::from_tree`](s1ap::S1APPDU::from_tree), [`inspect`] |
 //! | Write a message from its tree | [`S1APPDU::from_tree`](s1ap::S1APPDU::from_tree) |
 //!
 // Without `inspect` the items of the JSON forms in the tasks are no links: the links are
