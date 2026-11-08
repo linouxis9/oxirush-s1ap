@@ -5,8 +5,9 @@
 //! inside the Initial Context Setup E-RAB list.
 
 use oxirush_s1ap::helpers::*;
+use oxirush_s1ap::identity::Plmn;
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{Error, build_s1ap, extract_s1ap_ies};
+use oxirush_s1ap::{Bits, Error, build_s1ap, extract_s1ap_ies};
 
 // ── 1. Simple extraction: required IDs + optional cause ────────────────────
 
@@ -50,9 +51,9 @@ fn handle_handover_required(pdu: &S1APPDU<'_>) -> Result<Vec<String>, Error> {
 
         opt target: String = TargetID(target_value) => match target_value {
             TargetID::targeteNB_ID(value) => {
-                match plmn_from(&value.global_enb_id.plmn_identity) {
-                    Some((mcc, mnc)) => format!("target eNB in PLMN {mcc}-{mnc}"),
-                    None => "target eNB without a PLMN identity".to_string(),
+                match Plmn::try_from(value.global_enb_id.plmn_identity) {
+                    Ok(plmn) => format!("target eNB in PLMN {plmn}"),
+                    Err(_) => "target eNB without a PLMN identity".to_string(),
                 }
             },
             _ => "non-eNB target".to_string(),
@@ -181,7 +182,11 @@ fn main() -> Result<(), Error> {
 
 fn target_enb() -> Result<TargetID, Error> {
     let network = plmn("208", "93")?;
-    let enb = global_enb_id(network, EnbKind::Macro, 0x12345)?;
+    let enb = GlobalENBID {
+        plmn_identity: network,
+        enb_id: ENBID::macroENB_ID(Bits::new(0x12345, 20)?),
+        ie_extensions: None,
+    };
     let area = tai(network, [0x00, 0x01]);
 
     Ok(TargetID::targeteNB_ID(TargeteNBID {

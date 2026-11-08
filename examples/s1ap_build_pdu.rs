@@ -7,7 +7,7 @@
 
 use oxirush_s1ap::helpers::*;
 use oxirush_s1ap::s1ap::*;
-use oxirush_s1ap::{Error, Ie, build_s1ap, ie};
+use oxirush_s1ap::{Bits, Error, Ie, build_s1ap, ie};
 
 fn main() -> Result<(), Error> {
     // ── 1. Simple: InitialContextSetupResponse ─────────────────────────────
@@ -77,7 +77,11 @@ fn main() -> Result<(), Error> {
     // identity is mandatory in S1AP, and the transparent container uses the
     // ASN.1-derived underscore spelling accepted by the macro.
 
-    let target_enb = global_enb_id(network, EnbKind::Macro, 0x12345)?;
+    let target_enb = GlobalENBID {
+        plmn_identity: network,
+        enb_id: ENBID::macroENB_ID(Bits::new(0x12345, 20)?),
+        ie_extensions: None,
+    };
     let target_area = tai(network, [0x00, 0x01]);
     let target = TargetID::targeteNB_ID(TargeteNBID {
         global_enb_id: target_enb,

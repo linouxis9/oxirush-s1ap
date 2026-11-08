@@ -54,6 +54,9 @@ All notable changes to `oxirush-s1ap` are recorded here.
   The 106 IEs that were also named after their type no longer are.
 - The documentation of a PDU cites TS 36.413 clause 9.3.0 for the PDU that a
   sender constructs, in each place.
+- `helpers::plmn` is `Plmn::new` of oxirush-utils, whose errors it gives, and
+  `eutran_cgi` takes the eNB ID, whose alternative has its bits:
+  `eutran_cgi(plmn, &ENBID::macroENB_ID(Bits::new(id, 20)?), cell)`.
 
 ### Removed
 
@@ -76,6 +79,8 @@ All notable changes to `oxirush-s1ap` are recorded here.
   each task.
 - `procedure_name()`: `kind()` names the message, and `Display` shows it.
 - `VERSION`, which is `env!("CARGO_PKG_VERSION")`.
+- `helpers::plmn_from`, which `Plmn::try_from(identity)` is; `EnbKind`, which the
+  alternatives of `ENBID` are, `enb_id` and `global_enb_id`.
 
 ### Migration
 
@@ -89,6 +94,9 @@ All notable changes to `oxirush-s1ap` are recorded here.
 | `pdu.message::<M>()?` | `pdu.decode_value::<M>()?`, and `.into_owned()` to keep it |
 | `decode_open_type::<T>(&octets)`, `encode_open_type(&value)` | `oxirush_s1ap::decode::<T>(&octets)`, `oxirush_s1ap::encode(&value)` (a `Vec<u8>`: `.into()` gives `Octets`) |
 | `MME_UE_S1AP_ID(42)` (the type) | `MMEUES1APID(42)` |
+| `plmn_from(&identity)` | `Plmn::try_from(identity)`, its `mcc()` and its `mnc()` |
+| `global_enb_id(plmn, EnbKind::Macro, id)` | `GlobalENBID { plmn_identity: plmn, enb_id: ENBID::macroENB_ID(Bits::new(id, 20)?), ie_extensions: None }` |
+| `eutran_cgi(plmn, EnbKind::Macro, id, cell)` | `eutran_cgi(plmn, &ENBID::macroENB_ID(Bits::new(id, 20)?), cell)` |
 | `TAI::new(plmn, tac, None)` | `TAI { plmn_identity: plmn, tac, ie_extensions: None }` |
 | `inspect::message_named(name)` gives `("InitiatingMessage", code)` | it gives `(Direction::Initiating, code)` |
 | `tree["message"] == "..."` | `tree["message"] == tree!("...")` (oxirush-utils 0.2.0) |

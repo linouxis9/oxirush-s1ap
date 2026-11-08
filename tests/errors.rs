@@ -475,12 +475,12 @@ fn an_argument_that_a_helper_does_not_take_is_an_error_and_no_panic() {
         plmn("208", "9").unwrap_err(),
         oxirush_s1ap::Bits::new(1, 65).unwrap_err(),
     ];
-    // What was cut short: a macro eNB ID over 20 bits (TS 36.413 clause 9.2.1.37),
-    // alone and before the 8 bits of a cell in a Cell Identity of 28 (clause 9.2.1.38),
-    // and a number over the width of its bit string.
+    // What was cut short: a cell over the 8 bits after a macro eNB ID in a Cell Identity
+    // of 28 (TS 36.413 clauses 9.2.1.37 and 9.2.1.38), and a number over the width of its
+    // bit string.
+    let enb = ENBID::macroENB_ID(oxirush_s1ap::Bits::new(1, 20).unwrap());
     let cut_short = [
-        global_enb_id(network(), EnbKind::Macro, 0x1f_ffff).unwrap_err(),
-        eutran_cgi(network(), EnbKind::Macro, 0x1f_ffff, 1).unwrap_err(),
+        eutran_cgi(network(), &enb, 0x100).unwrap_err(),
         oxirush_s1ap::Bits::new(0x100, 8).unwrap_err(),
     ];
     for error in panicked.iter().chain(&cut_short) {
@@ -489,7 +489,7 @@ fn an_argument_that_a_helper_does_not_take_is_an_error_and_no_panic() {
     }
     assert_eq!(
         cut_short[0].to_string(),
-        "the macro eNB ID 2097151 does not fit in 20 bits"
+        "the cell of the eNB 256 does not fit in 8 bits"
     );
 
     // A TAC is two octets (clause 9.2.3.7), which the type of the argument says.

@@ -134,13 +134,14 @@ fn block_1() {
 #[rustfmt::skip]
 fn block_2() {
     use oxirush_s1ap::helpers::*;
-    use oxirush_s1ap::{BitString, build_s1ap, Ie, ie, extract_s1ap_ies, s1ap::*};
+    use oxirush_s1ap::{BitString, Bits, build_s1ap, Ie, ie, extract_s1ap_ies, s1ap::*};
 
     fn main() -> Result<(), Box<dyn std::error::Error>> {
         let network = plmn("208", "93")?;
 
         // The eNB: its identity, its name and the tracking area it serves
-        let enb = global_enb_id(network, EnbKind::Macro, 0x12345)?;
+        let enb_id = ENBID::macroENB_ID(Bits::new(0x12345, 20)?);
+        let enb = GlobalENBID { plmn_identity: network, enb_id: enb_id.clone(), ie_extensions: None };
         let area = SupportedTAsItem {
             tac: TAC([0, 1]),
             broadcast_plmns: BPLMNs(vec![network]),
@@ -180,7 +181,7 @@ fn block_2() {
             eNB_UE_S1AP_ID(7u32),
             NAS_PDU(attach),
             TAI(tai(network, [0, 1])),
-            EUTRAN_CGI(eutran_cgi(network, EnbKind::Macro, 0x12345, 1)?),
+            EUTRAN_CGI(eutran_cgi(network, &enb_id, 1)?),
             RRC_Establishment_Cause(RRCEstablishmentCause::mo_Signalling),
         )?;
 

@@ -24,9 +24,16 @@
 //! tshark -r pdu.pcap -V | grep -E 'LMNidentity:|Mobile (Country|Network) Code'
 //! ```
 
-use oxirush_s1ap::helpers::{EnbKind, global_enb_id, plmn, plmn_from};
+use oxirush_s1ap::helpers::plmn;
+use oxirush_s1ap::identity::Plmn;
 use oxirush_s1ap::s1ap::*;
 use oxirush_s1ap::{Error, Ie, extract_s1ap_ies, ie};
+
+/// The MCC and the MNC of a PLMN identity, as the `Plmn` of oxirush-utils reads them.
+fn plmn_from(identity: &PLMNidentity) -> Option<(String, String)> {
+    let plmn = Plmn::try_from(*identity).ok()?;
+    Some((plmn.mcc().to_string(), plmn.mnc().to_string()))
+}
 
 /// An MCC, an MNC and the octets of their PLMN identity, digit by digit from the clause.
 const IDENTITIES: &[(&str, &str, [u8; 3])] = &[
@@ -141,7 +148,13 @@ fn the_identities_of_an_s1_setup_are_those_that_tshark_reads() -> Result<(), Err
     );
 
     // And write the octets of the message for them.
-    assert_eq!(enb, global_enb_id(plmn("310", "410")?, EnbKind::Macro, 1)?);
+    let enb_id = ENBID::macroENB_ID(oxirush_s1ap::Bits::new(1, 20)?);
+    let written = GlobalENBID {
+        plmn_identity: plmn("310", "410")?,
+        enb_id,
+        ie_extensions: None,
+    };
+    assert_eq!(enb, written);
     assert_eq!(areas, tracking_areas());
     let written = ie::Global_ENB_ID::field(Criticality::Reject, enb).unwrap();
     assert_eq!(written, request.protocol_ies.0[0]);

@@ -10,7 +10,7 @@
 //! criticality, its identifier and the type of the error.
 
 use oxirush_s1ap::aper::{self, ErrorIe};
-use oxirush_s1ap::helpers::{EnbKind, eutran_cgi, global_enb_id, plmn, tai};
+use oxirush_s1ap::helpers::{eutran_cgi, plmn, tai};
 use oxirush_s1ap::s1ap::*;
 use oxirush_s1ap::{Deviation, Error, ErrorKind, build_s1ap, extract_s1ap_ies};
 
@@ -33,7 +33,7 @@ fn areas() -> Result<SupportedTAs, Error> {
 /// An S1 SETUP REQUEST as an eNB sends it, whose last IE is the DefaultPagingDRX.
 fn request() -> Result<Vec<u8>, Error> {
     build_s1ap!(REJECT S1SetupRequest,
-        REJECT Global_ENB_ID(global_enb_id(plmn("208", "93")?, EnbKind::Macro, 1)?),
+        REJECT Global_ENB_ID(macro_enb(plmn("208", "93")?, 1)?),
         IGNORE eNBname(ENBname("enb-1".into())),
         REJECT SupportedTAs(areas()?),
         IGNORE DefaultPagingDRX(PagingDRX::v128),
@@ -44,7 +44,7 @@ fn request() -> Result<Vec<u8>, Error> {
 /// The same request without its SupportedTAs.
 fn without_areas() -> Result<Vec<u8>, Error> {
     build_s1ap!(REJECT S1SetupRequest,
-        REJECT Global_ENB_ID(global_enb_id(plmn("208", "93")?, EnbKind::Macro, 1)?),
+        REJECT Global_ENB_ID(macro_enb(plmn("208", "93")?, 1)?),
         IGNORE eNBname(ENBname("enb-1".into())),
         IGNORE DefaultPagingDRX(PagingDRX::v128),
     )?
@@ -152,6 +152,15 @@ fn indicated(indication: &S1APPDU<'_>) -> Result<(Cause, CriticalityDiagnostics)
     Ok((cause, diagnostics))
 }
 
+/// The global identity of the macro eNB `id`, of 20 bits, in `plmn`.
+fn macro_enb(plmn_identity: PLMNidentity, id: u64) -> Result<GlobalENBID, Error> {
+    let enb_id = ENBID::macroENB_ID(oxirush_s1ap::Bits::new(id, 20)?);
+    Ok(GlobalENBID {
+        plmn_identity,
+        enb_id,
+        ie_extensions: None,
+    })
+}
 #[test]
 fn a_request_as_the_specification_has_it_deviates_in_nothing() -> Result<(), Error> {
     let pdu = S1APPDU::decode(&request()?)?.into_owned();
@@ -349,7 +358,7 @@ fn each_deviation_has_the_cause_of_its_clause() -> Result<(), Error> {
         REJECT eNB_UE_S1AP_ID(7u32),
         REJECT MME_UE_S1AP_ID(1u32),
         REJECT NAS_PDU(vec![0x07, 0x5d]),
-        IGNORE EUTRAN_CGI(eutran_cgi(network, EnbKind::Macro, 1, 1)?),
+        IGNORE EUTRAN_CGI(eutran_cgi(network, &macro_enb(network, 1)?.enb_id, 1)?),
         IGNORE TAI(tai(network, [0x00, 0x01])),
     )?;
     let mut ies = pdu.protocol_ies()?.into_owned();
