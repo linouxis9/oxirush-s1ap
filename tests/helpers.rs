@@ -1,8 +1,10 @@
-//! How an identity prints. It is printed whole, and as it is read: a PLMN identity as
-//! its MCC and its MNC, and a fixed number of octets, as a TMSI or a TAC, in
-//! hexadecimal, where `Debug` derived for a type gave a list of numbers.
+//! The helpers that build the values that a program of S1AP writes most from their
+//! parts, and what they refuse, and the PLMN identity of S1AP, a TBCD-STRING, which
+//! prints as its MCC and its MNC. TOY, the protocol of the tests of oxirush-aper, has
+//! the tests of how the other identities print.
 
-use oxirush_s1ap::helpers::plmn;
+use oxirush_s1ap::ErrorKind;
+use oxirush_s1ap::helpers::*;
 use oxirush_s1ap::identity::Plmn;
 use oxirush_s1ap::s1ap::*;
 
@@ -51,20 +53,25 @@ fn a_plmn_identity_converts_to_and_from_a_plmn() {
 }
 
 #[test]
-fn a_fixed_number_of_octets_prints_in_hexadecimal() {
-    let tmsi = MTMSI([0xde, 0xad, 0xbe, 0xef]);
-    assert_eq!(format!("{tmsi} {tmsi:?}"), "deadbeef MTMSI(deadbeef)");
-    let tac = TAC([0x00, 0x01]);
-    assert_eq!(format!("{tac} {tac:?}"), "0001 TAC(0001)");
-    assert_eq!(format!("{:?}", GTPTEID([0, 0, 0, 1])), "GTPTEID(00000001)");
+fn an_argument_that_a_helper_does_not_take_is_an_error_and_no_panic() {
+    let network = || plmn("208", "93").unwrap();
 
-    // An S-TMSI is printed whole, with its M-TMSI as it is read
-    let identity = STMSI {
-        mmec: MMECode([0x01]),
-        m_tmsi: tmsi,
-        ie_extensions: None,
-    };
-    let printed = format!("{identity:?}");
-    assert!(printed.contains("MMECode(01)"), "{printed}");
-    assert!(printed.contains("MTMSI(deadbeef)"), "{printed}");
+    // What panicked: an MCC of two digits, and an MNC of one.
+    let panicked = [plmn("20", "93").unwrap_err(), plmn("208", "9").unwrap_err()];
+    // What was cut short: a cell over the 8 bits after a macro eNB ID in a Cell Identity
+    // of 28 (TS 36.413 clauses 9.2.1.37 and 9.2.1.38).
+    let enb = ENBID::macroENB_ID(oxirush_s1ap::Bits::new(1, 20).unwrap());
+    let cut_short = [eutran_cgi(network(), &enb, 0x100).unwrap_err()];
+    for error in panicked.iter().chain(&cut_short) {
+        assert_eq!(error.kind(), ErrorKind::Argument, "{error}");
+        assert!(std::error::Error::source(error).is_none());
+    }
+    assert_eq!(
+        cut_short[0].to_string(),
+        "the cell of the eNB 256 does not fit in 8 bits"
+    );
+
+    // A TAC is two octets (clause 9.2.3.7), which the type of the argument says.
+    let area = tai(network(), [0, 1]);
+    assert_eq!(area.tac.0[..], [0, 1]);
 }
