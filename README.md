@@ -572,11 +572,11 @@ python3 ../oxirush-aper/protocols/benches/compare/compare.py --core 3 --perf "su
 
 The tests run 101 messages and 284 vectors that pycrate 0.8.1 encoded from
 the ASN.1, and 81 PDUs that the MME of Open5GS 2.8.0 sent in lab runs,
-through the codec and the trees. `fuzz/` has six
+through the codec and the trees. `fuzz/` has seven
 [cargo-fuzz](https://crates.io/crates/cargo-fuzz) targets: `decode`, `json`,
-`paths` and `exact` read any octets, and `edit` and `tree` edit the PDUs of
-the tests and write new ones. CI runs each for a minute, and the Fuzz
-workflow of oxirush-aper an hour each night. `examples/` has four programs.
+`paths` and `exact` read any octets, and `edit`, `tree` and `transfer` edit
+the PDUs of the tests and write new ones. CI runs each for a minute, and the
+Fuzz workflows of this repository and of oxirush-aper an hour each night. `examples/` has four programs.
 
 ```sh
 cargo test --all-features
