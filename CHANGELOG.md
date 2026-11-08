@@ -48,6 +48,8 @@ All notable changes to `oxirush-s1ap` are recorded here.
   `Vec<u8>`.
 - The methods of a PDU and its `Display` are those of oxirush-aper, written
   once for both protocols, with the same documentation.
+- `decode` and `encode` of a PDU, and `set_protocol_ies`, are the codecs of the
+  types: a PDU is read and written by one implementation.
 - The documentation of a PDU cites TS 36.413 clause 9.3.0 for the PDU that a
   sender constructs, in each place.
 
@@ -63,6 +65,8 @@ All notable changes to `oxirush-s1ap` are recorded here.
 - `S1AP_PDU`, which is `S1APPDU<'static>`; `decode_borrowed`, which is `decode`;
   `message()`; `s1ap::decode_open_type` and `s1ap::encode_open_type`; and
   `src/pdu.rs`.
+- `encode_into` of a PDU: `oxirush_s1ap::aper::encode_into(&pdu, &mut octets)`
+  keeps a buffer from one PDU to the next.
 - The aliases of the types of the two identifiers of a UE, as
   `s1ap::MME_UE_S1AP_ID` for `MMEUES1APID`, and the name `ENB_UE_S1AP_ID` of the IE
   `eNB_UE_S1AP_ID` in the macros.
