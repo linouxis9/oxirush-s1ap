@@ -6,6 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use oxirush_s1ap::Deviation;
 use oxirush_s1ap::S1ap;
 use oxirush_s1ap::inspect;
 use oxirush_s1ap::s1ap::S1APPDU;
@@ -326,8 +327,14 @@ fn a_pdu_written_from_the_values_of_the_reference_is_the_octets_of_the_reference
 
 /// The PDUs that a fuzzer found a fault with hold to the properties of the fuzz target
 /// `json`: the review of the release candidate found a PDU of a procedure that the
-/// specification does not have, whose paths listed a value that `select()` did not take.
-/// Each gives its tree back, and each path that its tree lists selects its value.
+/// specification does not have, whose paths listed a value that `select()` did not take,
+/// and the fuzzing of 0.4.0 an E-RABSetupListCtxtSURes that holds an
+/// E-RABSetupListCtxtSURes, whose name `select()` takes for the IE of the list.
+/// The nightly fuzzing of 0.4.0 found a RESET ACKNOWLEDGE whose extension additions, after
+/// its container, `set_protocol_ies()` dropped, against the target `exact`. Each
+/// gives its tree back, each path that its tree lists selects its value, and the protocol
+/// IEs of its message, put back, are its message, unless `check()` finds a form that X.691
+/// does not give around their values or does not know its procedure.
 #[test]
 fn the_pdus_that_a_fuzzer_found_a_fault_with_hold_to_the_properties_of_its_target() {
     let mut count = 0;
@@ -342,7 +349,21 @@ fn the_pdus_that_a_fuzzer_found_a_fault_with_hold_to_the_properties_of_its_targe
                 "{name} {path}"
             );
         }
+        let deviations = pdu.check();
+        let around = deviations.as_ref().is_ok_and(|deviations| {
+            deviations.iter().any(|deviation| {
+                matches!(
+                    deviation,
+                    Deviation::NotCanonical { ie: None, .. } | Deviation::UnknownProcedure { .. }
+                )
+            })
+        });
+        if let (Ok(ies), Ok(_), false) = (pdu.protocol_ies(), &deviations, around) {
+            let mut again = pdu.clone();
+            again.set_protocol_ies(ies.into_owned()).unwrap();
+            assert_eq!(again, pdu, "{name}");
+        }
         count += 1;
     }
-    assert_eq!(count, 1);
+    assert_eq!(count, 3);
 }

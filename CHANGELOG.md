@@ -2,6 +2,25 @@
 
 All notable changes to `oxirush-s1ap` are recorded here.
 
+## Unreleased
+
+### Fixed
+
+- Each path that `inspect::paths` lists selects its value, with oxirush-aper
+  0.2.1: an IE that a value holds alone and that has no name goes by its
+  identifier in digits after the member that holds it, as the tree writes it,
+  and an entry of a list of IEs, or of the IEs of a transfer in the place of the
+  value of an IE, that holds that same IE is listed by its position, as the name
+  of the IE after it stays on the IE. The fuzzing of 0.4.0 found the second in
+  an `E-RABSetupListCtxtSURes` that holds an `E-RABSetupListCtxtSURes`, which
+  `tests/fixtures/fuzzed.tsv` has now.
+- `set_protocol_ies()` keeps the extension additions that a later version of the
+  type of a message adds after its container, as they were, with oxirush-aper
+  0.2.1, and `check()` and `check_structure()` report them as
+  `Deviation::ExtensionAdditions`: it wrote the message without them. The
+  nightly fuzzing of 0.4.0 found a RESET ACKNOWLEDGE with some, which
+  `tests/fixtures/fuzzed.tsv` has now.
+
 ## 0.4.0 - 2026-11-08
 
 ### Changed
