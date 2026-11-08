@@ -28,6 +28,7 @@
 
 # Both leave aside what their version of the type does not have
 *	/[a-z0-9]+	an IE that the crate keeps as octets, where Wireshark notes: unknown sequence extension	both-ignore	an IE with extension additions that neither version of its type has: the crate keeps its octets, to send them as received, and Wireshark reads its root and notes the additions
+200e001d800001f85d400700000000200e001d00000b7800900120000048000000	/resetacknowledge	a message that the crate keeps as octets	both-ignore	a RESET ACKNOWLEDGE with an extension addition that neither version of its type has (X.691 §19.6 to §19.9), which the nightly fuzzing of 0.4.0 found: the crate keeps its octets, to send them as received, and check() reports the additions; Wireshark reads its root and notes them as an unknown sequence extension
 *	/privatemessage	a message that the crate keeps as octets	both-ignore	a PrivateMessage (TS 36.413 §9.3.1), whose IEs are of no specification: the crate keeps its octets, Wireshark notes their values as unknown
 *	/[a-z0-9]+	an IE that the crate keeps as octets, where Wireshark notes nothing \(check\(\): .*is not an IE of the message.*\)	crate-by-clause	an IE that the message does not have, so not comprehended in it (TS 36.413 §10.3.4.2), which check() reports: the crate keeps its octets, Wireshark reads it by its identifier
 
