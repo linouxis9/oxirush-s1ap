@@ -2,6 +2,13 @@
 
 All notable changes to `oxirush-s1ap` are recorded here.
 
+## Unreleased
+
+### Added
+
+- `TimeToWait::seconds`, the time that a Time to wait says to wait at least
+  (TS 36.413 clause 9.2.1.61), beside the helpers.
+
 ## 0.4.1 - 2026-11-08
 
 ### Fixed
