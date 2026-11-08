@@ -45,7 +45,7 @@ fn handle_handover_required(pdu: &S1APPDU<'_>) -> Result<Vec<String>, Error> {
         req mme_id: u32 = MME_UE_S1AP_ID(id),
         req enb_id: u32 = eNB_UE_S1AP_ID(id),
 
-        opt ho_type: HandoverType = HandoverType(value) => value,
+        opt ho_type: HandoverType = HandoverType(value),
         opt cause_str: String = Cause(cause) => format!("{cause:?}"),
 
         opt target: String = TargetID(target_value) => match target_value {
@@ -84,7 +84,7 @@ fn handle_initial_context_setup(pdu: &S1APPDU<'_>) -> Result<Vec<String>, Error>
         opt erabs: ERABToBeSetupListCtxtSUReq =
             E_RABToBeSetupListCtxtSUReq(list) => list,
 
-        opt ambr_dl: u64 = UEAggregateMaximumBitrate(ambr) =>
+        opt ambr_dl: u64 = uEaggregateMaximumBitrate(ambr) =>
             ambr.ue_aggregate_maximum_bit_rate_dl.0,
     );
 
@@ -135,7 +135,7 @@ fn main() -> Result<(), Error> {
         REJECT MME_UE_S1AP_ID(200u32),
         REJECT eNB_UE_S1AP_ID(10u32),
 
-        REJECT UEAggregateMaximumBitrate(bit_rate),
+        REJECT uEaggregateMaximumBitrate(bit_rate),
         REJECT E_RABToBeSetupListCtxtSUReq(erabs),
 
         REJECT UESecurityCapabilities(ue_security_capabilities(0xe0, 0xe0)),

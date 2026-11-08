@@ -57,7 +57,7 @@ fn main() -> Result<(), Error> {
         REJECT eNB_UE_S1AP_ID(enb_ue_id),
 
         // Its bit rate and its bearers
-        REJECT UEAggregateMaximumBitrate(bit_rate),
+        REJECT uEaggregateMaximumBitrate(bit_rate),
         REJECT E_RABToBeSetupListCtxtSUReq(erabs),
 
         // Its security capabilities and its key
@@ -239,8 +239,8 @@ fn print_and_encode(pdu: &S1APPDU<'_>) -> Result<(), Error> {
     // Display example: "S1SetupRequest (procedure 17, initiating message)".
     println!("{pdu}");
     println!(
-        "  procedure: {}  direction: {}  code: {}",
-        pdu.procedure_name(),
+        "  message: {:?}  direction: {}  code: {}",
+        pdu.kind(),
         pdu.direction(),
         pdu.procedure_code()
     );

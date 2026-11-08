@@ -25,16 +25,15 @@
 //!     let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
 //!     let pdu = S1APPDU::decode(&bytes)?;
 //!     assert_eq!((pdu.procedure_code(), pdu.direction()), (18, Direction::Initiating));
-//!     println!("{}", pdu.procedure_name());
-//!     # assert_eq!(pdu.procedure_name(), "UEContextReleaseRequest");
+//!     println!("{:?}", pdu.kind());
+//!     # assert_eq!(pdu.kind(), S1apPduKind::UEContextReleaseRequest);
 //!
-//!     // Read its IEs by name. An `opt` field is `None` when its IE is not there,
-//!     // and what follows `=>` is what the field keeps of the decoded value
+//!     // Read its IEs by name: an `opt` field is `None` when its IE is not there
 //!     let request: UEContextReleaseRequest = pdu.decode_value()?;
 //!     extract_s1ap_ies!(request, UEContextReleaseRequest,
 //!         opt mme_id: u32 = MME_UE_S1AP_ID(id),
 //!         opt enb_id: u32 = eNB_UE_S1AP_ID(id),
-//!         opt cause: Cause = Cause(cause) => cause,
+//!         opt cause: Cause = Cause(cause),
 //!     );
 //!     println!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}");
 //!     # assert_eq!(format!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}"), "MME=Some(42) eNB=Some(7) cause=Some(radioNetwork(user_inactivity))");
@@ -153,7 +152,7 @@
 //!     let message: InitialUEMessage = pdu.decode_value()?;
 //!     extract_s1ap_ies!(message, InitialUEMessage,
 //!         req enb_id: u32 = eNB_UE_S1AP_ID(id),
-//!         req nas: NASPDU = NAS_PDU(nas) => nas,
+//!         req nas: NASPDU = NAS_PDU(nas),
 //!     );
 //!     // Kept beyond the PDU: the octets are copied here, once
 //!     Ok(Ue { enb_id, nas: nas.into_owned() })
@@ -184,7 +183,7 @@
 //!     let pdu = S1APPDU::decode(&received)?;
 //!     let message: UplinkNASTransport = pdu.decode_value()?;
 //!     extract_s1ap_ies!(message, UplinkNASTransport,
-//!         req nas: NASPDU = NAS_PDU(nas) => nas,
+//!         req nas: NASPDU = NAS_PDU(nas),
 //!     );
 //!     // `nas` is a slice of `received`, here and after the await
 //!     deliver(&nas.0).await;
@@ -372,6 +371,3 @@ pub use s1ap::S1apPduKind;
 #[cfg(all(doctest, feature = "serde"))]
 #[doc = include_str!("../README.md")]
 struct Readme;
-
-/// Version of oxirush-s1ap.
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");

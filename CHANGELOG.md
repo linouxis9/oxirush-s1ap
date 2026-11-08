@@ -50,6 +50,8 @@ All notable changes to `oxirush-s1ap` are recorded here.
   once for both protocols, with the same documentation.
 - `decode` and `encode` of a PDU, and `set_protocol_ies`, are the codecs of the
   types: a PDU is read and written by one implementation.
+- An IE has one name in the macros and in `ie`: the one after its identifier.
+  The 106 IEs that were also named after their type no longer are.
 - The documentation of a PDU cites TS 36.413 clause 9.3.0 for the PDU that a
   sender constructs, in each place.
 
@@ -72,6 +74,8 @@ All notable changes to `oxirush-s1ap` are recorded here.
   `eNB_UE_S1AP_ID` in the macros.
 - The examples in the documentation of a few generated types: the README has
   each task.
+- `procedure_name()`: `kind()` names the message, and `Display` shows it.
+- `VERSION`, which is `env!("CARGO_PKG_VERSION")`.
 
 ### Migration
 

@@ -113,7 +113,7 @@ fn block_1() {
         extract_s1ap_ies!(pdu, UEContextReleaseRequest,
             req mme_id: u32 = MME_UE_S1AP_ID(id),
             req enb_id: u32 = eNB_UE_S1AP_ID(id),
-            opt cause: Cause = Cause(cause) => cause,
+            opt cause: Cause = Cause(cause),
         );
         println!("MME UE {mme_id}, eNB UE {enb_id}, cause {cause:?}");
 
@@ -158,7 +158,7 @@ fn block_2() {
         let received = S1APPDU::decode(&octets)?;
         extract_s1ap_ies!(received, S1SetupRequest,
             opt name: String = eNBname(name) => name.0.into_owned(),
-            req areas: SupportedTAs = SupportedTAs(areas) => areas,
+            req areas: SupportedTAs = SupportedTAs(areas),
         );
         println!("{received}: {}, {} tracking area", name.unwrap_or_default(), areas.0.len());
         let served = ServedGUMMEIsItem {
@@ -189,7 +189,7 @@ fn block_2() {
         let received = S1APPDU::decode(&octets)?;
         extract_s1ap_ies!(received, InitialUEMessage,
             req enb_id: u32 = eNB_UE_S1AP_ID(id),
-            req nas: NASPDU = NAS_PDU(nas) => nas,
+            req nas: NASPDU = NAS_PDU(nas),
         );
         println!("{received}: a NAS-PDU of {} octets", nas.0.len());
 
@@ -248,7 +248,7 @@ fn block_2() {
         let received = S1APPDU::decode(&octets)?;
         let deviations = received.check()?;
         extract_s1ap_ies!(received, InitialContextSetupRequest,
-            req key: SecurityKey = SecurityKey(key) => key,
+            req key: SecurityKey = SecurityKey(key),
         );
         println!("{received}: {} deviations, KeNB as sent: {}", deviations.len(), key.0.as_octets() == k_enb);
         Ok(())

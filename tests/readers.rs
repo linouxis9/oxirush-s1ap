@@ -42,8 +42,6 @@ fn an_ie_is_read_from_the_pdu_as_from_its_message() -> Result<(), Error> {
     assert!(pdu.ie::<ie::NAS_PDU>().is_none());
     let message: UEContextReleaseRequest = pdu.decode_value()?;
     assert_eq!(message.ie::<ie::eNB_UE_S1AP_ID>().unwrap()?, ENBUES1APID(7));
-    // The name of the type is a name of the IE of that type.
-    assert_eq!(message.ie::<ie::ENBUES1APID>().unwrap()?, ENBUES1APID(7));
     Ok(())
 }
 

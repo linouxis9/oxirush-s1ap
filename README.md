@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     extract_s1ap_ies!(pdu, UEContextReleaseRequest,
         req mme_id: u32 = MME_UE_S1AP_ID(id),
         req enb_id: u32 = eNB_UE_S1AP_ID(id),
-        opt cause: Cause = Cause(cause) => cause,
+        opt cause: Cause = Cause(cause),
     );
     println!("MME UE {mme_id}, eNB UE {enb_id}, cause {cause:?}");
 
@@ -98,7 +98,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let received = S1APPDU::decode(&octets)?;
     extract_s1ap_ies!(received, S1SetupRequest,
         opt name: String = eNBname(name) => name.0.into_owned(),
-        req areas: SupportedTAs = SupportedTAs(areas) => areas,
+        req areas: SupportedTAs = SupportedTAs(areas),
     );
     println!("{received}: {}, {} tracking area", name.unwrap_or_default(), areas.0.len());
     let served = ServedGUMMEIsItem {
@@ -129,7 +129,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let received = S1APPDU::decode(&octets)?;
     extract_s1ap_ies!(received, InitialUEMessage,
         req enb_id: u32 = eNB_UE_S1AP_ID(id),
-        req nas: NASPDU = NAS_PDU(nas) => nas,
+        req nas: NASPDU = NAS_PDU(nas),
     );
     println!("{received}: a NAS-PDU of {} octets", nas.0.len());
 
@@ -188,7 +188,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let received = S1APPDU::decode(&octets)?;
     let deviations = received.check()?;
     extract_s1ap_ies!(received, InitialContextSetupRequest,
-        req key: SecurityKey = SecurityKey(key) => key,
+        req key: SecurityKey = SecurityKey(key),
     );
     println!("{received}: {} deviations, KeNB as sent: {}", deviations.len(), key.0.as_octets() == k_enb);
     Ok(())
@@ -251,7 +251,7 @@ S1SetupFailure is not handled here
 |--------|------|
 | `decode` | Decode one PDU, which borrows from the octets and copies nothing |
 | `encode` | Encode it |
-| `procedure_code`, `procedure_name`, `direction`, `kind` | `18`, `"UEContextReleaseRequest"`, `Direction::Initiating`, and an `S1apPduKind` (`Other` for a procedure that the specification lacks in that direction) |
+| `procedure_code`, `direction`, `kind` | `18`, `Direction::Initiating`, and an `S1apPduKind` (`Other` for a procedure that the specification lacks in that direction) |
 | `decode_value`, `message` | The message as its type |
 | `protocol_ies`, `set_protocol_ies` | The IEs of the message, whatever it is |
 | `ie::<T>`, `ies::<T>` | The first IE of a type, or every one in order. A message has them too |
