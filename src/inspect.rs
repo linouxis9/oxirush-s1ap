@@ -196,19 +196,19 @@
 //! assert_eq!(check("/s1ap/Cause/nas"), Ok(()));
 //! assert_eq!(check("/s1ap/*/radioNetwork"), Ok(()));
 //!
-//! // A name that is written wrong, and an IE that the message does not have
+//! // A name that is written wrong, `value` after an IE, and an IE that the message does not have
 //! for wrong in ["/s1ap/Cause/radioNetwrok", "/s1ap/eNB-UE-S1AP-ID/value", "/s1ap/GUMMEI-ID"] {
 //!     println!("{}", check(wrong).unwrap_err());
 //! }
 //! # assert_eq!(printed, r##""radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, at /s1ap/Cause/radioNetwrok
-//! # "value" is not a member of this value, which has none, at /s1ap/eNB-UE-S1AP-ID/value
+//! # a path is the tree's names joined: write `/s1ap/eNB-UE-S1AP-ID`, at /s1ap/eNB-UE-S1AP-ID/value
 //! # "GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
 //! # "##);
 //! ```
 //!
 //! ```text
 //! "radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, at /s1ap/Cause/radioNetwrok
-//! "value" is not a member of this value, which has none, at /s1ap/eNB-UE-S1AP-ID/value
+//! a path is the tree's names joined: write `/s1ap/eNB-UE-S1AP-ID`, at /s1ap/eNB-UE-S1AP-ID/value
 //! "GUMMEI-ID" is not an IE of UEContextReleaseRequest, which has MME-UE-S1AP-ID, eNB-UE-S1AP-ID, Cause, GWContextReleaseIndication, SecondaryRATDataUsageReportList, at /s1ap/GUMMEI-ID
 //! ```
 //!
@@ -306,7 +306,10 @@
 //! ```
 //!
 //! So the names and the positions that a tree shows, joined after the root, are the path
-//! of a value in it. Any other list selects by position and `*`.
+//! of a value in it. Any other list selects by position and `*`. The name after an IE is
+//! a member of its value: `value` there, which no tree has, is an error that says the
+//! path without it, `/s1ap/Cause/radioNetwork` for `/s1ap/Cause/value/radioNetwork`, but
+//! where the value has a member of that name, as a bit string whose size varies.
 //!
 //! ## Names
 //!

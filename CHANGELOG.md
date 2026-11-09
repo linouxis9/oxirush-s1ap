@@ -6,8 +6,21 @@ All notable changes to `oxirush-s1ap` are recorded here.
 
 ### Added
 
+- `Deviation::rejects` and `check::answer` of `aper::check`, with oxirush-aper
+  0.3.0: whether a receiver rejects a message for a deviation that `check()`
+  reports, and the protocol cause of its answer to all of them, by the clause of
+  the criticality.
 - `TimeToWait::seconds`, the time that a Time to wait says to wait at least
   (TS 36.413 clause 9.2.1.61), beside the helpers.
+
+### Changed
+
+- A path of `inspect` is the names of the tree joined, with oxirush-aper 0.3.0:
+  `value` after the name of an IE, or after its position, where its value has no
+  member of that name, is refused by every function that takes a path, with the
+  path to write: ``a path is the tree's names joined: write
+  `/s1ap/MME-UE-S1AP-ID`, at /s1ap/MME-UE-S1AP-ID/value``. The `value` of a bit
+  string whose size varies, beside its `length`, stays.
 
 ## 0.4.1 - 2026-11-08
 
