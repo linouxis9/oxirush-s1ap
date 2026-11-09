@@ -190,6 +190,73 @@ fn the_names_and_the_positions_of_a_tree_are_the_path_of_each_value() {
     assert!(values > 300, "{values}");
 }
 
+/// A path is the names of the tree joined: the name after an IE is a member of its value,
+/// and `value` there, which no tree has, is refused with the path that the names of the
+/// tree write, without each such `value`. The `value` of a transport layer address, a
+/// bit string whose size varies, is a member of it.
+#[test]
+fn a_path_is_the_names_of_the_tree_and_value_after_an_ie_is_refused() {
+    let item = "E-RABToBeSetupListBearerSUReq/E-RABToBeSetupItemBearerSUReq";
+    let listed = "E-RABToBeSetupListBearerSUReq/value/E-RABToBeSetupItemBearerSUReq/value";
+    for (name, path, written, value) in [
+        (
+            "UEContextReleaseCommand",
+            "/s1ap/UE-S1AP-IDs/value/uE-S1AP-ID-pair/mME-UE-S1AP-ID".to_string(),
+            "/s1ap/UE-S1AP-IDs/uE-S1AP-ID-pair/mME-UE-S1AP-ID".to_string(),
+            tree!(0),
+        ),
+        (
+            "UEContextReleaseCommand",
+            "/s1ap/Cause/value/radioNetwork".to_string(),
+            "/s1ap/Cause/radioNetwork".to_string(),
+            tree!("unspecified"),
+        ),
+        (
+            "DownlinkNASTransport",
+            "/s1ap/MME-UE-S1AP-ID/value".to_string(),
+            "/s1ap/MME-UE-S1AP-ID".to_string(),
+            tree!(0),
+        ),
+        (
+            "InitialUEMessage",
+            "/s1ap/NAS-PDU/value".to_string(),
+            "/s1ap/NAS-PDU".to_string(),
+            tree!("076002"),
+        ),
+        (
+            "Paging",
+            "/s1ap/UEPagingID/value/s-TMSI/m-TMSI".to_string(),
+            "/s1ap/UEPagingID/s-TMSI/m-TMSI".to_string(),
+            tree!(2197619356u32),
+        ),
+        (
+            "E-RABSetupRequest",
+            format!("/s1ap/{listed}/gTP-TEID"),
+            format!("/s1ap/{item}/gTP-TEID"),
+            tree!(2778534635u32),
+        ),
+        (
+            "E-RABSetupRequest",
+            format!("/s1ap/{listed}/transportLayerAddress/value"),
+            format!("/s1ap/{item}/transportLayerAddress/value"),
+            tree!("00"),
+        ),
+    ] {
+        let mut tree = S1APPDU::decode(&fixture(name)).unwrap().to_tree();
+        let joined = format!("a path is the tree's names joined: write `{written}`, at {path}");
+        let error = inspect::select(&tree, &path).unwrap_err();
+        assert_eq!(error.kind(), oxirush_s1ap::ErrorKind::Path, "{path}");
+        assert_eq!(error.to_string(), joined);
+        let checked = inspect::check_path(name, &path).map_err(|error| error.to_string());
+        assert_eq!(checked, Err(joined.clone()));
+        let before = tree.clone();
+        let set = inspect::set(&mut tree, &path, tree!(1)).map_err(|error| error.to_string());
+        assert_eq!(set, Err(joined));
+        assert_eq!(tree, before);
+        assert_eq!(select(&tree, &written), [value], "{written}");
+    }
+}
+
 #[test]
 fn well_known_values_are_shown_and_taken_as_they_are_usually_written() {
     let wire = fixture("S1SetupRequest");
