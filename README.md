@@ -48,9 +48,9 @@ Each example is followed by its output.
 
 ```toml
 [dependencies]
-oxirush-s1ap = "0.4"
+oxirush-s1ap = "0.5"
 # With the JSON forms:
-# oxirush-s1ap = { version = "0.4", features = ["inspect"] }
+# oxirush-s1ap = { version = "0.5", features = ["inspect"] }
 # The examples of this page also use:
 # hex = "0.4"
 ```
