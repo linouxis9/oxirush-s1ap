@@ -279,9 +279,6 @@
 extern crate alloc;
 
 pub mod helpers;
-// What the fuzz targets take from the inside of the crate, with
-// `--cfg oxirush_s1ap_hooks`: the module `hooks`.
-oxirush_aper::__hooks! { cfg oxirush_s1ap_hooks, bindings s1ap, pdu S1APPDU }
 #[cfg(feature = "inspect")]
 pub mod inspect;
 #[cfg(feature = "inspect")]

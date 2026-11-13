@@ -488,7 +488,7 @@
 // The tables, the paths and the functions of the module, which oxirush-aper writes for
 // both protocols.
 oxirush_aper::__inspect! {
-    bindings s1ap, pdu S1APPDU, hooks oxirush_s1ap_hooks, any crate::s1ap::ErrorIndication<'a>
+    bindings s1ap, pdu S1APPDU, any crate::s1ap::ErrorIndication<'a>
 }
 
 use crate::s1ap::S1APPDU;

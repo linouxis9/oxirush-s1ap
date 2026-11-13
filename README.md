@@ -586,7 +586,7 @@ the Fuzz workflows of this repository and of oxirush-aper an hour each day.
 
 ```sh
 cargo test --all-features
-../oxirush-aper/protocols/fuzz/seed.sh && RUSTFLAGS="--cfg oxirush_s1ap_hooks" cargo +nightly fuzz run json -- -max_total_time=60
+../oxirush-aper/protocols/fuzz/seed.sh && cargo +nightly fuzz run json -- -max_total_time=60
 cargo run --example s1ap_build_pdu
 ```
 
