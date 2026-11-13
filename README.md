@@ -15,7 +15,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Decode a UE CONTEXT RELEASE REQUEST
     let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
     let pdu = S1APPDU::decode(&bytes)?;
-    println!("{pdu}");
+    assert_eq!(
+        pdu.to_string(),
+        "UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7",
+    );
 
     // Read its IEs by name: `req` fails when the IE is missing, `opt` gives an Option
     extract_s1ap_ies!(pdu, UEContextReleaseRequest,
@@ -23,7 +26,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         req enb_id: u32 = eNB_UE_S1AP_ID(id),
         opt cause: Cause = Cause(cause),
     );
-    println!("MME UE {mme_id}, eNB UE {enb_id}, cause {cause:?}");
+    assert_eq!((mme_id, enb_id), (42, 7));
+    assert_eq!(cause, Some(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)));
 
     // Build the same message with another cause, and encode it
     let pdu = build_s1ap!(UEContextReleaseRequest,
@@ -31,18 +35,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         eNB_UE_S1AP_ID(7u32),
         Cause(Cause::radioNetwork(CauseRadioNetwork::radio_connection_with_ue_lost)),
     )?;
-    println!("{}", hex::encode(pdu.encode()?));
+    assert_eq!(hex::encode(pdu.encode()?), "0012401500000300000002002a0008000200070002400202a0");
     Ok(())
 }
 ```
 
-```text
-UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7
-MME UE 42, eNB UE 7, cause Some(radioNetwork(user_inactivity))
-0012401500000300000002002a0008000200070002400202a0
-```
-
-Each example is followed by its output.
+Each example shows what it gives with `assert_eq!`, and runs as a test of the crate.
 
 ## Installation
 
@@ -101,7 +99,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         opt name: String = eNBname(name) => name.0.into_owned(),
         req areas: SupportedTAs = SupportedTAs(areas),
     );
-    println!("{received}: {}, {} tracking area", name.unwrap_or_default(), areas.0.len());
+    assert_eq!(received.to_string(), "S1SetupRequest (procedure 17, initiating message)");
+    assert_eq!((name.as_deref(), areas.0.len()), (Some("enb-1"), 1));
     let served = ServedGUMMEIsItem {
         served_plmns: ServedPLMNs(vec![network]),
         served_group_ids: ServedGroupIDs(vec![MMEGroupID([0, 1])]),
@@ -113,7 +112,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ServedGUMMEIs(ServedGUMMEIs(vec![served])),
         RelativeMMECapacity(RelativeMMECapacity(255)),
     )?;
-    println!("{response}");
+    assert_eq!(response.to_string(), "S1SetupResponse (procedure 17, successful outcome)");
 
     // The eNB forwards an ATTACH REQUEST, with the cell the UE is in
     let attach = hex::decode("07410108298039000000001002e0e000040201d031")?;
@@ -132,7 +131,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         req enb_id: u32 = eNB_UE_S1AP_ID(id),
         req nas: NASPDU = NAS_PDU(nas),
     );
-    println!("{received}: a NAS-PDU of {} octets", nas.0.len());
+    assert_eq!(
+        received.to_string(),
+        "InitialUEMessage (procedure 12, initiating message), eNB-UE-S1AP-ID 7",
+    );
+    assert_eq!(nas.0.len(), 21);
 
     // It gives the UE an MME UE S1AP ID, and answers with an AUTHENTICATION REQUEST
     let authentication = hex::decode(
@@ -143,7 +146,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         eNB_UE_S1AP_ID(enb_id),
         NAS_PDU(authentication),
     )?;
-    println!("{downlink}");
+    assert_eq!(
+        downlink.to_string(),
+        "DownlinkNASTransport (procedure 11, initiating message), MME-UE-S1AP-ID 1, eNB-UE-S1AP-ID 7",
+    );
 
     // After the security mode: the default bearer, whose item carries the
     // ATTACH ACCEPT, and the UE's security capabilities and KeNB
@@ -191,17 +197,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     extract_s1ap_ies!(received, InitialContextSetupRequest,
         req key: SecurityKey = SecurityKey(key),
     );
-    println!("{received}: {} deviations, KeNB as sent: {}", deviations.len(), key.0.as_octets() == k_enb);
+    assert_eq!(
+        received.to_string(),
+        "InitialContextSetupRequest (procedure 9, initiating message), MME-UE-S1AP-ID 1, eNB-UE-S1AP-ID 7",
+    );
+    assert!(deviations.is_empty());
+    assert_eq!(key.0.as_octets(), k_enb);
     Ok(())
 }
-```
-
-```text
-S1SetupRequest (procedure 17, initiating message): enb-1, 1 tracking area
-S1SetupResponse (procedure 17, successful outcome)
-InitialUEMessage (procedure 12, initiating message), eNB-UE-S1AP-ID 7: a NAS-PDU of 21 octets
-DownlinkNASTransport (procedure 11, initiating message), MME-UE-S1AP-ID 1, eNB-UE-S1AP-ID 7
-InitialContextSetupRequest (procedure 9, initiating message), MME-UE-S1AP-ID 1, eNB-UE-S1AP-ID 7: 0 deviations, KeNB as sent: true
 ```
 
 ## Decode a PDU and read its IEs
@@ -213,10 +216,10 @@ it: an IE that does not decode fails only the read that asks for it.
 ```rust
 use oxirush_s1ap::{S1apPduKind, extract_s1ap_ies, ie, s1ap::*};
 
-fn receive(octets: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
+fn receive(octets: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
     // `decode` copies nothing: the PDU borrows from `octets`
     let pdu = S1APPDU::decode(octets)?;
-    match pdu.kind() {
+    let handled = match pdu.kind() {
         S1apPduKind::UEContextReleaseRequest => {
             // Only the IEs that a field asks for are decoded
             extract_s1ap_ies!(pdu, UEContextReleaseRequest,
@@ -225,27 +228,24 @@ fn receive(octets: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
             );
             // One IE, by its marker type
             let cause = pdu.ie::<ie::Cause>().transpose()?;
-            println!("release of MME UE {mme_id}, eNB UE {enb_id}: {cause:?}");
+            format!("release of MME UE {mme_id}, eNB UE {enb_id}: {cause:?}")
         }
         S1apPduKind::Other { direction, procedure_code } => {
-            println!("procedure {procedure_code} has no {direction}");
+            format!("procedure {procedure_code} has no {direction}")
         }
-        kind => println!("{kind:?} is not handled here"),
-    }
-    Ok(())
+        kind => format!("{kind:?} is not handled here"),
+    };
+    Ok(handled)
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // A UE CONTEXT RELEASE REQUEST, then an S1 SETUP FAILURE
-    receive(&hex::decode("0012401500000300000002002a000800020007000240020280")?)?;
-    receive(&hex::decode("401100080000010002400145")?)?;
+    let release = receive(&hex::decode("0012401500000300000002002a000800020007000240020280")?)?;
+    assert_eq!(release, "release of MME UE 42, eNB UE 7: Some(radioNetwork(user_inactivity))");
+    let failure = receive(&hex::decode("401100080000010002400145")?)?;
+    assert_eq!(failure, "S1SetupFailure is not handled here");
     Ok(())
 }
-```
-
-```text
-release of MME UE 42, eNB UE 7: Some(radioNetwork(user_inactivity))
-S1SetupFailure is not handled here
 ```
 
 | Method | Does |
@@ -286,7 +286,7 @@ A name that does not exist, or a message that the procedure does not have in
 that direction, does not compile.
 
 ```rust
-use oxirush_s1ap::{Message, build_s1ap, s1ap::*};
+use oxirush_s1ap::{Criticality, Message, build_s1ap, s1ap::*};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The criticalities of the procedure and of the message's object set
@@ -294,28 +294,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         eNB_UE_S1AP_ID(7u32),
         NAS_PDU(vec![0x07, 0x41, 0x71]),
     )?;
-    println!("{} {}", pdu.criticality(), hex::encode(pdu.encode()?));
+    assert_eq!(pdu.criticality(), Criticality::Ignore);
+    assert_eq!(hex::encode(pdu.encode()?), "000c4011000002000800020007001a000403074171");
 
     // The PDU of a message you already have
     let message: InitialUEMessage = pdu.decode_value()?;
     let again = S1APPDU::of_message(&message, InitialUEMessage::CRITICALITY)?;
-    println!("{}", again == pdu);
+    assert_eq!(again, pdu);
 
     // An IE that the message cannot have has no criticality to take
     let error = build_s1ap!(InitialUEMessage,
         TimeToWait(TimeToWait::v10s),
+    ).unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "TimeToWait is no IE of the object set of InitialUEMessage, which assigns it no criticality: write its criticality",
     );
-    if let Err(error) = error {
-        println!("{error}");
-    }
     Ok(())
 }
-```
-
-```text
-ignore 000c4011000002000800020007001a000403074171
-true
-TimeToWait is no IE of the object set of InitialUEMessage, which assigns it no criticality: write its criticality
 ```
 
 ## E-RAB lists and handover containers
@@ -360,21 +356,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Each item of the list, read in the PDU without building the list
     for bearer in pdu.items::<ie::E_RABToBeSetupListCtxtSUReq>() {
         let bearer = bearer?;
-        println!("E-RAB {} with QCI {}", bearer.e_rab_id.0, bearer.e_rab_level_qos_parameters.qci.0);
+        assert_eq!((bearer.e_rab_id.0, bearer.e_rab_level_qos_parameters.qci.0), (5, 9));
     }
 
     // A Source-ToTarget-TransparentContainer, as the type it carries
     let octets = hex::decode("000201020002f83900012340200100")?;
     let container: SourceeNBToTargeteNBTransparentContainer = oxirush_s1ap::decode(&octets)?;
-    println!("{:?}", container.target_cell_id);
+    assert_eq!(
+        format!("{:?}", container.target_cell_id),
+        "EUTRANCGI { plmn_identity: PLMNidentity(208-93), cell_id: CellIdentity(0x1234/28), ie_extensions: None }",
+    );
     assert_eq!(oxirush_s1ap::encode(&container)?, octets);
     Ok(())
 }
-```
-
-```text
-E-RAB 5 with QCI 9
-EUTRANCGI { plmn_identity: PLMNidentity(208-93), cell_id: CellIdentity(0x1234/28), ie_extensions: None }
 ```
 
 ## Check a message, and answer a faulty one
@@ -398,9 +392,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let octets = request.encode()?;
     let received = S1APPDU::decode(&octets)?;
     let deviations = received.check()?;
-    for deviation in &deviations {
-        println!("{deviation}");
-    }
+    let listed: Vec<String> = deviations.iter().map(ToString::to_string).collect();
+    assert_eq!(listed, [
+        "the criticality of the PDU is ignore, and that of its procedure is reject",
+        "TimeToWait (IE 65), at position 1, is not an IE of the message",
+        "Global-ENB-ID (IE 59) is mandatory, and the message does not have it",
+        "SupportedTAs (IE 64) is mandatory, and the message does not have it",
+    ]);
 
     // The MME rejects the procedure, and reports the IEs at fault
     let cause = deviations.iter().find_map(Deviation::cause).ok_or("no cause")?;
@@ -408,17 +406,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Cause(Cause::protocol(cause)),
         CriticalityDiagnostics(received.criticality_diagnostics_for_response(&deviations)),
     )?;
-    println!("{failure}: {}", hex::encode(failure.encode()?));
+    assert_eq!(failure.to_string(), "S1SetupFailure (procedure 17, unsuccessful outcome)");
+    assert_eq!(
+        hex::encode(failure.encode()?),
+        "401100180000020002400131003a400c190200004100003b40004040",
+    );
     Ok(())
 }
-```
-
-```text
-the criticality of the PDU is ignore, and that of its procedure is reject
-TimeToWait (IE 65), at position 1, is not an IE of the message
-Global-ENB-ID (IE 59) is mandatory, and the message does not have it
-SupportedTAs (IE 64) is mandatory, and the message does not have it
-S1SetupFailure (procedure 17, unsuccessful outcome): 401100180000020002400131003a400c190200004100003b40004040
 ```
 
 `check()` decodes every IE. `check_structure()` looks at the container
@@ -443,33 +437,42 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // A UE CONTEXT RELEASE REQUEST, as a tree
     let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
     let mut tree = S1APPDU::decode(&bytes)?.to_tree();
-    println!("{tree}");
+    assert_eq!(tree, tree!({"message": "UEContextReleaseRequest", "ies": [
+        {"MME-UE-S1AP-ID": 42},
+        {"eNB-UE-S1AP-ID": 7},
+        {"Cause": {"radioNetwork": "user-inactivity"}},
+    ]}));
 
     // Each value with the path that selects it
-    for (path, value) in inspect::paths(&tree) {
-        println!("{path} = {value}");
-    }
+    let paths: Vec<String> = inspect::paths(&tree)
+        .iter()
+        .map(|(path, value)| format!("{path} = {value}"))
+        .collect();
+    assert_eq!(paths, [
+        "/s1ap/MME-UE-S1AP-ID = 42",
+        "/s1ap/eNB-UE-S1AP-ID = 7",
+        r#"/s1ap/Cause/radioNetwork = "user-inactivity""#,
+    ]);
 
     // Set a value, and pick another alternative of a CHOICE
     inspect::set(&mut tree, "/s1ap/eNB-UE-S1AP-ID", tree!(9))?;
     inspect::set(&mut tree, "/s1ap/Cause/nas", tree!("Normal Release"))?;
-    println!("{}", S1APPDU::from_tree(&tree)?.to_tree());
+    assert_eq!(S1APPDU::from_tree(&tree)?.to_tree(), tree!({"message": "UEContextReleaseRequest", "ies": [
+        {"MME-UE-S1AP-ID": 42},
+        {"eNB-UE-S1AP-ID": 9},
+        {"Cause": {"nas": "normal-release"}},
+    ]}));
 
     // A misspelt name is refused, and the tree stays as it was
-    if let Err(error) = inspect::set(&mut tree, "/s1ap/Cause/radioNetwrok", tree!("unspecified")) {
-        println!("{error}");
-    }
+    let before = tree.clone();
+    let error = inspect::set(&mut tree, "/s1ap/Cause/radioNetwrok", tree!("unspecified")).unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        r#""radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, at /s1ap/Cause/radioNetwrok"#,
+    );
+    assert_eq!(tree, before);
     Ok(())
 }
-```
-
-```text
-{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":7},{"Cause":{"radioNetwork":"user-inactivity"}}]}
-/s1ap/MME-UE-S1AP-ID = 42
-/s1ap/eNB-UE-S1AP-ID = 7
-/s1ap/Cause/radioNetwork = "user-inactivity"
-{"message":"UEContextReleaseRequest","ies":[{"MME-UE-S1AP-ID":42},{"eNB-UE-S1AP-ID":9},{"Cause":{"nas":"normal-release"}}]}
-"radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, at /s1ap/Cause/radioNetwrok
 ```
 
 The [`inspect`] module has the rules of the paths and more examples: adding
@@ -501,20 +504,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ],
     });
     let pdu = S1APPDU::from_tree(&request)?;
-    println!("{}", hex::encode(pdu.encode()?));
+    assert_eq!(
+        hex::encode(pdu.encode()?),
+        "0012402700000500000002002a000800020007000240020280003c40070200656e622d31fde80003c0ffee",
+    );
 
     // The name gave the procedure and the criticalities, which the tree writes
     // where the message does not assign them
-    println!("{pdu}");
-    println!("{}", tree!(inspect::select(&pdu.to_tree(), "/s1ap/*/criticality")?));
+    assert_eq!(
+        pdu.to_string(),
+        "UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7",
+    );
+    let tree = pdu.to_tree();
+    let criticalities = inspect::select(&tree, "/s1ap/*/criticality")?;
+    assert_eq!(criticalities, [&tree!("ignore"), &tree!("reject")]);
     Ok(())
 }
-```
-
-```text
-0012402700000500000002002a000800020007000240020280003c40070200656e622d31fde80003c0ffee
-UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7
-["ignore","reject"]
 ```
 
 ## Limits
@@ -585,9 +590,7 @@ cargo test --all-features
 cargo run --example s1ap_build_pdu
 ```
 
-Each Rust block of this page is checked with what it prints, by
-`tests/readme.rs`, which `protocols/tests/readme.py` of oxirush-aper writes
-from this page. [CONTRIBUTING.md](CONTRIBUTING.md) says how the bindings are
+[CONTRIBUTING.md](CONTRIBUTING.md) says how the bindings are
 generated, how the vectors were made and the PDUs captured, and what a change
 to them or to the pinned revisions takes.
 

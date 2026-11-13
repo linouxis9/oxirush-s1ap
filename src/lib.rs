@@ -25,8 +25,7 @@
 //!     let bytes = hex::decode("0012401500000300000002002a000800020007000240020280")?;
 //!     let pdu = S1APPDU::decode(&bytes)?;
 //!     assert_eq!((pdu.procedure_code(), pdu.direction()), (18, Direction::Initiating));
-//!     println!("{:?}", pdu.kind());
-//!     # assert_eq!(pdu.kind(), S1apPduKind::UEContextReleaseRequest);
+//!     assert_eq!(pdu.kind(), S1apPduKind::UEContextReleaseRequest);
 //!
 //!     // Read its IEs by name: an `opt` field is `None` when its IE is not there
 //!     let request: UEContextReleaseRequest = pdu.decode_value()?;
@@ -35,8 +34,8 @@
 //!         opt enb_id: u32 = eNB_UE_S1AP_ID(id),
 //!         opt cause: Cause = Cause(cause),
 //!     );
-//!     println!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}");
-//!     # assert_eq!(format!("MME={mme_id:?} eNB={enb_id:?} cause={cause:?}"), "MME=Some(42) eNB=Some(7) cause=Some(radioNetwork(user_inactivity))");
+//!     assert_eq!((mme_id, enb_id), (Some(42), Some(7)));
+//!     assert_eq!(cause, Some(Cause::radioNetwork(CauseRadioNetwork::user_inactivity)));
 //!
 //!     // Build it with another cause: the message, after the criticality of the PDU
 //!     // where it is not that of its procedure, then each IE with its criticality
@@ -53,11 +52,6 @@
 //! }
 //! ```
 //!
-//! ```text
-//! UEContextReleaseRequest
-//! MME=Some(42) eNB=Some(7) cause=Some(radioNetwork(user_inactivity))
-//! ```
-//!
 //! The types of [`s1ap`] are generated from the ASN.1 modules of the specification and
 //! checked in: `rasn-compiler` resolves the modules, and the generator of the crate
 //! writes each type with its codec on [`oxirush-aper`](aper).
@@ -65,7 +59,7 @@
 //! # Tasks
 //!
 //! The [README](https://github.com/linouxis9/oxirush-s1ap#readme) has an example of
-//! each, with what it prints.
+//! each.
 //!
 //! | Task | Items |
 //! |------|-------|
@@ -86,9 +80,6 @@
 //! the IE of an error of the macros.
 //!
 //! ```
-//! # use std::fmt::Write as _;
-//! # let mut printed = String::new();
-//! # macro_rules! println { ($($argument:tt)*) => { writeln!(printed, $($argument)*).unwrap() } }
 //! use oxirush_s1ap::{ErrorKind, s1ap::*};
 //!
 //! // A UE CONTEXT RELEASE REQUEST is not decoded as an S1 SETUP REQUEST
@@ -96,20 +87,19 @@
 //! let pdu = S1APPDU::decode(&bytes).unwrap();
 //! let wrong = pdu.decode_value::<S1SetupRequest>().unwrap_err();
 //! assert_eq!(wrong.kind(), ErrorKind::WrongMessage);
-//! println!("{wrong}");
+//! assert_eq!(
+//!     wrong.to_string(),
+//!     "the message of this PDU is UEContextReleaseRequest, not S1SetupRequest: \
+//!      kind() says which message a PDU holds",
+//! );
 //!
 //! // Octets that end early
 //! let short = S1APPDU::decode(&bytes[..10]).unwrap_err();
 //! assert_eq!(short.kind(), ErrorKind::Decode);
-//! println!("{short}");
-//! # assert_eq!(printed, r##"the message of this PDU is UEContextReleaseRequest, not S1SetupRequest: kind() says which message a PDU holds
-//! # these octets do not decode as S1AP-PDU: the octets end before the value does, in its field `value`
-//! # "##);
-//! ```
-//!
-//! ```text
-//! the message of this PDU is UEContextReleaseRequest, not S1SetupRequest: kind() says which message a PDU holds
-//! these octets do not decode as S1AP-PDU: the octets end before the value does, in its field `value`
+//! assert_eq!(
+//!     short.to_string(),
+//!     "these octets do not decode as S1AP-PDU: the octets end before the value does, in its field `value`",
+//! );
 //! ```
 //!
 //! The codec builds, encodes and decodes a message whatever its IEs are. `check()` of
