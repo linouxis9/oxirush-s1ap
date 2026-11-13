@@ -56,7 +56,6 @@ oxirush-s1ap = "0.5"
 | Feature | Adds |
 |---------|------|
 | `inspect` | A PDU as JSON: its tree, and paths to read and edit it |
-| `serde` | `Serialize` and `Deserialize` for every type, through its tree. Turns on `inspect` |
 
 The minimum supported Rust version is 1.88. The crate depends on one exact
 version of oxirush-aper, whose types (`Octets`, `Bits`, `Error`) the
@@ -427,8 +426,7 @@ INDICATION, the answer where a procedure has no failure message.
 With the `inspect` feature, a PDU is a JSON tree, to print a message or to
 write one: the name of the message and its IEs by name. The [`inspect`]
 functions read and edit a tree by path, under `/s1ap` and the name of the IE.
-A tree, and serde's form, carry keys such as KeNB in hexadecimal: do not
-log them.
+A tree carries keys such as KeNB in hexadecimal: do not log it.
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1APPDU, tree};
@@ -484,8 +482,8 @@ containers.
 A tree names the message, in any case, and lists its IEs. The name gives the
 direction, the procedure code and the criticalities. An IE can also be
 written as its octets, whatever they are, to send a broken message on
-purpose. With the `serde` feature, `Serialize` and `Deserialize` go through
-the tree, in any format that serde has.
+purpose. A tree implements `Serialize` and `Deserialize`, so any format of
+serde writes it and reads it back.
 
 ```rust
 use oxirush_s1ap::{inspect, s1ap::S1APPDU, tree};

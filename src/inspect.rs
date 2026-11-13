@@ -9,13 +9,12 @@
 //! ```
 //!
 //! The functions of this module select and edit the values of a tree by their paths, and
-//! say what the messages of the protocol have. With the feature `serde`, a PDU is
-//! serialized as its tree in every format of serde, and each other type of the bindings
-//! as its own tree, the form in which a tree of a PDU shows it. A tree is a [`Value`] of
+//! say what the messages of the protocol have. A tree is a [`Value`] of
 //! `oxirush-utils`, which the crate has as [`tree::Value`](crate::tree::Value), with
-//! `tree!` to write one.
+//! `tree!` to write one. A tree implements `Serialize` and `Deserialize`: any format of
+//! serde writes it and reads it back.
 //!
-//! A tree and the serde form show each value as it is, keys too: the `SecurityKey` of an
+//! A tree shows each value as it is, keys too: the `SecurityKey` of an
 //! INITIAL CONTEXT SETUP REQUEST, KeNB, and the next hop NH are strings of hexadecimal
 //! digits in them, so that they are encoded back to the same octets. They are no form for
 //! a log: `Debug` and `Display` of the bindings print no key, and the length of the octets
@@ -618,26 +617,5 @@ impl S1APPDU<'_> {
             criticality,
             value,
         ))
-    }
-}
-
-/// With the feature `serde`, a PDU is serialized as its tree, which
-/// [`to_tree`](S1APPDU::to_tree) gives: a PDU that has none, as one of a procedure that
-/// the protocol does not have in its direction, is an error of the format.
-#[cfg(feature = "serde")]
-impl serde_core::Serialize for S1APPDU<'_> {
-    fn serialize<S: serde_core::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serde_core::Serialize::serialize(&self.to_tree(), serializer)
-    }
-}
-
-/// With the feature `serde`, a PDU is deserialized from its tree, as
-/// [`from_tree`](S1APPDU::from_tree) reads it.
-#[cfg(feature = "serde")]
-impl<'de> serde_core::Deserialize<'de> for S1APPDU<'_> {
-    fn deserialize<D: serde_core::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        use serde_core::de::Error as _;
-        let tree = <Value as serde_core::Deserialize>::deserialize(deserializer)?;
-        S1APPDU::from_tree(&tree).map_err(D::Error::custom)
     }
 }

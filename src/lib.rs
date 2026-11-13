@@ -355,6 +355,6 @@ pub use registry::ie;
 pub use s1ap::S1apPduKind;
 
 /// The examples of the README, which the documentation tests compile and run.
-#[cfg(all(doctest, feature = "serde"))]
+#[cfg(all(doctest, feature = "inspect"))]
 #[doc = include_str!("../README.md")]
 struct Readme;
