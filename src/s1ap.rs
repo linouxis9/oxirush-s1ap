@@ -11,14 +11,10 @@
 )]
 pub mod s1_ap_common_data_types {
     use super::*;
-    #[cfg(feature = "inspect")]
-    use crate::inspect_registry::names;
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
     pub use oxirush_aper::Criticality;
     pub use oxirush_aper::Presence;
-    #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer, in_field,
@@ -67,29 +63,6 @@ pub mod s1_ap_common_data_types {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PrivateIEID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::local(value) => json::alternative("local", json::unsigned(u64::from(*value))),
-                Self::global(value) => json::alternative("global", json::object_identifier(value)),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::PrivateIEID)?;
-            Ok(match position {
-                0 => Self::local(reading.within("local", value, |value, reading| {
-                    reading
-                        .unsigned(value, 0, 65535)
-                        .map(|number| number as u16)
-                })?),
-                _ => Self::global(reading.within("global", value, |value, reading| {
-                    json::read_object_identifier(reading, value)
-                })?),
-            })
-        }
-    }
     /// `ProcedureCode ::= INTEGER (0..255)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ProcedureCode(pub u8);
@@ -118,18 +91,6 @@ pub mod s1_ap_common_data_types {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 255, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ProcedureCode {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading.unsigned(value, 0, 255).map(|number| number as u8)?,
-            ))
         }
     }
     /// `ProtocolExtensionID ::= INTEGER (0..65535)`.
@@ -162,20 +123,6 @@ pub mod s1_ap_common_data_types {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ProtocolExtensionID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 65535)
-                    .map(|number| number as u16)?,
-            ))
-        }
-    }
     /// `ProtocolIE-ID ::= INTEGER (0..65535)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ProtocolIEID(pub u16);
@@ -204,20 +151,6 @@ pub mod s1_ap_common_data_types {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 65535, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ProtocolIEID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 65535)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// `TriggeringMessage ::= ENUMERATED`.
@@ -256,16 +189,6 @@ pub mod s1_ap_common_data_types {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TriggeringMessage {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::TriggeringMessage[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::TriggeringMessage)?])
-        }
-    }
 }
 #[allow(
     non_camel_case_types,
@@ -277,12 +200,8 @@ pub mod s1_ap_common_data_types {
 )]
 pub mod s1_ap_constants {
     use super::*;
-    #[cfg(feature = "inspect")]
-    use crate::inspect_registry::names;
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
-    #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer, in_field,
@@ -756,12 +675,8 @@ pub mod s1_ap_constants {
 )]
 pub mod s1_ap_containers {
     use super::*;
-    #[cfg(feature = "inspect")]
-    use crate::inspect_registry::names;
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
-    #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer, in_field,
@@ -827,30 +742,6 @@ pub mod s1_ap_containers {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ProtocolIEField<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("id", self.id.to_tree());
-            members.put("criticality", self.criticality.to_tree());
-            members.put("value", json::octets(&self.value));
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, &["id", "criticality", "value"])?;
-            let id = reading.member(&members, "id", ProtocolIEID::from_tree)?;
-            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
-            let value = reading.member(&members, "value", |value, reading| {
-                json::read_octets(reading, value)
-            })?;
-            Ok(Self {
-                id,
-                criticality,
-                value,
-            })
-        }
-    }
     /// `ProtocolIE-Container ::= SEQUENCE (SIZE (0..65535)) OF ProtocolIEField`.
     #[doc = " `ProtocolIE-Container`: the IEs of a message."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -895,18 +786,6 @@ pub mod s1_ap_containers {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ProtocolIEContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     impl core::fmt::Debug for ProtocolExtensionField<'_> {
@@ -972,31 +851,6 @@ pub mod s1_ap_containers {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ProtocolExtensionField<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("id", self.id.to_tree());
-            members.put("criticality", self.criticality.to_tree());
-            members.put("extensionValue", json::octets(&self.extension_value));
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, &["id", "criticality", "extensionValue"])?;
-            let id = reading.member(&members, "id", ProtocolExtensionID::from_tree)?;
-            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
-            let extension_value =
-                reading.member(&members, "extensionValue", |value, reading| {
-                    json::read_octets(reading, value)
-                })?;
-            Ok(Self {
-                id,
-                criticality,
-                extension_value,
-            })
-        }
-    }
     /// `ProtocolExtensionContainer ::= SEQUENCE (SIZE (1..65535)) OF ProtocolExtensionField`.
     #[doc = " `ProtocolExtensionContainer`: the `iE-Extensions` of a type."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1043,18 +897,6 @@ pub mod s1_ap_containers {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ProtocolExtensionContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolExtensionField::from_tree(value, reading)
-            })?))
-        }
-    }
 }
 #[allow(
     non_camel_case_types,
@@ -1066,12 +908,8 @@ pub mod s1_ap_containers {
 )]
 pub mod s1_ap_ies {
     use super::*;
-    #[cfg(feature = "inspect")]
-    use crate::inspect_registry::names;
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
-    #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer, in_field,
@@ -1123,35 +961,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for AdditionalGUTI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("gUMMEI", self.gummei.to_tree());
-            members.put("m-TMSI", self.m_tmsi.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::AdditionalGUTI)?;
-            let gummei = reading.member(&members, "gUMMEI", GUMMEI::from_tree)?;
-            let m_tmsi = reading.member(&members, "m-TMSI", MTMSI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                gummei,
-                m_tmsi,
-                ie_extensions,
-            })
-        }
-    }
     /// `AdditionalCSFallbackIndicator ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -1182,16 +991,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for AdditionalCSFallbackIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::AdditionalCSFallbackIndicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::AdditionalCSFallbackIndicator)?])
         }
     }
     /// `AdditionalRRMPriorityIndex ::= BIT STRING (SIZE (32))`.
@@ -1234,16 +1033,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for AdditionalRRMPriorityIndex {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 32, 32)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 32, 32)?))
-        }
-    }
     /// `AerialUEsubscriptionInformation ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -1274,16 +1063,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for AerialUEsubscriptionInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::AerialUEsubscriptionInformation[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::AerialUEsubscriptionInformation)?])
         }
     }
     /// `AllocationAndRetentionPriority ::= SEQUENCE`, with an extension marker.
@@ -1344,53 +1123,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for AllocationAndRetentionPriority {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("priorityLevel", self.priority_level.to_tree());
-            members.put(
-                "pre-emptionCapability",
-                self.pre_emption_capability.to_tree(),
-            );
-            members.put(
-                "pre-emptionVulnerability",
-                self.pre_emption_vulnerability.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::AllocationAndRetentionPriority)?;
-            let priority_level =
-                reading.member(&members, "priorityLevel", PriorityLevel::from_tree)?;
-            let pre_emption_capability = reading.member(
-                &members,
-                "pre-emptionCapability",
-                PreEmptionCapability::from_tree,
-            )?;
-            let pre_emption_vulnerability = reading.member(
-                &members,
-                "pre-emptionVulnerability",
-                PreEmptionVulnerability::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                priority_level,
-                pre_emption_capability,
-                pre_emption_vulnerability,
-                ie_extensions,
-            })
         }
     }
     /// `AreaScopeOfMDT ::= CHOICE`, with an extension marker.
@@ -1463,31 +1195,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for AreaScopeOfMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::cellBased(value) => json::alternative("cellBased", value.to_tree()),
-                Self::tABased(value) => json::alternative("tABased", value.to_tree()),
-                Self::pLMNWide(value) => json::alternative("pLMNWide", Value::Null),
-                Self::tAIBased(value) => json::alternative("tAIBased", value.to_tree()),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::AreaScopeOfMDT)?;
-            Ok(match position {
-                0 => {
-                    Self::cellBased(reading.within("cellBased", value, CellBasedMDT::from_tree)?)
-                }
-                1 => Self::tABased(reading.within("tABased", value, TABasedMDT::from_tree)?),
-                2 => Self::pLMNWide(
-                    reading.within("pLMNWide", value, |value, reading| reading.null(value))?,
-                ),
-                _ => Self::tAIBased(reading.within("tAIBased", value, TAIBasedMDT::from_tree)?),
-            })
-        }
-    }
     /// `AreaScopeOfQMC ::= CHOICE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
@@ -1553,33 +1260,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for AreaScopeOfQMC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::cellBased(value) => json::alternative("cellBased", value.to_tree()),
-                Self::tABased(value) => json::alternative("tABased", value.to_tree()),
-                Self::tAIBased(value) => json::alternative("tAIBased", value.to_tree()),
-                Self::pLMNAreaBased(value) => json::alternative("pLMNAreaBased", value.to_tree()),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::AreaScopeOfQMC)?;
-            Ok(match position {
-                0 => {
-                    Self::cellBased(reading.within("cellBased", value, CellBasedQMC::from_tree)?)
-                }
-                1 => Self::tABased(reading.within("tABased", value, TABasedQMC::from_tree)?),
-                2 => Self::tAIBased(reading.within("tAIBased", value, TAIBasedQMC::from_tree)?),
-                _ => Self::pLMNAreaBased(reading.within(
-                    "pLMNAreaBased",
-                    value,
-                    PLMNAreaBasedQMC::from_tree,
-                )?),
-            })
-        }
-    }
     /// `AssistanceDataForCECapableUEs ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct AssistanceDataForCECapableUEs<'a> {
@@ -1638,40 +1318,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for AssistanceDataForCECapableUEs<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "cellIdentifierAndCELevelForCECapableUEs",
-                self.cell_identifier_and_ce_level_for_ce_capable_ues
-                    .to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::AssistanceDataForCECapableUEs)?;
-            let cell_identifier_and_ce_level_for_ce_capable_ues = reading.member(
-                &members,
-                "cellIdentifierAndCELevelForCECapableUEs",
-                CellIdentifierAndCELevelForCECapableUEs::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                cell_identifier_and_ce_level_for_ce_capable_ues,
-                ie_extensions,
-            })
         }
     }
     /// `AssistanceDataForPaging ::= SEQUENCE`, with an extension marker.
@@ -1777,65 +1423,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for AssistanceDataForPaging<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "assistanceDataForRecommendedCells",
-                self.assistance_data_for_recommended_cells
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "assistanceDataForCECapableUEs",
-                self.assistance_data_for_ce_capable_ues
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "pagingAttemptInformation",
-                self.paging_attempt_information
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::AssistanceDataForPaging)?;
-            let assistance_data_for_recommended_cells = reading.optional(
-                &members,
-                "assistanceDataForRecommendedCells",
-                AssistanceDataForRecommendedCells::from_tree,
-            )?;
-            let assistance_data_for_ce_capable_ues = reading.optional(
-                &members,
-                "assistanceDataForCECapableUEs",
-                AssistanceDataForCECapableUEs::from_tree,
-            )?;
-            let paging_attempt_information = reading.optional(
-                &members,
-                "pagingAttemptInformation",
-                PagingAttemptInformation::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                assistance_data_for_recommended_cells,
-                assistance_data_for_ce_capable_ues,
-                paging_attempt_information,
-                ie_extensions,
-            })
-        }
-    }
     /// `AssistanceDataForRecommendedCells ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct AssistanceDataForRecommendedCells<'a> {
@@ -1892,39 +1479,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for AssistanceDataForRecommendedCells<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "recommendedCellsForPaging",
-                self.recommended_cells_for_paging.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::AssistanceDataForRecommendedCells)?;
-            let recommended_cells_for_paging = reading.member(
-                &members,
-                "recommendedCellsForPaging",
-                RecommendedCellsForPaging::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                recommended_cells_for_paging,
-                ie_extensions,
-            })
-        }
-    }
     /// `BPLMNs ::= SEQUENCE (SIZE (1..6)) OF PLMNidentity`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BPLMNs(pub Vec<PLMNidentity>);
@@ -1963,18 +1517,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for BPLMNs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                PLMNidentity::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `BearerType ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -2004,16 +1546,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for BearerType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::BearerType[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::BearerType)?])
         }
     }
     /// `Bearers-SubjectToDLDiscarding-Item ::= SEQUENCE`, with an extension marker.
@@ -2065,36 +1597,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for BearersSubjectToDLDiscardingItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put("dL-Discarding", self.dl_discarding.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::BearersSubjectToDLDiscardingItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let dl_discarding =
-                reading.member(&members, "dL-Discarding", DLDiscarding::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                dl_discarding,
-                ie_extensions,
-            })
-        }
-    }
     /// `Bearers-SubjectToDLDiscardingList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToDLDiscardingList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -2140,18 +1642,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for BearersSubjectToDLDiscardingList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `Bearers-SubjectToEarlyStatusTransfer-Item ::= SEQUENCE`, with an extension marker.
@@ -2204,42 +1694,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for BearersSubjectToEarlyStatusTransferItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "dLCOUNT-PDCP-SNlength",
-                self.dl_count_pdcp_sn_length.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::BearersSubjectToEarlyStatusTransferItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let dl_count_pdcp_sn_length = reading.member(
-                &members,
-                "dLCOUNT-PDCP-SNlength",
-                DLCOUNTPDCPSNlength::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                dl_count_pdcp_sn_length,
-                ie_extensions,
-            })
-        }
-    }
     /// `Bearers-SubjectToEarlyStatusTransferList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToEarlyStatusTransferList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -2285,18 +1739,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for BearersSubjectToEarlyStatusTransferList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `Bearers-SubjectToStatusTransfer-Item ::= SEQUENCE`, with an extension marker.
@@ -2385,52 +1827,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for BearersSubjectToStatusTransferItem<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put("uL-COUNTvalue", self.ul_count_value.to_tree());
-            members.put("dL-COUNTvalue", self.dl_count_value.to_tree());
-            members.put_optional(
-                "receiveStatusofULPDCPSDUs",
-                self.receive_statusof_ul_pdcp_sdus
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::BearersSubjectToStatusTransferItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let ul_count_value =
-                reading.member(&members, "uL-COUNTvalue", COUNTvalue::from_tree)?;
-            let dl_count_value =
-                reading.member(&members, "dL-COUNTvalue", COUNTvalue::from_tree)?;
-            let receive_statusof_ul_pdcp_sdus = reading.optional(
-                &members,
-                "receiveStatusofULPDCPSDUs",
-                ReceiveStatusofULPDCPSDUs::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                ul_count_value,
-                dl_count_value,
-                receive_statusof_ul_pdcp_sdus,
-                ie_extensions,
-            })
-        }
-    }
     /// `Bearers-SubjectToStatusTransferList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BearersSubjectToStatusTransferList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -2478,18 +1874,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for BearersSubjectToStatusTransferList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `BitRate ::= INTEGER (0..10000000000)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct BitRate(pub u64);
@@ -2518,16 +1902,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 0, 10000000000, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for BitRate {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, 0, 10000000000)?))
         }
     }
     /// `BluetoothMeasConfig ::= ENUMERATED`, with an extension marker.
@@ -2559,16 +1933,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for BluetoothMeasConfig {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::BluetoothMeasConfig[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::BluetoothMeasConfig)?])
         }
     }
     /// `BluetoothMeasConfigNameList ::= SEQUENCE (SIZE (1..4)) OF BluetoothName`.
@@ -2616,18 +1980,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for BluetoothMeasConfigNameList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                BluetoothName::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `BluetoothMeasurementConfigurationBtRssi ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -2657,17 +2009,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for BluetoothMeasurementConfigurationBtRssi {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::BluetoothMeasurementConfigurationBtRssi[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES
-                [reading.named(value, names::BluetoothMeasurementConfigurationBtRssi)?])
         }
     }
     /// `BluetoothMeasurementConfiguration ::= SEQUENCE`, with an extension marker.
@@ -2760,58 +2101,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for BluetoothMeasurementConfiguration<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("bluetoothMeasConfig", self.bluetooth_meas_config.to_tree());
-            members.put_optional(
-                "bluetoothMeasConfigNameList",
-                self.bluetooth_meas_config_name_list
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "bt-rssi",
-                self.bt_rssi.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::BluetoothMeasurementConfiguration)?;
-            let bluetooth_meas_config = reading.member(
-                &members,
-                "bluetoothMeasConfig",
-                BluetoothMeasConfig::from_tree,
-            )?;
-            let bluetooth_meas_config_name_list = reading.optional(
-                &members,
-                "bluetoothMeasConfigNameList",
-                BluetoothMeasConfigNameList::from_tree,
-            )?;
-            let bt_rssi = reading.optional(
-                &members,
-                "bt-rssi",
-                BluetoothMeasurementConfigurationBtRssi::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                bluetooth_meas_config,
-                bluetooth_meas_config_name_list,
-                bt_rssi,
-                ie_extensions,
-            })
-        }
-    }
     /// `BluetoothName ::= OCTET STRING (SIZE (1..248))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct BluetoothName<'a>(pub Octets<'a>);
@@ -2858,16 +2147,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 1, 248, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for BluetoothName<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `BroadcastCancelledAreaList ::= CHOICE`, with an extension marker.
@@ -2924,42 +2203,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for BroadcastCancelledAreaList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::cellID_Cancelled(value) => {
-                    json::alternative("cellID-Cancelled", value.to_tree())
-                }
-                Self::tAI_Cancelled(value) => json::alternative("tAI-Cancelled", value.to_tree()),
-                Self::emergencyAreaID_Cancelled(value) => {
-                    json::alternative("emergencyAreaID-Cancelled", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) =
-                reading.alternative(value, names::BroadcastCancelledAreaList)?;
-            Ok(match position {
-                0 => Self::cellID_Cancelled(reading.within(
-                    "cellID-Cancelled",
-                    value,
-                    CellIDCancelled::from_tree,
-                )?),
-                1 => Self::tAI_Cancelled(reading.within(
-                    "tAI-Cancelled",
-                    value,
-                    TAICancelled::from_tree,
-                )?),
-                _ => Self::emergencyAreaID_Cancelled(reading.within(
-                    "emergencyAreaID-Cancelled",
-                    value,
-                    EmergencyAreaIDCancelled::from_tree,
-                )?),
-            })
-        }
-    }
     /// `BroadcastCompletedAreaList ::= CHOICE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
@@ -3014,42 +2257,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for BroadcastCompletedAreaList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::cellID_Broadcast(value) => {
-                    json::alternative("cellID-Broadcast", value.to_tree())
-                }
-                Self::tAI_Broadcast(value) => json::alternative("tAI-Broadcast", value.to_tree()),
-                Self::emergencyAreaID_Broadcast(value) => {
-                    json::alternative("emergencyAreaID-Broadcast", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) =
-                reading.alternative(value, names::BroadcastCompletedAreaList)?;
-            Ok(match position {
-                0 => Self::cellID_Broadcast(reading.within(
-                    "cellID-Broadcast",
-                    value,
-                    CellIDBroadcast::from_tree,
-                )?),
-                1 => Self::tAI_Broadcast(reading.within(
-                    "tAI-Broadcast",
-                    value,
-                    TAIBroadcast::from_tree,
-                )?),
-                _ => Self::emergencyAreaID_Broadcast(reading.within(
-                    "emergencyAreaID-Broadcast",
-                    value,
-                    EmergencyAreaIDBroadcast::from_tree,
-                )?),
-            })
-        }
-    }
     /// `CE-ModeBRestricted ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -3082,16 +2289,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CEModeBRestricted {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CEModeBRestricted[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CEModeBRestricted)?])
-        }
-    }
     /// `CE-mode-B-SupportIndicator ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -3121,16 +2318,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CEModeBSupportIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CEModeBSupportIndicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CEModeBSupportIndicator)?])
         }
     }
     /// `CELevel ::= OCTET STRING`.
@@ -3179,16 +2366,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CELevel<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `CGI ::= SEQUENCE`, with an extension marker.
@@ -3255,42 +2432,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CGI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_tree());
-            members.put("lAC", self.lac.to_tree());
-            members.put("cI", self.ci.to_tree());
-            members.put_optional("rAC", self.rac.as_ref().map(|value| value.to_tree()));
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CGI)?;
-            let plmn_identity =
-                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
-            let lac = reading.member(&members, "lAC", LAC::from_tree)?;
-            let ci = reading.member(&members, "cI", CI::from_tree)?;
-            let rac = reading.optional(&members, "rAC", RAC::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                lac,
-                ci,
-                rac,
-                ie_extensions,
-            })
-        }
-    }
     /// The octets, in hexadecimal.
     impl core::fmt::Display for CI {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -3334,17 +2475,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(16), json::octets(&self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(16), value)?;
-            Ok(Self(reading.octet_array::<2>(value)?))
-        }
-    }
     /// `CNDomain ::= ENUMERATED`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum CNDomain {
@@ -3374,16 +2504,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, false);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CNDomain {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CNDomain[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CNDomain)?])
         }
     }
     /// `CNType ::= ENUMERATED`, with an extension marker.
@@ -3416,16 +2536,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CNType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CNType[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CNType)?])
         }
     }
     /// `CNTypeRestrictions ::= SEQUENCE (SIZE (1..16)) OF CNTypeRestrictionsItem`.
@@ -3464,18 +2574,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CNTypeRestrictions {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                CNTypeRestrictionsItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `CNTypeRestrictions-Item ::= SEQUENCE`, with an extension marker.
@@ -3525,36 +2623,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CNTypeRestrictionsItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMN-Identity", self.plmn_identity.to_tree());
-            members.put("cNType", self.cn_type.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CNTypeRestrictionsItem)?;
-            let plmn_identity =
-                reading.member(&members, "pLMN-Identity", PLMNidentity::from_tree)?;
-            let cn_type = reading.member(&members, "cNType", CNType::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                cn_type,
-                ie_extensions,
-            })
         }
     }
     /// `COUNTValueExtended ::= SEQUENCE`, with an extension marker.
@@ -3609,36 +2677,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for COUNTValueExtended {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pDCP-SNExtended", self.pdcp_sn_extended.to_tree());
-            members.put("hFNModified", self.hfn_modified.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::COUNTValueExtended)?;
-            let pdcp_sn_extended =
-                reading.member(&members, "pDCP-SNExtended", PDCPSNExtended::from_tree)?;
-            let hfn_modified = reading.member(&members, "hFNModified", HFNModified::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                pdcp_sn_extended,
-                hfn_modified,
-                ie_extensions,
-            })
-        }
-    }
     /// `COUNTvalue ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct COUNTvalue {
@@ -3684,35 +2722,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for COUNTvalue {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pDCP-SN", self.pdcp_sn.to_tree());
-            members.put("hFN", self.hfn.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::COUNTvalue)?;
-            let pdcp_sn = reading.member(&members, "pDCP-SN", PDCPSN::from_tree)?;
-            let hfn = reading.member(&members, "hFN", HFN::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                pdcp_sn,
-                hfn,
-                ie_extensions,
-            })
         }
     }
     /// `COUNTvaluePDCP-SNlength18 ::= SEQUENCE`, with an extension marker.
@@ -3768,43 +2777,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for COUNTvaluePDCPSNlength18 {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pDCP-SNlength18", self.pdcp_sn_length18.to_tree());
-            members.put(
-                "hFNforPDCP-SNlength18",
-                self.hfn_for_pdcp_sn_length18.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::COUNTvaluePDCPSNlength18)?;
-            let pdcp_sn_length18 =
-                reading.member(&members, "pDCP-SNlength18", PDCPSNlength18::from_tree)?;
-            let hfn_for_pdcp_sn_length18 = reading.member(
-                &members,
-                "hFNforPDCP-SNlength18",
-                HFNforPDCPSNlength18::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                pdcp_sn_length18,
-                hfn_for_pdcp_sn_length18,
-                ie_extensions,
-            })
-        }
-    }
     /// `CSFallbackIndicator ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -3836,16 +2808,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CSFallbackIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CSFallbackIndicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CSFallbackIndicator)?])
         }
     }
     /// `CSG-Id ::= BIT STRING (SIZE (27))`.
@@ -3888,16 +2850,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CSGId {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 27, 27)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 27, 27)?))
-        }
-    }
     /// `CSG-IdList ::= SEQUENCE (SIZE (1..256)) OF CSGIdListItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CSGIdList(pub Vec<CSGIdListItem>);
@@ -3934,18 +2886,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CSGIdList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                CSGIdListItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `CSG-IdList-Item ::= SEQUENCE`, with an extension marker.
@@ -3991,32 +2931,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CSGIdListItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("cSG-Id", self.csg_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CSGIdListItem)?;
-            let csg_id = reading.member(&members, "cSG-Id", CSGId::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                csg_id,
-                ie_extensions,
-            })
-        }
-    }
     /// `CSGMembershipStatus ::= ENUMERATED`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum CSGMembershipStatus {
@@ -4046,16 +2960,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, false);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CSGMembershipStatus {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CSGMembershipStatus[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CSGMembershipStatus)?])
         }
     }
     /// `CancelledCellinEAI ::= SEQUENCE (SIZE (1..65535)) OF CancelledCellinEAIItem`.
@@ -4094,18 +2998,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CancelledCellinEAI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                CancelledCellinEAIItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `CancelledCellinEAI-Item ::= SEQUENCE`, with an extension marker.
@@ -4158,39 +3050,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CancelledCellinEAIItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_tree());
-            members.put("numberOfBroadcasts", self.number_of_broadcasts.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CancelledCellinEAIItem)?;
-            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
-            let number_of_broadcasts = reading.member(
-                &members,
-                "numberOfBroadcasts",
-                NumberOfBroadcasts::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ecgi,
-                number_of_broadcasts,
-                ie_extensions,
-            })
-        }
-    }
     /// `CancelledCellinTAI ::= SEQUENCE (SIZE (1..65535)) OF CancelledCellinTAIItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CancelledCellinTAI(pub Vec<CancelledCellinTAIItem>);
@@ -4227,18 +3086,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CancelledCellinTAI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                CancelledCellinTAIItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `CancelledCellinTAI-Item ::= SEQUENCE`, with an extension marker.
@@ -4289,39 +3136,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CancelledCellinTAIItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_tree());
-            members.put("numberOfBroadcasts", self.number_of_broadcasts.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CancelledCellinTAIItem)?;
-            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
-            let number_of_broadcasts = reading.member(
-                &members,
-                "numberOfBroadcasts",
-                NumberOfBroadcasts::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ecgi,
-                number_of_broadcasts,
-                ie_extensions,
-            })
         }
     }
     /// `Cause ::= CHOICE`, with an extension marker.
@@ -4402,37 +3216,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for Cause {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::radioNetwork(value) => json::alternative("radioNetwork", value.to_tree()),
-                Self::transport(value) => json::alternative("transport", value.to_tree()),
-                Self::nas(value) => json::alternative("nas", value.to_tree()),
-                Self::protocol(value) => json::alternative("protocol", value.to_tree()),
-                Self::misc(value) => json::alternative("misc", value.to_tree()),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::Cause)?;
-            Ok(match position {
-                0 => Self::radioNetwork(reading.within(
-                    "radioNetwork",
-                    value,
-                    CauseRadioNetwork::from_tree,
-                )?),
-                1 => Self::transport(reading.within(
-                    "transport",
-                    value,
-                    CauseTransport::from_tree,
-                )?),
-                2 => Self::nas(reading.within("nas", value, CauseNas::from_tree)?),
-                3 => Self::protocol(reading.within("protocol", value, CauseProtocol::from_tree)?),
-                _ => Self::misc(reading.within("misc", value, CauseMisc::from_tree)?),
-            })
-        }
-    }
     /// `CauseMisc ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -4474,16 +3257,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 6, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CauseMisc {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CauseMisc[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CauseMisc)?])
         }
     }
     /// `CauseNas ::= ENUMERATED`, with an extension marker.
@@ -4531,16 +3304,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CauseNas {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CauseNas[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CauseNas)?])
-        }
-    }
     /// `CauseProtocol ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -4584,16 +3347,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 7, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CauseProtocol {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CauseProtocol[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CauseProtocol)?])
         }
     }
     /// `CauseRadioNetwork ::= ENUMERATED`, with an extension marker.
@@ -4717,16 +3470,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CauseRadioNetwork {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CauseRadioNetwork[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CauseRadioNetwork)?])
-        }
-    }
     /// `CauseTransport ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -4760,16 +3503,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CauseTransport {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CauseTransport[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CauseTransport)?])
-        }
-    }
     /// `Cdma2000HORequiredIndication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -4799,16 +3532,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for Cdma2000HORequiredIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::Cdma2000HORequiredIndication[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::Cdma2000HORequiredIndication)?])
         }
     }
     /// `Cdma2000HOStatus ::= ENUMERATED`, with an extension marker.
@@ -4841,16 +3564,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for Cdma2000HOStatus {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::Cdma2000HOStatus[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::Cdma2000HOStatus)?])
         }
     }
     /// `Cdma2000OneXMEID ::= OCTET STRING`.
@@ -4901,16 +3614,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for Cdma2000OneXMEID<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `Cdma2000OneXMSI ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXMSI<'a>(pub Octets<'a>);
@@ -4957,16 +3660,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for Cdma2000OneXMSI<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `Cdma2000OneXPilot ::= OCTET STRING`.
@@ -5017,16 +3710,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for Cdma2000OneXPilot<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `Cdma2000OneXRAND ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000OneXRAND<'a>(pub Octets<'a>);
@@ -5073,16 +3756,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for Cdma2000OneXRAND<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `Cdma2000OneXSRVCCInfo ::= SEQUENCE`, with an extension marker.
@@ -5157,41 +3830,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for Cdma2000OneXSRVCCInfo<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("cdma2000OneXMEID", self.cdma2000_one_xmeid.to_tree());
-            members.put("cdma2000OneXMSI", self.cdma2000_one_xmsi.to_tree());
-            members.put("cdma2000OneXPilot", self.cdma2000_one_x_pilot.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::Cdma2000OneXSRVCCInfo)?;
-            let cdma2000_one_xmeid =
-                reading.member(&members, "cdma2000OneXMEID", Cdma2000OneXMEID::from_tree)?;
-            let cdma2000_one_xmsi =
-                reading.member(&members, "cdma2000OneXMSI", Cdma2000OneXMSI::from_tree)?;
-            let cdma2000_one_x_pilot =
-                reading.member(&members, "cdma2000OneXPilot", Cdma2000OneXPilot::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                cdma2000_one_xmeid,
-                cdma2000_one_xmsi,
-                cdma2000_one_x_pilot,
-                ie_extensions,
-            })
-        }
-    }
     /// `Cdma2000PDU ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Cdma2000PDU<'a>(pub Octets<'a>);
@@ -5240,16 +3878,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for Cdma2000PDU<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `Cdma2000RATType ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -5280,16 +3908,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for Cdma2000RATType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::Cdma2000RATType[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::Cdma2000RATType)?])
         }
     }
     /// `Cdma2000SectorID ::= OCTET STRING`.
@@ -5340,16 +3958,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for Cdma2000SectorID<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `Cell-Size ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -5385,16 +3993,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellSize {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CellSize[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CellSize)?])
-        }
-    }
     /// `CellAccessMode ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -5424,16 +4022,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellAccessMode {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CellAccessMode[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CellAccessMode)?])
         }
     }
     /// `CellBasedMDT ::= SEQUENCE`, with an extension marker.
@@ -5482,33 +4070,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellBasedMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("cellIdListforMDT", self.cell_id_listfor_mdt.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CellBasedMDT)?;
-            let cell_id_listfor_mdt =
-                reading.member(&members, "cellIdListforMDT", CellIdListforMDT::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                cell_id_listfor_mdt,
-                ie_extensions,
-            })
-        }
-    }
     /// `CellBasedQMC ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellBasedQMC {
@@ -5555,33 +4116,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellBasedQMC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("cellIdListforQMC", self.cell_id_listfor_qmc.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CellBasedQMC)?;
-            let cell_id_listfor_qmc =
-                reading.member(&members, "cellIdListforQMC", CellIdListforQMC::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                cell_id_listfor_qmc,
-                ie_extensions,
-            })
-        }
-    }
     /// `CellID-Broadcast ::= SEQUENCE (SIZE (1..65535)) OF CellIDBroadcastItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIDBroadcast(pub Vec<CellIDBroadcastItem>);
@@ -5618,18 +4152,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellIDBroadcast {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                CellIDBroadcastItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `CellID-Broadcast-Item ::= SEQUENCE`, with an extension marker.
@@ -5675,32 +4197,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellIDBroadcastItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CellIDBroadcastItem)?;
-            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ecgi,
-                ie_extensions,
-            })
-        }
-    }
     /// `CellID-Cancelled ::= SEQUENCE (SIZE (1..65535)) OF CellIDCancelledItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIDCancelled(pub Vec<CellIDCancelledItem>);
@@ -5737,18 +4233,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellIDCancelled {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                CellIDCancelledItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `CellID-Cancelled-Item ::= SEQUENCE`, with an extension marker.
@@ -5801,39 +4285,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellIDCancelledItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_tree());
-            members.put("numberOfBroadcasts", self.number_of_broadcasts.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CellIDCancelledItem)?;
-            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
-            let number_of_broadcasts = reading.member(
-                &members,
-                "numberOfBroadcasts",
-                NumberOfBroadcasts::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ecgi,
-                number_of_broadcasts,
-                ie_extensions,
-            })
-        }
-    }
     /// `CellIdListforMDT ::= SEQUENCE (SIZE (1..32)) OF EUTRANCGI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIdListforMDT(pub Vec<EUTRANCGI>);
@@ -5872,18 +4323,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellIdListforMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `CellIdListforQMC ::= SEQUENCE (SIZE (1..32)) OF EUTRANCGI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellIdListforQMC(pub Vec<EUTRANCGI>);
@@ -5920,18 +4359,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellIdListforQMC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_tree(value, reading)
-            })?))
         }
     }
     /// `CellIdentifierAndCELevelForCECapableUEs ::= SEQUENCE`, with an extension marker.
@@ -5994,36 +4421,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellIdentifierAndCELevelForCECapableUEs<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("global-Cell-ID", self.global_cell_id.to_tree());
-            members.put("cELevel", self.ce_level.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CellIdentifierAndCELevelForCECapableUEs)?;
-            let global_cell_id =
-                reading.member(&members, "global-Cell-ID", EUTRANCGI::from_tree)?;
-            let ce_level = reading.member(&members, "cELevel", CELevel::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                global_cell_id,
-                ce_level,
-                ie_extensions,
-            })
-        }
-    }
     /// `CellIdentity ::= BIT STRING (SIZE (28))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct CellIdentity(pub Bits);
@@ -6062,17 +4459,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 28, 28)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellIdentity {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(28), json::bits(self.0, 28, 28))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(28), value)?;
-            Ok(Self(json::read_bits(reading, value, 28, 28)?))
         }
     }
     /// `CellType ::= SEQUENCE`, with an extension marker.
@@ -6118,32 +4504,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("cell-Size", self.cell_size.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CellType)?;
-            let cell_size = reading.member(&members, "cell-Size", CellSize::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                cell_size,
-                ie_extensions,
-            })
         }
     }
     /// `CoarseUELocation ::= OCTET STRING`.
@@ -6194,16 +4554,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CoarseUELocation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `CoarseUELocationRequested ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -6233,16 +4583,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CoarseUELocationRequested {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CoarseUELocationRequested[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CoarseUELocationRequested)?])
         }
     }
     /// `CompletedCellinEAI ::= SEQUENCE (SIZE (1..65535)) OF CompletedCellinEAIItem`.
@@ -6281,18 +4621,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CompletedCellinEAI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                CompletedCellinEAIItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `CompletedCellinEAI-Item ::= SEQUENCE`, with an extension marker.
@@ -6338,32 +4666,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CompletedCellinEAIItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CompletedCellinEAIItem)?;
-            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ecgi,
-                ie_extensions,
-            })
-        }
-    }
     /// `CompletedCellinTAI ::= SEQUENCE (SIZE (1..65535)) OF CompletedCellinTAIItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CompletedCellinTAI(pub Vec<CompletedCellinTAIItem>);
@@ -6400,18 +4702,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CompletedCellinTAI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                CompletedCellinTAIItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `CompletedCellinTAI-Item ::= SEQUENCE`, with an extension marker.
@@ -6457,32 +4747,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CompletedCellinTAIItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("eCGI", self.ecgi.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CompletedCellinTAIItem)?;
-            let ecgi = reading.member(&members, "eCGI", EUTRANCGI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ecgi,
-                ie_extensions,
-            })
-        }
-    }
     /// `ConcurrentWarningMessageIndicator ::= ENUMERATED`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum ConcurrentWarningMessageIndicator {
@@ -6511,16 +4775,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, false);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ConcurrentWarningMessageIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ConcurrentWarningMessageIndicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ConcurrentWarningMessageIndicator)?])
         }
     }
     /// `ConnectedengNBItem ::= SEQUENCE`, with an extension marker.
@@ -6585,36 +4839,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ConnectedengNBItem<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("en-gNB-ID", self.en_gnb_id.to_tree());
-            members.put("supportedTAs", self.supported_tas.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ConnectedengNBItem)?;
-            let en_gnb_id = reading.member(&members, "en-gNB-ID", EnGNBID::from_tree)?;
-            let supported_tas =
-                reading.member(&members, "supportedTAs", SupportedTAs::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                en_gnb_id,
-                supported_tas,
-                ie_extensions,
-            })
-        }
-    }
     /// `ConnectedengNBList ::= SEQUENCE (SIZE (1..256)) OF ConnectedengNBItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ConnectedengNBList<'a>(pub Vec<ConnectedengNBItem<'a>>);
@@ -6658,18 +4882,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ConnectedengNBList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ConnectedengNBItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `ContextatSource ::= SEQUENCE`, with an extension marker.
@@ -6724,37 +4936,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ContextatSource {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("sourceNG-RAN-node-ID", self.source_ng_ran_node_id.to_tree());
-            members.put("rAN-UE-NGAP-ID", self.ran_ue_ngap_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ContextatSource)?;
-            let source_ng_ran_node_id =
-                reading.member(&members, "sourceNG-RAN-node-ID", GlobalRANNODEID::from_tree)?;
-            let ran_ue_ngap_id =
-                reading.member(&members, "rAN-UE-NGAP-ID", RANUENGAPID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                source_ng_ran_node_id,
-                ran_ue_ngap_id,
-                ie_extensions,
-            })
-        }
-    }
     /// The octets, in hexadecimal.
     impl core::fmt::Display for CorrelationID {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -6798,16 +4979,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CorrelationID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octet_array::<4>(value)?))
-        }
-    }
     /// `Coverage-Level ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -6837,16 +5008,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CoverageLevel {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::CoverageLevel[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::CoverageLevel)?])
         }
     }
     /// `CriticalityDiagnostics ::= SEQUENCE`, with an extension marker.
@@ -6941,66 +5102,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CriticalityDiagnostics {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "procedureCode",
-                self.procedure_code.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "triggeringMessage",
-                self.triggering_message
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "procedureCriticality",
-                self.procedure_criticality
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iEsCriticalityDiagnostics",
-                self.ies_criticality_diagnostics
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CriticalityDiagnostics)?;
-            let procedure_code =
-                reading.optional(&members, "procedureCode", ProcedureCode::from_tree)?;
-            let triggering_message =
-                reading.optional(&members, "triggeringMessage", TriggeringMessage::from_tree)?;
-            let procedure_criticality =
-                reading.optional(&members, "procedureCriticality", Criticality::from_tree)?;
-            let ies_criticality_diagnostics = reading.optional(
-                &members,
-                "iEsCriticalityDiagnostics",
-                CriticalityDiagnosticsIEList::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                procedure_code,
-                triggering_message,
-                procedure_criticality,
-                ies_criticality_diagnostics,
-                ie_extensions,
-            })
-        }
-    }
     /// `CriticalityDiagnostics-IE-Item ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CriticalityDiagnosticsIEItem {
@@ -7056,39 +5157,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CriticalityDiagnosticsIEItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("iECriticality", self.ie_criticality.to_tree());
-            members.put("iE-ID", self.ie_id.to_tree());
-            members.put("typeOfError", self.type_of_error.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CriticalityDiagnosticsIEItem)?;
-            let ie_criticality =
-                reading.member(&members, "iECriticality", Criticality::from_tree)?;
-            let ie_id = reading.member(&members, "iE-ID", ProtocolIEID::from_tree)?;
-            let type_of_error = reading.member(&members, "typeOfError", TypeOfError::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ie_criticality,
-                ie_id,
-                type_of_error,
-                ie_extensions,
-            })
-        }
-    }
     /// `CriticalityDiagnostics-IE-List ::= SEQUENCE (SIZE (1..256)) OF CriticalityDiagnosticsIEItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CriticalityDiagnosticsIEList(pub Vec<CriticalityDiagnosticsIEItem>);
@@ -7127,18 +5195,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CriticalityDiagnosticsIEList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                CriticalityDiagnosticsIEItem::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `DAPSRequestInfoDAPSIndicator ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -7168,16 +5224,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DAPSRequestInfoDAPSIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::DAPSRequestInfoDAPSIndicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::DAPSRequestInfoDAPSIndicator)?])
         }
     }
     /// `DAPSRequestInfo ::= SEQUENCE`, with an extension marker.
@@ -7226,36 +5272,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for DAPSRequestInfo {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("dAPSIndicator", self.daps_indicator.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::DAPSRequestInfo)?;
-            let daps_indicator = reading.member(
-                &members,
-                "dAPSIndicator",
-                DAPSRequestInfoDAPSIndicator::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                daps_indicator,
-                ie_extensions,
-            })
-        }
-    }
     /// `DAPSResponseInfoDapsresponseindicator ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -7286,16 +5302,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DAPSResponseInfoDapsresponseindicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::DAPSResponseInfoDapsresponseindicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::DAPSResponseInfoDapsresponseindicator)?])
         }
     }
     /// `DAPSResponseInfo ::= SEQUENCE`, with an extension marker.
@@ -7342,39 +5348,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DAPSResponseInfo {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "dapsresponseindicator",
-                self.dapsresponseindicator.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::DAPSResponseInfo)?;
-            let dapsresponseindicator = reading.member(
-                &members,
-                "dapsresponseindicator",
-                DAPSResponseInfoDapsresponseindicator::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                dapsresponseindicator,
-                ie_extensions,
-            })
         }
     }
     /// `DAPSResponseInfoItem ::= SEQUENCE`, with an extension marker.
@@ -7427,36 +5400,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for DAPSResponseInfoItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put("dAPSResponseInfo", self.daps_response_info.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::DAPSResponseInfoItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let daps_response_info =
-                reading.member(&members, "dAPSResponseInfo", DAPSResponseInfo::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                daps_response_info,
-                ie_extensions,
-            })
-        }
-    }
     /// `DAPSResponseInfoList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DAPSResponseInfoList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -7502,18 +5445,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for DAPSResponseInfoList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `DCN-ID ::= INTEGER (0..65535)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct DCNID(pub u16);
@@ -7542,20 +5473,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 65535, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DCNID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 65535)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// `DL-CP-SecurityInformation ::= SEQUENCE`, with an extension marker.
@@ -7603,32 +5520,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for DLCPSecurityInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("dl-NAS-MAC", self.dl_nas_mac.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::DLCPSecurityInformation)?;
-            let dl_nas_mac = reading.member(&members, "dl-NAS-MAC", DLNASMAC::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                dl_nas_mac,
-                ie_extensions,
-            })
-        }
-    }
     /// `DL-Forwarding ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -7658,16 +5549,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DLForwarding {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::DLForwarding[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::DLForwarding)?])
         }
     }
     /// `DL-NAS-MAC ::= BIT STRING (SIZE (16))`.
@@ -7708,16 +5589,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 16, 16)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DLNASMAC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 16, 16)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 16, 16)?))
         }
     }
     /// `DLCOUNT-PDCP-SNlength ::= CHOICE`, with an extension marker.
@@ -7772,43 +5643,6 @@ pub mod s1_ap_ies {
                 }
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DLCOUNTPDCPSNlength {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::dLCOUNTValuePDCP_SNlength12(value) => {
-                    json::alternative("dLCOUNTValuePDCP-SNlength12", value.to_tree())
-                }
-                Self::dLCOUNTValuePDCP_SNlength15(value) => {
-                    json::alternative("dLCOUNTValuePDCP-SNlength15", value.to_tree())
-                }
-                Self::dLCOUNTValuePDCP_SNlength18(value) => {
-                    json::alternative("dLCOUNTValuePDCP-SNlength18", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::DLCOUNTPDCPSNlength)?;
-            Ok(match position {
-                0 => Self::dLCOUNTValuePDCP_SNlength12(reading.within(
-                    "dLCOUNTValuePDCP-SNlength12",
-                    value,
-                    COUNTvalue::from_tree,
-                )?),
-                1 => Self::dLCOUNTValuePDCP_SNlength15(reading.within(
-                    "dLCOUNTValuePDCP-SNlength15",
-                    value,
-                    COUNTValueExtended::from_tree,
-                )?),
-                _ => Self::dLCOUNTValuePDCP_SNlength18(reading.within(
-                    "dLCOUNTValuePDCP-SNlength18",
-                    value,
-                    COUNTvaluePDCPSNlength18::from_tree,
-                )?),
-            })
         }
     }
     /// `DLDiscarding ::= CHOICE`, with an extension marker.
@@ -7867,43 +5701,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for DLDiscarding {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::discardDLCOUNTValuePDCP_SNlength12(value) => {
-                    json::alternative("discardDLCOUNTValuePDCP-SNlength12", value.to_tree())
-                }
-                Self::discardDLCOUNTValuePDCP_SNlength15(value) => {
-                    json::alternative("discardDLCOUNTValuePDCP-SNlength15", value.to_tree())
-                }
-                Self::discardDLCOUNTValuePDCP_SNlength18(value) => {
-                    json::alternative("discardDLCOUNTValuePDCP-SNlength18", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::DLDiscarding)?;
-            Ok(match position {
-                0 => Self::discardDLCOUNTValuePDCP_SNlength12(reading.within(
-                    "discardDLCOUNTValuePDCP-SNlength12",
-                    value,
-                    COUNTvalue::from_tree,
-                )?),
-                1 => Self::discardDLCOUNTValuePDCP_SNlength15(reading.within(
-                    "discardDLCOUNTValuePDCP-SNlength15",
-                    value,
-                    COUNTValueExtended::from_tree,
-                )?),
-                _ => Self::discardDLCOUNTValuePDCP_SNlength18(reading.within(
-                    "discardDLCOUNTValuePDCP-SNlength18",
-                    value,
-                    COUNTvaluePDCPSNlength18::from_tree,
-                )?),
-            })
-        }
-    }
     /// `DLNASPDUDeliveryAckRequest ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -7935,16 +5732,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for DLNASPDUDeliveryAckRequest {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::DLNASPDUDeliveryAckRequest[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::DLNASPDUDeliveryAckRequest)?])
-        }
-    }
     /// `Data-Forwarding-Not-Possible ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -7974,16 +5761,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DataForwardingNotPossible {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::DataForwardingNotPossible[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::DataForwardingNotPossible)?])
         }
     }
     /// `DataCodingScheme ::= BIT STRING (SIZE (8))`.
@@ -8026,16 +5803,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for DataCodingScheme {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 8, 8)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 8, 8)?))
-        }
-    }
     /// `DataSize ::= INTEGER (1..4095, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct DataSize(pub u64);
@@ -8064,16 +5831,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 1, 4095, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DataSize {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
     /// `Direct-Forwarding-Path-Availability ::= ENUMERATED`, with an extension marker.
@@ -8107,16 +5864,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for DirectForwardingPathAvailability {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::DirectForwardingPathAvailability[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::DirectForwardingPathAvailability)?])
-        }
-    }
     /// `E-RAB-ID ::= INTEGER (0..15, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ERABID(pub u64);
@@ -8145,16 +5892,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 0, 15, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
     /// `E-RABInformationList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
@@ -8200,18 +5937,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABInformationList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABInformationListItem ::= SEQUENCE`, with an extension marker.
@@ -8268,39 +5993,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABInformationListItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put_optional(
-                "dL-Forwarding",
-                self.dl_forwarding.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABInformationListItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let dl_forwarding =
-                reading.optional(&members, "dL-Forwarding", DLForwarding::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                dl_forwarding,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABItem ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABItem {
@@ -8346,35 +6038,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put("cause", self.cause.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let cause = reading.member(&members, "cause", Cause::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                cause,
-                ie_extensions,
-            })
         }
     }
     /// `E-RABLevelQoSParameters ::= SEQUENCE`, with an extension marker.
@@ -8440,51 +6103,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABLevelQoSParameters {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("qCI", self.qci.to_tree());
-            members.put(
-                "allocationRetentionPriority",
-                self.allocation_retention_priority.to_tree(),
-            );
-            members.put_optional(
-                "gbrQosInformation",
-                self.gbr_qos_information
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABLevelQoSParameters)?;
-            let qci = reading.member(&members, "qCI", QCI::from_tree)?;
-            let allocation_retention_priority = reading.member(
-                &members,
-                "allocationRetentionPriority",
-                AllocationAndRetentionPriority::from_tree,
-            )?;
-            let gbr_qos_information =
-                reading.optional(&members, "gbrQosInformation", GBRQosInformation::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                qci,
-                allocation_retention_priority,
-                gbr_qos_information,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -8528,18 +6146,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABSecurityResultItem ::= SEQUENCE`, with an extension marker.
@@ -8592,36 +6198,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABSecurityResultItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put("securityResult", self.security_result.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABSecurityResultItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let security_result =
-                reading.member(&members, "securityResult", SecurityResult::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                security_result,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABSecurityResultList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSecurityResultList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -8665,18 +6241,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABSecurityResultList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABUsageReportItem ::= SEQUENCE`, with an extension marker.
@@ -8746,50 +6310,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABUsageReportItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("startTimestamp", json::octets(&self.start_timestamp));
-            members.put("endTimestamp", json::octets(&self.end_timestamp));
-            members.put("usageCountUL", json::unsigned(self.usage_count_ul));
-            members.put("usageCountDL", json::unsigned(self.usage_count_dl));
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABUsageReportItem)?;
-            let start_timestamp =
-                reading.member(&members, "startTimestamp", |value, reading| {
-                    reading.octet_array::<4>(value)
-                })?;
-            let end_timestamp = reading.member(&members, "endTimestamp", |value, reading| {
-                reading.octet_array::<4>(value)
-            })?;
-            let usage_count_ul = reading.member(&members, "usageCountUL", |value, reading| {
-                reading.unsigned(value, 0, 18446744073709551615)
-            })?;
-            let usage_count_dl = reading.member(&members, "usageCountDL", |value, reading| {
-                reading.unsigned(value, 0, 18446744073709551615)
-            })?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                start_timestamp,
-                end_timestamp,
-                usage_count_ul,
-                usage_count_dl,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABUsageReportList ::= SEQUENCE (SIZE (1..2)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABUsageReportList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -8835,18 +6355,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABUsageReportList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// The octets, in hexadecimal.
     impl core::fmt::Display for EUTRANTraceID {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -8890,16 +6398,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EUTRANTraceID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octet_array::<8>(value)?))
-        }
-    }
     /// `EARFCN ::= INTEGER (0..262143, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct EARFCN(pub u64);
@@ -8928,16 +6426,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 0, 262143, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for EARFCN {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
     /// `ECGI-List ::= SEQUENCE (SIZE (1..256)) OF EUTRANCGI`.
@@ -8978,18 +6466,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ECGI_List {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `ECGIList ::= SEQUENCE (SIZE (1..65535)) OF EUTRANCGI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ECGIList(pub Vec<EUTRANCGI>);
@@ -9026,18 +6502,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ECGIList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_tree(value, reading)
-            })?))
         }
     }
     /// `ECGIListForRestart ::= SEQUENCE (SIZE (1..256)) OF EUTRANCGI`.
@@ -9078,18 +6542,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ECGIListForRestart {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `EDT-Session ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -9119,16 +6571,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for EDTSession {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::EDTSession[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::EDTSession)?])
         }
     }
     /// `EN-DCSONConfigurationTransfer ::= SEQUENCE`, with an extension marker.
@@ -9212,49 +6654,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENDCSONConfigurationTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("transfertype", self.transfertype.to_tree());
-            members.put("sONInformation", self.son_information.to_tree());
-            members.put_optional(
-                "x2TNLConfigInfo",
-                self.x2_tnl_config_info
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENDCSONConfigurationTransfer)?;
-            let transfertype =
-                reading.member(&members, "transfertype", ENDCSONTransferType::from_tree)?;
-            let son_information =
-                reading.member(&members, "sONInformation", SONInformation::from_tree)?;
-            let x2_tnl_config_info = reading.optional(
-                &members,
-                "x2TNLConfigInfo",
-                X2TNLConfigurationInfo::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                transfertype,
-                son_information,
-                x2_tnl_config_info,
-                ie_extensions,
-            })
-        }
-    }
     /// `EN-DCSONTransferType ::= CHOICE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
@@ -9308,29 +6707,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENDCSONTransferType<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::request(value) => json::alternative("request", value.to_tree()),
-                Self::reply(value) => json::alternative("reply", value.to_tree()),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::ENDCSONTransferType)?;
-            Ok(match position {
-                0 => Self::request(reading.within(
-                    "request",
-                    value,
-                    ENDCTransferTypeRequest::from_tree,
-                )?),
-                _ => {
-                    Self::reply(reading.within("reply", value, ENDCTransferTypeReply::from_tree)?)
-                }
-            })
-        }
-    }
     /// `EN-DCSONeNBIdentification ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENDCSONeNBIdentification {
@@ -9380,35 +6756,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENDCSONeNBIdentification {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("globaleNBID", self.global_enb_id.to_tree());
-            members.put("selectedTAI", self.selected_tai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENDCSONeNBIdentification)?;
-            let global_enb_id = reading.member(&members, "globaleNBID", GlobalENBID::from_tree)?;
-            let selected_tai = reading.member(&members, "selectedTAI", TAI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                global_enb_id,
-                selected_tai,
-                ie_extensions,
-            })
         }
     }
     /// `EN-DCSONengNBIdentification ::= SEQUENCE`, with an extension marker.
@@ -9474,36 +6821,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENDCSONengNBIdentification<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("globalengNBID", self.globalen_gnb_id.to_tree());
-            members.put("selectedTAI", self.selected_tai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENDCSONengNBIdentification)?;
-            let globalen_gnb_id =
-                reading.member(&members, "globalengNBID", GlobalEnGNBID::from_tree)?;
-            let selected_tai = reading.member(&members, "selectedTAI", TAI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                globalen_gnb_id,
-                selected_tai,
-                ie_extensions,
-            })
-        }
-    }
     /// `EN-DCTransferTypeReply ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENDCTransferTypeReply<'a> {
@@ -9566,40 +6883,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENDCTransferTypeReply<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("sourceengNB", self.source_en_gnb.to_tree());
-            members.put("targeteNB", self.target_enb.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENDCTransferTypeReply)?;
-            let source_en_gnb = reading.member(
-                &members,
-                "sourceengNB",
-                ENDCSONengNBIdentification::from_tree,
-            )?;
-            let target_enb =
-                reading.member(&members, "targeteNB", ENDCSONeNBIdentification::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                source_en_gnb,
-                target_enb,
-                ie_extensions,
-            })
         }
     }
     /// `EN-DCTransferTypeRequest ::= SEQUENCE`, with an extension marker.
@@ -9704,60 +6987,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENDCTransferTypeRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("sourceeNB", self.source_enb.to_tree());
-            members.put("targetengNB", self.target_en_gnb.to_tree());
-            members.put_optional(
-                "targeteNB",
-                self.target_enb.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "associatedTAI",
-                self.associated_tai.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "broadcast5GSTAI",
-                self.broadcast_5gs_tai.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENDCTransferTypeRequest)?;
-            let source_enb =
-                reading.member(&members, "sourceeNB", ENDCSONeNBIdentification::from_tree)?;
-            let target_en_gnb = reading.member(
-                &members,
-                "targetengNB",
-                ENDCSONengNBIdentification::from_tree,
-            )?;
-            let target_enb =
-                reading.optional(&members, "targeteNB", ENDCSONeNBIdentification::from_tree)?;
-            let associated_tai = reading.optional(&members, "associatedTAI", TAI::from_tree)?;
-            let broadcast_5gs_tai =
-                reading.optional(&members, "broadcast5GSTAI", FiveGSTAI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                source_enb,
-                target_en_gnb,
-                target_enb,
-                associated_tai,
-                broadcast_5gs_tai,
-                ie_extensions,
-            })
-        }
-    }
     /// `ENB-EarlyStatusTransfer-TransparentContainer ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBEarlyStatusTransferTransparentContainer<'a> {
@@ -9816,40 +7045,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBEarlyStatusTransferTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "bearers-SubjectToEarlyStatusTransferList",
-                self.bearers_subject_to_early_status_transfer_list.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members =
-                reading.members(value, names::ENBEarlyStatusTransferTransparentContainer)?;
-            let bearers_subject_to_early_status_transfer_list = reading.member(
-                &members,
-                "bearers-SubjectToEarlyStatusTransferList",
-                BearersSubjectToEarlyStatusTransferList::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                bearers_subject_to_early_status_transfer_list,
-                ie_extensions,
-            })
         }
     }
     /// `ENB-ID ::= CHOICE`, with an extension marker.
@@ -9911,49 +7106,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::macroENB_ID(value) => {
-                    json::alternative("macroENB-ID", json::bits(*value, 20, 20))
-                }
-                Self::homeENB_ID(value) => {
-                    json::alternative("homeENB-ID", json::bits(*value, 28, 28))
-                }
-                Self::short_macroENB_ID(value) => {
-                    json::alternative("short-macroENB-ID", json::bits(*value, 18, 18))
-                }
-                Self::long_macroENB_ID(value) => {
-                    json::alternative("long-macroENB-ID", json::bits(*value, 21, 21))
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::ENBID)?;
-            Ok(match position {
-                0 => {
-                    Self::macroENB_ID(reading.within("macroENB-ID", value, |value, reading| {
-                        json::read_bits(reading, value, 20, 20)
-                    })?)
-                }
-                1 => Self::homeENB_ID(reading.within("homeENB-ID", value, |value, reading| {
-                    json::read_bits(reading, value, 28, 28)
-                })?),
-                2 => Self::short_macroENB_ID(reading.within(
-                    "short-macroENB-ID",
-                    value,
-                    |value, reading| json::read_bits(reading, value, 18, 18),
-                )?),
-                _ => Self::long_macroENB_ID(reading.within(
-                    "long-macroENB-ID",
-                    value,
-                    |value, reading| json::read_bits(reading, value, 21, 21),
-                )?),
-            })
-        }
-    }
     /// `ENB-StatusTransfer-TransparentContainer ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBStatusTransferTransparentContainer<'a> {
@@ -10013,39 +7165,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBStatusTransferTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "bearers-SubjectToStatusTransferList",
-                self.bearers_subject_to_status_transfer_list.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENBStatusTransferTransparentContainer)?;
-            let bearers_subject_to_status_transfer_list = reading.member(
-                &members,
-                "bearers-SubjectToStatusTransferList",
-                BearersSubjectToStatusTransferList::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                bearers_subject_to_status_transfer_list,
-                ie_extensions,
-            })
-        }
-    }
     /// `ENB-UE-S1AP-ID ::= INTEGER (0..16777215)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ENBUES1APID(pub u32);
@@ -10074,20 +7193,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 16777215, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBUES1APID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 16777215)
-                    .map(|number| number as u32)?,
-            ))
         }
     }
     /// `ENBIndirectX2TransportLayerAddresses ::= SEQUENCE (SIZE (1..2)) OF TransportLayerAddress`.
@@ -10135,18 +7240,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBIndirectX2TransportLayerAddresses<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TransportLayerAddress::from_tree(value, reading)
-            })?))
         }
     }
     /// `ENBX2ExtTLA ::= SEQUENCE`, with an extension marker.
@@ -10221,42 +7314,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBX2ExtTLA<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "iPsecTLA",
-                self.ipsec_tla.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "gTPTLAa",
-                self.gtp_tlaa.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENBX2ExtTLA)?;
-            let ipsec_tla =
-                reading.optional(&members, "iPsecTLA", TransportLayerAddress::from_tree)?;
-            let gtp_tlaa = reading.optional(&members, "gTPTLAa", ENBX2GTPTLAs::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ipsec_tla,
-                gtp_tlaa,
-                ie_extensions,
-            })
-        }
-    }
     /// `ENBX2ExtTLAs ::= SEQUENCE (SIZE (1..16)) OF ENBX2ExtTLA`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2ExtTLAs<'a>(pub Vec<ENBX2ExtTLA<'a>>);
@@ -10300,18 +7357,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBX2ExtTLAs<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ENBX2ExtTLA::from_tree(value, reading)
-            })?))
         }
     }
     /// `ENBX2GTPTLAs ::= SEQUENCE (SIZE (1..16)) OF TransportLayerAddress`.
@@ -10359,18 +7404,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBX2GTPTLAs<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TransportLayerAddress::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `ENBX2TLAs ::= SEQUENCE (SIZE (1..2)) OF TransportLayerAddress`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBX2TLAs<'a>(pub Vec<TransportLayerAddress<'a>>);
@@ -10414,18 +7447,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBX2TLAs<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TransportLayerAddress::from_tree(value, reading)
-            })?))
         }
     }
     /// `ENBname ::= PrintableString (SIZE (1..150, ...))`.
@@ -10476,20 +7497,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBname<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_text(
-                reading,
-                value,
-                json::Characters::Printable,
-            )?))
-        }
-    }
     /// `EPLMNs ::= SEQUENCE (SIZE (1..15)) OF PLMNidentity`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EPLMNs(pub Vec<PLMNidentity>);
@@ -10526,18 +7533,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for EPLMNs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                PLMNidentity::from_tree(value, reading)
-            })?))
         }
     }
     /// `EUTRAN-CGI ::= SEQUENCE`, with an extension marker.
@@ -10589,36 +7584,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EUTRANCGI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_tree());
-            members.put("cell-ID", self.cell_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::EUTRANCGI)?;
-            let plmn_identity =
-                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
-            let cell_id = reading.member(&members, "cell-ID", CellIdentity::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                cell_id,
-                ie_extensions,
-            })
-        }
-    }
     /// `EUTRANRoundTripDelayEstimationInfo ::= INTEGER (0..2047)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct EUTRANRoundTripDelayEstimationInfo(pub u16);
@@ -10647,20 +7612,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 2047, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for EUTRANRoundTripDelayEstimationInfo {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 2047)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// The octets, in hexadecimal.
@@ -10706,16 +7657,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EmergencyAreaID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octet_array::<3>(value)?))
-        }
-    }
     /// `EmergencyAreaID-Broadcast ::= SEQUENCE (SIZE (1..65535)) OF EmergencyAreaIDBroadcastItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDBroadcast(pub Vec<EmergencyAreaIDBroadcastItem>);
@@ -10752,18 +7693,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for EmergencyAreaIDBroadcast {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                EmergencyAreaIDBroadcastItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `EmergencyAreaID-Broadcast-Item ::= SEQUENCE`, with an extension marker.
@@ -10819,40 +7748,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EmergencyAreaIDBroadcastItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("emergencyAreaID", self.emergency_area_id.to_tree());
-            members.put("completedCellinEAI", self.completed_cellin_eai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::EmergencyAreaIDBroadcastItem)?;
-            let emergency_area_id =
-                reading.member(&members, "emergencyAreaID", EmergencyAreaID::from_tree)?;
-            let completed_cellin_eai = reading.member(
-                &members,
-                "completedCellinEAI",
-                CompletedCellinEAI::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                emergency_area_id,
-                completed_cellin_eai,
-                ie_extensions,
-            })
-        }
-    }
     /// `EmergencyAreaID-Cancelled ::= SEQUENCE (SIZE (1..65535)) OF EmergencyAreaIDCancelledItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDCancelled(pub Vec<EmergencyAreaIDCancelledItem>);
@@ -10889,18 +7784,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for EmergencyAreaIDCancelled {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                EmergencyAreaIDCancelledItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `EmergencyAreaID-Cancelled-Item ::= SEQUENCE`, with an extension marker.
@@ -10956,40 +7839,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EmergencyAreaIDCancelledItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("emergencyAreaID", self.emergency_area_id.to_tree());
-            members.put("cancelledCellinEAI", self.cancelled_cellin_eai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::EmergencyAreaIDCancelledItem)?;
-            let emergency_area_id =
-                reading.member(&members, "emergencyAreaID", EmergencyAreaID::from_tree)?;
-            let cancelled_cellin_eai = reading.member(
-                &members,
-                "cancelledCellinEAI",
-                CancelledCellinEAI::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                emergency_area_id,
-                cancelled_cellin_eai,
-                ie_extensions,
-            })
-        }
-    }
     /// `EmergencyAreaIDList ::= SEQUENCE (SIZE (1..65535)) OF EmergencyAreaID`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EmergencyAreaIDList(pub Vec<EmergencyAreaID>);
@@ -11026,18 +7875,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for EmergencyAreaIDList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                EmergencyAreaID::from_tree(value, reading)
-            })?))
         }
     }
     /// `EmergencyAreaIDListForRestart ::= SEQUENCE (SIZE (1..256)) OF EmergencyAreaID`.
@@ -11078,18 +7915,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EmergencyAreaIDListForRestart {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                EmergencyAreaID::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `EmergencyIndicator ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -11119,16 +7944,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for EmergencyIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::EmergencyIndicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::EmergencyIndicator)?])
         }
     }
     /// `En-gNB-ID ::= BIT STRING (SIZE (22..32, ...))`.
@@ -11169,16 +7984,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EnGNBID<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bit_string(&self.0, 22, 32, true)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bit_string(reading, value, 22, 32, true)?))
-        }
-    }
     /// `EncryptionAlgorithms ::= BIT STRING (SIZE (16, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct EncryptionAlgorithms<'a>(pub BitString<'a>);
@@ -11217,16 +8022,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EncryptionAlgorithms<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bit_string(&self.0, 16, 16, true)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bit_string(reading, value, 16, 16, true)?))
-        }
-    }
     /// `EndIndication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -11257,16 +8052,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for EndIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::EndIndication[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::EndIndication)?])
         }
     }
     /// `EnhancedCoverageRestricted ::= ENUMERATED`, with an extension marker.
@@ -11300,16 +8085,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EnhancedCoverageRestricted {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::EnhancedCoverageRestricted[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::EnhancedCoverageRestricted)?])
-        }
-    }
     /// `Ethernet-Type ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -11339,16 +8114,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for EthernetType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::EthernetType[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::EthernetType)?])
         }
     }
     /// `EventL1LoggedMDTConfig ::= SEQUENCE`, with an extension marker.
@@ -11410,43 +8175,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EventL1LoggedMDTConfig {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("l1Threshold", self.l1_threshold.to_tree());
-            members.put("hysteresis", self.hysteresis.to_tree());
-            members.put("timeToTrigger", self.time_to_trigger.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::EventL1LoggedMDTConfig)?;
-            let l1_threshold = reading.member(
-                &members,
-                "l1Threshold",
-                MeasurementThresholdL1LoggedMDT::from_tree,
-            )?;
-            let hysteresis = reading.member(&members, "hysteresis", Hysteresis::from_tree)?;
-            let time_to_trigger =
-                reading.member(&members, "timeToTrigger", TimeToTrigger::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                l1_threshold,
-                hysteresis,
-                time_to_trigger,
-                ie_extensions,
-            })
-        }
-    }
     /// `EventTriggerOutOfCoverage ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -11476,16 +8204,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for EventTriggerOutOfCoverage {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::EventTriggerOutOfCoverage[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::EventTriggerOutOfCoverage)?])
         }
     }
     /// `EventTrigger ::= CHOICE`.
@@ -11541,41 +8259,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EventTrigger {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::outOfCoverage(value) => json::alternative("outOfCoverage", value.to_tree()),
-                Self::eventL1LoggedMDTConfig(value) => {
-                    json::alternative("eventL1LoggedMDTConfig", value.to_tree())
-                }
-                Self::choice_Extensions(value) => {
-                    json::alternative("choice-Extensions", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::EventTrigger)?;
-            Ok(match position {
-                0 => Self::outOfCoverage(reading.within(
-                    "outOfCoverage",
-                    value,
-                    EventTriggerOutOfCoverage::from_tree,
-                )?),
-                1 => Self::eventL1LoggedMDTConfig(reading.within(
-                    "eventL1LoggedMDTConfig",
-                    value,
-                    EventL1LoggedMDTConfig::from_tree,
-                )?),
-                _ => Self::choice_Extensions(reading.within(
-                    "choice-Extensions",
-                    value,
-                    ProtocolIEField::from_tree,
-                )?),
-            })
-        }
-    }
     /// `EventType ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -11613,16 +8296,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for EventType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::EventType[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::EventType)?])
-        }
-    }
     /// `ExpectedActivityPeriod ::= INTEGER (1..181, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExpectedActivityPeriod(pub u64);
@@ -11651,16 +8324,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 1, 181, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ExpectedActivityPeriod {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
     /// `ExpectedHOInterval ::= ENUMERATED`, with an extension marker.
@@ -11708,16 +8371,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ExpectedHOInterval {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ExpectedHOInterval[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ExpectedHOInterval)?])
-        }
-    }
     /// `ExpectedIdlePeriod ::= INTEGER (1..181, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExpectedIdlePeriod(pub u64);
@@ -11746,16 +8399,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 1, 181, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ExpectedIdlePeriod {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
     /// `ExpectedUEActivityBehaviour ::= SEQUENCE`, with an extension marker.
@@ -11843,65 +8486,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ExpectedUEActivityBehaviour {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "expectedActivityPeriod",
-                self.expected_activity_period
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "expectedIdlePeriod",
-                self.expected_idle_period
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "sourceofUEActivityBehaviourInformation",
-                self.sourceof_ue_activity_behaviour_information
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ExpectedUEActivityBehaviour)?;
-            let expected_activity_period = reading.optional(
-                &members,
-                "expectedActivityPeriod",
-                ExpectedActivityPeriod::from_tree,
-            )?;
-            let expected_idle_period = reading.optional(
-                &members,
-                "expectedIdlePeriod",
-                ExpectedIdlePeriod::from_tree,
-            )?;
-            let sourceof_ue_activity_behaviour_information = reading.optional(
-                &members,
-                "sourceofUEActivityBehaviourInformation",
-                SourceOfUEActivityBehaviourInformation::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                expected_activity_period,
-                expected_idle_period,
-                sourceof_ue_activity_behaviour_information,
-                ie_extensions,
-            })
-        }
-    }
     /// `ExpectedUEBehaviour ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ExpectedUEBehaviour {
@@ -11970,51 +8554,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ExpectedUEBehaviour {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "expectedActivity",
-                self.expected_activity.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "expectedHOInterval",
-                self.expected_ho_interval
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ExpectedUEBehaviour)?;
-            let expected_activity = reading.optional(
-                &members,
-                "expectedActivity",
-                ExpectedUEActivityBehaviour::from_tree,
-            )?;
-            let expected_ho_interval = reading.optional(
-                &members,
-                "expectedHOInterval",
-                ExpectedHOInterval::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                expected_activity,
-                expected_ho_interval,
-                ie_extensions,
-            })
-        }
-    }
     /// `Extended-UEIdentityIndexValue ::= BIT STRING (SIZE (14))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExtendedUEIdentityIndexValue(pub Bits);
@@ -12055,16 +8594,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ExtendedUEIdentityIndexValue {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 14, 14)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 14, 14)?))
-        }
-    }
     /// `ExtendedBitRate ::= INTEGER (10000000001..4000000000000, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExtendedBitRate(pub u64);
@@ -12093,16 +8622,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 10000000001, 4000000000000, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ExtendedBitRate {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
     /// `ExtendedRNC-ID ::= INTEGER (4096..65535)`.
@@ -12135,20 +8654,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ExtendedRNCID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 4096, 65535)
-                    .map(|number| number as u16)?,
-            ))
-        }
-    }
     /// `ExtendedRepetitionPeriod ::= INTEGER (4096..131071)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ExtendedRepetitionPeriod(pub u32);
@@ -12177,20 +8682,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 4096, 131071, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ExtendedRepetitionPeriod {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 4096, 131071)
-                    .map(|number| number as u32)?,
-            ))
         }
     }
     /// The octets, in hexadecimal.
@@ -12234,17 +8725,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for FiveGSTAC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(24), json::octets(&self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(24), value)?;
-            Ok(Self(reading.octet_array::<3>(value)?))
         }
     }
     /// `FiveGSTAI ::= SEQUENCE`, with an extension marker.
@@ -12298,36 +8778,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for FiveGSTAI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_tree());
-            members.put("fiveGSTAC", self.five_gs_tac.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::FiveGSTAI)?;
-            let plmn_identity =
-                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
-            let five_gs_tac = reading.member(&members, "fiveGSTAC", FiveGSTAC::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                five_gs_tac,
-                ie_extensions,
-            })
-        }
-    }
     /// `FiveQI ::= INTEGER (0..255, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct FiveQI(pub u64);
@@ -12356,16 +8806,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 0, 255, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for FiveQI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
     /// `ForbiddenInterRATs ::= ENUMERATED`, with an extension marker.
@@ -12411,16 +8851,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ForbiddenInterRATs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ForbiddenInterRATs[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ForbiddenInterRATs)?])
-        }
-    }
     /// `ForbiddenLACs ::= SEQUENCE (SIZE (1..4096)) OF LAC`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenLACs(pub Vec<LAC>);
@@ -12459,18 +8889,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ForbiddenLACs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                LAC::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `ForbiddenLAs ::= SEQUENCE (SIZE (1..16)) OF ForbiddenLAsItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenLAs(pub Vec<ForbiddenLAsItem>);
@@ -12507,18 +8925,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ForbiddenLAs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ForbiddenLAsItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `ForbiddenLAs-Item ::= SEQUENCE`, with an extension marker.
@@ -12573,37 +8979,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ForbiddenLAsItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMN-Identity", self.plmn_identity.to_tree());
-            members.put("forbiddenLACs", self.forbidden_lacs.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ForbiddenLAsItem)?;
-            let plmn_identity =
-                reading.member(&members, "pLMN-Identity", PLMNidentity::from_tree)?;
-            let forbidden_lacs =
-                reading.member(&members, "forbiddenLACs", ForbiddenLACs::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                forbidden_lacs,
-                ie_extensions,
-            })
-        }
-    }
     /// `ForbiddenTACs ::= SEQUENCE (SIZE (1..4096)) OF TAC`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenTACs(pub Vec<TAC>);
@@ -12642,18 +9017,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ForbiddenTACs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TAC::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `ForbiddenTAs ::= SEQUENCE (SIZE (1..16)) OF ForbiddenTAsItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ForbiddenTAs(pub Vec<ForbiddenTAsItem>);
@@ -12690,18 +9053,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ForbiddenTAs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ForbiddenTAsItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `ForbiddenTAs-Item ::= SEQUENCE`, with an extension marker.
@@ -12754,37 +9105,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ForbiddenTAsItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMN-Identity", self.plmn_identity.to_tree());
-            members.put("forbiddenTACs", self.forbidden_tacs.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ForbiddenTAsItem)?;
-            let plmn_identity =
-                reading.member(&members, "pLMN-Identity", PLMNidentity::from_tree)?;
-            let forbidden_tacs =
-                reading.member(&members, "forbiddenTACs", ForbiddenTACs::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                forbidden_tacs,
-                ie_extensions,
-            })
         }
     }
     /// `GBR-QosInformation ::= SEQUENCE`, with an extension marker.
@@ -12854,57 +9174,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for GBRQosInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "e-RAB-MaximumBitrateDL",
-                self.e_rab_maximum_bitrate_dl.to_tree(),
-            );
-            members.put(
-                "e-RAB-MaximumBitrateUL",
-                self.e_rab_maximum_bitrate_ul.to_tree(),
-            );
-            members.put(
-                "e-RAB-GuaranteedBitrateDL",
-                self.e_rab_guaranteed_bitrate_dl.to_tree(),
-            );
-            members.put(
-                "e-RAB-GuaranteedBitrateUL",
-                self.e_rab_guaranteed_bitrate_ul.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::GBRQosInformation)?;
-            let e_rab_maximum_bitrate_dl =
-                reading.member(&members, "e-RAB-MaximumBitrateDL", BitRate::from_tree)?;
-            let e_rab_maximum_bitrate_ul =
-                reading.member(&members, "e-RAB-MaximumBitrateUL", BitRate::from_tree)?;
-            let e_rab_guaranteed_bitrate_dl =
-                reading.member(&members, "e-RAB-GuaranteedBitrateDL", BitRate::from_tree)?;
-            let e_rab_guaranteed_bitrate_ul =
-                reading.member(&members, "e-RAB-GuaranteedBitrateUL", BitRate::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_maximum_bitrate_dl,
-                e_rab_maximum_bitrate_ul,
-                e_rab_guaranteed_bitrate_dl,
-                e_rab_guaranteed_bitrate_ul,
-                ie_extensions,
-            })
-        }
-    }
     /// `GERAN-Cell-ID ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GERANCellID {
@@ -12956,38 +9225,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for GERANCellID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("lAI", self.lai.to_tree());
-            members.put("rAC", self.rac.to_tree());
-            members.put("cI", self.ci.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::GERANCellID)?;
-            let lai = reading.member(&members, "lAI", LAI::from_tree)?;
-            let rac = reading.member(&members, "rAC", RAC::from_tree)?;
-            let ci = reading.member(&members, "cI", CI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                lai,
-                rac,
-                ci,
-                ie_extensions,
-            })
-        }
-    }
     /// `GNB ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GNB {
@@ -13033,33 +9270,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for GNB {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("global-gNB-ID", self.global_gnb_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::GNB)?;
-            let global_gnb_id =
-                reading.member(&members, "global-gNB-ID", GlobalGNBID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                global_gnb_id,
-                ie_extensions,
-            })
-        }
-    }
     /// `GNB-ID ::= BIT STRING (SIZE (22..32))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct GNBID(pub Bits);
@@ -13088,16 +9298,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 22, 32)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for GNBID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 22, 32)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 22, 32)?))
         }
     }
     /// `GNB-Identity ::= CHOICE`, with an extension marker.
@@ -13133,22 +9333,6 @@ pub mod s1_ap_ies {
                 }
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for GNBIdentity {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::gNB_ID(value) => json::alternative("gNB-ID", value.to_tree()),
-            }
-        }
-        #[allow(clippy::match_single_binding)]
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::GNBIdentity)?;
-            Ok(match position {
-                _ => Self::gNB_ID(reading.within("gNB-ID", value, GNBID::from_tree)?),
-            })
         }
     }
     /// The octets, in hexadecimal.
@@ -13192,17 +9376,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for GTPTEID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(32), json::octets(&self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(32), value)?;
-            Ok(Self(reading.octet_array::<4>(value)?))
         }
     }
     /// `GUMMEI ::= SEQUENCE`, with an extension marker.
@@ -13260,39 +9433,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for GUMMEI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMN-Identity", self.plmn_identity.to_tree());
-            members.put("mME-Group-ID", self.mme_group_id.to_tree());
-            members.put("mME-Code", self.mme_code.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::GUMMEI)?;
-            let plmn_identity =
-                reading.member(&members, "pLMN-Identity", PLMNidentity::from_tree)?;
-            let mme_group_id = reading.member(&members, "mME-Group-ID", MMEGroupID::from_tree)?;
-            let mme_code = reading.member(&members, "mME-Code", MMECode::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                mme_group_id,
-                mme_code,
-                ie_extensions,
-            })
-        }
-    }
     /// `GUMMEIList ::= SEQUENCE (SIZE (1..256)) OF GUMMEI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GUMMEIList(pub Vec<GUMMEI>);
@@ -13331,18 +9471,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for GUMMEIList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                GUMMEI::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `GUMMEIType ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -13376,16 +9504,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for GUMMEIType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::GUMMEIType[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::GUMMEIType)?])
-        }
-    }
     /// `GWContextReleaseIndication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -13415,16 +9533,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for GWContextReleaseIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::GWContextReleaseIndication[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::GWContextReleaseIndication)?])
         }
     }
     /// `Global-ENB-ID ::= SEQUENCE`, with an extension marker.
@@ -13476,36 +9584,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for GlobalENBID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_tree());
-            members.put("eNB-ID", self.enb_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::GlobalENBID)?;
-            let plmn_identity =
-                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
-            let enb_id = reading.member(&members, "eNB-ID", ENBID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                enb_id,
-                ie_extensions,
-            })
-        }
-    }
     /// `Global-GNB-ID ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct GlobalGNBID {
@@ -13555,36 +9633,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for GlobalGNBID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMN-Identity", self.plmn_identity.to_tree());
-            members.put("gNB-ID", self.gnb_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::GlobalGNBID)?;
-            let plmn_identity =
-                reading.member(&members, "pLMN-Identity", PLMNidentity::from_tree)?;
-            let gnb_id = reading.member(&members, "gNB-ID", GNBIdentity::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                gnb_id,
-                ie_extensions,
-            })
-        }
-    }
     /// `Global-RAN-NODE-ID ::= CHOICE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
@@ -13626,23 +9674,6 @@ pub mod s1_ap_ies {
                 }
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for GlobalRANNODEID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::gNB(value) => json::alternative("gNB", value.to_tree()),
-                Self::ng_eNB(value) => json::alternative("ng-eNB", value.to_tree()),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::GlobalRANNODEID)?;
-            Ok(match position {
-                0 => Self::gNB(reading.within("gNB", value, GNB::from_tree)?),
-                _ => Self::ng_eNB(reading.within("ng-eNB", value, NGENB::from_tree)?),
-            })
         }
     }
     /// `Global-en-gNB-ID ::= SEQUENCE`, with an extension marker.
@@ -13707,36 +9738,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for GlobalEnGNBID<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_tree());
-            members.put("en-gNB-ID", self.en_gnb_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::GlobalEnGNBID)?;
-            let plmn_identity =
-                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
-            let en_gnb_id = reading.member(&members, "en-gNB-ID", EnGNBID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                en_gnb_id,
-                ie_extensions,
-            })
-        }
-    }
     /// `HFN ::= INTEGER (0..1048575)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HFN(pub u32);
@@ -13765,20 +9766,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 1048575, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for HFN {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 1048575)
-                    .map(|number| number as u32)?,
-            ))
         }
     }
     /// `HFNModified ::= INTEGER (0..131071)`.
@@ -13811,20 +9798,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for HFNModified {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 131071)
-                    .map(|number| number as u32)?,
-            ))
-        }
-    }
     /// `HFNforPDCP-SNlength18 ::= INTEGER (0..16383)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HFNforPDCPSNlength18(pub u16);
@@ -13853,20 +9826,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 16383, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for HFNforPDCPSNlength18 {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 16383)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// `HandoverFlag ::= ENUMERATED`, with an extension marker.
@@ -13898,16 +9857,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverFlag {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::HandoverFlag[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::HandoverFlag)?])
         }
     }
     /// `HandoverRestrictionList ::= SEQUENCE`, with an extension marker.
@@ -14001,65 +9950,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverRestrictionList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("servingPLMN", self.serving_plmn.to_tree());
-            members.put_optional(
-                "equivalentPLMNs",
-                self.equivalent_plmns.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "forbiddenTAs",
-                self.forbidden_tas.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "forbiddenLAs",
-                self.forbidden_las.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "forbiddenInterRATs",
-                self.forbidden_inter_rats
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::HandoverRestrictionList)?;
-            let serving_plmn = reading.member(&members, "servingPLMN", PLMNidentity::from_tree)?;
-            let equivalent_plmns =
-                reading.optional(&members, "equivalentPLMNs", EPLMNs::from_tree)?;
-            let forbidden_tas =
-                reading.optional(&members, "forbiddenTAs", ForbiddenTAs::from_tree)?;
-            let forbidden_las =
-                reading.optional(&members, "forbiddenLAs", ForbiddenLAs::from_tree)?;
-            let forbidden_inter_rats = reading.optional(
-                &members,
-                "forbiddenInterRATs",
-                ForbiddenInterRATs::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                serving_plmn,
-                equivalent_plmns,
-                forbidden_tas,
-                forbidden_las,
-                forbidden_inter_rats,
-                ie_extensions,
-            })
-        }
-    }
     /// `HandoverType ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -14105,16 +9995,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::HandoverType[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::HandoverType)?])
-        }
-    }
     /// `HandoverWindowDuration ::= INTEGER (1..6000)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct HandoverWindowDuration(pub u16);
@@ -14143,20 +10023,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 1, 6000, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverWindowDuration {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 1, 6000)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// `HandoverWindowStart ::= INTEGER (0..1048575)`.
@@ -14189,20 +10055,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverWindowStart {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 1048575)
-                    .map(|number| number as u32)?,
-            ))
-        }
-    }
     /// `Hysteresis ::= INTEGER (0..30)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct Hysteresis(pub u8);
@@ -14231,18 +10083,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 30, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for Hysteresis {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading.unsigned(value, 0, 30).map(|number| number as u8)?,
-            ))
         }
     }
     /// `IAB-Authorized ::= ENUMERATED`, with an extension marker.
@@ -14277,16 +10117,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for IABAuthorized {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::IABAuthorized[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::IABAuthorized)?])
-        }
-    }
     /// `IAB-Node-Indication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -14318,16 +10148,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for IABNodeIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::IABNodeIndication[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::IABNodeIndication)?])
-        }
-    }
     /// `IAB-Supported ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -14357,16 +10177,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for IABSupported {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::IABSupported[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::IABSupported)?])
         }
     }
     /// `IMSI ::= OCTET STRING (SIZE (3..8))`.
@@ -14417,17 +10227,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for IMSI<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Digits, json::octets(&self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Digits, value)?;
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `IMSvoiceEPSfallbackfrom5G ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -14457,16 +10256,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for IMSvoiceEPSfallbackfrom5G {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::IMSvoiceEPSfallbackfrom5G[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::IMSvoiceEPSfallbackfrom5G)?])
         }
     }
     /// `ImmediateMDT ::= SEQUENCE`, with an extension marker.
@@ -14551,70 +10340,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ImmediateMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "measurementsToActivate",
-                self.measurements_to_activate.to_tree(),
-            );
-            members.put("m1reportingTrigger", self.m1_reporting_trigger.to_tree());
-            members.put_optional(
-                "m1thresholdeventA2",
-                self.m1_thresholdevent_a2
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "m1periodicReporting",
-                self.m1_periodic_reporting
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ImmediateMDT)?;
-            let measurements_to_activate = reading.member(
-                &members,
-                "measurementsToActivate",
-                MeasurementsToActivate::from_tree,
-            )?;
-            let m1_reporting_trigger = reading.member(
-                &members,
-                "m1reportingTrigger",
-                M1ReportingTrigger::from_tree,
-            )?;
-            let m1_thresholdevent_a2 = reading.optional(
-                &members,
-                "m1thresholdeventA2",
-                M1ThresholdEventA2::from_tree,
-            )?;
-            let m1_periodic_reporting = reading.optional(
-                &members,
-                "m1periodicReporting",
-                M1PeriodicReporting::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                measurements_to_activate,
-                m1_reporting_trigger,
-                m1_thresholdevent_a2,
-                m1_periodic_reporting,
-                ie_extensions,
-            })
-        }
-    }
     /// `InformationOnRecommendedCellsAndENBsForPaging ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct InformationOnRecommendedCellsAndENBsForPaging<'a> {
@@ -14679,50 +10404,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for InformationOnRecommendedCellsAndENBsForPaging<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "recommendedCellsForPaging",
-                self.recommended_cells_for_paging.to_tree(),
-            );
-            members.put(
-                "recommendENBsForPaging",
-                self.recommend_enbs_for_paging.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members =
-                reading.members(value, names::InformationOnRecommendedCellsAndENBsForPaging)?;
-            let recommended_cells_for_paging = reading.member(
-                &members,
-                "recommendedCellsForPaging",
-                RecommendedCellsForPaging::from_tree,
-            )?;
-            let recommend_enbs_for_paging = reading.member(
-                &members,
-                "recommendENBsForPaging",
-                RecommendedENBsForPaging::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                recommended_cells_for_paging,
-                recommend_enbs_for_paging,
-                ie_extensions,
-            })
-        }
-    }
     /// `IntegrityProtectionAlgorithms ::= BIT STRING (SIZE (16, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IntegrityProtectionAlgorithms<'a>(pub BitString<'a>);
@@ -14761,16 +10442,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for IntegrityProtectionAlgorithms<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bit_string(&self.0, 16, 16, true)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bit_string(reading, value, 16, 16, true)?))
-        }
-    }
     /// `IntegrityProtectionIndication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -14802,16 +10473,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 3, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for IntegrityProtectionIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::IntegrityProtectionIndication[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::IntegrityProtectionIndication)?])
         }
     }
     /// `IntegrityProtectionResult ::= ENUMERATED`, with an extension marker.
@@ -14846,16 +10507,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for IntegrityProtectionResult {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::IntegrityProtectionResult[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::IntegrityProtectionResult)?])
-        }
-    }
     /// `IntendedNumberOfPagingAttempts ::= INTEGER (1..16, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct IntendedNumberOfPagingAttempts(pub u64);
@@ -14884,16 +10535,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 1, 16, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for IntendedNumberOfPagingAttempts {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
     /// `InterSystemMeasurementItemSubcarrierSpacingSSB ::= ENUMERATED`, with an extension marker.
@@ -14939,17 +10580,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 5, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for InterSystemMeasurementItemSubcarrierSpacingSSB {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::InterSystemMeasurementItemSubcarrierSpacingSSB[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES
-                [reading.named(value, names::InterSystemMeasurementItemSubcarrierSpacingSSB)?])
         }
     }
     /// `InterSystemMeasurementItem ::= SEQUENCE`.
@@ -15151,129 +10781,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for InterSystemMeasurementItem<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "freqBandIndicatorNR",
-                json::unsigned(u64::from(self.freq_band_indicator_nr)),
-            );
-            members.put(
-                "sSBfrequencies",
-                json::unsigned(u64::from(self.ssb_frequencies)),
-            );
-            members.put(
-                "subcarrierSpacingSSB",
-                self.subcarrier_spacing_ssb.to_tree(),
-            );
-            members.put_optional(
-                "maxRSIndexCellQual",
-                self.max_rs_index_cell_qual
-                    .as_ref()
-                    .map(|value| json::unsigned(u64::from(*value))),
-            );
-            members.put_optional("sMTC", self.smtc.as_ref().map(|value| json::octets(value)));
-            members.put_optional(
-                "threshRS-Index-r15",
-                self.thresh_rs_index_r15
-                    .as_ref()
-                    .map(|value| json::octets(value)),
-            );
-            members.put_optional(
-                "sSBToMeasure",
-                self.ssb_to_measure
-                    .as_ref()
-                    .map(|value| json::octets(value)),
-            );
-            members.put_optional(
-                "sSRSSIMeasurement",
-                self.ss_rssi_measurement
-                    .as_ref()
-                    .map(|value| json::octets(value)),
-            );
-            members.put_optional(
-                "quantityConfigNR-R15",
-                self.quantity_config_nr_r15
-                    .as_ref()
-                    .map(|value| json::octets(value)),
-            );
-            members.put_optional(
-                "excludedCellsToAddModList",
-                self.excluded_cells_to_add_mod_list
-                    .as_ref()
-                    .map(|value| json::octets(value)),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::InterSystemMeasurementItem)?;
-            let freq_band_indicator_nr =
-                reading.member(&members, "freqBandIndicatorNR", |value, reading| {
-                    reading.unsigned(value, 1, 1024).map(|number| number as u16)
-                })?;
-            let ssb_frequencies =
-                reading.member(&members, "sSBfrequencies", |value, reading| {
-                    reading
-                        .unsigned(value, 0, 3279165)
-                        .map(|number| number as u32)
-                })?;
-            let subcarrier_spacing_ssb = reading.member(
-                &members,
-                "subcarrierSpacingSSB",
-                InterSystemMeasurementItemSubcarrierSpacingSSB::from_tree,
-            )?;
-            let max_rs_index_cell_qual =
-                reading.optional(&members, "maxRSIndexCellQual", |value, reading| {
-                    reading.unsigned(value, 1, 16).map(|number| number as u8)
-                })?;
-            let smtc = reading.optional(&members, "sMTC", |value, reading| {
-                json::read_octets(reading, value)
-            })?;
-            let thresh_rs_index_r15 =
-                reading.optional(&members, "threshRS-Index-r15", |value, reading| {
-                    json::read_octets(reading, value)
-                })?;
-            let ssb_to_measure = reading.optional(&members, "sSBToMeasure", |value, reading| {
-                json::read_octets(reading, value)
-            })?;
-            let ss_rssi_measurement =
-                reading.optional(&members, "sSRSSIMeasurement", |value, reading| {
-                    json::read_octets(reading, value)
-                })?;
-            let quantity_config_nr_r15 =
-                reading.optional(&members, "quantityConfigNR-R15", |value, reading| {
-                    json::read_octets(reading, value)
-                })?;
-            let excluded_cells_to_add_mod_list =
-                reading.optional(&members, "excludedCellsToAddModList", |value, reading| {
-                    json::read_octets(reading, value)
-                })?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                freq_band_indicator_nr,
-                ssb_frequencies,
-                subcarrier_spacing_ssb,
-                max_rs_index_cell_qual,
-                smtc,
-                thresh_rs_index_r15,
-                ssb_to_measure,
-                ss_rssi_measurement,
-                quantity_config_nr_r15,
-                excluded_cells_to_add_mod_list,
-                ie_extensions,
-            })
-        }
-    }
     /// `InterSystemMeasurementList ::= SEQUENCE (SIZE (1..64)) OF InterSystemMeasurementItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct InterSystemMeasurementList<'a>(pub Vec<InterSystemMeasurementItem<'a>>);
@@ -15317,18 +10824,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for InterSystemMeasurementList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                InterSystemMeasurementItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `InterSystemMeasurementParameters ::= SEQUENCE`, with an extension marker.
@@ -15408,50 +10903,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for InterSystemMeasurementParameters<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "measurementDuration",
-                json::unsigned(u64::from(self.measurement_duration)),
-            );
-            members.put_optional(
-                "interSystemMeasurementList",
-                self.inter_system_measurement_list
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::InterSystemMeasurementParameters)?;
-            let measurement_duration =
-                reading.member(&members, "measurementDuration", |value, reading| {
-                    reading.unsigned(value, 1, 100).map(|number| number as u8)
-                })?;
-            let inter_system_measurement_list = reading.optional(
-                &members,
-                "interSystemMeasurementList",
-                InterSystemMeasurementList::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                measurement_duration,
-                inter_system_measurement_list,
-                ie_extensions,
-            })
-        }
-    }
     /// `InterfacesToTrace ::= BIT STRING (SIZE (8))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct InterfacesToTrace(pub Bits);
@@ -15490,16 +10941,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 8, 8)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for InterfacesToTrace {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 8, 8)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 8, 8)?))
         }
     }
     /// `IntersystemMeasurementConfiguration ::= SEQUENCE`, with an extension marker.
@@ -15603,69 +11044,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for IntersystemMeasurementConfiguration<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "rSRP",
-                self.rsrp
-                    .as_ref()
-                    .map(|value| json::unsigned(u64::from(*value))),
-            );
-            members.put_optional(
-                "rSRQ",
-                self.rsrq
-                    .as_ref()
-                    .map(|value| json::unsigned(u64::from(*value))),
-            );
-            members.put_optional(
-                "sINR",
-                self.sinr
-                    .as_ref()
-                    .map(|value| json::unsigned(u64::from(*value))),
-            );
-            members.put(
-                "interSystemMeasurementParameters",
-                self.inter_system_measurement_parameters.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::IntersystemMeasurementConfiguration)?;
-            let rsrp = reading.optional(&members, "rSRP", |value, reading| {
-                reading.unsigned(value, 0, 127).map(|number| number as u8)
-            })?;
-            let rsrq = reading.optional(&members, "rSRQ", |value, reading| {
-                reading.unsigned(value, 0, 127).map(|number| number as u8)
-            })?;
-            let sinr = reading.optional(&members, "sINR", |value, reading| {
-                reading.unsigned(value, 0, 127).map(|number| number as u8)
-            })?;
-            let inter_system_measurement_parameters = reading.member(
-                &members,
-                "interSystemMeasurementParameters",
-                InterSystemMeasurementParameters::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                rsrp,
-                rsrq,
-                sinr,
-                inter_system_measurement_parameters,
-                ie_extensions,
-            })
-        }
-    }
     /// `IntersystemSONConfigurationTransfer ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IntersystemSONConfigurationTransfer<'a>(pub Octets<'a>);
@@ -15714,16 +11092,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for IntersystemSONConfigurationTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `KillAllWarningMessages ::= ENUMERATED`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum KillAllWarningMessages {
@@ -15752,16 +11120,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, false);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for KillAllWarningMessages {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::KillAllWarningMessages[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::KillAllWarningMessages)?])
         }
     }
     /// `L3-Information ::= OCTET STRING`.
@@ -15812,16 +11170,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for L3Information<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// The octets, in hexadecimal.
     impl core::fmt::Display for LAC {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -15863,17 +11211,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for LAC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(16), json::octets(&self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(16), value)?;
-            Ok(Self(reading.octet_array::<2>(value)?))
         }
     }
     /// `LAI ::= SEQUENCE`, with an extension marker.
@@ -15925,36 +11262,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for LAI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_tree());
-            members.put("lAC", self.lac.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::LAI)?;
-            let plmn_identity =
-                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
-            let lac = reading.member(&members, "lAC", LAC::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                lac,
-                ie_extensions,
-            })
-        }
-    }
     /// `LHN-ID ::= OCTET STRING (SIZE (32..256))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LHNID<'a>(pub Octets<'a>);
@@ -16001,16 +11308,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 32, 256, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for LHNID<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `LPPa-PDU ::= OCTET STRING`.
@@ -16062,16 +11359,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for LPPaPDU<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `LTE-M-Indication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -16101,16 +11388,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for LTEMIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::LTEMIndication[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::LTEMIndication)?])
         }
     }
     /// `LTE-NTN-TAI-Information ::= SEQUENCE`, with an extension marker.
@@ -16176,45 +11453,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for LTENTNTAIInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("servingPLMN", self.serving_plmn.to_tree());
-            members.put("tACList-In-LTE-NTN", self.tac_list_in_lte_ntn.to_tree());
-            members.put_optional(
-                "uE-Location-Derived-TAC",
-                self.ue_location_derived_tac
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::LTENTNTAIInformation)?;
-            let serving_plmn = reading.member(&members, "servingPLMN", PLMNidentity::from_tree)?;
-            let tac_list_in_lte_ntn =
-                reading.member(&members, "tACList-In-LTE-NTN", TACListInLTENTN::from_tree)?;
-            let ue_location_derived_tac =
-                reading.optional(&members, "uE-Location-Derived-TAC", TAC::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                serving_plmn,
-                tac_list_in_lte_ntn,
-                ue_location_derived_tac,
-                ie_extensions,
-            })
         }
     }
     /// `LastVisitedCell-Item ::= CHOICE`, with an extension marker.
@@ -16309,43 +11547,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for LastVisitedCellItem<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::e_UTRAN_Cell(value) => json::alternative("e-UTRAN-Cell", value.to_tree()),
-                Self::uTRAN_Cell(value) => json::alternative("uTRAN-Cell", value.to_tree()),
-                Self::gERAN_Cell(value) => json::alternative("gERAN-Cell", value.to_tree()),
-                Self::nG_RAN_Cell(value) => json::alternative("nG-RAN-Cell", value.to_tree()),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::LastVisitedCellItem)?;
-            Ok(match position {
-                0 => Self::e_UTRAN_Cell(reading.within(
-                    "e-UTRAN-Cell",
-                    value,
-                    LastVisitedEUTRANCellInformation::from_tree,
-                )?),
-                1 => Self::uTRAN_Cell(reading.within(
-                    "uTRAN-Cell",
-                    value,
-                    LastVisitedUTRANCellInformation::from_tree,
-                )?),
-                2 => Self::gERAN_Cell(reading.within(
-                    "gERAN-Cell",
-                    value,
-                    LastVisitedGERANCellInformation::from_tree,
-                )?),
-                _ => Self::nG_RAN_Cell(reading.within(
-                    "nG-RAN-Cell",
-                    value,
-                    LastVisitedNGRANCellInformation::from_tree,
-                )?),
-            })
-        }
-    }
     /// `LastVisitedEUTRANCellInformation ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedEUTRANCellInformation {
@@ -16404,46 +11605,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for LastVisitedEUTRANCellInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("global-Cell-ID", self.global_cell_id.to_tree());
-            members.put("cellType", self.cell_type.to_tree());
-            members.put(
-                "time-UE-StayedInCell",
-                self.time_ue_stayed_in_cell.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::LastVisitedEUTRANCellInformation)?;
-            let global_cell_id =
-                reading.member(&members, "global-Cell-ID", EUTRANCGI::from_tree)?;
-            let cell_type = reading.member(&members, "cellType", CellType::from_tree)?;
-            let time_ue_stayed_in_cell = reading.member(
-                &members,
-                "time-UE-StayedInCell",
-                TimeUEStayedInCell::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                global_cell_id,
-                cell_type,
-                time_ue_stayed_in_cell,
-                ie_extensions,
-            })
-        }
-    }
     /// `LastVisitedGERANCellInformation ::= CHOICE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
@@ -16476,25 +11637,6 @@ pub mod s1_ap_ies {
                 }
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for LastVisitedGERANCellInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::undefined(value) => json::alternative("undefined", Value::Null),
-            }
-        }
-        #[allow(clippy::match_single_binding)]
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) =
-                reading.alternative(value, names::LastVisitedGERANCellInformation)?;
-            Ok(match position {
-                _ => Self::undefined(
-                    reading.within("undefined", value, |value, reading| reading.null(value))?,
-                ),
-            })
         }
     }
     /// `LastVisitedNGRANCellInformation ::= OCTET STRING`.
@@ -16543,16 +11685,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for LastVisitedNGRANCellInformation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `LastVisitedPSCellInformation ::= SEQUENCE`, with an extension marker.
@@ -16613,43 +11745,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for LastVisitedPSCellInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "pSCellID",
-                self.ps_cell_id.as_ref().map(|value| value.to_tree()),
-            );
-            members.put("timeStay", json::unsigned(u64::from(self.time_stay)));
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::LastVisitedPSCellInformation)?;
-            let ps_cell_id =
-                reading.optional(&members, "pSCellID", PSCellInformation::from_tree)?;
-            let time_stay = reading.member(&members, "timeStay", |value, reading| {
-                reading
-                    .unsigned(value, 0, 40950)
-                    .map(|number| number as u16)
-            })?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ps_cell_id,
-                time_stay,
-                ie_extensions,
-            })
-        }
-    }
     /// `LastVisitedPSCellList ::= SEQUENCE (SIZE (1..8)) OF LastVisitedPSCellInformation`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LastVisitedPSCellList(pub Vec<LastVisitedPSCellInformation>);
@@ -16686,18 +11781,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for LastVisitedPSCellList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                LastVisitedPSCellInformation::from_tree(value, reading)
-            })?))
         }
     }
     /// `LastVisitedUTRANCellInformation ::= OCTET STRING`.
@@ -16748,16 +11831,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for LastVisitedUTRANCellInformation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `Links-to-log ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -16790,16 +11863,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 3, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for LinksToLog {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::LinksToLog[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::LinksToLog)?])
         }
     }
     /// `ListeningSubframePatternPatternPeriod ::= ENUMERATED`, with an extension marker.
@@ -16835,16 +11898,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 4, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ListeningSubframePatternPatternPeriod {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ListeningSubframePatternPatternPeriod[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ListeningSubframePatternPatternPeriod)?])
         }
     }
     /// `ListeningSubframePattern ::= SEQUENCE`, with an extension marker.
@@ -16899,41 +11952,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ListeningSubframePattern {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pattern-period", self.pattern_period.to_tree());
-            members.put("pattern-offset", json::unsigned(self.pattern_offset));
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ListeningSubframePattern)?;
-            let pattern_period = reading.member(
-                &members,
-                "pattern-period",
-                ListeningSubframePatternPatternPeriod::from_tree,
-            )?;
-            let pattern_offset = reading.member(&members, "pattern-offset", |value, reading| {
-                reading.unsigned(value, u64::MIN, u64::MAX)
-            })?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                pattern_period,
-                pattern_offset,
-                ie_extensions,
-            })
         }
     }
     /// `LoggedMBSFNMDT ::= SEQUENCE`, with an extension marker.
@@ -17002,46 +12020,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for LoggedMBSFNMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("loggingInterval", self.logging_interval.to_tree());
-            members.put("loggingDuration", self.logging_duration.to_tree());
-            members.put_optional(
-                "mBSFN-ResultToLog",
-                self.mbsfn_result_to_log
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::LoggedMBSFNMDT)?;
-            let logging_interval =
-                reading.member(&members, "loggingInterval", LoggingInterval::from_tree)?;
-            let logging_duration =
-                reading.member(&members, "loggingDuration", LoggingDuration::from_tree)?;
-            let mbsfn_result_to_log =
-                reading.optional(&members, "mBSFN-ResultToLog", MBSFNResultToLog::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                logging_interval,
-                logging_duration,
-                mbsfn_result_to_log,
-                ie_extensions,
-            })
-        }
-    }
     /// `LoggedMDT ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LoggedMDT {
@@ -17095,37 +12073,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for LoggedMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("loggingInterval", self.logging_interval.to_tree());
-            members.put("loggingDuration", self.logging_duration.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::LoggedMDT)?;
-            let logging_interval =
-                reading.member(&members, "loggingInterval", LoggingInterval::from_tree)?;
-            let logging_duration =
-                reading.member(&members, "loggingDuration", LoggingDuration::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                logging_interval,
-                logging_duration,
-                ie_extensions,
-            })
-        }
-    }
     /// `LoggedMDTTrigger ::= CHOICE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
@@ -17168,29 +12115,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for LoggedMDTTrigger {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::periodical(value) => json::alternative("periodical", Value::Null),
-                Self::eventTrigger(value) => json::alternative("eventTrigger", value.to_tree()),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::LoggedMDTTrigger)?;
-            Ok(match position {
-                0 => Self::periodical(
-                    reading.within("periodical", value, |value, reading| reading.null(value))?,
-                ),
-                _ => Self::eventTrigger(reading.within(
-                    "eventTrigger",
-                    value,
-                    EventTrigger::from_tree,
-                )?),
-            })
-        }
-    }
     /// `LoggingDuration ::= ENUMERATED`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum LoggingDuration {
@@ -17231,16 +12155,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 6, false);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for LoggingDuration {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::LoggingDuration[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::LoggingDuration)?])
         }
     }
     /// `LoggingInterval ::= ENUMERATED`.
@@ -17289,16 +12203,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for LoggingInterval {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::LoggingInterval[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::LoggingInterval)?])
-        }
-    }
     /// The octets, in hexadecimal.
     impl core::fmt::Display for MTMSI {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -17340,17 +12244,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MTMSI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(32), json::octets(&self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(32), value)?;
-            Ok(Self(reading.octet_array::<4>(value)?))
         }
     }
     /// `M1PeriodicReporting ::= SEQUENCE`, with an extension marker.
@@ -17406,37 +12299,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for M1PeriodicReporting {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("reportInterval", self.report_interval.to_tree());
-            members.put("reportAmount", self.report_amount.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::M1PeriodicReporting)?;
-            let report_interval =
-                reading.member(&members, "reportInterval", ReportIntervalMDT::from_tree)?;
-            let report_amount =
-                reading.member(&members, "reportAmount", ReportAmountMDT::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                report_interval,
-                report_amount,
-                ie_extensions,
-            })
-        }
-    }
     /// `M1ReportingTrigger ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -17472,16 +12334,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for M1ReportingTrigger {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::M1ReportingTrigger[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::M1ReportingTrigger)?])
         }
     }
     /// `M1ThresholdEventA2 ::= SEQUENCE`, with an extension marker.
@@ -17531,36 +12383,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for M1ThresholdEventA2 {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("measurementThreshold", self.measurement_threshold.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::M1ThresholdEventA2)?;
-            let measurement_threshold = reading.member(
-                &members,
-                "measurementThreshold",
-                MeasurementThresholdA2::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                measurement_threshold,
-                ie_extensions,
-            })
-        }
-    }
     /// `M3Configuration ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct M3Configuration {
@@ -17604,32 +12426,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for M3Configuration {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("m3period", self.m3_period.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::M3Configuration)?;
-            let m3_period = reading.member(&members, "m3period", M3period::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                m3_period,
-                ie_extensions,
-            })
         }
     }
     /// `M3period ::= ENUMERATED`, with an extension marker.
@@ -17681,16 +12477,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 3, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for M3period {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::M3period[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::M3period)?])
         }
     }
     /// `M4Configuration ::= SEQUENCE`, with an extension marker.
@@ -17745,36 +12531,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for M4Configuration {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("m4period", self.m4_period.to_tree());
-            members.put("m4-links-to-log", self.m4_links_to_log.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::M4Configuration)?;
-            let m4_period = reading.member(&members, "m4period", M4period::from_tree)?;
-            let m4_links_to_log =
-                reading.member(&members, "m4-links-to-log", LinksToLog::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                m4_period,
-                m4_links_to_log,
-                ie_extensions,
-            })
-        }
-    }
     /// `M4ReportAmountMDT ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -17822,16 +12578,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for M4ReportAmountMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::M4ReportAmountMDT[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::M4ReportAmountMDT)?])
-        }
-    }
     /// `M4period ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -17871,16 +12617,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 5, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for M4period {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::M4period[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::M4period)?])
         }
     }
     /// `M5Configuration ::= SEQUENCE`, with an extension marker.
@@ -17935,36 +12671,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for M5Configuration {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("m5period", self.m5_period.to_tree());
-            members.put("m5-links-to-log", self.m5_links_to_log.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::M5Configuration)?;
-            let m5_period = reading.member(&members, "m5period", M5period::from_tree)?;
-            let m5_links_to_log =
-                reading.member(&members, "m5-links-to-log", LinksToLog::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                m5_period,
-                m5_links_to_log,
-                ie_extensions,
-            })
-        }
-    }
     /// `M5ReportAmountMDT ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -18012,16 +12718,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for M5ReportAmountMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::M5ReportAmountMDT[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::M5ReportAmountMDT)?])
-        }
-    }
     /// `M5period ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -18061,16 +12757,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 5, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for M5period {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::M5period[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::M5period)?])
         }
     }
     /// `M6Configuration ::= SEQUENCE`, with an extension marker.
@@ -18139,46 +12825,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for M6Configuration {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("m6report-Interval", self.m6_report_interval.to_tree());
-            members.put_optional(
-                "m6delay-threshold",
-                self.m6_delay_threshold
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put("m6-links-to-log", self.m6_links_to_log.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::M6Configuration)?;
-            let m6_report_interval =
-                reading.member(&members, "m6report-Interval", M6reportInterval::from_tree)?;
-            let m6_delay_threshold =
-                reading.optional(&members, "m6delay-threshold", M6delayThreshold::from_tree)?;
-            let m6_links_to_log =
-                reading.member(&members, "m6-links-to-log", LinksToLog::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                m6_report_interval,
-                m6_delay_threshold,
-                m6_links_to_log,
-                ie_extensions,
-            })
-        }
-    }
     /// `M6ReportAmountMDT ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -18224,16 +12870,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 8, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for M6ReportAmountMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::M6ReportAmountMDT[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::M6ReportAmountMDT)?])
         }
     }
     /// `M6delay-threshold ::= ENUMERATED`, with an extension marker.
@@ -18291,16 +12927,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for M6delayThreshold {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::M6delayThreshold[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::M6delayThreshold)?])
-        }
-    }
     /// `M6report-Interval ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -18334,16 +12960,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 4, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for M6reportInterval {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::M6reportInterval[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::M6reportInterval)?])
         }
     }
     /// `M7Configuration ::= SEQUENCE`, with an extension marker.
@@ -18398,36 +13014,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for M7Configuration {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("m7period", self.m7_period.to_tree());
-            members.put("m7-links-to-log", self.m7_links_to_log.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::M7Configuration)?;
-            let m7_period = reading.member(&members, "m7period", M7period::from_tree)?;
-            let m7_links_to_log =
-                reading.member(&members, "m7-links-to-log", LinksToLog::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                m7_period,
-                m7_links_to_log,
-                ie_extensions,
-            })
-        }
-    }
     /// `M7ReportAmountMDT ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -18475,16 +13061,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for M7ReportAmountMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::M7ReportAmountMDT[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::M7ReportAmountMDT)?])
-        }
-    }
     /// `M7period ::= INTEGER (1..60, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct M7period(pub u64);
@@ -18513,16 +13089,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 1, 60, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for M7period {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
     /// `MBSFN-ResultToLog ::= SEQUENCE (SIZE (1..8)) OF MBSFNResultToLogInfo`.
@@ -18561,18 +13127,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MBSFNResultToLog {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                MBSFNResultToLogInfo::from_tree(value, reading)
-            })?))
         }
     }
     /// `MBSFN-ResultToLogInfo ::= SEQUENCE`, with an extension marker.
@@ -18637,42 +13191,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MBSFNResultToLogInfo {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "mBSFN-AreaId",
-                self.mbsfn_area_id
-                    .as_ref()
-                    .map(|value| json::unsigned(u64::from(*value))),
-            );
-            members.put("carrierFreq", self.carrier_freq.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::MBSFNResultToLogInfo)?;
-            let mbsfn_area_id = reading.optional(&members, "mBSFN-AreaId", |value, reading| {
-                reading.unsigned(value, 0, 255).map(|number| number as u8)
-            })?;
-            let carrier_freq = reading.member(&members, "carrierFreq", EARFCN::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                mbsfn_area_id,
-                carrier_freq,
-                ie_extensions,
-            })
-        }
-    }
     /// `MDT-Activation ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -18710,16 +13228,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 3, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MDTActivation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::MDTActivation[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::MDTActivation)?])
         }
     }
     /// `MDT-Configuration ::= SEQUENCE`, with an extension marker.
@@ -18791,40 +13299,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MDTConfiguration<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("mdt-Activation", self.mdt_activation.to_tree());
-            members.put("areaScopeOfMDT", self.area_scope_of_mdt.to_tree());
-            members.put("mDTMode", self.mdt_mode.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::MDTConfiguration)?;
-            let mdt_activation =
-                reading.member(&members, "mdt-Activation", MDTActivation::from_tree)?;
-            let area_scope_of_mdt =
-                reading.member(&members, "areaScopeOfMDT", AreaScopeOfMDT::from_tree)?;
-            let mdt_mode = reading.member(&members, "mDTMode", MDTMode::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                mdt_activation,
-                area_scope_of_mdt,
-                mdt_mode,
-                ie_extensions,
-            })
-        }
-    }
     /// `MDT-ConfigurationNR ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MDTConfigurationNR<'a>(pub Octets<'a>);
@@ -18873,16 +13347,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MDTConfigurationNR<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `MDT-Location-Info ::= BIT STRING (SIZE (8))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MDTLocationInfo(pub Bits);
@@ -18921,16 +13385,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 8, 8)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MDTLocationInfo {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 8, 8)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 8, 8)?))
         }
     }
     /// `MDTMode ::= CHOICE`, with an extension marker.
@@ -19013,35 +13467,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MDTMode<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::immediateMDT(value) => json::alternative("immediateMDT", value.to_tree()),
-                Self::loggedMDT(value) => json::alternative("loggedMDT", value.to_tree()),
-                Self::mDTMode_Extension(value) => {
-                    json::alternative("mDTMode-Extension", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::MDTMode)?;
-            Ok(match position {
-                0 => Self::immediateMDT(reading.within(
-                    "immediateMDT",
-                    value,
-                    ImmediateMDT::from_tree,
-                )?),
-                1 => Self::loggedMDT(reading.within("loggedMDT", value, LoggedMDT::from_tree)?),
-                _ => Self::mDTMode_Extension(reading.within(
-                    "mDTMode-Extension",
-                    value,
-                    ProtocolIEField::from_tree,
-                )?),
-            })
-        }
-    }
     /// `MDTPLMNList ::= SEQUENCE (SIZE (1..16)) OF PLMNidentity`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MDTPLMNList(pub Vec<PLMNidentity>);
@@ -19078,18 +13503,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MDTPLMNList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                PLMNidentity::from_tree(value, reading)
-            })?))
         }
     }
     /// The octets, in hexadecimal.
@@ -19135,17 +13548,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMECode {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(8), json::octets(&self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(8), value)?;
-            Ok(Self(reading.octet_array::<1>(value)?))
-        }
-    }
     /// The octets, in hexadecimal.
     impl core::fmt::Display for MMEGroupID {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -19189,17 +13591,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMEGroupID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(16), json::octets(&self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(16), value)?;
-            Ok(Self(reading.octet_array::<2>(value)?))
-        }
-    }
     /// `MME-UE-S1AP-ID ::= INTEGER (0..4294967295)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MMEUES1APID(pub u32);
@@ -19228,20 +13619,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 4294967295, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMEUES1APID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 4294967295)
-                    .map(|number| number as u32)?,
-            ))
         }
     }
     /// `MMEPagingTarget ::= CHOICE`, with an extension marker.
@@ -19287,27 +13664,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMEPagingTarget {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::global_ENB_ID(value) => json::alternative("global-ENB-ID", value.to_tree()),
-                Self::tAI(value) => json::alternative("tAI", value.to_tree()),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::MMEPagingTarget)?;
-            Ok(match position {
-                0 => Self::global_ENB_ID(reading.within(
-                    "global-ENB-ID",
-                    value,
-                    GlobalENBID::from_tree,
-                )?),
-                _ => Self::tAI(reading.within("tAI", value, TAI::from_tree)?),
-            })
-        }
-    }
     /// `MMERelaySupportIndicator ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -19337,16 +13693,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMERelaySupportIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::MMERelaySupportIndicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::MMERelaySupportIndicator)?])
         }
     }
     /// `MMEname ::= PrintableString (SIZE (1..150, ...))`.
@@ -19397,20 +13743,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMEname<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_text(
-                reading,
-                value,
-                json::Characters::Printable,
-            )?))
-        }
-    }
     /// `MSClassmark2 ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MSClassmark2<'a>(pub Octets<'a>);
@@ -19457,16 +13789,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MSClassmark2<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `MSClassmark3 ::= OCTET STRING`.
@@ -19517,16 +13839,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MSClassmark3<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `ManagementBasedMDTAllowed ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -19556,16 +13868,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ManagementBasedMDTAllowed {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ManagementBasedMDTAllowed[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ManagementBasedMDTAllowed)?])
         }
     }
     /// `Masked-IMEISV ::= BIT STRING (SIZE (64))`.
@@ -19606,16 +13908,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 64, 64)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MaskedIMEISV {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 64, 64)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 64, 64)?))
         }
     }
     /// `MeasurementThresholdA2 ::= CHOICE`, with an extension marker.
@@ -19661,31 +13953,6 @@ pub mod s1_ap_ies {
                 }
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MeasurementThresholdA2 {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::threshold_RSRP(value) => json::alternative("threshold-RSRP", value.to_tree()),
-                Self::threshold_RSRQ(value) => json::alternative("threshold-RSRQ", value.to_tree()),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::MeasurementThresholdA2)?;
-            Ok(match position {
-                0 => Self::threshold_RSRP(reading.within(
-                    "threshold-RSRP",
-                    value,
-                    ThresholdRSRP::from_tree,
-                )?),
-                _ => Self::threshold_RSRQ(reading.within(
-                    "threshold-RSRQ",
-                    value,
-                    ThresholdRSRQ::from_tree,
-                )?),
-            })
         }
     }
     /// `MeasurementThresholdL1LoggedMDT ::= CHOICE`.
@@ -19743,40 +14010,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MeasurementThresholdL1LoggedMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::threshold_RSRP(value) => json::alternative("threshold-RSRP", value.to_tree()),
-                Self::threshold_RSRQ(value) => json::alternative("threshold-RSRQ", value.to_tree()),
-                Self::choice_Extensions(value) => {
-                    json::alternative("choice-Extensions", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) =
-                reading.alternative(value, names::MeasurementThresholdL1LoggedMDT)?;
-            Ok(match position {
-                0 => Self::threshold_RSRP(reading.within(
-                    "threshold-RSRP",
-                    value,
-                    ThresholdRSRP::from_tree,
-                )?),
-                1 => Self::threshold_RSRQ(reading.within(
-                    "threshold-RSRQ",
-                    value,
-                    ThresholdRSRQ::from_tree,
-                )?),
-                _ => Self::choice_Extensions(reading.within(
-                    "choice-Extensions",
-                    value,
-                    ProtocolIEField::from_tree,
-                )?),
-            })
-        }
-    }
     /// `MeasurementsToActivate ::= BIT STRING (SIZE (8))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MeasurementsToActivate(pub Bits);
@@ -19815,16 +14048,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 8, 8)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MeasurementsToActivate {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 8, 8)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 8, 8)?))
         }
     }
     /// `MessageIdentifier ::= BIT STRING (SIZE (16))`.
@@ -19867,16 +14090,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MessageIdentifier {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 16, 16)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 16, 16)?))
-        }
-    }
     /// `MobilityInformation ::= BIT STRING (SIZE (32))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct MobilityInformation(pub Bits);
@@ -19917,16 +14130,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MobilityInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 32, 32)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 32, 32)?))
-        }
-    }
     /// `MutingAvailabilityIndication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -19957,16 +14160,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MutingAvailabilityIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::MutingAvailabilityIndication[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::MutingAvailabilityIndication)?])
         }
     }
     /// `MutingPatternInformationMutingPatternPeriod ::= ENUMERATED`, with an extension marker.
@@ -20008,17 +14201,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 5, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MutingPatternInformationMutingPatternPeriod {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::MutingPatternInformationMutingPatternPeriod[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES
-                [reading.named(value, names::MutingPatternInformationMutingPatternPeriod)?])
         }
     }
     /// `MutingPatternInformation ::= SEQUENCE`, with an extension marker.
@@ -20084,50 +14266,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MutingPatternInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "muting-pattern-period",
-                self.muting_pattern_period.to_tree(),
-            );
-            members.put_optional(
-                "muting-pattern-offset",
-                self.muting_pattern_offset
-                    .as_ref()
-                    .map(|value| json::unsigned(*value)),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::MutingPatternInformation)?;
-            let muting_pattern_period = reading.member(
-                &members,
-                "muting-pattern-period",
-                MutingPatternInformationMutingPatternPeriod::from_tree,
-            )?;
-            let muting_pattern_offset =
-                reading.optional(&members, "muting-pattern-offset", |value, reading| {
-                    reading.unsigned(value, u64::MIN, u64::MAX)
-                })?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                muting_pattern_period,
-                muting_pattern_offset,
-                ie_extensions,
-            })
-        }
-    }
     /// `NAS-PDU ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASPDU<'a>(pub Octets<'a>);
@@ -20174,16 +14312,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NASPDU<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `NASSecurityParametersfromE-UTRAN ::= OCTET STRING`.
@@ -20234,16 +14362,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NASSecurityParametersfromEUTRAN<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `NASSecurityParameterstoE-UTRAN ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASSecurityParameterstoEUTRAN<'a>(pub Octets<'a>);
@@ -20292,16 +14410,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NASSecurityParameterstoEUTRAN<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `NB-IoT-DefaultPagingDRX ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -20334,16 +14442,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 4, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NBIoTDefaultPagingDRX {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::NBIoTDefaultPagingDRX[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::NBIoTDefaultPagingDRX)?])
         }
     }
     /// `NB-IoT-Paging-eDRX-Cycle ::= ENUMERATED`, with an extension marker.
@@ -20403,16 +14501,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 14, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NBIoTPagingEDRXCycle {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::NBIoTPagingEDRXCycle[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::NBIoTPagingEDRXCycle)?])
         }
     }
     /// `NB-IoT-Paging-eDRXInformation ::= SEQUENCE`, with an extension marker.
@@ -20477,51 +14565,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NBIoTPagingEDRXInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "nB-IoT-paging-eDRX-Cycle",
-                self.nb_iot_paging_edrx_cycle.to_tree(),
-            );
-            members.put_optional(
-                "nB-IoT-pagingTimeWindow",
-                self.nb_iot_paging_time_window
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::NBIoTPagingEDRXInformation)?;
-            let nb_iot_paging_edrx_cycle = reading.member(
-                &members,
-                "nB-IoT-paging-eDRX-Cycle",
-                NBIoTPagingEDRXCycle::from_tree,
-            )?;
-            let nb_iot_paging_time_window = reading.optional(
-                &members,
-                "nB-IoT-pagingTimeWindow",
-                NBIoTPagingTimeWindow::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                nb_iot_paging_edrx_cycle,
-                nb_iot_paging_time_window,
-                ie_extensions,
-            })
-        }
-    }
     /// `NB-IoT-PagingDRX ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -20563,16 +14606,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 6, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NBIoTPagingDRX {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::NBIoTPagingDRX[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::NBIoTPagingDRX)?])
         }
     }
     /// `NB-IoT-PagingTimeWindow ::= ENUMERATED`, with an extension marker.
@@ -20638,16 +14671,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NBIoTPagingTimeWindow {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::NBIoTPagingTimeWindow[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::NBIoTPagingTimeWindow)?])
-        }
-    }
     /// `NB-IoT-RLF-Report-Container ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NBIoTRLFReportContainer<'a>(pub Octets<'a>);
@@ -20696,16 +14719,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NBIoTRLFReportContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `NB-IoT-UEIdentityIndexValue ::= BIT STRING (SIZE (12))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct NBIoTUEIdentityIndexValue(pub Bits);
@@ -20744,16 +14757,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 12, 12)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NBIoTUEIdentityIndexValue {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 12, 12)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 12, 12)?))
         }
     }
     /// `NG-eNB ::= SEQUENCE`, with an extension marker.
@@ -20800,33 +14803,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NGENB {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("global-ng-eNB-ID", self.global_ng_enb_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::NGENB)?;
-            let global_ng_enb_id =
-                reading.member(&members, "global-ng-eNB-ID", GlobalENBID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                global_ng_enb_id,
-                ie_extensions,
-            })
         }
     }
     /// `NR-CGI ::= SEQUENCE`, with an extension marker.
@@ -20881,37 +14857,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NRCGI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMNIdentity", self.plmn_identity.to_tree());
-            members.put("nRCellIdentity", self.nr_cell_identity.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::NRCGI)?;
-            let plmn_identity =
-                reading.member(&members, "pLMNIdentity", PLMNidentity::from_tree)?;
-            let nr_cell_identity =
-                reading.member(&members, "nRCellIdentity", NRCellIdentity::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                nr_cell_identity,
-                ie_extensions,
-            })
-        }
-    }
     /// `NRCellIdentity ::= BIT STRING (SIZE (36))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct NRCellIdentity(pub Bits);
@@ -20950,17 +14895,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 36, 36)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NRCellIdentity {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(36), json::bits(self.0, 36, 36))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(36), value)?;
-            Ok(Self(json::read_bits(reading, value, 36, 36)?))
         }
     }
     /// `NRUESecurityCapabilities ::= SEQUENCE`, with an extension marker.
@@ -21030,49 +14964,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NRUESecurityCapabilities<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "nRencryptionAlgorithms",
-                self.nr_encryption_algorithms.to_tree(),
-            );
-            members.put(
-                "nRintegrityProtectionAlgorithms",
-                self.nr_integrity_protection_algorithms.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::NRUESecurityCapabilities)?;
-            let nr_encryption_algorithms = reading.member(
-                &members,
-                "nRencryptionAlgorithms",
-                NRencryptionAlgorithms::from_tree,
-            )?;
-            let nr_integrity_protection_algorithms = reading.member(
-                &members,
-                "nRintegrityProtectionAlgorithms",
-                NRintegrityProtectionAlgorithms::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                nr_encryption_algorithms,
-                nr_integrity_protection_algorithms,
-                ie_extensions,
-            })
-        }
-    }
     /// `NRUESidelinkAggregateMaximumBitrate ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRUESidelinkAggregateMaximumBitrate {
@@ -21117,36 +15008,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NRUESidelinkAggregateMaximumBitrate {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "uEaggregateMaximumBitRate",
-                self.ue_aggregate_maximum_bit_rate.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::NRUESidelinkAggregateMaximumBitrate)?;
-            let ue_aggregate_maximum_bit_rate =
-                reading.member(&members, "uEaggregateMaximumBitRate", BitRate::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ue_aggregate_maximum_bit_rate,
-                ie_extensions,
-            })
         }
     }
     /// `NRV2XServicesAuthorized ::= SEQUENCE`, with an extension marker.
@@ -21210,42 +15071,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NRV2XServicesAuthorized {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "vehicleUE",
-                self.vehicle_ue.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "pedestrianUE",
-                self.pedestrian_ue.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::NRV2XServicesAuthorized)?;
-            let vehicle_ue = reading.optional(&members, "vehicleUE", VehicleUE::from_tree)?;
-            let pedestrian_ue =
-                reading.optional(&members, "pedestrianUE", PedestrianUE::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                vehicle_ue,
-                pedestrian_ue,
-                ie_extensions,
-            })
-        }
-    }
     /// `NRencryptionAlgorithms ::= BIT STRING (SIZE (16, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NRencryptionAlgorithms<'a>(pub BitString<'a>);
@@ -21282,16 +15107,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string(&self.0, 16, 16, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NRencryptionAlgorithms<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bit_string(&self.0, 16, 16, true)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bit_string(reading, value, 16, 16, true)?))
         }
     }
     /// `NRintegrityProtectionAlgorithms ::= BIT STRING (SIZE (16, ...))`.
@@ -21332,16 +15147,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NRintegrityProtectionAlgorithms<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bit_string(&self.0, 16, 16, true)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bit_string(reading, value, 16, 16, true)?))
-        }
-    }
     /// `NRrestrictionin5GS ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -21373,16 +15178,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NRrestrictionin5GS {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::NRrestrictionin5GS[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::NRrestrictionin5GS)?])
-        }
-    }
     /// `NRrestrictioninEPSasSecondaryRAT ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -21412,16 +15207,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NRrestrictioninEPSasSecondaryRAT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::NRrestrictioninEPSasSecondaryRAT[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::NRrestrictioninEPSasSecondaryRAT)?])
         }
     }
     /// `NextPagingAreaScope ::= ENUMERATED`, with an extension marker.
@@ -21456,16 +15241,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NextPagingAreaScope {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::NextPagingAreaScope[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::NextPagingAreaScope)?])
-        }
-    }
     /// `NotifySourceeNB ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -21495,16 +15270,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NotifySourceeNB {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::NotifySourceeNB[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::NotifySourceeNB)?])
         }
     }
     /// `NumberOfBroadcasts ::= INTEGER (0..65535)`.
@@ -21537,20 +15302,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NumberOfBroadcasts {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 65535)
-                    .map(|number| number as u16)?,
-            ))
-        }
-    }
     /// `NumberofBroadcastRequest ::= INTEGER (0..65535)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct NumberofBroadcastRequest(pub u16);
@@ -21579,20 +15330,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 65535, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NumberofBroadcastRequest {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 65535)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// `OldBSS-ToNewBSS-Information ::= OCTET STRING`.
@@ -21643,16 +15380,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for OldBSSToNewBSSInformation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `OverloadAction ::= ENUMERATED`, with an extension marker.
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
@@ -21692,16 +15419,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for OverloadAction {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::OverloadAction[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::OverloadAction)?])
-        }
-    }
     /// `OverloadResponse ::= CHOICE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
@@ -21735,26 +15452,6 @@ pub mod s1_ap_ies {
                 }
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for OverloadResponse {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::overloadAction(value) => json::alternative("overloadAction", value.to_tree()),
-            }
-        }
-        #[allow(clippy::match_single_binding)]
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::OverloadResponse)?;
-            Ok(match position {
-                _ => Self::overloadAction(reading.within(
-                    "overloadAction",
-                    value,
-                    OverloadAction::from_tree,
-                )?),
-            })
         }
     }
     /// `PC5FlowBitRates ::= SEQUENCE`, with an extension marker.
@@ -21808,40 +15505,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PC5FlowBitRates {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "guaranteedFlowBitRate",
-                self.guaranteed_flow_bit_rate.to_tree(),
-            );
-            members.put("maximumFlowBitRate", self.maximum_flow_bit_rate.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PC5FlowBitRates)?;
-            let guaranteed_flow_bit_rate =
-                reading.member(&members, "guaranteedFlowBitRate", BitRate::from_tree)?;
-            let maximum_flow_bit_rate =
-                reading.member(&members, "maximumFlowBitRate", BitRate::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                guaranteed_flow_bit_rate,
-                maximum_flow_bit_rate,
-                ie_extensions,
-            })
         }
     }
     /// `PC5QoSFlowItem ::= SEQUENCE`, with an extension marker.
@@ -21911,44 +15574,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PC5QoSFlowItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pQI", self.pqi.to_tree());
-            members.put_optional(
-                "pc5FlowBitRates",
-                self.pc5_flow_bit_rates
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional("range", self.range.as_ref().map(|value| value.to_tree()));
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PC5QoSFlowItem)?;
-            let pqi = reading.member(&members, "pQI", FiveQI::from_tree)?;
-            let pc5_flow_bit_rates =
-                reading.optional(&members, "pc5FlowBitRates", PC5FlowBitRates::from_tree)?;
-            let range = reading.optional(&members, "range", Range::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                pqi,
-                pc5_flow_bit_rates,
-                range,
-                ie_extensions,
-            })
-        }
-    }
     /// `PC5QoSFlowList ::= SEQUENCE (SIZE (1..2048)) OF PC5QoSFlowItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PC5QoSFlowList(pub Vec<PC5QoSFlowItem>);
@@ -21985,18 +15610,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PC5QoSFlowList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                PC5QoSFlowItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `PC5QoSParameters ::= SEQUENCE`, with an extension marker.
@@ -22058,42 +15671,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PC5QoSParameters {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pc5QoSFlowList", self.pc5_qos_flow_list.to_tree());
-            members.put_optional(
-                "pc5LinkAggregatedBitRates",
-                self.pc5_link_aggregated_bit_rates
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PC5QoSParameters)?;
-            let pc5_qos_flow_list =
-                reading.member(&members, "pc5QoSFlowList", PC5QoSFlowList::from_tree)?;
-            let pc5_link_aggregated_bit_rates =
-                reading.optional(&members, "pc5LinkAggregatedBitRates", BitRate::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                pc5_qos_flow_list,
-                pc5_link_aggregated_bit_rates,
-                ie_extensions,
-            })
-        }
-    }
     /// `PDCP-SN ::= INTEGER (0..4095)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PDCPSN(pub u16);
@@ -22122,20 +15699,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 4095, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PDCPSN {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 4095)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// `PDCP-SNExtended ::= INTEGER (0..32767)`.
@@ -22168,20 +15731,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PDCPSNExtended {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 32767)
-                    .map(|number| number as u16)?,
-            ))
-        }
-    }
     /// `PDCP-SNlength18 ::= INTEGER (0..262143)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PDCPSNlength18(pub u32);
@@ -22210,20 +15759,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 262143, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PDCPSNlength18 {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 262143)
-                    .map(|number| number as u32)?,
-            ))
         }
     }
     /// `PLMNAreaBasedQMC ::= SEQUENCE`, with an extension marker.
@@ -22272,33 +15807,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PLMNAreaBasedQMC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("plmnListforQMC", self.plmn_listfor_qmc.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PLMNAreaBasedQMC)?;
-            let plmn_listfor_qmc =
-                reading.member(&members, "plmnListforQMC", PLMNListforQMC::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_listfor_qmc,
-                ie_extensions,
-            })
-        }
-    }
     /// `PLMNListforQMC ::= SEQUENCE (SIZE (1..16)) OF PLMNidentity`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PLMNListforQMC(pub Vec<PLMNidentity>);
@@ -22335,18 +15843,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PLMNListforQMC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                PLMNidentity::from_tree(value, reading)
-            })?))
         }
     }
     /// The MCC and the MNC, as `208-93`. Octets that are no PLMN identity print in hexadecimal.
@@ -22410,17 +15906,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PLMNidentity {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Plmn, self.0.to_tree())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Plmn, value)?;
-            Ok(Self(TBCDSTRING::from_tree(value, reading)?))
-        }
-    }
     /// `PS-ServiceNotAvailable ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -22450,16 +15935,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PSServiceNotAvailable {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PSServiceNotAvailable[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PSServiceNotAvailable)?])
         }
     }
     /// `PSCellInformation ::= SEQUENCE`, with an extension marker.
@@ -22505,32 +15980,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PSCellInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("nCGI", self.ncgi.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PSCellInformation)?;
-            let ncgi = reading.member(&members, "nCGI", NRCGI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ncgi,
-                ie_extensions,
-            })
-        }
-    }
     /// `PWSfailedECGIList ::= SEQUENCE (SIZE (1..256)) OF EUTRANCGI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PWSfailedECGIList(pub Vec<EUTRANCGI>);
@@ -22569,18 +16018,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PWSfailedECGIList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                EUTRANCGI::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `Packet-LossRate ::= INTEGER (0..1000)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PacketLossRate(pub u16);
@@ -22609,20 +16046,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 1000, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PacketLossRate {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 1000)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// `Paging-eDRX-Cycle ::= ENUMERATED`, with an extension marker.
@@ -22684,16 +16107,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PagingEDRXCycle {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PagingEDRXCycle[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PagingEDRXCycle)?])
-        }
-    }
     /// `Paging-eDRXInformation ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PagingEDRXInformation {
@@ -22753,42 +16166,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PagingEDRXInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("paging-eDRX-Cycle", self.paging_edrx_cycle.to_tree());
-            members.put_optional(
-                "pagingTimeWindow",
-                self.paging_time_window
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PagingEDRXInformation)?;
-            let paging_edrx_cycle =
-                reading.member(&members, "paging-eDRX-Cycle", PagingEDRXCycle::from_tree)?;
-            let paging_time_window =
-                reading.optional(&members, "pagingTimeWindow", PagingTimeWindow::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                paging_edrx_cycle,
-                paging_time_window,
-                ie_extensions,
-            })
-        }
-    }
     /// `PagingAttemptCount ::= INTEGER (1..16, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct PagingAttemptCount(pub u64);
@@ -22817,16 +16194,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(self.0, 1, 16, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PagingAttemptCount {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
         }
     }
     /// `PagingAttemptInformation ::= SEQUENCE`, with an extension marker.
@@ -22898,58 +16265,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PagingAttemptInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pagingAttemptCount", self.paging_attempt_count.to_tree());
-            members.put(
-                "intendedNumberOfPagingAttempts",
-                self.intended_number_of_paging_attempts.to_tree(),
-            );
-            members.put_optional(
-                "nextPagingAreaScope",
-                self.next_paging_area_scope
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PagingAttemptInformation)?;
-            let paging_attempt_count = reading.member(
-                &members,
-                "pagingAttemptCount",
-                PagingAttemptCount::from_tree,
-            )?;
-            let intended_number_of_paging_attempts = reading.member(
-                &members,
-                "intendedNumberOfPagingAttempts",
-                IntendedNumberOfPagingAttempts::from_tree,
-            )?;
-            let next_paging_area_scope = reading.optional(
-                &members,
-                "nextPagingAreaScope",
-                NextPagingAreaScope::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                paging_attempt_count,
-                intended_number_of_paging_attempts,
-                next_paging_area_scope,
-                ie_extensions,
-            })
-        }
-    }
     /// `PagingCause ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -22979,16 +16294,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PagingCause {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PagingCause[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PagingCause)?])
         }
     }
     /// `PagingDRX ::= ENUMERATED`, with an extension marker.
@@ -23023,16 +16328,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 4, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PagingDRX {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PagingDRX[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PagingDRX)?])
         }
     }
     /// `PagingPriority ::= ENUMERATED`, with an extension marker.
@@ -23080,16 +16375,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 8, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PagingPriority {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PagingPriority[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PagingPriority)?])
         }
     }
     /// `PagingProbabilityInformation ::= ENUMERATED`, with an extension marker.
@@ -23165,16 +16450,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PagingProbabilityInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PagingProbabilityInformation[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PagingProbabilityInformation)?])
-        }
-    }
     /// `PagingTimeWindow ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -23238,16 +16513,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PagingTimeWindow {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PagingTimeWindow[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PagingTimeWindow)?])
-        }
-    }
     /// `PedestrianUE ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -23280,16 +16545,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PedestrianUE {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PedestrianUE[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PedestrianUE)?])
-        }
-    }
     /// `PendingDataIndication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -23319,16 +16574,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PendingDataIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PendingDataIndication[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PendingDataIndication)?])
         }
     }
     /// The octets, in hexadecimal.
@@ -23374,17 +16619,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PortNumber {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(16), json::octets(&self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(16), value)?;
-            Ok(Self(reading.octet_array::<2>(value)?))
-        }
-    }
     /// `Pre-emptionCapability ::= ENUMERATED`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum PreEmptionCapability {
@@ -23419,16 +16653,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PreEmptionCapability {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PreEmptionCapability[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PreEmptionCapability)?])
-        }
-    }
     /// `Pre-emptionVulnerability ::= ENUMERATED`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub enum PreEmptionVulnerability {
@@ -23458,16 +16682,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, false);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PreEmptionVulnerability {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PreEmptionVulnerability[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PreEmptionVulnerability)?])
         }
     }
     /// `PriorityLevel ::= INTEGER (0..15)`.
@@ -23500,18 +16714,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PriorityLevel {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading.unsigned(value, 0, 15).map(|number| number as u8)?,
-            ))
-        }
-    }
     /// `PrivacyIndicator ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -23542,16 +16744,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PrivacyIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::PrivacyIndicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::PrivacyIndicator)?])
         }
     }
     /// `ProSeAuthorized ::= SEQUENCE`, with an extension marker.
@@ -23625,53 +16817,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ProSeAuthorized {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "proSeDirectDiscovery",
-                self.prose_direct_discovery
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "proSeDirectCommunication",
-                self.prose_direct_communication
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ProSeAuthorized)?;
-            let prose_direct_discovery = reading.optional(
-                &members,
-                "proSeDirectDiscovery",
-                ProSeDirectDiscovery::from_tree,
-            )?;
-            let prose_direct_communication = reading.optional(
-                &members,
-                "proSeDirectCommunication",
-                ProSeDirectCommunication::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                prose_direct_discovery,
-                prose_direct_communication,
-                ie_extensions,
-            })
-        }
-    }
     /// `ProSeDirectCommunication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -23702,16 +16847,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ProSeDirectCommunication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ProSeDirectCommunication[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ProSeDirectCommunication)?])
         }
     }
     /// `ProSeDirectDiscovery ::= ENUMERATED`, with an extension marker.
@@ -23746,16 +16881,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ProSeDirectDiscovery {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ProSeDirectDiscovery[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ProSeDirectDiscovery)?])
-        }
-    }
     /// `ProSeUEtoNetworkRelaying ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -23788,16 +16913,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ProSeUEtoNetworkRelaying {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ProSeUEtoNetworkRelaying[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ProSeUEtoNetworkRelaying)?])
-        }
-    }
     /// `QCI ::= INTEGER (0..255)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct QCI(pub u8);
@@ -23826,18 +16941,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 255, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for QCI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading.unsigned(value, 0, 255).map(|number| number as u8)?,
-            ))
         }
     }
     /// The octets, in hexadecimal.
@@ -23883,17 +16986,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RAC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(8), json::octets(&self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(8), value)?;
-            Ok(Self(reading.octet_array::<1>(value)?))
-        }
-    }
     /// `RACSIndication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -23925,16 +17017,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RACSIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::RACSIndication[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::RACSIndication)?])
-        }
-    }
     /// `RAN-UE-NGAP-ID ::= INTEGER (0..4294967295)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RANUENGAPID(pub u32);
@@ -23963,20 +17045,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 4294967295, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RANUENGAPID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 4294967295)
-                    .map(|number| number as u32)?,
-            ))
         }
     }
     /// `RAT-Restrictions ::= SEQUENCE (SIZE (1..16)) OF RATRestrictionsItem`.
@@ -24022,18 +17090,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RATRestrictions<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                RATRestrictionsItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `RAT-RestrictionsItem ::= SEQUENCE`, with an extension marker.
@@ -24100,42 +17156,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RATRestrictionsItem<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_tree());
-            members.put(
-                "rAT-RestrictionInformation",
-                json::bit_string(&self.rat_restriction_information, 8, 8, true),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::RATRestrictionsItem)?;
-            let plmn_identity =
-                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
-            let rat_restriction_information =
-                reading.member(&members, "rAT-RestrictionInformation", |value, reading| {
-                    json::read_bit_string(reading, value, 8, 8, true)
-                })?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                rat_restriction_information,
-                ie_extensions,
-            })
-        }
-    }
     /// `RAT-Type ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -24185,16 +17205,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RATType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::RATType[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::RATType)?])
-        }
-    }
     /// `RIMInformation ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RIMInformation<'a>(pub Octets<'a>);
@@ -24241,16 +17251,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RIMInformation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `RIMRoutingAddress ::= CHOICE`, with an extension marker.
@@ -24317,39 +17317,6 @@ pub mod s1_ap_ies {
                 }
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RIMRoutingAddress {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::gERAN_Cell_ID(value) => json::alternative("gERAN-Cell-ID", value.to_tree()),
-                Self::targetRNC_ID(value) => json::alternative("targetRNC-ID", value.to_tree()),
-                Self::eHRPD_Sector_ID(value) => {
-                    json::alternative("eHRPD-Sector-ID", json::octets(value))
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::RIMRoutingAddress)?;
-            Ok(match position {
-                0 => Self::gERAN_Cell_ID(reading.within(
-                    "gERAN-Cell-ID",
-                    value,
-                    GERANCellID::from_tree,
-                )?),
-                1 => Self::targetRNC_ID(reading.within(
-                    "targetRNC-ID",
-                    value,
-                    TargetRNCID::from_tree,
-                )?),
-                _ => Self::eHRPD_Sector_ID(reading.within(
-                    "eHRPD-Sector-ID",
-                    value,
-                    |value, reading| reading.octet_array::<16>(value),
-                )?),
-            })
         }
     }
     /// `RIMTransfer ::= SEQUENCE`, with an extension marker.
@@ -24420,42 +17387,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RIMTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("rIMInformation", self.rim_information.to_tree());
-            members.put_optional(
-                "rIMRoutingAddress",
-                self.rim_routing_address
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::RIMTransfer)?;
-            let rim_information =
-                reading.member(&members, "rIMInformation", RIMInformation::from_tree)?;
-            let rim_routing_address =
-                reading.optional(&members, "rIMRoutingAddress", RIMRoutingAddress::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                rim_information,
-                rim_routing_address,
-                ie_extensions,
-            })
         }
     }
     /// `RLFReportInformation ::= SEQUENCE`, with an extension marker.
@@ -24534,51 +17465,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RLFReportInformation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "uE-RLF-Report-Container",
-                self.ue_rlf_report_container.to_tree(),
-            );
-            members.put_optional(
-                "uE-RLF-Report-Container-for-extended-bands",
-                self.ue_rlf_report_container_for_extended_bands
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::RLFReportInformation)?;
-            let ue_rlf_report_container = reading.member(
-                &members,
-                "uE-RLF-Report-Container",
-                UERLFReportContainer::from_tree,
-            )?;
-            let ue_rlf_report_container_for_extended_bands = reading.optional(
-                &members,
-                "uE-RLF-Report-Container-for-extended-bands",
-                UERLFReportContainerForExtendedBands::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ue_rlf_report_container,
-                ue_rlf_report_container_for_extended_bands,
-                ie_extensions,
-            })
-        }
-    }
     /// `RNC-ID ::= INTEGER (0..4095)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RNCID(pub u16);
@@ -24607,20 +17493,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 4095, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RNCID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 4095)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// `RRC-Container ::= OCTET STRING`.
@@ -24671,16 +17543,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RRCContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `RRC-Establishment-Cause ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -24726,16 +17588,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 5, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RRCEstablishmentCause {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::RRCEstablishmentCause[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::RRCEstablishmentCause)?])
         }
     }
     /// `Range ::= ENUMERATED`, with an extension marker.
@@ -24787,16 +17639,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for Range {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::Range[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::Range)?])
-        }
-    }
     /// `ReceiveStatusOfULPDCPSDUsExtended ::= BIT STRING (SIZE (1..16384))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ReceiveStatusOfULPDCPSDUsExtended<'a>(pub BitString<'a>);
@@ -24835,18 +17677,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ReceiveStatusOfULPDCPSDUsExtended<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bit_string(&self.0, 1, 16384, false)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bit_string(
-                reading, value, 1, 16384, false,
-            )?))
-        }
-    }
     /// `ReceiveStatusOfULPDCPSDUsPDCP-SNlength18 ::= BIT STRING (SIZE (1..131072))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'a>(pub BitString<'a>);
@@ -24883,18 +17713,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string(&self.0, 1, 131072, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ReceiveStatusOfULPDCPSDUsPDCPSNlength18<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bit_string(&self.0, 1, 131072, false)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bit_string(
-                reading, value, 1, 131072, false,
-            )?))
         }
     }
     /// `ReceiveStatusofULPDCPSDUs ::= BIT STRING (SIZE (4096))`.
@@ -24938,18 +17756,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string(&self.0, 4096, 4096, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ReceiveStatusofULPDCPSDUs<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bit_string(&self.0, 4096, 4096, false)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bit_string(
-                reading, value, 4096, 4096, false,
-            )?))
         }
     }
     /// `RecommendedCellItem ::= SEQUENCE`, with an extension marker.
@@ -25014,43 +17820,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RecommendedCellItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("eUTRAN-CGI", self.eutran_cgi.to_tree());
-            members.put_optional(
-                "timeStayedInCell",
-                self.time_stayed_in_cell
-                    .as_ref()
-                    .map(|value| json::unsigned(u64::from(*value))),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::RecommendedCellItem)?;
-            let eutran_cgi = reading.member(&members, "eUTRAN-CGI", EUTRANCGI::from_tree)?;
-            let time_stayed_in_cell =
-                reading.optional(&members, "timeStayedInCell", |value, reading| {
-                    reading.unsigned(value, 0, 4095).map(|number| number as u16)
-                })?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                eutran_cgi,
-                time_stayed_in_cell,
-                ie_extensions,
-            })
-        }
-    }
     /// `RecommendedCellList ::= SEQUENCE (SIZE (1..16)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedCellList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -25094,18 +17863,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RecommendedCellList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `RecommendedCellsForPaging ::= SEQUENCE`, with an extension marker.
@@ -25164,36 +17921,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RecommendedCellsForPaging<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("recommendedCellList", self.recommended_cell_list.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::RecommendedCellsForPaging)?;
-            let recommended_cell_list = reading.member(
-                &members,
-                "recommendedCellList",
-                RecommendedCellList::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                recommended_cell_list,
-                ie_extensions,
-            })
-        }
-    }
     /// `RecommendedENBItem ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedENBItem {
@@ -25240,33 +17967,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RecommendedENBItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("mMEPagingTarget", self.mme_paging_target.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::RecommendedENBItem)?;
-            let mme_paging_target =
-                reading.member(&members, "mMEPagingTarget", MMEPagingTarget::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                mme_paging_target,
-                ie_extensions,
-            })
-        }
-    }
     /// `RecommendedENBList ::= SEQUENCE (SIZE (1..16)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RecommendedENBList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -25310,18 +18010,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RecommendedENBList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `RecommendedENBsForPaging ::= SEQUENCE`, with an extension marker.
@@ -25380,36 +18068,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RecommendedENBsForPaging<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("recommendedENBList", self.recommended_enb_list.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::RecommendedENBsForPaging)?;
-            let recommended_enb_list = reading.member(
-                &members,
-                "recommendedENBList",
-                RecommendedENBList::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                recommended_enb_list,
-                ie_extensions,
-            })
-        }
-    }
     /// `RelativeMMECapacity ::= INTEGER (0..255)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RelativeMMECapacity(pub u8);
@@ -25438,18 +18096,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 255, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RelativeMMECapacity {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading.unsigned(value, 0, 255).map(|number| number as u8)?,
-            ))
         }
     }
     /// `RelayNode-Indicator ::= ENUMERATED`, with an extension marker.
@@ -25483,16 +18129,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RelayNodeIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::RelayNodeIndicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::RelayNodeIndicator)?])
-        }
-    }
     /// `RepetitionPeriod ::= INTEGER (0..4095)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RepetitionPeriod(pub u16);
@@ -25521,20 +18157,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 4095, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RepetitionPeriod {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 4095)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// `ReportAmountMDT ::= ENUMERATED`.
@@ -25583,16 +18205,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ReportAmountMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ReportAmountMDT[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ReportAmountMDT)?])
-        }
-    }
     /// `ReportArea ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -25622,16 +18234,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ReportArea {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ReportArea[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ReportArea)?])
         }
     }
     /// `ReportIntervalMDT ::= ENUMERATED`.
@@ -25690,16 +18292,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ReportIntervalMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ReportIntervalMDT[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ReportIntervalMDT)?])
-        }
-    }
     /// `RequestType ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RequestType {
@@ -25751,35 +18343,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RequestType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("eventType", self.event_type.to_tree());
-            members.put("reportArea", self.report_area.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::RequestType)?;
-            let event_type = reading.member(&members, "eventType", EventType::from_tree)?;
-            let report_area = reading.member(&members, "reportArea", ReportArea::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                event_type,
-                report_area,
-                ie_extensions,
-            })
-        }
-    }
     /// `RequestTypeAdditionalInfo ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -25809,16 +18372,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RequestTypeAdditionalInfo {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::RequestTypeAdditionalInfo[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::RequestTypeAdditionalInfo)?])
         }
     }
     /// `RequestedTNLInfo ::= SEQUENCE`, with an extension marker.
@@ -25866,33 +18419,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RequestedTNLInfo {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::RequestedTNLInfo)?;
-            let plmn_identity =
-                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                ie_extensions,
-            })
-        }
-    }
     /// `Routing-ID ::= INTEGER (0..255)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct RoutingID(pub u8);
@@ -25921,18 +18447,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 255, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RoutingID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading.unsigned(value, 0, 255).map(|number| number as u8)?,
-            ))
         }
     }
     /// `S-TMSI ::= SEQUENCE`, with an extension marker.
@@ -25980,35 +18494,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for STMSI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("mMEC", self.mmec.to_tree());
-            members.put("m-TMSI", self.m_tmsi.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::STMSI)?;
-            let mmec = reading.member(&members, "mMEC", MMECode::from_tree)?;
-            let m_tmsi = reading.member(&members, "m-TMSI", MTMSI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                mmec,
-                m_tmsi,
-                ie_extensions,
-            })
         }
     }
     /// `SONConfigurationTransfer ::= SEQUENCE`, with an extension marker.
@@ -26079,39 +18564,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SONConfigurationTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("targeteNB-ID", self.target_enb_id.to_tree());
-            members.put("sourceeNB-ID", self.source_enb_id.to_tree());
-            members.put("sONInformation", self.son_information.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SONConfigurationTransfer)?;
-            let target_enb_id = reading.member(&members, "targeteNB-ID", TargeteNBID::from_tree)?;
-            let source_enb_id = reading.member(&members, "sourceeNB-ID", SourceeNBID::from_tree)?;
-            let son_information =
-                reading.member(&members, "sONInformation", SONInformation::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                target_enb_id,
-                source_enb_id,
-                son_information,
-                ie_extensions,
-            })
         }
     }
     /// `SONInformation ::= CHOICE`, with an extension marker.
@@ -26198,43 +18650,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SONInformation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::sONInformationRequest(value) => {
-                    json::alternative("sONInformationRequest", value.to_tree())
-                }
-                Self::sONInformationReply(value) => {
-                    json::alternative("sONInformationReply", value.to_tree())
-                }
-                Self::sONInformation_Extension(value) => {
-                    json::alternative("sONInformation-Extension", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::SONInformation)?;
-            Ok(match position {
-                0 => Self::sONInformationRequest(reading.within(
-                    "sONInformationRequest",
-                    value,
-                    SONInformationRequest::from_tree,
-                )?),
-                1 => Self::sONInformationReply(reading.within(
-                    "sONInformationReply",
-                    value,
-                    SONInformationReply::from_tree,
-                )?),
-                _ => Self::sONInformation_Extension(reading.within(
-                    "sONInformation-Extension",
-                    value,
-                    ProtocolIEField::from_tree,
-                )?),
-            })
-        }
-    }
     /// `SONInformationReply ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SONInformationReply<'a> {
@@ -26302,41 +18717,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SONInformationReply<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "x2TNLConfigurationInfo",
-                self.x2_tnl_configuration_info
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SONInformationReply)?;
-            let x2_tnl_configuration_info = reading.optional(
-                &members,
-                "x2TNLConfigurationInfo",
-                X2TNLConfigurationInfo::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                x2_tnl_configuration_info,
-                ie_extensions,
-            })
-        }
-    }
     /// `SONInformationReport ::= CHOICE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
@@ -26381,28 +18761,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SONInformationReport<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::rLFReportInformation(value) => {
-                    json::alternative("rLFReportInformation", value.to_tree())
-                }
-            }
-        }
-        #[allow(clippy::match_single_binding)]
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::SONInformationReport)?;
-            Ok(match position {
-                _ => Self::rLFReportInformation(reading.within(
-                    "rLFReportInformation",
-                    value,
-                    RLFReportInformation::from_tree,
-                )?),
-            })
-        }
-    }
     /// `SONInformationRequest ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -26442,16 +18800,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SONInformationRequest {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::SONInformationRequest[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::SONInformationRequest)?])
-        }
-    }
     /// `SRVCCHOIndication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -26482,16 +18830,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SRVCCHOIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::SRVCCHOIndication[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::SRVCCHOIndication)?])
         }
     }
     /// `SRVCCOperationNotPossible ::= ENUMERATED`, with an extension marker.
@@ -26525,16 +18863,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SRVCCOperationNotPossible {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::SRVCCOperationNotPossible[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::SRVCCOperationNotPossible)?])
-        }
-    }
     /// `SRVCCOperationPossible ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -26564,16 +18892,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SRVCCOperationPossible {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::SRVCCOperationPossible[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::SRVCCOperationPossible)?])
         }
     }
     /// `ScheduledCommunicationTime ::= SEQUENCE`, with an extension marker.
@@ -26662,60 +18980,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ScheduledCommunicationTime {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "dayofWeek",
-                self.dayof_week
-                    .as_ref()
-                    .map(|value| json::bits(*value, 7, 7)),
-            );
-            members.put_optional(
-                "timeofDayStart",
-                self.timeof_day_start
-                    .as_ref()
-                    .map(|value| json::unsigned(*value)),
-            );
-            members.put_optional(
-                "timeofDayEnd",
-                self.timeof_day_end
-                    .as_ref()
-                    .map(|value| json::unsigned(*value)),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ScheduledCommunicationTime)?;
-            let dayof_week = reading.optional(&members, "dayofWeek", |value, reading| {
-                json::read_bits(reading, value, 7, 7)
-            })?;
-            let timeof_day_start =
-                reading.optional(&members, "timeofDayStart", |value, reading| {
-                    reading.unsigned(value, u64::MIN, u64::MAX)
-                })?;
-            let timeof_day_end = reading.optional(&members, "timeofDayEnd", |value, reading| {
-                reading.unsigned(value, u64::MIN, u64::MAX)
-            })?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                dayof_week,
-                timeof_day_start,
-                timeof_day_end,
-                ie_extensions,
-            })
-        }
-    }
     /// `SecondaryRATDataUsageReportItem ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecondaryRATDataUsageReportItem<'a> {
@@ -26785,46 +19049,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SecondaryRATDataUsageReportItem<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put("secondaryRATType", self.secondary_rat_type.to_tree());
-            members.put(
-                "e-RABUsageReportList",
-                self.e_rab_usage_report_list.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SecondaryRATDataUsageReportItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let secondary_rat_type =
-                reading.member(&members, "secondaryRATType", SecondaryRATType::from_tree)?;
-            let e_rab_usage_report_list = reading.member(
-                &members,
-                "e-RABUsageReportList",
-                ERABUsageReportList::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                secondary_rat_type,
-                e_rab_usage_report_list,
-                ie_extensions,
-            })
-        }
-    }
     /// `SecondaryRATDataUsageReportList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecondaryRATDataUsageReportList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -26872,18 +19096,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SecondaryRATDataUsageReportList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `SecondaryRATDataUsageRequest ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -26913,16 +19125,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SecondaryRATDataUsageRequest {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::SecondaryRATDataUsageRequest[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::SecondaryRATDataUsageRequest)?])
         }
     }
     /// `SecondaryRATType ::= ENUMERATED`, with an extension marker.
@@ -26955,16 +19157,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SecondaryRATType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::SecondaryRATType[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::SecondaryRATType)?])
         }
     }
     /// `SecurityContext ::= SEQUENCE`, with an extension marker.
@@ -27033,42 +19225,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SecurityContext<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "nextHopChainingCount",
-                json::unsigned(u64::from(self.next_hop_chaining_count)),
-            );
-            members.put("nextHopParameter", self.next_hop_parameter.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SecurityContext)?;
-            let next_hop_chaining_count =
-                reading.member(&members, "nextHopChainingCount", |value, reading| {
-                    reading.unsigned(value, 0, 7).map(|number| number as u8)
-                })?;
-            let next_hop_parameter =
-                reading.member(&members, "nextHopParameter", SecurityKey::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                next_hop_chaining_count,
-                next_hop_parameter,
-                ie_extensions,
-            })
-        }
-    }
     /// `SecurityIndication ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecurityIndication {
@@ -27113,39 +19269,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SecurityIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "integrityProtectionIndication",
-                self.integrity_protection_indication.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SecurityIndication)?;
-            let integrity_protection_indication = reading.member(
-                &members,
-                "integrityProtectionIndication",
-                IntegrityProtectionIndication::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                integrity_protection_indication,
-                ie_extensions,
-            })
         }
     }
     impl core::fmt::Debug for SecurityKey<'_> {
@@ -27196,18 +19319,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SecurityKey<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bit_string(&self.0, 256, 256, false)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.secret(|reading| {
-                json::read_bit_string(reading, value, 256, 256, false)
-            })?))
-        }
-    }
     /// `SecurityResult ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecurityResult {
@@ -27254,39 +19365,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SecurityResult {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "integrityProtectionResult",
-                self.integrity_protection_result.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SecurityResult)?;
-            let integrity_protection_result = reading.member(
-                &members,
-                "integrityProtectionResult",
-                IntegrityProtectionResult::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                integrity_protection_result,
-                ie_extensions,
-            })
-        }
-    }
     /// `SensorMeasConfig ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -27316,16 +19394,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SensorMeasConfig {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::SensorMeasConfig[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::SensorMeasConfig)?])
         }
     }
     /// `SensorMeasConfigNameItem ::= SEQUENCE`, with an extension marker.
@@ -27374,33 +19442,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SensorMeasConfigNameItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("sensorNameConfig", self.sensor_name_config.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SensorMeasConfigNameItem)?;
-            let sensor_name_config =
-                reading.member(&members, "sensorNameConfig", SensorNameConfig::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                sensor_name_config,
-                ie_extensions,
-            })
-        }
-    }
     /// `SensorMeasConfigNameList ::= SEQUENCE (SIZE (1..3)) OF SensorMeasConfigNameItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SensorMeasConfigNameList(pub Vec<SensorMeasConfigNameItem>);
@@ -27437,18 +19478,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SensorMeasConfigNameList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                SensorMeasConfigNameItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `SensorMeasurementConfiguration ::= SEQUENCE`, with an extension marker.
@@ -27513,45 +19542,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SensorMeasurementConfiguration {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("sensorMeasConfig", self.sensor_meas_config.to_tree());
-            members.put_optional(
-                "sensorMeasConfigNameList",
-                self.sensor_meas_config_name_list
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SensorMeasurementConfiguration)?;
-            let sensor_meas_config =
-                reading.member(&members, "sensorMeasConfig", SensorMeasConfig::from_tree)?;
-            let sensor_meas_config_name_list = reading.optional(
-                &members,
-                "sensorMeasConfigNameList",
-                SensorMeasConfigNameList::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                sensor_meas_config,
-                sensor_meas_config_name_list,
-                ie_extensions,
-            })
-        }
-    }
     /// `SensorNameConfigUncompensatedBarometricConfig ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -27581,17 +19571,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SensorNameConfigUncompensatedBarometricConfig {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::SensorNameConfigUncompensatedBarometricConfig[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES
-                [reading.named(value, names::SensorNameConfigUncompensatedBarometricConfig)?])
         }
     }
     /// `SensorNameConfig ::= CHOICE`.
@@ -27640,35 +19619,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SensorNameConfig {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::uncompensatedBarometricConfig(value) => {
-                    json::alternative("uncompensatedBarometricConfig", value.to_tree())
-                }
-                Self::choice_Extensions(value) => {
-                    json::alternative("choice-Extensions", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::SensorNameConfig)?;
-            Ok(match position {
-                0 => Self::uncompensatedBarometricConfig(reading.within(
-                    "uncompensatedBarometricConfig",
-                    value,
-                    SensorNameConfigUncompensatedBarometricConfig::from_tree,
-                )?),
-                _ => Self::choice_Extensions(reading.within(
-                    "choice-Extensions",
-                    value,
-                    ProtocolIEField::from_tree,
-                )?),
-            })
-        }
-    }
     /// `SerialNumber ::= BIT STRING (SIZE (16))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct SerialNumber(pub Bits);
@@ -27709,16 +19659,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SerialNumber {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 16, 16)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 16, 16)?))
-        }
-    }
     /// `ServedDCNs ::= SEQUENCE (SIZE (0..32)) OF ServedDCNsItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedDCNs(pub Vec<ServedDCNsItem>);
@@ -27755,18 +19695,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ServedDCNs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ServedDCNsItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `ServedDCNsItem ::= SEQUENCE`, with an extension marker.
@@ -27819,39 +19747,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ServedDCNsItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("dCN-ID", self.dcn_id.to_tree());
-            members.put("relativeDCNCapacity", self.relative_dcn_capacity.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ServedDCNsItem)?;
-            let dcn_id = reading.member(&members, "dCN-ID", DCNID::from_tree)?;
-            let relative_dcn_capacity = reading.member(
-                &members,
-                "relativeDCNCapacity",
-                RelativeMMECapacity::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                dcn_id,
-                relative_dcn_capacity,
-                ie_extensions,
-            })
-        }
-    }
     /// `ServedGUMMEIs ::= SEQUENCE (SIZE (1..8)) OF ServedGUMMEIsItem`.
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -27889,18 +19784,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ServedGUMMEIs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ServedGUMMEIsItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `ServedGUMMEIsItem ::= SEQUENCE`, with an extension marker.
@@ -27961,39 +19844,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ServedGUMMEIsItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("servedPLMNs", self.served_plmns.to_tree());
-            members.put("servedGroupIDs", self.served_group_ids.to_tree());
-            members.put("servedMMECs", self.served_mmecs.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ServedGUMMEIsItem)?;
-            let served_plmns = reading.member(&members, "servedPLMNs", ServedPLMNs::from_tree)?;
-            let served_group_ids =
-                reading.member(&members, "servedGroupIDs", ServedGroupIDs::from_tree)?;
-            let served_mmecs = reading.member(&members, "servedMMECs", ServedMMECs::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                served_plmns,
-                served_group_ids,
-                served_mmecs,
-                ie_extensions,
-            })
-        }
-    }
     /// `ServedGroupIDs ::= SEQUENCE (SIZE (1..65535)) OF MMEGroupID`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedGroupIDs(pub Vec<MMEGroupID>);
@@ -28030,18 +19880,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ServedGroupIDs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                MMEGroupID::from_tree(value, reading)
-            })?))
         }
     }
     /// `ServedMMECs ::= SEQUENCE (SIZE (1..256)) OF MMECode`.
@@ -28082,18 +19920,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ServedMMECs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                MMECode::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `ServedPLMNs ::= SEQUENCE (SIZE (1..32)) OF PLMNidentity`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ServedPLMNs(pub Vec<PLMNidentity>);
@@ -28132,18 +19958,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ServedPLMNs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                PLMNidentity::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `ServiceType ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -28175,16 +19989,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ServiceType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ServiceType[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ServiceType)?])
         }
     }
     /// `Source-ToTarget-TransparentContainer ::= OCTET STRING`.
@@ -28235,16 +20039,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SourceToTargetTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `SourceBSS-ToTargetBSS-TransparentContainer ::= OCTET STRING`.
     #[doc = " This IE includes a transparent container from the source RAN node to the target RAN node."]
     #[doc = " The octets of the OCTET STRING are encoded according to the specifications of the target system."]
@@ -28293,16 +20087,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SourceBSSToTargetBSSTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `SourceNgRanNode-ID ::= SEQUENCE`, with an extension marker.
@@ -28357,36 +20141,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SourceNgRanNodeID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("global-RAN-NODE-ID", self.global_ran_node_id.to_tree());
-            members.put("selected-TAI", self.selected_tai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SourceNgRanNodeID)?;
-            let global_ran_node_id =
-                reading.member(&members, "global-RAN-NODE-ID", GlobalRANNODEID::from_tree)?;
-            let selected_tai = reading.member(&members, "selected-TAI", FiveGSTAI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                global_ran_node_id,
-                selected_tai,
-                ie_extensions,
-            })
-        }
-    }
     /// `SourceNgRanNode-ToTargetNgRanNode-TransparentContainer ::= OCTET STRING`.
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -28434,16 +20188,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SourceNgRanNodeToTargetNgRanNodeTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `SourceNodeID ::= CHOICE`.
@@ -28500,35 +20244,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SourceNodeID<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::sourceNgRanNode_ID(value) => {
-                    json::alternative("sourceNgRanNode-ID", value.to_tree())
-                }
-                Self::sourceNodeID_Extension(value) => {
-                    json::alternative("sourceNodeID-Extension", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::SourceNodeID)?;
-            Ok(match position {
-                0 => Self::sourceNgRanNode_ID(reading.within(
-                    "sourceNgRanNode-ID",
-                    value,
-                    SourceNgRanNodeID::from_tree,
-                )?),
-                _ => Self::sourceNodeID_Extension(reading.within(
-                    "sourceNodeID-Extension",
-                    value,
-                    ProtocolIEField::from_tree,
-                )?),
-            })
-        }
-    }
     /// `SourceOfUEActivityBehaviourInformation ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -28559,19 +20274,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SourceOfUEActivityBehaviourInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::SourceOfUEActivityBehaviourInformation[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(
-                Self::VALUES
-                    [reading.named(value, names::SourceOfUEActivityBehaviourInformation)?],
-            )
         }
     }
     /// `SourceRNC-ToTargetRNC-TransparentContainer ::= OCTET STRING`.
@@ -28622,16 +20324,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SourceRNCToTargetRNCTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `SourceeNB-ID ::= SEQUENCE`.
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -28677,36 +20369,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SourceeNBID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("global-ENB-ID", self.global_enb_id.to_tree());
-            members.put("selected-TAI", self.selected_tai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SourceeNBID)?;
-            let global_enb_id =
-                reading.member(&members, "global-ENB-ID", GlobalENBID::from_tree)?;
-            let selected_tai = reading.member(&members, "selected-TAI", TAI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                global_enb_id,
-                selected_tai,
-                ie_extensions,
-            })
         }
     }
     /// `SourceeNB-ToTargeteNB-TransparentContainer ::= SEQUENCE`, with an extension marker.
@@ -28813,71 +20475,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SourceeNBToTargeteNBTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("rRC-Container", self.rrc_container.to_tree());
-            members.put_optional(
-                "e-RABInformationList",
-                self.e_rab_information_list
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put("targetCell-ID", self.target_cell_id.to_tree());
-            members.put_optional(
-                "subscriberProfileIDforRFP",
-                self.subscriber_profile_id_for_rfp
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put(
-                "uE-HistoryInformation",
-                self.ue_history_information.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members =
-                reading.members(value, names::SourceeNBToTargeteNBTransparentContainer)?;
-            let rrc_container =
-                reading.member(&members, "rRC-Container", RRCContainer::from_tree)?;
-            let e_rab_information_list = reading.optional(
-                &members,
-                "e-RABInformationList",
-                ERABInformationList::from_tree,
-            )?;
-            let target_cell_id = reading.member(&members, "targetCell-ID", EUTRANCGI::from_tree)?;
-            let subscriber_profile_id_for_rfp = reading.optional(
-                &members,
-                "subscriberProfileIDforRFP",
-                SubscriberProfileIDforRFP::from_tree,
-            )?;
-            let ue_history_information = reading.member(
-                &members,
-                "uE-HistoryInformation",
-                UEHistoryInformation::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                rrc_container,
-                e_rab_information_list,
-                target_cell_id,
-                subscriber_profile_id_for_rfp,
-                ue_history_information,
-                ie_extensions,
-            })
-        }
-    }
     /// `StratumLevel ::= INTEGER (0..3, ...)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct StratumLevel(pub u64);
@@ -28908,16 +20505,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for StratumLevel {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.unsigned(value, u64::MIN, u64::MAX)?))
-        }
-    }
     /// `SubscriberProfileIDforRFP ::= INTEGER (1..256)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct SubscriberProfileIDforRFP(pub u16);
@@ -28946,20 +20533,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 1, 256, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SubscriberProfileIDforRFP {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 1, 256)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// `SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator ::= ENUMERATED`, with an extension marker.
@@ -28995,22 +20568,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(
-                names::SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator
-                    [self.index() as usize],
-            )
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(
-                value,
-                names::SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator,
-            )?])
-        }
-    }
     /// `SubscriptionBasedUEDifferentiationInfoStationaryIndication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -29041,22 +20598,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SubscriptionBasedUEDifferentiationInfoStationaryIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(
-                names::SubscriptionBasedUEDifferentiationInfoStationaryIndication
-                    [self.index() as usize],
-            )
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(
-                value,
-                names::SubscriptionBasedUEDifferentiationInfoStationaryIndication,
-            )?])
         }
     }
     /// `SubscriptionBasedUEDifferentiationInfoTrafficProfile ::= ENUMERATED`, with an extension marker.
@@ -29096,21 +20637,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SubscriptionBasedUEDifferentiationInfoTrafficProfile {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(
-                names::SubscriptionBasedUEDifferentiationInfoTrafficProfile[self.index() as usize],
-            )
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(
-                value,
-                names::SubscriptionBasedUEDifferentiationInfoTrafficProfile,
-            )?])
-        }
-    }
     /// `SubscriptionBasedUEDifferentiationInfoBatteryIndication ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -29146,22 +20672,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 3, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SubscriptionBasedUEDifferentiationInfoBatteryIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(
-                names::SubscriptionBasedUEDifferentiationInfoBatteryIndication
-                    [self.index() as usize],
-            )
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(
-                value,
-                names::SubscriptionBasedUEDifferentiationInfoBatteryIndication,
-            )?])
         }
     }
     /// `Subscription-Based-UE-DifferentiationInfo ::= SEQUENCE`, with an extension marker.
@@ -29302,97 +20812,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SubscriptionBasedUEDifferentiationInfo {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "periodicCommunicationIndicator",
-                self.periodic_communication_indicator
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "periodicTime",
-                self.periodic_time
-                    .as_ref()
-                    .map(|value| json::unsigned(*value)),
-            );
-            members.put_optional(
-                "scheduledCommunicationTime",
-                self.scheduled_communication_time
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "stationaryIndication",
-                self.stationary_indication
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "trafficProfile",
-                self.traffic_profile.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "batteryIndication",
-                self.battery_indication
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SubscriptionBasedUEDifferentiationInfo)?;
-            let periodic_communication_indicator = reading.optional(
-                &members,
-                "periodicCommunicationIndicator",
-                SubscriptionBasedUEDifferentiationInfoPeriodicCommunicationIndicator::from_tree,
-            )?;
-            let periodic_time = reading.optional(&members, "periodicTime", |value, reading| {
-                reading.unsigned(value, u64::MIN, u64::MAX)
-            })?;
-            let scheduled_communication_time = reading.optional(
-                &members,
-                "scheduledCommunicationTime",
-                ScheduledCommunicationTime::from_tree,
-            )?;
-            let stationary_indication = reading.optional(
-                &members,
-                "stationaryIndication",
-                SubscriptionBasedUEDifferentiationInfoStationaryIndication::from_tree,
-            )?;
-            let traffic_profile = reading.optional(
-                &members,
-                "trafficProfile",
-                SubscriptionBasedUEDifferentiationInfoTrafficProfile::from_tree,
-            )?;
-            let battery_indication = reading.optional(
-                &members,
-                "batteryIndication",
-                SubscriptionBasedUEDifferentiationInfoBatteryIndication::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                periodic_communication_indicator,
-                periodic_time,
-                scheduled_communication_time,
-                stationary_indication,
-                traffic_profile,
-                battery_indication,
-                ie_extensions,
-            })
-        }
-    }
     /// `SupportedTAs ::= SEQUENCE (SIZE (1..256)) OF SupportedTAsItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SupportedTAs(pub Vec<SupportedTAsItem>);
@@ -29429,18 +20848,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SupportedTAs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                SupportedTAsItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `SupportedTAs-Item ::= SEQUENCE`, with an extension marker.
@@ -29490,35 +20897,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SupportedTAsItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("tAC", self.tac.to_tree());
-            members.put("broadcastPLMNs", self.broadcast_plmns.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SupportedTAsItem)?;
-            let tac = reading.member(&members, "tAC", TAC::from_tree)?;
-            let broadcast_plmns = reading.member(&members, "broadcastPLMNs", BPLMNs::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                tac,
-                broadcast_plmns,
-                ie_extensions,
-            })
         }
     }
     /// `SynchronisationInformation ::= SEQUENCE`, with an extension marker.
@@ -29602,59 +20980,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SynchronisationInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "sourceStratumLevel",
-                self.source_stratum_level
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "listeningSubframePattern",
-                self.listening_subframe_pattern
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "aggressoreCGI-List",
-                self.aggressor_ecgi_list
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SynchronisationInformation)?;
-            let source_stratum_level =
-                reading.optional(&members, "sourceStratumLevel", StratumLevel::from_tree)?;
-            let listening_subframe_pattern = reading.optional(
-                &members,
-                "listeningSubframePattern",
-                ListeningSubframePattern::from_tree,
-            )?;
-            let aggressor_ecgi_list =
-                reading.optional(&members, "aggressoreCGI-List", ECGI_List::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                source_stratum_level,
-                listening_subframe_pattern,
-                aggressor_ecgi_list,
-                ie_extensions,
-            })
-        }
-    }
     /// `SynchronisationStatus ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -29685,16 +21010,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SynchronisationStatus {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::SynchronisationStatus[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::SynchronisationStatus)?])
         }
     }
     /// `TABasedMDT ::= SEQUENCE`, with an extension marker.
@@ -29743,33 +21058,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TABasedMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("tAListforMDT", self.ta_listfor_mdt.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TABasedMDT)?;
-            let ta_listfor_mdt =
-                reading.member(&members, "tAListforMDT", TAListforMDT::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ta_listfor_mdt,
-                ie_extensions,
-            })
-        }
-    }
     /// `TABasedQMC ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TABasedQMC {
@@ -29816,33 +21104,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TABasedQMC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("tAListforQMC", self.ta_listfor_qmc.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TABasedQMC)?;
-            let ta_listfor_qmc =
-                reading.member(&members, "tAListforQMC", TAListforQMC::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ta_listfor_qmc,
-                ie_extensions,
-            })
-        }
-    }
     /// The octets, in hexadecimal.
     impl core::fmt::Display for TAC {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -29886,17 +21147,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(16), json::octets(&self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(16), value)?;
-            Ok(Self(reading.octet_array::<2>(value)?))
-        }
-    }
     /// `TACList-In-LTE-NTN ::= SEQUENCE (SIZE (1..12)) OF TAC`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TACListInLTENTN(pub Vec<TAC>);
@@ -29933,18 +21183,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TACListInLTENTN {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TAC::from_tree(value, reading)
-            })?))
         }
     }
     /// `TAI ::= SEQUENCE`, with an extension marker.
@@ -29996,36 +21234,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAI {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("pLMNidentity", self.plmn_identity.to_tree());
-            members.put("tAC", self.tac.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TAI)?;
-            let plmn_identity =
-                reading.member(&members, "pLMNidentity", PLMNidentity::from_tree)?;
-            let tac = reading.member(&members, "tAC", TAC::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                plmn_identity,
-                tac,
-                ie_extensions,
-            })
-        }
-    }
     /// `TAI-Broadcast ::= SEQUENCE (SIZE (1..65535)) OF TAIBroadcastItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIBroadcast(pub Vec<TAIBroadcastItem>);
@@ -30062,18 +21270,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAIBroadcast {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TAIBroadcastItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `TAI-Broadcast-Item ::= SEQUENCE`, with an extension marker.
@@ -30126,39 +21322,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAIBroadcastItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("tAI", self.tai.to_tree());
-            members.put("completedCellinTAI", self.completed_cellin_tai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TAIBroadcastItem)?;
-            let tai = reading.member(&members, "tAI", TAI::from_tree)?;
-            let completed_cellin_tai = reading.member(
-                &members,
-                "completedCellinTAI",
-                CompletedCellinTAI::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                tai,
-                completed_cellin_tai,
-                ie_extensions,
-            })
-        }
-    }
     /// `TAI-Cancelled ::= SEQUENCE (SIZE (1..65535)) OF TAICancelledItem`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAICancelled(pub Vec<TAICancelledItem>);
@@ -30195,18 +21358,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAICancelled {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TAICancelledItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `TAI-Cancelled-Item ::= SEQUENCE`, with an extension marker.
@@ -30259,39 +21410,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAICancelledItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("tAI", self.tai.to_tree());
-            members.put("cancelledCellinTAI", self.cancelled_cellin_tai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TAICancelledItem)?;
-            let tai = reading.member(&members, "tAI", TAI::from_tree)?;
-            let cancelled_cellin_tai = reading.member(
-                &members,
-                "cancelledCellinTAI",
-                CancelledCellinTAI::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                tai,
-                cancelled_cellin_tai,
-                ie_extensions,
-            })
-        }
-    }
     /// `TAIBasedMDT ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIBasedMDT {
@@ -30336,33 +21454,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAIBasedMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("tAIListforMDT", self.tai_listfor_mdt.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TAIBasedMDT)?;
-            let tai_listfor_mdt =
-                reading.member(&members, "tAIListforMDT", TAIListforMDT::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                tai_listfor_mdt,
-                ie_extensions,
-            })
         }
     }
     /// `TAIBasedQMC ::= SEQUENCE`, with an extension marker.
@@ -30411,33 +21502,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAIBasedQMC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("tAIListforQMC", self.tai_listfor_qmc.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TAIBasedQMC)?;
-            let tai_listfor_qmc =
-                reading.member(&members, "tAIListforQMC", TAIListforQMC::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                tai_listfor_qmc,
-                ie_extensions,
-            })
-        }
-    }
     /// `TAIListForRestart ::= SEQUENCE (SIZE (1..2048)) OF TAI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListForRestart(pub Vec<TAI>);
@@ -30474,18 +21538,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAIListForRestart {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TAI::from_tree(value, reading)
-            })?))
         }
     }
     /// `TAIListforMDT ::= SEQUENCE (SIZE (1..8)) OF TAI`.
@@ -30526,18 +21578,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAIListforMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TAI::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `TAIListforQMC ::= SEQUENCE (SIZE (1..8)) OF TAI`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAIListforQMC(pub Vec<TAI>);
@@ -30574,18 +21614,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAIListforQMC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TAI::from_tree(value, reading)
-            })?))
         }
     }
     /// `TAIListforWarning ::= SEQUENCE (SIZE (1..65535)) OF TAI`.
@@ -30626,18 +21654,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAIListforWarning {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TAI::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `TAListforMDT ::= SEQUENCE (SIZE (1..8)) OF TAC`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAListforMDT(pub Vec<TAC>);
@@ -30676,18 +21692,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAListforMDT {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TAC::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `TAListforQMC ::= SEQUENCE (SIZE (1..8)) OF TAC`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TAListforQMC(pub Vec<TAC>);
@@ -30724,18 +21728,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAListforQMC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                TAC::from_tree(value, reading)
-            })?))
         }
     }
     /// The octets, in hexadecimal.
@@ -30779,16 +21771,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TBCDSTRING {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octet_array::<3>(value)?))
         }
     }
     /// `Target-ToSource-TransparentContainer ::= OCTET STRING`.
@@ -30839,16 +21821,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TargetToSourceTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `TargetBSS-ToSourceBSS-TransparentContainer ::= OCTET STRING`.
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -30896,16 +21868,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TargetBSSToSourceBSSTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `TargetID ::= CHOICE`, with an extension marker.
@@ -30979,41 +21941,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TargetID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::targeteNB_ID(value) => json::alternative("targeteNB-ID", value.to_tree()),
-                Self::targetRNC_ID(value) => json::alternative("targetRNC-ID", value.to_tree()),
-                Self::cGI(value) => json::alternative("cGI", value.to_tree()),
-                Self::targetgNgRanNode_ID(value) => {
-                    json::alternative("targetgNgRanNode-ID", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::TargetID)?;
-            Ok(match position {
-                0 => Self::targeteNB_ID(reading.within(
-                    "targeteNB-ID",
-                    value,
-                    TargeteNBID::from_tree,
-                )?),
-                1 => Self::targetRNC_ID(reading.within(
-                    "targetRNC-ID",
-                    value,
-                    TargetRNCID::from_tree,
-                )?),
-                2 => Self::cGI(reading.within("cGI", value, CGI::from_tree)?),
-                _ => Self::targetgNgRanNode_ID(reading.within(
-                    "targetgNgRanNode-ID",
-                    value,
-                    TargetNgRanNodeID::from_tree,
-                )?),
-            })
-        }
-    }
     /// `TargetNgRanNode-ID ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TargetNgRanNodeID {
@@ -31066,36 +21993,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TargetNgRanNodeID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("global-RAN-NODE-ID", self.global_ran_node_id.to_tree());
-            members.put("selected-TAI", self.selected_tai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TargetNgRanNodeID)?;
-            let global_ran_node_id =
-                reading.member(&members, "global-RAN-NODE-ID", GlobalRANNODEID::from_tree)?;
-            let selected_tai = reading.member(&members, "selected-TAI", FiveGSTAI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                global_ran_node_id,
-                selected_tai,
-                ie_extensions,
-            })
-        }
-    }
     /// `TargetNgRanNode-ToSourceNgRanNode-TransparentContainer ::= OCTET STRING`.
     #[doc = " This is a dummy IE used only as a reference to the actual definition in relevant specification."]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -31143,16 +22040,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TargetNgRanNodeToSourceNgRanNodeTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `TargetRNC-ID ::= SEQUENCE`, with an extension marker.
@@ -31224,45 +22111,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TargetRNCID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("lAI", self.lai.to_tree());
-            members.put_optional("rAC", self.rac.as_ref().map(|value| value.to_tree()));
-            members.put("rNC-ID", self.rnc_id.to_tree());
-            members.put_optional(
-                "extendedRNC-ID",
-                self.extended_rnc_id.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TargetRNCID)?;
-            let lai = reading.member(&members, "lAI", LAI::from_tree)?;
-            let rac = reading.optional(&members, "rAC", RAC::from_tree)?;
-            let rnc_id = reading.member(&members, "rNC-ID", RNCID::from_tree)?;
-            let extended_rnc_id =
-                reading.optional(&members, "extendedRNC-ID", ExtendedRNCID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                lai,
-                rac,
-                rnc_id,
-                extended_rnc_id,
-                ie_extensions,
-            })
-        }
-    }
     /// `TargetRNC-ToSourceRNC-TransparentContainer ::= OCTET STRING`.
     #[doc = " This IE includes a transparent container from the target RAN node to the source RAN node."]
     #[doc = " The octets of the OCTET STRING are coded according to the specifications of the target system."]
@@ -31311,16 +22159,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TargetRNCToSourceRNCTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `TargeteNB-ID ::= SEQUENCE`, with an extension marker.
@@ -31372,36 +22210,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TargeteNBID {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("global-ENB-ID", self.global_enb_id.to_tree());
-            members.put("selected-TAI", self.selected_tai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TargeteNBID)?;
-            let global_enb_id =
-                reading.member(&members, "global-ENB-ID", GlobalENBID::from_tree)?;
-            let selected_tai = reading.member(&members, "selected-TAI", TAI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                global_enb_id,
-                selected_tai,
-                ie_extensions,
-            })
         }
     }
     /// `TargeteNB-ToSourceeNB-TransparentContainer ::= SEQUENCE`, with an extension marker.
@@ -31459,34 +22267,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TargeteNBToSourceeNBTransparentContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("rRC-Container", self.rrc_container.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members =
-                reading.members(value, names::TargeteNBToSourceeNBTransparentContainer)?;
-            let rrc_container =
-                reading.member(&members, "rRC-Container", RRCContainer::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                rrc_container,
-                ie_extensions,
-            })
-        }
-    }
     /// `Threshold-RSRP ::= INTEGER (0..97)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ThresholdRSRP(pub u8);
@@ -31515,18 +22295,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 97, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ThresholdRSRP {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading.unsigned(value, 0, 97).map(|number| number as u8)?,
-            ))
         }
     }
     /// `Threshold-RSRQ ::= INTEGER (0..34)`.
@@ -31559,18 +22327,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ThresholdRSRQ {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading.unsigned(value, 0, 34).map(|number| number as u8)?,
-            ))
-        }
-    }
     /// `Time-UE-StayedInCell ::= INTEGER (0..4095)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TimeUEStayedInCell(pub u16);
@@ -31601,20 +22357,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TimeUEStayedInCell {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 4095)
-                    .map(|number| number as u16)?,
-            ))
-        }
-    }
     /// `Time-UE-StayedInCell-EnhancedGranularity ::= INTEGER (0..40950)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TimeUEStayedInCellEnhancedGranularity(pub u16);
@@ -31643,20 +22385,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 40950, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TimeUEStayedInCellEnhancedGranularity {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading
-                    .unsigned(value, 0, 40950)
-                    .map(|number| number as u16)?,
-            ))
         }
     }
     /// `TimeBasedHandoverInformation ::= SEQUENCE`, with an extension marker.
@@ -31712,40 +22440,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TimeBasedHandoverInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("hOWindowStart", self.ho_window_start.to_tree());
-            members.put("hOWindowDuration", self.ho_window_duration.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TimeBasedHandoverInformation)?;
-            let ho_window_start =
-                reading.member(&members, "hOWindowStart", HandoverWindowStart::from_tree)?;
-            let ho_window_duration = reading.member(
-                &members,
-                "hOWindowDuration",
-                HandoverWindowDuration::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ho_window_start,
-                ho_window_duration,
-                ie_extensions,
-            })
-        }
-    }
     /// `TimeRefDistribution ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -31775,16 +22469,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TimeRefDistribution {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::TimeRefDistribution[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::TimeRefDistribution)?])
         }
     }
     /// The octets, in hexadecimal.
@@ -31828,16 +22512,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TimeSinceSecondaryNodeRelease {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octet_array::<4>(value)?))
         }
     }
     /// `TimeSynchronisationInfo ::= SEQUENCE`, with an extension marker.
@@ -31890,43 +22564,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TimeSynchronisationInfo {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("stratumLevel", self.stratum_level.to_tree());
-            members.put(
-                "synchronisationStatus",
-                self.synchronisation_status.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TimeSynchronisationInfo)?;
-            let stratum_level =
-                reading.member(&members, "stratumLevel", StratumLevel::from_tree)?;
-            let synchronisation_status = reading.member(
-                &members,
-                "synchronisationStatus",
-                SynchronisationStatus::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                stratum_level,
-                synchronisation_status,
-                ie_extensions,
-            })
         }
     }
     /// `TimeToTrigger ::= ENUMERATED`.
@@ -31991,16 +22628,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TimeToTrigger {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::TimeToTrigger[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::TimeToTrigger)?])
-        }
-    }
     /// `TimeToWait ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -32042,16 +22669,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 6, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TimeToWait {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::TimeToWait[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::TimeToWait)?])
         }
     }
     /// `TraceActivation ::= SEQUENCE`, with an extension marker.
@@ -32135,50 +22752,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TraceActivation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-UTRAN-Trace-ID", self.e_utran_trace_id.to_tree());
-            members.put("interfacesToTrace", self.interfaces_to_trace.to_tree());
-            members.put("traceDepth", self.trace_depth.to_tree());
-            members.put(
-                "traceCollectionEntityIPAddress",
-                self.trace_collection_entity_ip_address.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TraceActivation)?;
-            let e_utran_trace_id =
-                reading.member(&members, "e-UTRAN-Trace-ID", EUTRANTraceID::from_tree)?;
-            let interfaces_to_trace =
-                reading.member(&members, "interfacesToTrace", InterfacesToTrace::from_tree)?;
-            let trace_depth = reading.member(&members, "traceDepth", TraceDepth::from_tree)?;
-            let trace_collection_entity_ip_address = reading.member(
-                &members,
-                "traceCollectionEntityIPAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_utran_trace_id,
-                interfaces_to_trace,
-                trace_depth,
-                trace_collection_entity_ip_address,
-                ie_extensions,
-            })
-        }
-    }
     /// `TraceDepth ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -32222,16 +22795,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TraceDepth {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::TraceDepth[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::TraceDepth)?])
-        }
-    }
     /// `TrafficLoadReductionIndication ::= INTEGER (1..99)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct TrafficLoadReductionIndication(pub u8);
@@ -32260,18 +22823,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 1, 99, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TrafficLoadReductionIndication {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading.unsigned(value, 1, 99).map(|number| number as u8)?,
-            ))
         }
     }
     /// `TransportInformation ::= SEQUENCE`, with an extension marker.
@@ -32320,32 +22871,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TransportInformation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put("uL-GTP-TEID", self.ul_gtp_teid.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TransportInformation)?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let ul_gtp_teid = reading.member(&members, "uL-GTP-TEID", GTPTEID::from_tree)?;
-            Ok(Self {
-                transport_layer_address,
-                ul_gtp_teid,
-            })
-        }
-    }
     /// `TransportLayerAddress ::= BIT STRING (SIZE (1..160, ...))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TransportLayerAddress<'a>(pub BitString<'a>);
@@ -32382,17 +22907,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bit_string(&self.0, 1, 160, true)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TransportLayerAddress<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Address, json::bit_string(&self.0, 1, 160, true))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Address, value)?;
-            Ok(Self(json::read_bit_string(reading, value, 1, 160, true)?))
         }
     }
     /// `TunnelInformation ::= SEQUENCE`, with an extension marker.
@@ -32463,46 +22977,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TunnelInformation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put_optional(
-                "uDP-Port-Number",
-                self.udp_port_number.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TunnelInformation)?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let udp_port_number =
-                reading.optional(&members, "uDP-Port-Number", PortNumber::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                transport_layer_address,
-                udp_port_number,
-                ie_extensions,
-            })
-        }
-    }
     /// `TypeOfError ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -32533,16 +23007,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TypeOfError {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::TypeOfError[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::TypeOfError)?])
         }
     }
     /// `UE-Application-Layer-Measurement-Capability ::= BIT STRING (SIZE (8))`.
@@ -32583,16 +23047,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 8, 8)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEApplicationLayerMeasurementCapability {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 8, 8)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 8, 8)?))
         }
     }
     /// `UE-HistoryInformation ::= SEQUENCE (SIZE (1..16)) OF LastVisitedCellItem`.
@@ -32638,18 +23092,6 @@ pub mod s1_ap_ies {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEHistoryInformation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                LastVisitedCellItem::from_tree(value, reading)
-            })?))
         }
     }
     /// `UE-HistoryInformationFromTheUE ::= OCTET STRING`.
@@ -32700,16 +23142,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEHistoryInformationFromTheUE<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `UE-RLF-Report-Container ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERLFReportContainer<'a>(pub Octets<'a>);
@@ -32756,16 +23188,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UERLFReportContainer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `UE-RLF-Report-Container-for-extended-bands ::= OCTET STRING`.
@@ -32816,16 +23238,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UERLFReportContainerForExtendedBands<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `UE-RetentionInformation ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -32855,16 +23267,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UERetentionInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::UERetentionInformation[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::UERetentionInformation)?])
         }
     }
     /// `UE-S1AP-ID-pair ::= SEQUENCE`, with an extension marker.
@@ -32918,37 +23320,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UES1APIDPair {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("mME-UE-S1AP-ID", self.mme_ue_s1ap_id.to_tree());
-            members.put("eNB-UE-S1AP-ID", self.enb_ue_s1ap_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UES1APIDPair)?;
-            let mme_ue_s1ap_id =
-                reading.member(&members, "mME-UE-S1AP-ID", MMEUES1APID::from_tree)?;
-            let enb_ue_s1ap_id =
-                reading.member(&members, "eNB-UE-S1AP-ID", ENBUES1APID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                mme_ue_s1ap_id,
-                enb_ue_s1ap_id,
-                ie_extensions,
-            })
-        }
-    }
     /// `UE-S1AP-IDs ::= CHOICE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[non_exhaustive]
@@ -32992,33 +23363,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UES1APIDs {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::uE_S1AP_ID_pair(value) => {
-                    json::alternative("uE-S1AP-ID-pair", value.to_tree())
-                }
-                Self::mME_UE_S1AP_ID(value) => json::alternative("mME-UE-S1AP-ID", value.to_tree()),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::UES1APIDs)?;
-            Ok(match position {
-                0 => Self::uE_S1AP_ID_pair(reading.within(
-                    "uE-S1AP-ID-pair",
-                    value,
-                    UES1APIDPair::from_tree,
-                )?),
-                _ => Self::mME_UE_S1AP_ID(reading.within(
-                    "mME-UE-S1AP-ID",
-                    value,
-                    MMEUES1APID::from_tree,
-                )?),
-            })
-        }
-    }
     /// `UE-Usage-Type ::= INTEGER (0..255)`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct UEUsageType(pub u8);
@@ -33047,18 +23391,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.unsigned(u64::from(self.0), 0, 255, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEUsageType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::unsigned(u64::from(self.0))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(
-                reading.unsigned(value, 0, 255).map(|number| number as u8)?,
-            ))
         }
     }
     /// `UE-associatedLogicalS1-ConnectionItem ::= SEQUENCE`, with an extension marker.
@@ -33122,43 +23454,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEAssociatedLogicalS1ConnectionItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "mME-UE-S1AP-ID",
-                self.mme_ue_s1ap_id.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "eNB-UE-S1AP-ID",
-                self.enb_ue_s1ap_id.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEAssociatedLogicalS1ConnectionItem)?;
-            let mme_ue_s1ap_id =
-                reading.optional(&members, "mME-UE-S1AP-ID", MMEUES1APID::from_tree)?;
-            let enb_ue_s1ap_id =
-                reading.optional(&members, "eNB-UE-S1AP-ID", ENBUES1APID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                mme_ue_s1ap_id,
-                enb_ue_s1ap_id,
-                ie_extensions,
-            })
-        }
-    }
     /// `UEAggregateMaximumBitrate ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEAggregateMaximumBitrate {
@@ -33210,43 +23505,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEAggregateMaximumBitrate {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "uEaggregateMaximumBitRateDL",
-                self.ue_aggregate_maximum_bit_rate_dl.to_tree(),
-            );
-            members.put(
-                "uEaggregateMaximumBitRateUL",
-                self.ue_aggregate_maximum_bit_rate_ul.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEAggregateMaximumBitrate)?;
-            let ue_aggregate_maximum_bit_rate_dl =
-                reading.member(&members, "uEaggregateMaximumBitRateDL", BitRate::from_tree)?;
-            let ue_aggregate_maximum_bit_rate_ul =
-                reading.member(&members, "uEaggregateMaximumBitRateUL", BitRate::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ue_aggregate_maximum_bit_rate_dl,
-                ue_aggregate_maximum_bit_rate_ul,
-                ie_extensions,
-            })
         }
     }
     /// `UEAppLayerMeasConfig ::= SEQUENCE`, with an extension marker.
@@ -33316,43 +23574,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEAppLayerMeasConfig<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "containerForAppLayerMeasConfig",
-                json::octets(&self.container_for_app_layer_meas_config),
-            );
-            members.put("areaScopeOfQMC", self.area_scope_of_qmc.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEAppLayerMeasConfig)?;
-            let container_for_app_layer_meas_config = reading.member(
-                &members,
-                "containerForAppLayerMeasConfig",
-                |value, reading| json::read_octets(reading, value),
-            )?;
-            let area_scope_of_qmc =
-                reading.member(&members, "areaScopeOfQMC", AreaScopeOfQMC::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                container_for_app_layer_meas_config,
-                area_scope_of_qmc,
-                ie_extensions,
-            })
-        }
-    }
     /// `UECapabilityInfoRequest ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -33382,16 +23603,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UECapabilityInfoRequest {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::UECapabilityInfoRequest[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::UECapabilityInfoRequest)?])
         }
     }
     /// `UEIdentityIndexValue ::= BIT STRING (SIZE (10))`.
@@ -33432,16 +23643,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 10, 10)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEIdentityIndexValue {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 10, 10)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 10, 10)?))
         }
     }
     /// `UEPagingID ::= CHOICE`, with an extension marker.
@@ -33497,23 +23698,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEPagingID<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::s_TMSI(value) => json::alternative("s-TMSI", value.to_tree()),
-                Self::iMSI(value) => json::alternative("iMSI", value.to_tree()),
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::UEPagingID)?;
-            Ok(match position {
-                0 => Self::s_TMSI(reading.within("s-TMSI", value, STMSI::from_tree)?),
-                _ => Self::iMSI(reading.within("iMSI", value, IMSI::from_tree)?),
-            })
-        }
-    }
     /// `UERadioCapability ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapability<'a>(pub Octets<'a>);
@@ -33560,16 +23744,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UERadioCapability<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `UERadioCapabilityForPaging ::= OCTET STRING`.
@@ -33620,16 +23794,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UERadioCapabilityForPaging<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `UERadioCapabilityID ::= OCTET STRING`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapabilityID<'a>(pub Octets<'a>);
@@ -33676,16 +23840,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 0, UNBOUNDED, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UERadioCapabilityID<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `UESecurityCapabilities ::= SEQUENCE`, with an extension marker.
@@ -33752,46 +23906,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UESecurityCapabilities<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("encryptionAlgorithms", self.encryption_algorithms.to_tree());
-            members.put(
-                "integrityProtectionAlgorithms",
-                self.integrity_protection_algorithms.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UESecurityCapabilities)?;
-            let encryption_algorithms = reading.member(
-                &members,
-                "encryptionAlgorithms",
-                EncryptionAlgorithms::from_tree,
-            )?;
-            let integrity_protection_algorithms = reading.member(
-                &members,
-                "integrityProtectionAlgorithms",
-                IntegrityProtectionAlgorithms::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                encryption_algorithms,
-                integrity_protection_algorithms,
-                ie_extensions,
-            })
-        }
-    }
     /// `UESidelinkAggregateMaximumBitrate ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UESidelinkAggregateMaximumBitrate {
@@ -33838,39 +23952,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UESidelinkAggregateMaximumBitrate {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "uESidelinkAggregateMaximumBitRate",
-                self.ue_sidelink_aggregate_maximum_bit_rate.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UESidelinkAggregateMaximumBitrate)?;
-            let ue_sidelink_aggregate_maximum_bit_rate = reading.member(
-                &members,
-                "uESidelinkAggregateMaximumBitRate",
-                BitRate::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ue_sidelink_aggregate_maximum_bit_rate,
-                ie_extensions,
-            })
-        }
-    }
     /// `UEUserPlaneCIoTSupportIndicator ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -33900,16 +23981,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEUserPlaneCIoTSupportIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::UEUserPlaneCIoTSupportIndicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::UEUserPlaneCIoTSupportIndicator)?])
         }
     }
     /// `UL-CP-SecurityInformation ::= SEQUENCE`, with an extension marker.
@@ -33963,35 +24034,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ULCPSecurityInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("ul-NAS-MAC", self.ul_nas_mac.to_tree());
-            members.put("ul-NAS-Count", self.ul_nas_count.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ULCPSecurityInformation)?;
-            let ul_nas_mac = reading.member(&members, "ul-NAS-MAC", ULNASMAC::from_tree)?;
-            let ul_nas_count = reading.member(&members, "ul-NAS-Count", ULNASCount::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                ul_nas_mac,
-                ul_nas_count,
-                ie_extensions,
-            })
-        }
-    }
     /// `UL-NAS-Count ::= BIT STRING (SIZE (5))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ULNASCount(pub Bits);
@@ -34032,17 +24074,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ULNASCount {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::readable(json::Form::Number(5), json::bits(self.0, 5, 5))
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let value = &json::read_readable(reading, json::Form::Number(5), value)?;
-            Ok(Self(json::read_bits(reading, value, 5, 5)?))
-        }
-    }
     /// `UL-NAS-MAC ::= BIT STRING (SIZE (16))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     pub struct ULNASMAC(pub Bits);
@@ -34081,16 +24112,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.bits_sized(self.0, 16, 16)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ULNASMAC {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::bits(self.0, 16, 16)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_bits(reading, value, 16, 16)?))
         }
     }
     /// `URI-Address ::= VisibleString`.
@@ -34141,20 +24162,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for URIAddress<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_text(
-                reading,
-                value,
-                json::Characters::Visible,
-            )?))
-        }
-    }
     /// `UnlicensedSpectrumRestriction ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -34184,16 +24191,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UnlicensedSpectrumRestriction {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::UnlicensedSpectrumRestriction[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::UnlicensedSpectrumRestriction)?])
         }
     }
     /// `UserLocationInformation ::= SEQUENCE`, with an extension marker.
@@ -34243,35 +24240,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UserLocationInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("eutran-cgi", self.eutran_cgi.to_tree());
-            members.put("tai", self.tai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UserLocationInformation)?;
-            let eutran_cgi = reading.member(&members, "eutran-cgi", EUTRANCGI::from_tree)?;
-            let tai = reading.member(&members, "tai", TAI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                eutran_cgi,
-                tai,
-                ie_extensions,
-            })
         }
     }
     /// `V2XServicesAuthorized ::= SEQUENCE`, with an extension marker.
@@ -34335,42 +24303,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for V2XServicesAuthorized {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put_optional(
-                "vehicleUE",
-                self.vehicle_ue.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "pedestrianUE",
-                self.pedestrian_ue.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::V2XServicesAuthorized)?;
-            let vehicle_ue = reading.optional(&members, "vehicleUE", VehicleUE::from_tree)?;
-            let pedestrian_ue =
-                reading.optional(&members, "pedestrianUE", PedestrianUE::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                vehicle_ue,
-                pedestrian_ue,
-                ie_extensions,
-            })
-        }
-    }
     /// `VehicleUE ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -34401,16 +24333,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 2, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for VehicleUE {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::VehicleUE[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::VehicleUE)?])
         }
     }
     /// `VoiceSupportMatchIndicator ::= ENUMERATED`, with an extension marker.
@@ -34446,16 +24368,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for VoiceSupportMatchIndicator {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::VoiceSupportMatchIndicator[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::VoiceSupportMatchIndicator)?])
-        }
-    }
     /// `WLANMeasConfig ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -34485,16 +24397,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for WLANMeasConfig {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::WLANMeasConfig[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::WLANMeasConfig)?])
         }
     }
     /// `WLANMeasConfigNameList ::= SEQUENCE (SIZE (1..4)) OF WLANName`.
@@ -34542,18 +24444,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for WLANMeasConfigNameList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                WLANName::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `WLANMeasurementConfigurationWlanRssi ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -34585,16 +24475,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for WLANMeasurementConfigurationWlanRssi {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::WLANMeasurementConfigurationWlanRssi[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::WLANMeasurementConfigurationWlanRssi)?])
-        }
-    }
     /// `WLANMeasurementConfigurationWlanRtt ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -34624,16 +24504,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for WLANMeasurementConfigurationWlanRtt {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::WLANMeasurementConfigurationWlanRtt[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::WLANMeasurementConfigurationWlanRtt)?])
         }
     }
     /// `WLANMeasurementConfiguration ::= SEQUENCE`, with an extension marker.
@@ -34741,65 +24611,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for WLANMeasurementConfiguration<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("wlanMeasConfig", self.wlan_meas_config.to_tree());
-            members.put_optional(
-                "wlanMeasConfigNameList",
-                self.wlan_meas_config_name_list
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "wlan-rssi",
-                self.wlan_rssi.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "wlan-rtt",
-                self.wlan_rtt.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::WLANMeasurementConfiguration)?;
-            let wlan_meas_config =
-                reading.member(&members, "wlanMeasConfig", WLANMeasConfig::from_tree)?;
-            let wlan_meas_config_name_list = reading.optional(
-                &members,
-                "wlanMeasConfigNameList",
-                WLANMeasConfigNameList::from_tree,
-            )?;
-            let wlan_rssi = reading.optional(
-                &members,
-                "wlan-rssi",
-                WLANMeasurementConfigurationWlanRssi::from_tree,
-            )?;
-            let wlan_rtt = reading.optional(
-                &members,
-                "wlan-rtt",
-                WLANMeasurementConfigurationWlanRtt::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                wlan_meas_config,
-                wlan_meas_config_name_list,
-                wlan_rssi,
-                wlan_rtt,
-                ie_extensions,
-            })
-        }
-    }
     /// `WLANName ::= OCTET STRING (SIZE (1..32))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WLANName<'a>(pub Octets<'a>);
@@ -34848,16 +24659,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for WLANName<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// `WUS-Assistance-Information ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WUSAssistanceInformation {
@@ -34902,39 +24703,6 @@ pub mod s1_ap_ies {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for WUSAssistanceInformation {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "pagingProbabilityInformation",
-                self.paging_probability_information.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::WUSAssistanceInformation)?;
-            let paging_probability_information = reading.member(
-                &members,
-                "pagingProbabilityInformation",
-                PagingProbabilityInformation::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                paging_probability_information,
-                ie_extensions,
-            })
         }
     }
     /// `WarningAreaCoordinates ::= OCTET STRING (SIZE (1..1024))`.
@@ -34983,16 +24751,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_string(&self.0, 1, 1024, false)?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for WarningAreaCoordinates<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
         }
     }
     /// `WarningAreaList ::= CHOICE`, with an extension marker.
@@ -35049,37 +24807,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for WarningAreaList {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::cellIDList(value) => json::alternative("cellIDList", value.to_tree()),
-                Self::trackingAreaListforWarning(value) => {
-                    json::alternative("trackingAreaListforWarning", value.to_tree())
-                }
-                Self::emergencyAreaIDList(value) => {
-                    json::alternative("emergencyAreaIDList", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::WarningAreaList)?;
-            Ok(match position {
-                0 => Self::cellIDList(reading.within("cellIDList", value, ECGIList::from_tree)?),
-                1 => Self::trackingAreaListforWarning(reading.within(
-                    "trackingAreaListforWarning",
-                    value,
-                    TAIListforWarning::from_tree,
-                )?),
-                _ => Self::emergencyAreaIDList(reading.within(
-                    "emergencyAreaIDList",
-                    value,
-                    EmergencyAreaIDList::from_tree,
-                )?),
-            })
-        }
-    }
     /// `WarningMessageContents ::= OCTET STRING (SIZE (1..9600))`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WarningMessageContents<'a>(pub Octets<'a>);
@@ -35128,16 +24855,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for WarningMessageContents<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(json::read_octets(reading, value)?))
-        }
-    }
     /// The octets, in hexadecimal.
     impl core::fmt::Display for WarningSecurityInfo {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -35181,16 +24898,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for WarningSecurityInfo {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octet_array::<50>(value)?))
-        }
-    }
     /// The octets, in hexadecimal.
     impl core::fmt::Display for WarningType {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -35232,16 +24939,6 @@ pub mod s1_ap_ies {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.octet_array(&self.0);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for WarningType {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::octets(&self.0)
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.octet_array::<2>(value)?))
         }
     }
     /// `X2TNLConfigurationInfo ::= SEQUENCE`, with an extension marker.
@@ -35302,39 +24999,6 @@ pub mod s1_ap_ies {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for X2TNLConfigurationInfo<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put(
-                "eNBX2TransportLayerAddresses",
-                self.enb_x2_transport_layer_addresses.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::X2TNLConfigurationInfo)?;
-            let enb_x2_transport_layer_addresses = reading.member(
-                &members,
-                "eNBX2TransportLayerAddresses",
-                ENBX2TLAs::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                enb_x2_transport_layer_addresses,
-                ie_extensions,
-            })
-        }
-    }
 }
 #[allow(
     non_camel_case_types,
@@ -35346,12 +25010,8 @@ pub mod s1_ap_ies {
 )]
 pub mod s1_ap_pdu_contents {
     use super::*;
-    #[cfg(feature = "inspect")]
-    use crate::inspect_registry::names;
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
-    #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer, in_field,
@@ -35428,53 +25088,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for CSGMembershipInfo {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("cSGMembershipStatus", self.csg_membership_status.to_tree());
-            members.put("cSG-Id", self.csg_id.to_tree());
-            members.put_optional(
-                "cellAccessMode",
-                self.cell_access_mode.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "pLMNidentity",
-                self.plmn_identity.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CSGMembershipInfo)?;
-            let csg_membership_status = reading.member(
-                &members,
-                "cSGMembershipStatus",
-                CSGMembershipStatus::from_tree,
-            )?;
-            let csg_id = reading.member(&members, "cSG-Id", CSGId::from_tree)?;
-            let cell_access_mode =
-                reading.optional(&members, "cellAccessMode", CellAccessMode::from_tree)?;
-            let plmn_identity =
-                reading.optional(&members, "pLMNidentity", PLMNidentity::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                csg_membership_status,
-                csg_id,
-                cell_access_mode,
-                plmn_identity,
-                ie_extensions,
-            })
-        }
-    }
     /// `CellTrafficTrace ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct CellTrafficTrace<'a> {
@@ -35510,21 +25123,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for CellTrafficTrace<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::CellTrafficTrace)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `ConnectionEstablishmentIndication ::= SEQUENCE`, with an extension marker.
@@ -35564,21 +25162,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ConnectionEstablishmentIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ConnectionEstablishmentIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `DeactivateTrace ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DeactivateTrace<'a> {
@@ -35614,21 +25197,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DeactivateTrace<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::DeactivateTrace)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `DownlinkNASTransport ::= SEQUENCE`, with an extension marker.
@@ -35668,21 +25236,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for DownlinkNASTransport<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::DownlinkNASTransport)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `DownlinkNonUEAssociatedLPPaTransport ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DownlinkNonUEAssociatedLPPaTransport<'a> {
@@ -35718,21 +25271,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DownlinkNonUEAssociatedLPPaTransport<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::DownlinkNonUEAssociatedLPPaTransport)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `DownlinkS1cdma2000tunnelling ::= SEQUENCE`, with an extension marker.
@@ -35772,21 +25310,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for DownlinkS1cdma2000tunnelling<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::DownlinkS1cdma2000tunnelling)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `DownlinkUEAssociatedLPPaTransport ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DownlinkUEAssociatedLPPaTransport<'a> {
@@ -35822,21 +25345,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for DownlinkUEAssociatedLPPaTransport<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::DownlinkUEAssociatedLPPaTransport)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `E-RABAdmittedItem ::= SEQUENCE`, with an extension marker.
@@ -35967,81 +25475,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABAdmittedItem<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put("gTP-TEID", self.gtp_teid.to_tree());
-            members.put_optional(
-                "dL-transportLayerAddress",
-                self.dl_transport_layer_address
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "dL-gTP-TEID",
-                self.dl_gtp_teid.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "uL-TransportLayerAddress",
-                self.ul_transport_layer_address
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "uL-GTP-TEID",
-                self.ul_gtp_teid.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABAdmittedItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
-            let dl_transport_layer_address = reading.optional(
-                &members,
-                "dL-transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let dl_gtp_teid = reading.optional(&members, "dL-gTP-TEID", GTPTEID::from_tree)?;
-            let ul_transport_layer_address = reading.optional(
-                &members,
-                "uL-TransportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let ul_gtp_teid = reading.optional(&members, "uL-GTP-TEID", GTPTEID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                dl_transport_layer_address,
-                dl_gtp_teid,
-                ul_transport_layer_address,
-                ul_gtp_teid,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABAdmittedList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABAdmittedList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -36085,18 +25518,6 @@ pub mod s1_ap_pdu_contents {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABAdmittedList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABDataForwardingItem ::= SEQUENCE`, with an extension marker.
@@ -36214,68 +25635,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABDataForwardingItem<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put_optional(
-                "dL-transportLayerAddress",
-                self.dl_transport_layer_address
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "dL-gTP-TEID",
-                self.dl_gtp_teid.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "uL-TransportLayerAddress",
-                self.ul_transport_layer_address
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "uL-GTP-TEID",
-                self.ul_gtp_teid.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABDataForwardingItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let dl_transport_layer_address = reading.optional(
-                &members,
-                "dL-transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let dl_gtp_teid = reading.optional(&members, "dL-gTP-TEID", GTPTEID::from_tree)?;
-            let ul_transport_layer_address = reading.optional(
-                &members,
-                "uL-TransportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let ul_gtp_teid = reading.optional(&members, "uL-GTP-TEID", GTPTEID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                dl_transport_layer_address,
-                dl_gtp_teid,
-                ul_transport_layer_address,
-                ul_gtp_teid,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABFailedToResumeItemResumeReq ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToResumeItemResumeReq {
@@ -36321,35 +25680,6 @@ pub mod s1_ap_pdu_contents {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABFailedToResumeItemResumeReq {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put("cause", self.cause.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABFailedToResumeItemResumeReq)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let cause = reading.member(&members, "cause", Cause::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                cause,
-                ie_extensions,
-            })
         }
     }
     /// `E-RABFailedToResumeItemResumeRes ::= SEQUENCE`, with an extension marker.
@@ -36399,35 +25729,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABFailedToResumeItemResumeRes {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put("cause", self.cause.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABFailedToResumeItemResumeRes)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let cause = reading.member(&members, "cause", Cause::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                cause,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABFailedToResumeListResumeReq ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToResumeListResumeReq<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -36473,18 +25774,6 @@ pub mod s1_ap_pdu_contents {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABFailedToResumeListResumeReq<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABFailedToResumeListResumeRes ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
@@ -36534,18 +25823,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABFailedToResumeListResumeRes<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `E-RABFailedToSetupItemHOReqAck ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABFailedToSetupItemHOReqAck {
@@ -36591,35 +25868,6 @@ pub mod s1_ap_pdu_contents {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABFailedToSetupItemHOReqAck {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put("cause", self.cause.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABFailedToSetupItemHOReqAck)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let cause = reading.member(&members, "cause", Cause::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                cause,
-                ie_extensions,
-            })
         }
     }
     /// `E-RABFailedtoSetupListHOReqAck ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
@@ -36669,18 +25917,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABFailedtoSetupListHOReqAck<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `E-RABModificationConfirm ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModificationConfirm<'a> {
@@ -36718,21 +25954,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABModificationConfirm<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABModificationConfirm)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `E-RABModificationIndication ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModificationIndication<'a> {
@@ -36768,21 +25989,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABModificationIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABModificationIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `E-RABModifyItemBearerModConf ::= SEQUENCE`, with an extension marker.
@@ -36828,32 +26034,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABModifyItemBearerModConf {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABModifyItemBearerModConf)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABModifyItemBearerModRes ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyItemBearerModRes {
@@ -36895,32 +26075,6 @@ pub mod s1_ap_pdu_contents {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABModifyItemBearerModRes {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABModifyItemBearerModRes)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                ie_extensions,
-            })
         }
     }
     /// `E-RABModifyListBearerModConf ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
@@ -36968,18 +26122,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABModifyListBearerModConf<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `E-RABModifyListBearerModRes ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyListBearerModRes<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -37025,18 +26167,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABModifyListBearerModRes<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `E-RABModifyRequest ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyRequest<'a> {
@@ -37074,21 +26204,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABModifyRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABModifyRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `E-RABModifyResponse ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABModifyResponse<'a> {
@@ -37124,21 +26239,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABModifyResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABModifyResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `E-RABNotToBeModifiedItemBearerModInd ::= SEQUENCE`, with an extension marker.
@@ -37209,45 +26309,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABNotToBeModifiedItemBearerModInd<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put("dL-GTP-TEID", self.dl_gtp_teid.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABNotToBeModifiedItemBearerModInd)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let dl_gtp_teid = reading.member(&members, "dL-GTP-TEID", GTPTEID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                transport_layer_address,
-                dl_gtp_teid,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABNotToBeModifiedListBearerModInd ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABNotToBeModifiedListBearerModInd<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -37295,18 +26356,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABNotToBeModifiedListBearerModInd<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `E-RABReleaseCommand ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABReleaseCommand<'a> {
@@ -37344,21 +26393,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABReleaseCommand<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABReleaseCommand)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `E-RABReleaseIndication ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABReleaseIndication<'a> {
@@ -37394,21 +26428,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABReleaseIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABReleaseIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `E-RABReleaseItemBearerRelComp ::= SEQUENCE`, with an extension marker.
@@ -37452,32 +26471,6 @@ pub mod s1_ap_pdu_contents {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABReleaseItemBearerRelComp {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABReleaseItemBearerRelComp)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                ie_extensions,
-            })
         }
     }
     /// `E-RABReleaseListBearerRelComp ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
@@ -37525,18 +26518,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABReleaseListBearerRelComp<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `E-RABReleaseResponse ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABReleaseResponse<'a> {
@@ -37572,21 +26553,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABReleaseResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABReleaseResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `E-RABSetupItemBearerSURes ::= SEQUENCE`, with an extension marker.
@@ -37655,45 +26621,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABSetupItemBearerSURes<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put("gTP-TEID", self.gtp_teid.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABSetupItemBearerSURes)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABSetupItemCtxtSURes ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupItemCtxtSURes<'a> {
@@ -37760,45 +26687,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABSetupItemCtxtSURes<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put("gTP-TEID", self.gtp_teid.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABSetupItemCtxtSURes)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABSetupListBearerSURes ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupListBearerSURes<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -37842,18 +26730,6 @@ pub mod s1_ap_pdu_contents {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABSetupListBearerSURes<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABSetupListCtxtSURes ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
@@ -37901,18 +26777,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABSetupListCtxtSURes<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `E-RABSetupRequest ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupRequest<'a> {
@@ -37950,21 +26814,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABSetupRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABSetupRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `E-RABSetupResponse ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABSetupResponse<'a> {
@@ -38000,21 +26849,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABSetupResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABSetupResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `E-RABSubjecttoDataForwardingList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
@@ -38062,18 +26896,6 @@ pub mod s1_ap_pdu_contents {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABSubjecttoDataForwardingList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABToBeModifiedItemBearerModInd ::= SEQUENCE`, with an extension marker.
@@ -38144,45 +26966,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeModifiedItemBearerModInd<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put("dL-GTP-TEID", self.dl_gtp_teid.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABToBeModifiedItemBearerModInd)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let dl_gtp_teid = reading.member(&members, "dL-GTP-TEID", GTPTEID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                transport_layer_address,
-                dl_gtp_teid,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABToBeModifiedItemBearerModReq ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeModifiedItemBearerModReq<'a> {
@@ -38249,45 +27032,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeModifiedItemBearerModReq<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "e-RABLevelQoSParameters",
-                self.e_rab_level_qos_parameters.to_tree(),
-            );
-            members.put("nAS-PDU", self.nas_pdu.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABToBeModifiedItemBearerModReq)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let e_rab_level_qos_parameters = reading.member(
-                &members,
-                "e-RABLevelQoSParameters",
-                ERABLevelQoSParameters::from_tree,
-            )?;
-            let nas_pdu = reading.member(&members, "nAS-PDU", NASPDU::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                e_rab_level_qos_parameters,
-                nas_pdu,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABToBeModifiedListBearerModInd ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeModifiedListBearerModInd<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -38335,18 +27079,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeModifiedListBearerModInd<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `E-RABToBeModifiedListBearerModReq ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeModifiedListBearerModReq<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -38392,18 +27124,6 @@ pub mod s1_ap_pdu_contents {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeModifiedListBearerModReq<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABToBeSetupItemBearerSUReq ::= SEQUENCE`, with an extension marker.
@@ -38483,58 +27203,6 @@ pub mod s1_ap_pdu_contents {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeSetupItemBearerSUReq<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "e-RABlevelQoSParameters",
-                self.e_rab_level_qos_parameters.to_tree(),
-            );
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put("gTP-TEID", self.gtp_teid.to_tree());
-            members.put("nAS-PDU", self.nas_pdu.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABToBeSetupItemBearerSUReq)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let e_rab_level_qos_parameters = reading.member(
-                &members,
-                "e-RABlevelQoSParameters",
-                ERABLevelQoSParameters::from_tree,
-            )?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
-            let nas_pdu = reading.member(&members, "nAS-PDU", NASPDU::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                e_rab_level_qos_parameters,
-                transport_layer_address,
-                gtp_teid,
-                nas_pdu,
-                ie_extensions,
-            })
         }
     }
     /// `E-RABToBeSetupItemCtxtSUReq ::= SEQUENCE`, with an extension marker.
@@ -38623,61 +27291,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeSetupItemCtxtSUReq<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "e-RABlevelQoSParameters",
-                self.e_rab_level_qos_parameters.to_tree(),
-            );
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put("gTP-TEID", self.gtp_teid.to_tree());
-            members.put_optional(
-                "nAS-PDU",
-                self.nas_pdu.as_ref().map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABToBeSetupItemCtxtSUReq)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let e_rab_level_qos_parameters = reading.member(
-                &members,
-                "e-RABlevelQoSParameters",
-                ERABLevelQoSParameters::from_tree,
-            )?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
-            let nas_pdu = reading.optional(&members, "nAS-PDU", NASPDU::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                e_rab_level_qos_parameters,
-                transport_layer_address,
-                gtp_teid,
-                nas_pdu,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABToBeSetupItemHOReq ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupItemHOReq<'a> {
@@ -38752,55 +27365,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeSetupItemHOReq<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put("gTP-TEID", self.gtp_teid.to_tree());
-            members.put(
-                "e-RABlevelQosParameters",
-                self.e_rab_level_qos_parameters.to_tree(),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABToBeSetupItemHOReq)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
-            let e_rab_level_qos_parameters = reading.member(
-                &members,
-                "e-RABlevelQosParameters",
-                ERABLevelQoSParameters::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                e_rab_level_qos_parameters,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABToBeSetupListBearerSUReq ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupListBearerSUReq<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -38844,18 +27408,6 @@ pub mod s1_ap_pdu_contents {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeSetupListBearerSUReq<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABToBeSetupListCtxtSUReq ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
@@ -38903,18 +27455,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeSetupListCtxtSUReq<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `E-RABToBeSetupListHOReq ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSetupListHOReq<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -38958,18 +27498,6 @@ pub mod s1_ap_pdu_contents {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeSetupListHOReq<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABToBeSwitchedDLItem ::= SEQUENCE`, with an extension marker.
@@ -39038,45 +27566,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeSwitchedDLItem<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put("gTP-TEID", self.gtp_teid.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABToBeSwitchedDLItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABToBeSwitchedDLList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSwitchedDLList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -39120,18 +27609,6 @@ pub mod s1_ap_pdu_contents {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeSwitchedDLList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABToBeSwitchedULItem ::= SEQUENCE`, with an extension marker.
@@ -39200,45 +27677,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeSwitchedULItem<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put(
-                "transportLayerAddress",
-                self.transport_layer_address.to_tree(),
-            );
-            members.put("gTP-TEID", self.gtp_teid.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABToBeSwitchedULItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let transport_layer_address = reading.member(
-                &members,
-                "transportLayerAddress",
-                TransportLayerAddress::from_tree,
-            )?;
-            let gtp_teid = reading.member(&members, "gTP-TEID", GTPTEID::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                transport_layer_address,
-                gtp_teid,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABToBeSwitchedULList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeSwitchedULList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -39282,18 +27720,6 @@ pub mod s1_ap_pdu_contents {
                 item.encode(writer)?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeSwitchedULList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
         }
     }
     /// `E-RABToBeUpdatedItem ::= SEQUENCE`, with an extension marker.
@@ -39352,44 +27778,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeUpdatedItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("e-RAB-ID", self.e_rab_id.to_tree());
-            members.put_optional(
-                "securityIndication",
-                self.security_indication
-                    .as_ref()
-                    .map(|value| value.to_tree()),
-            );
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ERABToBeUpdatedItem)?;
-            let e_rab_id = reading.member(&members, "e-RAB-ID", ERABID::from_tree)?;
-            let security_indication = reading.optional(
-                &members,
-                "securityIndication",
-                SecurityIndication::from_tree,
-            )?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self {
-                e_rab_id,
-                security_indication,
-                ie_extensions,
-            })
-        }
-    }
     /// `E-RABToBeUpdatedList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ERABToBeUpdatedList<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -39435,18 +27823,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ERABToBeUpdatedList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `ENBCPRelocationIndication ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBCPRelocationIndication<'a> {
@@ -39482,21 +27858,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBCPRelocationIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENBCPRelocationIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `ENBConfigurationTransfer ::= SEQUENCE`, with an extension marker.
@@ -39536,21 +27897,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBConfigurationTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENBConfigurationTransfer)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `ENBConfigurationUpdate ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBConfigurationUpdate<'a> {
@@ -39586,21 +27932,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBConfigurationUpdate<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENBConfigurationUpdate)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `ENBConfigurationUpdateAcknowledge ::= SEQUENCE`, with an extension marker.
@@ -39640,21 +27971,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBConfigurationUpdateAcknowledge<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENBConfigurationUpdateAcknowledge)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `ENBConfigurationUpdateFailure ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBConfigurationUpdateFailure<'a> {
@@ -39690,21 +28006,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBConfigurationUpdateFailure<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENBConfigurationUpdateFailure)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `ENBDirectInformationTransfer ::= SEQUENCE`, with an extension marker.
@@ -39744,21 +28045,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBDirectInformationTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENBDirectInformationTransfer)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `ENBEarlyStatusTransfer ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ENBEarlyStatusTransfer<'a> {
@@ -39794,21 +28080,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBEarlyStatusTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENBEarlyStatusTransfer)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `ENBStatusTransfer ::= SEQUENCE`, with an extension marker.
@@ -39848,21 +28119,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ENBStatusTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ENBStatusTransfer)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `ErrorIndication ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ErrorIndication<'a> {
@@ -39898,21 +28154,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ErrorIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ErrorIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `HandoverCancel ::= SEQUENCE`, with an extension marker.
@@ -39952,21 +28193,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverCancel<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::HandoverCancel)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `HandoverCancelAcknowledge ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct HandoverCancelAcknowledge<'a> {
@@ -40002,21 +28228,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverCancelAcknowledge<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::HandoverCancelAcknowledge)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `HandoverCommand ::= SEQUENCE`, with an extension marker.
@@ -40056,21 +28267,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverCommand<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::HandoverCommand)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `HandoverFailure ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct HandoverFailure<'a> {
@@ -40106,21 +28302,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverFailure<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::HandoverFailure)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `HandoverNotify ::= SEQUENCE`, with an extension marker.
@@ -40160,21 +28341,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverNotify<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::HandoverNotify)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `HandoverPreparationFailure ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct HandoverPreparationFailure<'a> {
@@ -40210,21 +28376,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverPreparationFailure<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::HandoverPreparationFailure)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `HandoverRequest ::= SEQUENCE`, with an extension marker.
@@ -40264,21 +28415,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::HandoverRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `HandoverRequestAcknowledge ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct HandoverRequestAcknowledge<'a> {
@@ -40314,21 +28450,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverRequestAcknowledge<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::HandoverRequestAcknowledge)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `HandoverRequired ::= SEQUENCE`, with an extension marker.
@@ -40368,21 +28489,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverRequired<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::HandoverRequired)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `HandoverSuccess ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct HandoverSuccess<'a> {
@@ -40418,21 +28524,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for HandoverSuccess<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::HandoverSuccess)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `InitialContextSetupFailure ::= SEQUENCE`, with an extension marker.
@@ -40472,21 +28563,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for InitialContextSetupFailure<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::InitialContextSetupFailure)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `InitialContextSetupRequest ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct InitialContextSetupRequest<'a> {
@@ -40522,21 +28598,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for InitialContextSetupRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::InitialContextSetupRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `InitialContextSetupResponse ::= SEQUENCE`, with an extension marker.
@@ -40576,21 +28637,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for InitialContextSetupResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::InitialContextSetupResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `InitialUEMessage ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct InitialUEMessage<'a> {
@@ -40626,21 +28672,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for InitialUEMessage<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::InitialUEMessage)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `Inter-SystemInformationTransferType ::= CHOICE`, with an extension marker.
@@ -40687,27 +28718,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for InterSystemInformationTransferType<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::rIMTransfer(value) => json::alternative("rIMTransfer", value.to_tree()),
-            }
-        }
-        #[allow(clippy::match_single_binding)]
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) =
-                reading.alternative(value, names::InterSystemInformationTransferType)?;
-            Ok(match position {
-                _ => Self::rIMTransfer(reading.within(
-                    "rIMTransfer",
-                    value,
-                    RIMTransfer::from_tree,
-                )?),
-            })
-        }
-    }
     /// `KillRequest ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct KillRequest<'a> {
@@ -40743,21 +28753,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for KillRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::KillRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `KillResponse ::= SEQUENCE`, with an extension marker.
@@ -40797,21 +28792,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for KillResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::KillResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `LocationReport ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LocationReport<'a> {
@@ -40847,21 +28827,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for LocationReport<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::LocationReport)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `LocationReportingControl ::= SEQUENCE`, with an extension marker.
@@ -40901,21 +28866,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for LocationReportingControl<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::LocationReportingControl)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `LocationReportingFailureIndication ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct LocationReportingFailureIndication<'a> {
@@ -40951,21 +28901,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for LocationReportingFailureIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::LocationReportingFailureIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `MMECPRelocationIndication ::= SEQUENCE`, with an extension marker.
@@ -41005,21 +28940,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMECPRelocationIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::MMECPRelocationIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `MMEConfigurationTransfer ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MMEConfigurationTransfer<'a> {
@@ -41055,21 +28975,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMEConfigurationTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::MMEConfigurationTransfer)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `MMEConfigurationUpdate ::= SEQUENCE`, with an extension marker.
@@ -41109,21 +29014,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMEConfigurationUpdate<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::MMEConfigurationUpdate)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `MMEConfigurationUpdateAcknowledge ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MMEConfigurationUpdateAcknowledge<'a> {
@@ -41159,21 +29049,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMEConfigurationUpdateAcknowledge<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::MMEConfigurationUpdateAcknowledge)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `MMEConfigurationUpdateFailure ::= SEQUENCE`, with an extension marker.
@@ -41213,21 +29088,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMEConfigurationUpdateFailure<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::MMEConfigurationUpdateFailure)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `MMEDirectInformationTransfer ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MMEDirectInformationTransfer<'a> {
@@ -41263,21 +29123,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMEDirectInformationTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::MMEDirectInformationTransfer)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `MMEEarlyStatusTransfer ::= SEQUENCE`, with an extension marker.
@@ -41317,21 +29162,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMEEarlyStatusTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::MMEEarlyStatusTransfer)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `MMEStatusTransfer ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct MMEStatusTransfer<'a> {
@@ -41367,21 +29197,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for MMEStatusTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::MMEStatusTransfer)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `NASDeliveryIndication ::= SEQUENCE`, with an extension marker.
@@ -41421,21 +29236,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for NASDeliveryIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::NASDeliveryIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `NASNonDeliveryIndication ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct NASNonDeliveryIndication<'a> {
@@ -41471,21 +29271,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for NASNonDeliveryIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::NASNonDeliveryIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `OverloadStart ::= SEQUENCE`, with an extension marker.
@@ -41525,21 +29310,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for OverloadStart<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::OverloadStart)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `OverloadStop ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct OverloadStop<'a> {
@@ -41575,21 +29345,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for OverloadStop<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::OverloadStop)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `PWSFailureIndication ::= SEQUENCE`, with an extension marker.
@@ -41629,21 +29384,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PWSFailureIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PWSFailureIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `PWSRestartIndication ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PWSRestartIndication<'a> {
@@ -41679,21 +29419,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PWSRestartIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PWSRestartIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `Paging ::= SEQUENCE`, with an extension marker.
@@ -41733,21 +29458,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for Paging<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::Paging)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `PathSwitchRequest ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PathSwitchRequest<'a> {
@@ -41783,21 +29493,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PathSwitchRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PathSwitchRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `PathSwitchRequestAcknowledge ::= SEQUENCE`, with an extension marker.
@@ -41837,21 +29532,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PathSwitchRequestAcknowledge<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PathSwitchRequestAcknowledge)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `PathSwitchRequestFailure ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PathSwitchRequestFailure<'a> {
@@ -41887,21 +29567,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PathSwitchRequestFailure<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PathSwitchRequestFailure)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `SEQUENCE ::= SEQUENCE`.
@@ -41945,30 +29610,6 @@ pub mod s1_ap_pdu_contents {
                 .map_err(in_field("criticality"))?;
             writer.open_type(&self.value);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for AnonymousPrivateMessagePrivateIEs<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("id", self.id.to_tree());
-            members.put("criticality", self.criticality.to_tree());
-            members.put("value", json::octets(&self.value));
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::AnonymousPrivateMessagePrivateIEs)?;
-            let id = reading.member(&members, "id", PrivateIEID::from_tree)?;
-            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
-            let value = reading.member(&members, "value", |value, reading| {
-                json::read_octets(reading, value)
-            })?;
-            Ok(Self {
-                id,
-                criticality,
-                value,
-            })
         }
     }
     /// `PrivateMessagePrivateIEs ::= SEQUENCE (SIZE (1..65535)) OF AnonymousPrivateMessagePrivateIEs`.
@@ -42016,18 +29657,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for PrivateMessagePrivateIEs<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                AnonymousPrivateMessagePrivateIEs::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `PrivateMessage ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct PrivateMessage<'a> {
@@ -42063,21 +29692,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("private_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for PrivateMessage<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("privateIEs", self.private_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::PrivateMessage)?;
-            let private_ies =
-                reading.member(&members, "privateIEs", PrivateMessagePrivateIEs::from_tree)?;
-            Ok(Self { private_ies })
         }
     }
     /// `RerouteNASRequest ::= SEQUENCE`, with an extension marker.
@@ -42117,21 +29731,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for RerouteNASRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::RerouteNASRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `Reset ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct Reset<'a> {
@@ -42167,21 +29766,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for Reset<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::Reset)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `ResetAcknowledge ::= SEQUENCE`, with an extension marker.
@@ -42221,21 +29805,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ResetAcknowledge<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::ResetAcknowledge)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `ResetAll ::= ENUMERATED`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
     #[non_exhaustive]
@@ -42265,16 +29834,6 @@ pub mod s1_ap_pdu_contents {
         fn encode(&self, writer: &mut Writer<'_>) -> Result<(), Error> {
             writer.index(self.index(), 1, true);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for ResetAll {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            json::text(names::ResetAll[self.index() as usize])
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self::VALUES[reading.named(value, names::ResetAll)?])
         }
     }
     /// `ResetType ::= CHOICE`, with an extension marker.
@@ -42334,33 +29893,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for ResetType<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::s1_Interface(value) => json::alternative("s1-Interface", value.to_tree()),
-                Self::partOfS1_Interface(value) => {
-                    json::alternative("partOfS1-Interface", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::ResetType)?;
-            Ok(match position {
-                0 => Self::s1_Interface(reading.within(
-                    "s1-Interface",
-                    value,
-                    ResetAll::from_tree,
-                )?),
-                _ => Self::partOfS1_Interface(reading.within(
-                    "partOfS1-Interface",
-                    value,
-                    UEAssociatedLogicalS1ConnectionListRes::from_tree,
-                )?),
-            })
-        }
-    }
     /// `RetrieveUEInformation ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RetrieveUEInformation<'a> {
@@ -42396,21 +29928,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for RetrieveUEInformation<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::RetrieveUEInformation)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `S1RemovalFailure ::= SEQUENCE`, with an extension marker.
@@ -42450,21 +29967,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for S1RemovalFailure<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::S1RemovalFailure)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `S1RemovalRequest ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct S1RemovalRequest<'a> {
@@ -42500,21 +30002,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for S1RemovalRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::S1RemovalRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `S1RemovalResponse ::= SEQUENCE`, with an extension marker.
@@ -42554,21 +30041,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for S1RemovalResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::S1RemovalResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `S1SetupFailure ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct S1SetupFailure<'a> {
@@ -42604,21 +30076,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for S1SetupFailure<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::S1SetupFailure)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `S1SetupRequest ::= SEQUENCE`, with an extension marker.
@@ -42658,21 +30115,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for S1SetupRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::S1SetupRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `S1SetupResponse ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct S1SetupResponse<'a> {
@@ -42710,21 +30152,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for S1SetupResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::S1SetupResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `SecondaryRATDataUsageReport ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SecondaryRATDataUsageReport<'a> {
@@ -42760,21 +30187,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for SecondaryRATDataUsageReport<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SecondaryRATDataUsageReport)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `TAIItem ::= SEQUENCE`, with an extension marker.
@@ -42815,29 +30227,6 @@ pub mod s1_ap_pdu_contents {
                 value.encode(writer).map_err(in_field("ie_extensions"))?;
             }
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAIItem {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("tAI", self.tai.to_tree());
-            members.put_optional(
-                "iE-Extensions",
-                self.ie_extensions.as_ref().map(|value| value.to_tree()),
-            );
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TAIItem)?;
-            let tai = reading.member(&members, "tAI", TAI::from_tree)?;
-            let ie_extensions = reading.optional(
-                &members,
-                "iE-Extensions",
-                ProtocolExtensionContainer::from_tree,
-            )?;
-            Ok(Self { tai, ie_extensions })
         }
     }
     /// `TAIList ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
@@ -42885,18 +30274,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TAIList<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `TraceFailureIndication ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TraceFailureIndication<'a> {
@@ -42934,21 +30311,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for TraceFailureIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TraceFailureIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `TraceStart ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TraceStart<'a> {
@@ -42984,21 +30346,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for TraceStart<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::TraceStart)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UE-associatedLogicalS1-ConnectionListRes ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
@@ -43048,18 +30395,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEAssociatedLogicalS1ConnectionListRes<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `UE-associatedLogicalS1-ConnectionListResAck ::= SEQUENCE (SIZE (1..256)) OF ProtocolIEField`.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEAssociatedLogicalS1ConnectionListResAck<'a>(pub Vec<ProtocolIEField<'a>>);
@@ -43107,18 +30442,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEAssociatedLogicalS1ConnectionListResAck<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            Value::Array(self.0.iter().map(|item| item.to_tree()).collect())
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            Ok(Self(reading.list(value, |value, reading| {
-                ProtocolIEField::from_tree(value, reading)
-            })?))
-        }
-    }
     /// `UECapabilityInfoIndication ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UECapabilityInfoIndication<'a> {
@@ -43154,21 +30477,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UECapabilityInfoIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UECapabilityInfoIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UEContextModificationConfirm ::= SEQUENCE`, with an extension marker.
@@ -43208,21 +30516,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextModificationConfirm<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextModificationConfirm)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `UEContextModificationFailure ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEContextModificationFailure<'a> {
@@ -43258,21 +30551,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextModificationFailure<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextModificationFailure)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UEContextModificationIndication ::= SEQUENCE`, with an extension marker.
@@ -43312,21 +30590,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextModificationIndication<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextModificationIndication)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `UEContextModificationRequest ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEContextModificationRequest<'a> {
@@ -43362,21 +30625,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextModificationRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextModificationRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UEContextModificationResponse ::= SEQUENCE`, with an extension marker.
@@ -43416,21 +30664,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextModificationResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextModificationResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `UEContextReleaseCommand ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEContextReleaseCommand<'a> {
@@ -43466,21 +30699,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextReleaseCommand<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextReleaseCommand)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UEContextReleaseComplete ::= SEQUENCE`, with an extension marker.
@@ -43520,21 +30738,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextReleaseComplete<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextReleaseComplete)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `UEContextReleaseRequest ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEContextReleaseRequest<'a> {
@@ -43570,21 +30773,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextReleaseRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextReleaseRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UEContextResumeFailure ::= SEQUENCE`, with an extension marker.
@@ -43624,21 +30812,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextResumeFailure<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextResumeFailure)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `UEContextResumeRequest ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEContextResumeRequest<'a> {
@@ -43674,21 +30847,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextResumeRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextResumeRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UEContextResumeResponse ::= SEQUENCE`, with an extension marker.
@@ -43728,21 +30886,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextResumeResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextResumeResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `UEContextSuspendRequest ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEContextSuspendRequest<'a> {
@@ -43778,21 +30921,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextSuspendRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextSuspendRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UEContextSuspendResponse ::= SEQUENCE`, with an extension marker.
@@ -43832,21 +30960,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEContextSuspendResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEContextSuspendResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `UEInformationTransfer ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UEInformationTransfer<'a> {
@@ -43882,21 +30995,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UEInformationTransfer<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UEInformationTransfer)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UERadioCapabilityIDMappingRequest ::= SEQUENCE`, with an extension marker.
@@ -43936,21 +31034,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UERadioCapabilityIDMappingRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UERadioCapabilityIDMappingRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `UERadioCapabilityIDMappingResponse ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapabilityIDMappingResponse<'a> {
@@ -43986,21 +31069,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UERadioCapabilityIDMappingResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UERadioCapabilityIDMappingResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UERadioCapabilityMatchRequest ::= SEQUENCE`, with an extension marker.
@@ -44040,21 +31108,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UERadioCapabilityMatchRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UERadioCapabilityMatchRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `UERadioCapabilityMatchResponse ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UERadioCapabilityMatchResponse<'a> {
@@ -44090,21 +31143,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UERadioCapabilityMatchResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UERadioCapabilityMatchResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UplinkNASTransport ::= SEQUENCE`, with an extension marker.
@@ -44144,21 +31182,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UplinkNASTransport<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UplinkNASTransport)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `UplinkNonUEAssociatedLPPaTransport ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UplinkNonUEAssociatedLPPaTransport<'a> {
@@ -44194,21 +31217,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UplinkNonUEAssociatedLPPaTransport<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UplinkNonUEAssociatedLPPaTransport)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `UplinkS1cdma2000tunnelling ::= SEQUENCE`, with an extension marker.
@@ -44248,21 +31256,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for UplinkS1cdma2000tunnelling<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UplinkS1cdma2000tunnelling)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `UplinkUEAssociatedLPPaTransport ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct UplinkUEAssociatedLPPaTransport<'a> {
@@ -44298,21 +31291,6 @@ pub mod s1_ap_pdu_contents {
                 .encode(writer)
                 .map_err(in_field("protocol_ies"))?;
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UplinkUEAssociatedLPPaTransport<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UplinkUEAssociatedLPPaTransport)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
         }
     }
     /// `WriteReplaceWarningRequest ::= SEQUENCE`, with an extension marker.
@@ -44352,21 +31330,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for WriteReplaceWarningRequest<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::WriteReplaceWarningRequest)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
     /// `WriteReplaceWarningResponse ::= SEQUENCE`, with an extension marker.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct WriteReplaceWarningResponse<'a> {
@@ -44404,21 +31367,6 @@ pub mod s1_ap_pdu_contents {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for WriteReplaceWarningResponse<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("protocolIEs", self.protocol_ies.to_tree());
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::WriteReplaceWarningResponse)?;
-            let protocol_ies =
-                reading.member(&members, "protocolIEs", ProtocolIEContainer::from_tree)?;
-            Ok(Self { protocol_ies })
-        }
-    }
 }
 #[allow(
     non_camel_case_types,
@@ -44430,12 +31378,8 @@ pub mod s1_ap_pdu_contents {
 )]
 pub mod s1_ap_pdu_descriptions {
     use super::*;
-    #[cfg(feature = "inspect")]
-    use crate::inspect_registry::names;
     use alloc::borrow::Cow;
     use alloc::vec::Vec;
-    #[cfg(feature = "inspect")]
-    use oxirush_aper::json::{self, Reading, Refused, Tree, Value};
     use oxirush_aper::{
         AsnType, BitString, Bits, Decode, Encode, Error, ObjectIdentifier, Octets, Reader,
         UNBOUNDED, Writer, in_field,
@@ -44503,31 +31447,6 @@ pub mod s1_ap_pdu_descriptions {
                 .map_err(in_field("criticality"))?;
             writer.open_type(&self.value);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for InitiatingMessage<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("procedureCode", self.procedure_code.to_tree());
-            members.put("criticality", self.criticality.to_tree());
-            members.put("value", json::octets(&self.value));
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::InitiatingMessage)?;
-            let procedure_code =
-                reading.member(&members, "procedureCode", ProcedureCode::from_tree)?;
-            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
-            let value = reading.member(&members, "value", |value, reading| {
-                json::read_octets(reading, value)
-            })?;
-            Ok(Self {
-                procedure_code,
-                criticality,
-                value,
-            })
         }
     }
     /// `S1AP-PDU ::= CHOICE`, with an extension marker.
@@ -44600,43 +31519,6 @@ pub mod s1_ap_pdu_descriptions {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for S1APPDU<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            match self {
-                Self::initiatingMessage(value) => {
-                    json::alternative("initiatingMessage", value.to_tree())
-                }
-                Self::successfulOutcome(value) => {
-                    json::alternative("successfulOutcome", value.to_tree())
-                }
-                Self::unsuccessfulOutcome(value) => {
-                    json::alternative("unsuccessfulOutcome", value.to_tree())
-                }
-            }
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let (position, value) = reading.alternative(value, names::S1APPDU)?;
-            Ok(match position {
-                0 => Self::initiatingMessage(reading.within(
-                    "initiatingMessage",
-                    value,
-                    InitiatingMessage::from_tree,
-                )?),
-                1 => Self::successfulOutcome(reading.within(
-                    "successfulOutcome",
-                    value,
-                    SuccessfulOutcome::from_tree,
-                )?),
-                _ => Self::unsuccessfulOutcome(reading.within(
-                    "unsuccessfulOutcome",
-                    value,
-                    UnsuccessfulOutcome::from_tree,
-                )?),
-            })
-        }
-    }
     impl core::fmt::Debug for SuccessfulOutcome<'_> {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             let holds_key = oxirush_aper::protocol::holds_key::<crate::S1ap>(
@@ -44702,31 +31584,6 @@ pub mod s1_ap_pdu_descriptions {
             Ok(())
         }
     }
-    #[cfg(feature = "inspect")]
-    impl Tree for SuccessfulOutcome<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("procedureCode", self.procedure_code.to_tree());
-            members.put("criticality", self.criticality.to_tree());
-            members.put("value", json::octets(&self.value));
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::SuccessfulOutcome)?;
-            let procedure_code =
-                reading.member(&members, "procedureCode", ProcedureCode::from_tree)?;
-            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
-            let value = reading.member(&members, "value", |value, reading| {
-                json::read_octets(reading, value)
-            })?;
-            Ok(Self {
-                procedure_code,
-                criticality,
-                value,
-            })
-        }
-    }
     impl core::fmt::Debug for UnsuccessfulOutcome<'_> {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             let holds_key = oxirush_aper::protocol::holds_key::<crate::S1ap>(
@@ -44790,31 +31647,6 @@ pub mod s1_ap_pdu_descriptions {
                 .map_err(in_field("criticality"))?;
             writer.open_type(&self.value);
             Ok(())
-        }
-    }
-    #[cfg(feature = "inspect")]
-    impl Tree for UnsuccessfulOutcome<'_> {
-        const NAME: &'static str = <Self as AsnType>::NAME;
-        fn to_tree(&self) -> Value {
-            let mut members = json::Members::new();
-            members.put("procedureCode", self.procedure_code.to_tree());
-            members.put("criticality", self.criticality.to_tree());
-            members.put("value", json::octets(&self.value));
-            members.finish()
-        }
-        fn from_tree(value: &Value, reading: &mut Reading) -> Result<Self, Refused> {
-            let members = reading.members(value, names::UnsuccessfulOutcome)?;
-            let procedure_code =
-                reading.member(&members, "procedureCode", ProcedureCode::from_tree)?;
-            let criticality = reading.member(&members, "criticality", Criticality::from_tree)?;
-            let value = reading.member(&members, "value", |value, reading| {
-                json::read_octets(reading, value)
-            })?;
-            Ok(Self {
-                procedure_code,
-                criticality,
-                value,
-            })
         }
     }
 }
