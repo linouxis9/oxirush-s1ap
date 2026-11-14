@@ -79,3 +79,8 @@ doc-scrape-examples = false
 oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "e74549b8621df0ae02f19ba78efb63e07ab81002" }
 oxirush-utils = { git = "https://github.com/linouxis9/oxirush-utils", rev = "219336a848e65a19c80ef2e6bccd8feeb044844a" }
 oxirush-ngap = { git = "https://github.com/linouxis9/oxirush-ngap", rev = "144559f34a9a9a231b6337bdb3deeee7ed0f03a1" }
+
+# A test build has no debug information, as in CI: with it, a test build of the crate
+# took a quarter more time and three times the disk. A panic still names its line.
+[profile.test]
+debug = 0
