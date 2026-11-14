@@ -78,13 +78,13 @@ fn redundant(value: &Value, found: &mut Vec<String>) {
     match value {
         Value::Object(members) => {
             for (name, member) in members {
-                let wraps = match name.as_str() {
+                let wraps = match name {
                     "id" | "extensionValue" | "decoded" | "criticality" => true,
                     "value" => !members.contains_key("length"),
                     name => name.starts_with('_'),
                 };
                 if wraps {
-                    found.push(name.clone());
+                    found.push(name.to_string());
                 }
                 redundant(member, found);
             }
@@ -355,7 +355,7 @@ fn the_parts_of_a_gummei_are_numbers() {
 
 #[test]
 fn a_tunnel_endpoint_and_the_identities_of_a_ue_are_readable() {
-    let added = |ie: &str, value: Value| {
+    let added = |ie: &'static str, value: Value| {
         S1APPDU::from_tree(&tree!({"message": "UEContextReleaseRequest", "ies": [
             {(ie): value, "criticality": "ignore"},
         ]}))

@@ -32,7 +32,7 @@ fn source() -> Value {
 
 /// The octets that oxirush-ngap writes for the container `name` with the value `value`,
 /// in the IE `ie` of its own message `message`.
-fn by_ngap(message: &str, ie: &str, name: &str, value: Value) -> Value {
+fn by_ngap(message: &'static str, ie: &'static str, name: &'static str, value: Value) -> Value {
     let pdu = NGAPPDU::from_tree(&tree!({"message": message, "ies": [
         {"AMF-UE-NGAP-ID": 1},
         {(ie): {(name): (value)}},
