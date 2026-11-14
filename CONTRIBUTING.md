@@ -254,8 +254,8 @@ fixtures, so existing corpus inputs still pick the same PDU.
 ```sh
 cargo install cargo-fuzz
 ../oxirush-aper/protocols/fuzz/seed.sh
-cargo +nightly fuzz run decode -- -max_total_time=60 -max_len=4096 -dict=fuzz/corpus/protocol.dict
-cargo +nightly fuzz run edit -- -max_total_time=60 -max_len=1024 -len_control=0
+cargo +nightly fuzz run decode -- -max_total_time=60 -max_len=4096 -dict=fuzz/octets.dict
+cargo +nightly fuzz run edit -- -max_total_time=60 -max_len=1024 -len_control=0 -dict=fuzz/names.dict
 ```
 
 
