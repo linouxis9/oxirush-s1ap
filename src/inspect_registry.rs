@@ -2,7 +2,6 @@
 pub(crate) use crate::registry::{
     IE_NAMES, IE_TYPES, ITEM_CRITICALITIES, MESSAGES, ie, ie_contents,
 };
-use oxirush_aper::inspect::Form;
 pub(crate) const PROTOCOL: &str = "S1AP";
 pub(crate) const ROOT: &str = "s1ap";
 oxirush_aper::__transfers! {}
@@ -12,44 +11,9 @@ oxirush_aper::__carried! {
     of "NGAP" 104 "SourceNGRANNode-ToTargetNGRANNode-TransparentContainer";
     of "NGAP" 123 "TargetNGRANNode-ToSourceNGRANNode-TransparentContainer";
 }
-pub(crate) fn type_form(name: &str) -> Option<Form> {
-    Some(match name {
-        // CI
-        "CI" => Form::Number(16),
-        // CellIdentity
-        "CellIdentity" => Form::Number(28),
-        // FiveGSTAC
-        "FiveGSTAC" => Form::Number(24),
-        // GTP-TEID
-        "GTPTEID" => Form::Number(32),
-        // IMSI
-        "IMSI" => Form::Digits,
-        // LAC
-        "LAC" => Form::Number(16),
-        // MME-Code
-        "MMECode" => Form::Number(8),
-        // MME-Group-ID
-        "MMEGroupID" => Form::Number(16),
-        // M-TMSI
-        "MTMSI" => Form::Number(32),
-        // NRCellIdentity
-        "NRCellIdentity" => Form::Number(36),
-        // PLMNidentity
-        "PLMNidentity" => Form::Plmn,
-        // Port-Number
-        "PortNumber" => Form::Number(16),
-        // RAC
-        "RAC" => Form::Number(8),
-        // TAC
-        "TAC" => Form::Number(16),
-        // TransportLayerAddress
-        "TransportLayerAddress" => Form::Address,
-        // UL-NAS-Count
-        "ULNASCount" => Form::Number(5),
-        _ => return None,
-    })
-}
 use oxirush_aper::UNBOUNDED;
+#[allow(unused_imports)]
+use oxirush_aper::inspect::Form;
 #[allow(unused_imports)]
 use oxirush_aper::inspect::schema::{Field as F, Kind as K, Member as M, Text, Type as T};
 /// The types of the protocol, in the order of the names that ASN.1 gives them, which the walker of the trees reads: a type is named by its row.
