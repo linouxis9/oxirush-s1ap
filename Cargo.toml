@@ -69,6 +69,6 @@ doc-scrape-examples = false
 # that the walker needs, and oxirush-ngap of the same change, whose tests take the
 # handover containers of S1AP, until the releases that have them.
 [patch.crates-io]
-oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "336b93d22a8dc98e7136e00b997faa8d1815df40" }
+oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "606704af9039e8c3af0bcd51ed7630c4aabacdc3" }
 oxirush-utils = { git = "https://github.com/linouxis9/oxirush-utils", rev = "89606c26c44b70d11055882abdee99b22f564353" }
-oxirush-ngap = { git = "https://github.com/linouxis9/oxirush-ngap", rev = "7c81f7b90f63c8fb1b6e911da1727a816afd795b" }
+oxirush-ngap = { git = "https://github.com/linouxis9/oxirush-ngap", rev = "197dcfd09defb4f711e5f2c750aba7819ec913cb" }
