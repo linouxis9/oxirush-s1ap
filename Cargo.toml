@@ -76,9 +76,9 @@ doc-scrape-examples = false
 # that the walker needs, and oxirush-ngap of the same change, whose tests take the
 # handover containers of S1AP, until the releases that have them.
 [patch.crates-io]
-oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "90e9ade5b7a7117d5a1af93a5538e7d7a32685a7" }
+oxirush-aper = { git = "https://github.com/linouxis9/oxirush-aper", rev = "ec538c50288633d0754250636d79468d21dc5618" }
 oxirush-utils = { git = "https://github.com/linouxis9/oxirush-utils", rev = "4eae6c700f102dbf134e47f758e96799bee3f537" }
-oxirush-ngap = { git = "https://github.com/linouxis9/oxirush-ngap", rev = "85aec4d455eb0e0d0d73fc8f851bf448b48ee251" }
+oxirush-ngap = { git = "https://github.com/linouxis9/oxirush-ngap", rev = "c655e15c9234d0021e6f22803596b0f2c4e732c0" }
 
 # A test build has no debug information, as in CI: with it, a test build of the crate
 # took a quarter more time and three times the disk. A panic still names its line.
