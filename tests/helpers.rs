@@ -93,18 +93,27 @@ fn a_time_to_wait_is_its_seconds() {
     assert_eq!(seconds, [1, 2, 5, 10, 20, 60]);
 }
 
+/// The octets of the NAS UE network capability IE lead with EEA0 and EIA0,
+/// which the bitmaps of S1AP leave out (TS 24.301 §9.9.3.34, TS 36.413
+/// §9.2.1.40): every other algorithm of the two octets is kept.
 #[test]
-fn security_capability_octets_lead_with_the_first_algorithm() {
-    // 128-EEA1 and 128-EEA2; 128-EIA2.
-    let capabilities = ue_security_capabilities(0xC0, 0x40);
-    let leading = |bits: &BitString| (0..3).map(|at| bits.get(at).unwrap()).collect::<Vec<_>>();
+fn security_capabilities_keep_every_algorithm_of_the_nas_octets() {
+    // EEA0, 128-EEA1, 128-EEA2 and EEA7; 128-EIA2 and EIA4 to EIA7.
+    let capabilities = ue_security_capabilities(&[0xe1, 0x2f, 0xff]);
+    let octets = |bits: &BitString| (bits.len(), bits.as_octets().to_vec());
     assert_eq!(
-        leading(&capabilities.encryption_algorithms.0),
-        [true, true, false]
+        octets(&capabilities.encryption_algorithms.0),
+        (16, vec![0xc2, 0x00])
     );
     assert_eq!(
-        leading(&capabilities.integrity_protection_algorithms.0),
-        [false, true, false]
+        octets(&capabilities.integrity_protection_algorithms.0),
+        (16, vec![0x5e, 0x00])
+    );
+    // An octet that the value does not have gives no algorithm.
+    let capabilities = ue_security_capabilities(&[0xf0]);
+    assert_eq!(
+        octets(&capabilities.integrity_protection_algorithms.0),
+        (16, vec![0x00, 0x00])
     );
 }
 

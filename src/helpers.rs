@@ -22,10 +22,10 @@
 //! let enb = ENBID::macroENB_ID(Bits::new(0x12345, 20).unwrap());
 //! let cell = eutran_cgi(network, &enb, 7).unwrap(); // eNB, cell
 //!
-//! // A bit string from octets, and the algorithms of a UE: the first octet
-//! // of its encryption bitmap, then of its integrity bitmap
+//! // A bit string from octets, and the algorithms of a UE: the value of its
+//! // NAS UE network capability IE
 //! let algorithm_mask = oxirush_s1ap::BitString::from([0xe0]);
-//! let capabilities = ue_security_capabilities(0xe0, 0xe0);
+//! let capabilities = ue_security_capabilities(&[0xf0, 0xf0]);
 //!
 //! // What is no MCC, and a cell that does not fit in the 8 bits after a macro eNB ID
 //! println!("{}", plmn("20", "93").unwrap_err());
@@ -165,19 +165,29 @@ pub fn eutran_cgi(
     })
 }
 
-/// Build LTE UE security capabilities from the first octet of the encryption
-/// bitmap and the first octet of the integrity bitmap.
+/// Build the UE Security Capabilities of a UE from the value of its NAS UE
+/// network capability IE (TS 24.301 §9.9.3.34), whose first two octets are
+/// its EPS encryption and integrity algorithms.
 ///
-/// Each is the first octet of an S1AP bitmap, whose leading bit is
-/// 128-EEA1 or 128-EIA1 (TS 36.413 §9.2.1.40). The octets of the NAS UE
-/// network capability IE lead with EEA0 and EIA0 (TS 24.301 §9.9.3.34), so
-/// shift them left by one bit first.
-pub fn ue_security_capabilities(encryption: u8, integrity: u8) -> UESecurityCapabilities<'static> {
-    // Sixteen bits, of which the first eight are the algorithms.
-    let algorithms = |byte: u8| BitString::from([byte, 0]);
+/// A NAS octet leads with EEA0 or EIA0, which an S1AP bitmap leaves out: bits
+/// 7 to 1 of the octet are the first to seventh bits of the bitmap, which
+/// starts at 128-EEA1 or 128-EIA1 (TS 36.413 §9.2.1.40). An octet that the
+/// value does not have gives a bitmap of no algorithm. Each bitmap has sixteen
+/// bits.
+///
+/// ```
+/// use oxirush_s1ap::helpers::ue_security_capabilities;
+///
+/// // EEA0 to 128-EEA3 and EIA0 to 128-EIA3, then the UMTS algorithms
+/// let capabilities = ue_security_capabilities(&[0xf0, 0xf0, 0x80, 0x80]);
+/// assert_eq!(capabilities.encryption_algorithms.0.as_octets(), [0xe0, 0x00]);
+/// assert_eq!(capabilities.integrity_protection_algorithms.0.as_octets(), [0xe0, 0x00]);
+/// ```
+pub fn ue_security_capabilities(nas: &[u8]) -> UESecurityCapabilities<'static> {
+    let bitmap = |octet: usize| BitString::from([nas.get(octet).copied().unwrap_or(0) << 1, 0]);
     UESecurityCapabilities {
-        encryption_algorithms: EncryptionAlgorithms(algorithms(encryption)),
-        integrity_protection_algorithms: IntegrityProtectionAlgorithms(algorithms(integrity)),
+        encryption_algorithms: EncryptionAlgorithms(bitmap(0)),
+        integrity_protection_algorithms: IntegrityProtectionAlgorithms(bitmap(1)),
         ie_extensions: None,
     }
 }

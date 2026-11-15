@@ -139,7 +139,7 @@ fn main() -> Result<(), Error> {
         REJECT uEaggregateMaximumBitrate(bit_rate),
         REJECT E_RABToBeSetupListCtxtSUReq(erabs),
 
-        REJECT UESecurityCapabilities(ue_security_capabilities(0xe0, 0xe0)),
+        REJECT UESecurityCapabilities(ue_security_capabilities(&[0xf0, 0xf0])),
         REJECT SecurityKey([0; 32]),
     )?;
 

@@ -185,7 +185,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         eNB_UE_S1AP_ID(enb_id),
         uEaggregateMaximumBitrate(rates),
         E_RABToBeSetupListCtxtSUReq(ERABToBeSetupListCtxtSUReq(bearers)),
-        UESecurityCapabilities(ue_security_capabilities(0xe0, 0xe0)),
+        UESecurityCapabilities(ue_security_capabilities(&[0xf0, 0xf0])),
         SecurityKey(k_enb),
     )?;
 

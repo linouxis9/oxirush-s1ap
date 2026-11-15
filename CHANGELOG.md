@@ -12,6 +12,11 @@ All notable changes to `oxirush-s1ap` are recorded here.
 
 ### Changed
 
+- `helpers::ue_security_capabilities` takes the value of the NAS UE network
+  capability IE (TS 24.301 §9.9.3.34), whose EEA and EIA octets lead with
+  EEA0 and EIA0, where it took the first octet of each S1AP bitmap (TS 36.413
+  §9.2.1.40). Not source compatible: `ue_security_capabilities(0xe0, 0xe0)` is
+  `ue_security_capabilities(&[0xf0, 0xf0])`.
 - The trees of the IEs, the transfers and the messages are read and written by
   the walker of oxirush-aper with the table of the types of S1AP
   (`inspect_registry.rs`), in the place of an `impl Tree` for each type of the

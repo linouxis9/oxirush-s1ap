@@ -61,7 +61,7 @@ fn main() -> Result<(), Error> {
         REJECT E_RABToBeSetupListCtxtSUReq(erabs),
 
         // Its security capabilities and its key
-        REJECT UESecurityCapabilities(ue_security_capabilities(0xe0, 0xe0)),
+        REJECT UESecurityCapabilities(ue_security_capabilities(&[0xf0, 0xf0])),
         REJECT SecurityKey([0; 32]),
 
         // Its MME
