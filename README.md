@@ -546,15 +546,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Performance
 
-| Six common PDUs | This crate | rasn 0.29 | hampi 0.7.2 | asn1c (Open5GS 2.8.0) | pycrate 0.8.1 |
-|---|---|---|---|---|---|
-| Decoding, every IE as its type | 185 to 552 ns | 4.0–8.1× slower | 5.5–13× slower | 9.0–22× slower | 370–880× slower |
-| Encoding | 161 to 385 ns | 11–15× slower | 12–22× slower | 9.6–19× slower | 470–770× slower |
+| Codec, on six common PDUs | Decoding, every IE as its type | Encoding |
+|---|---|---|
+| This crate | 185 to 552 ns | 161 to 385 ns |
+| rasn 0.29 | 4.0–8.1× slower | 11–15× slower |
+| hampi 0.7.2 | 5.5–13× slower | 12–22× slower |
+| asn1c (Open5GS 2.8.0) | 9.0–22× slower | 9.6–19× slower |
+| pycrate 0.8.1 | 370–880× slower | 470–770× slower |
 
 Medians of ten rounds in turns on one core of an Intel Xeon E5-2680 v4 (a
 KVM guest, Linux 7.0, Rust 1.100.0), at 24ee03c on 2026-11-15. A cell of
-another codec says how much slower it is than this crate on the six PDUs;
-the ten times of the two overlap for none. [`benches/README.md`](benches/README.md) has each PDU,
+another codec says how much slower it is than this crate on the six PDUs:
+the medians differ by more than 10 % and the ten times of the two overlap
+for none. [`benches/README.md`](benches/README.md) has each PDU,
 the readers and the checks, the method and the command.
 
 ## Tests and fuzzing
@@ -564,11 +568,11 @@ cargo test --all-features
 cargo run --example s1ap_build_pdu
 ```
 
-Each example of this page checks what it gives with `assert_eq!`, and runs
-as a documentation test. The tests run 101 messages and 284 vectors that
-pycrate 0.8.1 encoded from the ASN.1, and 81 PDUs that the MME of Open5GS
-2.8.0 sent in lab runs, through the codec and the trees, and 16 trees of
-each message that the tables make. No PDU of a commercial RAN or core is
+Each example of this page checks what it gives with `assert_eq!`, and runs as
+a documentation test. The tests run 101 messages and 284 vectors that pycrate
+0.8.1 encoded from the ASN.1, and 81 PDUs that the MME of Open5GS 2.8.0 sent
+in lab runs, through the codec and the trees, and, for each message, 16 trees
+generated from the protocol's tables. No PDU of a commercial RAN or core is
 among them. `fuzz/` has ten fuzz targets, and `examples/` four programs.
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has how the bindings are generated, the

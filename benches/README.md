@@ -6,18 +6,19 @@ are those of `protocols/benches/` of
 beside this repository, which oxirush-ngap and oxirush-s1ap share; what is of
 the protocol is in `src/` and `compare/` here.
 
-The README sums up the comparison with the other implementations of S1AP,
-and [The six PDUs](#the-six-pdus) has its figures. The figures below were taken on the same
-machine, an Intel Xeon E5-2680 v4 (Broadwell, 2.4 GHz; a KVM guest bound to
-NUMA node 0; Linux 7.0, Rust 1.100.0), on 2026-11-15, at 24ee03c.
+The README sums up the comparison with the other implementations of S1AP, and
+[The six PDUs](#the-six-pdus) has its figures. The figures below were taken on
+the same machine, an Intel Xeon E5-2680 v4 (Broadwell, 2.4 GHz; a KVM guest
+bound to NUMA node 0; Linux 7.0, Rust 1.100.0), on 2026-11-15, at 24ee03c.
 
 ## The six PDUs
 
-The comparison of the [README](../README.md#performance), on the six PDUs of `compare/pdus.tsv`, which each implementation decodes and
-encodes. The envelope alone is `S1APPDU::decode`, which leaves the value of
-each IE in its octets; "this crate" decodes the PDU and then every IE of its
-message as its type, which is what the others do; and encoding writes the PDU
-from the typed values of its IEs, as `build_s1ap!` does.
+The comparison of the [README](../README.md#performance), on the six PDUs of
+`compare/pdus.tsv`, which each implementation decodes and encodes. The envelope
+alone is `S1APPDU::decode`, which leaves the value of each IE in its octets;
+"this crate" decodes the PDU and then every IE of its message as its type, which
+is what the others do; and encoding writes the PDU from the typed values of its
+IEs, as `build_s1ap!` does.
 
 Decoding, ns per call:
 
@@ -30,16 +31,16 @@ Decoding, ns per call:
 | UEContextReleaseCommand (21) | 30 | 224 | 952 | 1,240 | 2,716 | 120,403 |
 | InitialUEMessage (48) | 30 | 274 | 2,208 | 2,706 | 5,057 | 215,092 |
 
-The time of each other implementation over this crate's, decoding:
+How much slower each other implementation is than this crate, decoding:
 
-| PDU (octets) | rasn / this crate | hampi / this crate | asn1c / this crate | pycrate / this crate |
+| PDU (octets) | rasn | hampi | asn1c | pycrate |
 |---|---|---|---|---|
-| DownlinkNASTransport (73) | 5.9x | 8.9x | 20x | 680x |
-| InitialContextSetupRequest (197) | 7.5x | 13x | 22x | 880x |
-| S1SetupResponse (45) | 4.0x | 6.0x | 9.0x | 370x |
-| HandoverRequest (146) | 7.7x | 12x | 20x | 860x |
-| UEContextReleaseCommand (21) | 4.3x | 5.5x | 12x | 540x |
-| InitialUEMessage (48) | 8.1x | 9.9x | 18x | 780x |
+| DownlinkNASTransport (73) | 5.9× slower | 8.9× slower | 20× slower | 680× slower |
+| InitialContextSetupRequest (197) | 7.5× slower | 13× slower | 22× slower | 880× slower |
+| S1SetupResponse (45) | 4.0× slower | 6.0× slower | 9.0× slower | 370× slower |
+| HandoverRequest (146) | 7.7× slower | 12× slower | 20× slower | 860× slower |
+| UEContextReleaseCommand (21) | 4.3× slower | 5.5× slower | 12× slower | 540× slower |
+| InitialUEMessage (48) | 8.1× slower | 9.9× slower | 18× slower | 780× slower |
 
 Encoding, ns per call:
 
@@ -52,18 +53,19 @@ Encoding, ns per call:
 | UEContextReleaseCommand (21) | 170 | 1,874 | 1,970 | 1,628 | 79,536 |
 | InitialUEMessage (48) | 204 | 2,992 | 3,574 | 2,902 | 129,785 |
 
-The time of each other implementation over this crate's, encoding:
+How much slower each other implementation is than this crate, encoding:
 
-| PDU (octets) | rasn / this crate | hampi / this crate | asn1c / this crate | pycrate / this crate |
+| PDU (octets) | rasn | hampi | asn1c | pycrate |
 |---|---|---|---|---|
-| DownlinkNASTransport (73) | 14x | 16x | 16x | 510x |
-| InitialContextSetupRequest (197) | 13x | 22x | 19x | 770x |
-| S1SetupResponse (45) | 13x | 14x | 11x | 550x |
-| HandoverRequest (146) | 14x | 20x | 17x | 760x |
-| UEContextReleaseCommand (21) | 11x | 12x | 9.6x | 470x |
-| InitialUEMessage (48) | 15x | 18x | 14x | 640x |
+| DownlinkNASTransport (73) | 14× slower | 16× slower | 16× slower | 510× slower |
+| InitialContextSetupRequest (197) | 13× slower | 22× slower | 19× slower | 770× slower |
+| S1SetupResponse (45) | 13× slower | 14× slower | 11× slower | 550× slower |
+| HandoverRequest (146) | 14× slower | 20× slower | 17× slower | 760× slower |
+| UEContextReleaseCommand (21) | 11× slower | 12× slower | 9.6× slower | 470× slower |
+| InitialUEMessage (48) | 15× slower | 18× slower | 14× slower | 640× slower |
 
-The figures were taken at 24ee03c, by [the method of the comparison](#the-method-of-the-comparison).
+The figures were taken at 24ee03c, by [the method of the
+comparison](#the-method-of-the-comparison).
 
 ## Every figure of the comparison for InitialContextSetupRequest
 
@@ -83,23 +85,25 @@ The programs, the machine and the method of [the six PDUs](#the-six-pdus), per c
 | encode octets allocated | 456 | 1,698 | 1,797 | 3,728 |  |
 | most memory held, KiB | 3,836 | 4,050 | 3,770 | 4,606 | 27,462 |
 
-The time, the cycles and the instructions of each other implementation over this crate's:
+How much slower each other implementation is than this crate, and how many more
+cycles and instructions it takes:
 
-|  | rasn / this crate | hampi / this crate | asn1c / this crate | pycrate / this crate |
+|  | rasn | hampi | asn1c | pycrate |
 |---|---|---|---|---|
-| decode ns | 7.5x | 13x | 22x | 880x |
-| decode cycles | 7.7x | 13x | 22x | 850x |
-| decode instructions | 6.5x | 14x | 24x | 620x |
-| encode ns | 13x | 22x | 19x | 770x |
-| encode cycles | 13x | 23x | 19x | 770x |
-| encode instructions | 11x | 27x | 21x | 540x |
+| decode ns | 7.5× slower | 13× slower | 22× slower | 880× slower |
+| decode cycles | 7.7× more | 13× more | 22× more | 850× more |
+| decode instructions | 6.5× more | 14× more | 24× more | 620× more |
+| encode ns | 13× slower | 22× slower | 19× slower | 770× slower |
+| encode cycles | 13× more | 23× more | 19× more | 770× more |
+| encode instructions | 11× more | 27× more | 21× more | 540× more |
 
 ## The method of the comparison
 
 Every operation of every implementation ran once a round, a call repeated
 for about 0.2 s, in turns, ten rounds (ten runs of the script with
 `--rounds 1`): a time is the median of the ten, and a ratio of times is given
-where the ten times of the two do not overlap (they overlap for none here).
+otherwise than "about the same", which is when the medians are within 10 % or
+the ten times overlap (none is here).
 The cycles and the instructions, the median of the rounds, are those that
 `perf stat` counts for the calls alone: the difference between a run of
 twice the calls and one of the calls.
