@@ -548,12 +548,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 | Six common PDUs | This crate | rasn 0.29 | hampi 0.7.2 | asn1c (Open5GS 2.8.0) | pycrate 0.8.1 |
 |---|---|---|---|---|---|
-| Decoding, every IE as its type | 79 to 266 ns | 6.3–9.6× slower | 6.7–15× slower | 12–22× slower | 540–990× slower |
-| Encoding | 64 to 170 ns | 12–14× slower | 19–31× slower | 11–20× slower | 680–940× slower |
+| Decoding, every IE as its type | 185 to 552 ns | 4.0–8.1× slower | 5.5–13× slower | 9.0–22× slower | 370–880× slower |
+| Encoding | 161 to 385 ns | 11–15× slower | 12–22× slower | 9.6–19× slower | 470–770× slower |
 
-On one core of an AMD Ryzen 7 5700G (Linux 7.0, Rust 1.98.1), at 774c1b5 on
-2026-10-18. A cell of another codec says how much slower it is than this
-crate on the six PDUs. [`benches/README.md`](benches/README.md) has each PDU,
+Medians of ten rounds in turns on one core of an Intel Xeon E5-2680 v4 (a
+KVM guest, Linux 7.0, Rust 1.100.0), at 24ee03c on 2026-11-15. A cell of
+another codec says how much slower it is than this crate on the six PDUs;
+the ten times of the two overlap for none. [`benches/README.md`](benches/README.md) has each PDU,
 the readers and the checks, the method and the command.
 
 ## Tests and fuzzing
