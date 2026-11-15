@@ -69,8 +69,7 @@ measures a clean build.
 
 ## The six PDUs
 
-The comparison of the [README](../README.md#against-other-implementations),
-on the six PDUs of `compare/pdus.tsv`, which each implementation decodes and
+The comparison of the [README](../README.md#performance), on the six PDUs of `compare/pdus.tsv`, which each implementation decodes and
 encodes. The envelope alone is `S1APPDU::decode`, which leaves the value of
 each IE in its octets; "this crate" decodes the PDU and then every IE of its
 message as its type, which is what the others do; and encoding writes the PDU
@@ -124,8 +123,7 @@ The figures were taken at 774c1b5, by [the method of the comparison](#the-method
 
 ## Every figure of the comparison for InitialContextSetupRequest
 
-The programs, the machine and the method of the comparison of the
-[README](../README.md#against-other-implementations), per call:
+The programs, the machine and the method of [the six PDUs](#the-six-pdus), per call:
 
 |  | this crate | rasn 0.29 | hampi 0.7.2 | asn1c (Open5GS 2.8.0) | pycrate 0.8.1 |
 |---|---|---|---|---|---|
@@ -166,4 +164,8 @@ program on one core, measured on a quiet machine on 2026-10-18: each is the
 median of four runs of the script, which fetches each implementation at a
 pinned version: hampi 0.7.2 and rasn 0.29.0 from crates.io, Open5GS v2.8.0
 from GitHub, pycrate 0.8.1 from PyPI, and the ASN.1 from the archive of 3GPP.
-The [README](../README.md#against-other-implementations) has the command.
+From the root of the repository, with oxirush-aper beside it:
+
+```sh
+python3 ../oxirush-aper/protocols/benches/compare/compare.py --core 3 --perf "sudo -n perf"
+```
