@@ -46,9 +46,9 @@ Each example shows what it gives with `assert_eq!`, and runs as a test of the cr
 
 ```toml
 [dependencies]
-oxirush-s1ap = "0.5"
+oxirush-s1ap = "0.6"
 # With the JSON forms:
-# oxirush-s1ap = { version = "0.5", features = ["inspect"] }
+# oxirush-s1ap = { version = "0.6", features = ["inspect"] }
 # The examples of this page also use:
 # hex = "0.4"
 ```

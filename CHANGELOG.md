@@ -2,7 +2,7 @@
 
 All notable changes to `oxirush-s1ap` are recorded here.
 
-## Unreleased
+## 0.6.0 - unreleased
 
 ### Added
 
