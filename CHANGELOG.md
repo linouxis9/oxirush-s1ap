@@ -4,24 +4,37 @@ All notable changes to `oxirush-s1ap` are recorded here.
 
 ## 0.6.0 - unreleased
 
+On oxirush-aper 0.4.0 exactly, and oxirush-utils 0.3. The trees are read and written
+by the walker of oxirush-aper over the table of the types of S1AP, in less time: its
+changelog has the figures.
+
 ### Added
 
-- `inspect::value_tree` and `inspect::value_from_tree`: the tree of a value of
-  a type of the bindings, as the tree of a PDU shows it, and the value that a
-  tree writes. They take the place of `Tree` on each type.
+- `inspect::at` gives the type at a path of the tree of a PDU, through lists and the
+  IEs that they hold: its name, the IE whose value it is, what its tree takes, and the
+  IEs that an extension container may hold. `inspect::tree_at` reads octets of that
+  type as the tree of a PDU shows them.
+- `inspect::value_tree` and `inspect::value_from_tree`: the tree of a value of a type
+  of the bindings, as the tree of a PDU shows it, and the value that a tree writes.
+  They take the place of `Tree` on each type.
+- The extension set of each type that has an extension container, in
+  `inspect_registry.rs`.
+- `encode_into` of a PDU appends its octets to a buffer that the caller keeps;
+  `encode` allocates the octets once, at their size.
+- The tests write 16 trees of each message that the tables make as PDUs, and read
+  them back. The fuzz target `generated` does the same with the fuzzer's octets, and
+  `walker` checks that the walker reads the IEs of the fixtures as the typed decoder
+  does.
 
 ### Changed
 
-- `helpers::ue_security_capabilities` takes the value of the NAS UE network
-  capability IE (TS 24.301 §9.9.3.34), whose EEA and EIA octets lead with
-  EEA0 and EIA0, where it took the first octet of each S1AP bitmap (TS 36.413
-  §9.2.1.40). Not source compatible: `ue_security_capabilities(0xe0, 0xe0)` is
-  `ue_security_capabilities(&[0xf0, 0xf0])`.
-- The trees of the IEs, the transfers and the messages are read and written by
-  the walker of oxirush-aper with the table of the types of S1AP
-  (`inspect_registry.rs`), in the place of an `impl Tree` for each type of the
-  bindings: the same trees, octets and errors, and 13,168 generated lines
-  fewer. A type of the bindings no longer implements `oxirush_utils::tree::Tree`.
+- Breaking: `helpers::ue_security_capabilities` takes the value of the NAS UE network
+  capability IE (TS 24.301 §9.9.3.34), whose EEA and EIA octets lead with EEA0 and
+  EIA0. It took the first octet of each S1AP bitmap (TS 36.413 §9.2.1.40).
+- Breaking: a type of the bindings no longer implements `oxirush_utils::tree::Tree`.
+  The trees of the IEs, the transfers and the messages are read and written by the
+  walker of oxirush-aper with the table of the types of S1AP (`inspect_registry.rs`):
+  the same trees, octets and errors, and 13,168 generated lines fewer.
   `value_from_tree` refuses a value outside a constraint of its type, which
   `tree::from_value` read.
 
@@ -30,6 +43,14 @@ All notable changes to `oxirush-s1ap` are recorded here.
 - The feature `serde`, and `Serialize` and `Deserialize` of every type of the
   bindings, which went through the tree: a program serializes the tree,
   `to_tree()`, which implements both, and reads a PDU back with `from_tree`.
+
+### Migration from 0.5
+
+| 0.5 | 0.6 |
+|-----|-----|
+| `ue_security_capabilities(0xe0, 0xe0)` | `ue_security_capabilities(&[0xf0, 0xf0])`, the EEA and EIA octets of the NAS IE's value |
+| `value.to_tree()`, `T::from_tree(&tree)` on a type of the bindings | `inspect::value_tree(&value)?`, `inspect::value_from_tree::<T>(&tree)?` |
+| `features = ["serde"]`, `serde_json::to_string(&pdu)` | `serde_json::to_string(&pdu.to_tree())` |
 
 ## 0.5.0 - 2026-11-09
 

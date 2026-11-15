@@ -54,7 +54,12 @@
 //!
 //! The types of [`s1ap`] are generated from the ASN.1 modules of the specification and
 //! checked in: `rasn-compiler` resolves the modules, and the generator of the crate
-//! writes each type with its codec on [`oxirush-aper`](aper).
+//! writes each type with its codec on [`oxirush-aper`](aper). The documentation of a
+//! generated type is its ASN.1 definition, and its members, alternatives and values
+//! follow the ASN.1 names: the member `pLMNidentity` is the field `plmn_identity`, the
+//! alternative `radioNetwork` the variant `radioNetwork`, and the value
+//! `om-intervention` the variant `om_intervention`. Only the hand-written items of the
+//! crate have documentation of their own.
 //!
 //! # Tasks
 //!
@@ -70,6 +75,7 @@
 //! | A list of single containers, and a handover container, typed | [`S1APPDU::items`](s1ap::S1APPDU::items), [`decode`], [`encode`] |
 //! | Check a message, and answer one that is faulty | [`S1APPDU::check`](s1ap::S1APPDU::check), [`S1APPDU::check_structure`](s1ap::S1APPDU::check_structure), [`Deviation`], [`S1APPDU::criticality_diagnostics_for_response`](s1ap::S1APPDU::criticality_diagnostics_for_response) |
 //! | A PDU as JSON | [`S1APPDU::to_tree`](s1ap::S1APPDU::to_tree), [`S1APPDU::from_tree`](s1ap::S1APPDU::from_tree), [`inspect`] |
+//! | What a path takes | [`inspect::at`], [`inspect::tree_at`], [`inspect::value_tree`], [`inspect::value_from_tree`] |
 //! | Write a message from its tree | [`S1APPDU::from_tree`](s1ap::S1APPDU::from_tree) |
 //!
 // Without `inspect` the items of the JSON forms in the tasks are no links: the links are
@@ -270,7 +276,8 @@
 //! - [oxirush-security](https://docs.rs/oxirush-security): NAS security, AKA and the derivation of keys.
 //! - [oxirush-ngap](https://docs.rs/oxirush-ngap): NGAP, between a gNB and an AMF.
 //! - [oxirush-s1ap](https://docs.rs/oxirush-s1ap): S1AP, between an eNB and an MME.
-//! - [oxirush-gtp-u](https://docs.rs/oxirush-gtp-u): GTP-U tunnels, with a test UPF.
+//! - [oxirush-gtp-u](https://docs.rs/oxirush-gtp-u): GTP-U tunnels, with a user-plane test peer.
+//! - [oxirush-pfcp](https://docs.rs/oxirush-pfcp): PFCP, between the control plane and the user plane.
 //! - [oxirush-sctp](https://docs.rs/oxirush-sctp): SCTP sockets, which carry NGAP and S1AP.
 
 #![forbid(unsafe_code)]

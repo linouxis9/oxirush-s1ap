@@ -151,7 +151,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // After the security mode: the default bearer, whose item carries the
-    // ATTACH ACCEPT, and the UE's security capabilities and KeNB
+    // ATTACH ACCEPT, and the UE's security capabilities and KeNB. The capabilities
+    // are the EEA and EIA octets of the UE's NAS UE network capability IE: here
+    // EEA0 to 128-EEA3 and EIA0 to 128-EIA3
     let priority = AllocationAndRetentionPriority {
         priority_level: PriorityLevel(8),
         pre_emption_capability: PreEmptionCapability::shall_not_trigger_pre_emption,
@@ -477,6 +479,43 @@ The [`inspect`] module has the rules of the paths and more examples: adding
 and removing IEs, repeated IEs, list items, ENUMERATED names and handover
 containers.
 
+## What a path takes
+
+`inspect::at` names the type at a path, even where no PDU has a value yet:
+through lists and the IEs that they hold. It says what its tree takes, and
+which IEs an extension container may hold. `inspect::tree_at` reads octets of
+that type as the tree of a PDU shows them.
+
+```rust
+use oxirush_s1ap::tree::Takes;
+use oxirush_s1ap::{Presence, inspect, s1ap::*, tree};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // The item of an E-RAB in the list of an INITIAL CONTEXT SETUP REQUEST
+    let item = "/s1ap/E-RABToBeSetupListCtxtSUReq/0/E-RABToBeSetupItemCtxtSUReq";
+    let at = inspect::at(item)?;
+    assert_eq!((at.name, at.ie), ("E-RABToBeSetupItemCtxtSUReq", Some(52)));
+
+    // A member of its value: a number up to 255
+    let qci = inspect::at(&format!("{item}/e-RABlevelQoSParameters/qCI"))?;
+    assert_eq!((qci.name, qci.takes), ("QCI", Takes::Number(255)));
+
+    // The extension container of the item may hold five IEs, each optional
+    let extensions = inspect::at(&format!("{item}/iE-Extensions"))?;
+    let ies = extensions.ies.ok_or("an extension container has IEs")?;
+    assert_eq!(ies.len(), 5);
+    assert!(ies.iter().all(|&(_, _, presence)| presence == Presence::Optional));
+
+    // A value of an IE from its tree, and its octets read back as a tree
+    let tree = tree!({"uEaggregateMaximumBitRateDL": 100_000_000, "uEaggregateMaximumBitRateUL": 50_000_000});
+    let value: UEAggregateMaximumBitrate = inspect::value_from_tree(&tree)?;
+    let octets = oxirush_s1ap::encode(&value)?;
+    assert_eq!(hex::encode(&octets), "1805f5e1006002faf080");
+    assert_eq!(inspect::tree_at("/s1ap/uEaggregateMaximumBitrate", &octets)?, tree);
+    Ok(())
+}
+```
+
 ## Write a message from its tree
 
 A tree names the message, in any case, and lists its IEs. The name gives the
@@ -575,11 +614,13 @@ python3 ../oxirush-aper/protocols/benches/compare/compare.py --core 3 --perf "su
 
 The tests run 101 messages and 284 vectors that pycrate 0.8.1 encoded from
 the ASN.1, and 81 PDUs that the MME of Open5GS 2.8.0 sent in lab runs,
-through the codec and the trees. `fuzz/` has eight
+through the codec and the trees, and 16 trees of each message of the
+protocol that its tables make, written as PDUs and read back. `fuzz/` has ten
 [cargo-fuzz](https://crates.io/crates/cargo-fuzz) targets: `decode`, `json`,
-`paths` and `exact` read any octets, and `edit`, `tree`, `transfer` and `jer`
-edit the PDUs of the tests and write new ones. CI runs each for a minute, and
-the Fuzz workflows of this repository and of oxirush-aper an hour each day.
+`paths` and `exact` read any octets; `edit`, `tree`, `transfer`, `jer` and
+`walker` edit the PDUs of the tests and write new ones; `generated` writes a
+PDU of any message with the IEs and values that its octets choose. CI runs
+each for a minute, and the Fuzz workflow an hour each day but Sunday.
 `examples/` has four programs.
 
 ```sh
@@ -605,7 +646,8 @@ says how to report a vulnerability.
 - [oxirush-security](https://github.com/linouxis9/oxirush-security): NAS security, AKA and the derivation of keys.
 - [oxirush-ngap](https://github.com/linouxis9/oxirush-ngap): NGAP, between a gNB and an AMF.
 - [oxirush-s1ap](https://github.com/linouxis9/oxirush-s1ap): S1AP, between an eNB and an MME.
-- [oxirush-gtp-u](https://github.com/linouxis9/oxirush-gtp-u): GTP-U tunnels, with a test UPF.
+- [oxirush-gtp-u](https://github.com/linouxis9/oxirush-gtp-u): GTP-U tunnels, with a user-plane test peer.
+- [oxirush-pfcp](https://github.com/linouxis9/oxirush-pfcp): PFCP, between the control plane and the user plane.
 - [oxirush-sctp](https://github.com/linouxis9/oxirush-sctp): SCTP sockets, which carry NGAP and S1AP.
 
 ## License
