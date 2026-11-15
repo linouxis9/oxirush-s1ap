@@ -4,9 +4,9 @@
 [![Documentation](https://docs.rs/oxirush-s1ap/badge.svg)](https://docs.rs/oxirush-s1ap)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-S1AP, the protocol between an eNB and an MME (3GPP TS 36.413), in Rust:
-types generated from the specification's ASN.1, and macros that build a
-message and read its IEs by name.
+Decode, build and check S1AP, the protocol between an eNB and an MME, in Rust
+(3GPP TS 36.413 V19.2.0, aligned PER). The types are generated from the
+specification's ASN.1, and macros build a message and read its IEs by name.
 
 ```rust
 use oxirush_s1ap::{build_s1ap, extract_s1ap_ies, s1ap::*};
@@ -17,7 +17,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pdu = S1APPDU::decode(&bytes)?;
     assert_eq!(
         pdu.to_string(),
-        "UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7",
+        "UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, \
+         eNB-UE-S1AP-ID 7",
     );
 
     // Read its IEs by name: `req` fails when the IE is missing, `opt` gives an Option
@@ -35,31 +36,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         eNB_UE_S1AP_ID(7u32),
         Cause(Cause::radioNetwork(CauseRadioNetwork::radio_connection_with_ue_lost)),
     )?;
-    assert_eq!(hex::encode(pdu.encode()?), "0012401500000300000002002a0008000200070002400202a0");
+    let octets = "0012401500000300000002002a0008000200070002400202a0";
+    assert_eq!(hex::encode(pdu.encode()?), octets);
     Ok(())
 }
 ```
-
-Each example shows what it gives with `assert_eq!`, and runs as a test of the crate.
 
 ## Installation
 
 ```toml
 [dependencies]
-oxirush-s1ap = "0.6"
-# With the JSON forms:
-# oxirush-s1ap = { version = "0.6", features = ["inspect"] }
-# The examples of this page also use:
-# hex = "0.4"
+oxirush-s1ap = { version = "0.6", features = ["inspect"] }
+hex = "0.4" # for the examples of this page
 ```
 
-| Feature | Adds |
-|---------|------|
-| `inspect` | A PDU as JSON: its tree, and paths to read and edit it |
+| Feature | Adds | Needs |
+|---------|------|-------|
+| `inspect` | A PDU as a JSON tree, with paths to read and edit it | `oxirush-utils` |
 
-The minimum supported Rust version is 1.88. The crate depends on one exact
-version of oxirush-aper, whose types (`Octets`, `Bits`, `Error`) the
-bindings use. It re-exports it as `oxirush_s1ap::aper`.
+The minimum supported Rust version is 1.88. The crate re-exports the
+oxirush-aper that it is built on as `oxirush_s1ap::aper`.
 
 ## Answer an eNB, from S1 SETUP to INITIAL CONTEXT SETUP
 
@@ -147,7 +143,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     assert_eq!(
         downlink.to_string(),
-        "DownlinkNASTransport (procedure 11, initiating message), MME-UE-S1AP-ID 1, eNB-UE-S1AP-ID 7",
+        "DownlinkNASTransport (procedure 11, initiating message), MME-UE-S1AP-ID 1, \
+         eNB-UE-S1AP-ID 7",
     );
 
     // After the security mode: the default bearer, whose item carries the
@@ -160,7 +157,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         pre_emption_vulnerability: PreEmptionVulnerability::not_pre_emptable,
         ie_extensions: None,
     };
-    let accept = hex::decode("07420121060002f839000100155201c101090908696e7465726e657405010a000001")?;
+    let accept = "07420121060002f839000100155201c101090908696e7465726e657405010a000001";
+    let accept = hex::decode(accept)?;
     let bearer = ERABToBeSetupItemCtxtSUReq {
         e_rab_id: ERABID(5),
         e_rab_level_qos_parameters: ERABLevelQoSParameters {
@@ -181,7 +179,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ie_extensions: None,
     };
     let mut k_enb = [0; 32];
-    hex::decode_to_slice("cd49a4ae7001cf3c810a89f47ced1b130f7b3f9b42bc9707431b3fb4e62b20fc", &mut k_enb)?;
+    let key = "cd49a4ae7001cf3c810a89f47ced1b130f7b3f9b42bc9707431b3fb4e62b20fc";
+    hex::decode_to_slice(key, &mut k_enb)?;
     let setup = build_s1ap!(InitialContextSetupRequest,
         MME_UE_S1AP_ID(1u32),
         eNB_UE_S1AP_ID(enb_id),
@@ -200,7 +199,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     assert_eq!(
         received.to_string(),
-        "InitialContextSetupRequest (procedure 9, initiating message), MME-UE-S1AP-ID 1, eNB-UE-S1AP-ID 7",
+        "InitialContextSetupRequest (procedure 9, initiating message), MME-UE-S1AP-ID 1, \
+         eNB-UE-S1AP-ID 7",
     );
     assert!(deviations.is_empty());
     assert_eq!(key.0.as_octets(), k_enb);
@@ -249,14 +249,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-| Method | Does |
-|--------|------|
-| `decode` | Decode one PDU, which borrows from the octets and copies nothing |
-| `encode` | Encode it |
-| `procedure_code`, `direction`, `kind` | `18`, `Direction::Initiating`, and an `S1apPduKind` (`Other` for a procedure that the specification lacks in that direction) |
-| `decode_value`, `message` | The message as its type |
-| `protocol_ies`, `set_protocol_ies` | The IEs of the message, whatever it is |
-| `ie::<T>`, `ies::<T>` | The first IE of a type, or every one in order. A message has them too |
+`decode_value()` gives the message as its type, `protocol_ies()` its IEs
+whatever it is, and `ie::<T>()` and `ies::<T>()` the first IE of a type or
+every one, on a PDU or a message.
 
 A field of `extract_s1ap_ies!` is `req`, `opt` or `lax`, then its name, its
 type and the IE it reads. What follows `=>` is what the field keeps of the
@@ -276,15 +271,20 @@ and `ie::X::field(criticality, value)` builds one.
 
 ## Build a PDU
 
+The macros name IEs, types and fields after the ASN.1, made into Rust
+identifiers:
+
 | ASN.1 | Rust |
 |---|---|
 | `id-MME-UE-S1AP-ID` (an IE) | `MME_UE_S1AP_ID` |
 | `Pre-emptionCapability`, `E-RAB-ID` (types) | `PreEmptionCapability`, `ERABID` |
 | `pLMNidentity` (a field) | `plmn_identity` |
 
-Leave a criticality out and the macro takes the one that TS 36.413 assigns.
-A name that does not exist, or a message that the procedure does not have in
-that direction, does not compile.
+The object set of a message is the list of IEs that the ASN.1 allows in it,
+each with its criticality and presence. Leave a criticality out and the macro
+takes the one that the object set assigns. A name that does not exist, or a
+message that the procedure does not have in that direction, does not
+compile.
 
 ```rust
 use oxirush_s1ap::{Criticality, Message, build_s1ap, s1ap::*};
@@ -309,13 +309,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ).unwrap_err();
     assert_eq!(
         error.to_string(),
-        "TimeToWait is no IE of the object set of InitialUEMessage, which assigns it no criticality: write its criticality",
+        "TimeToWait is no IE of the object set of InitialUEMessage, which assigns it no \
+         criticality: write its criticality",
     );
     Ok(())
 }
 ```
 
-## E-RAB lists and handover containers
+## Read E-RAB lists and handover containers
 
 An item of an E-RAB list is an IE alone in its container: `ie::X::field`
 builds it without naming a message, and `items::<L>()` reads each item of a
@@ -365,7 +366,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let container: SourceeNBToTargeteNBTransparentContainer = oxirush_s1ap::decode(&octets)?;
     assert_eq!(
         format!("{:?}", container.target_cell_id),
-        "EUTRANCGI { plmn_identity: PLMNidentity(208-93), cell_id: CellIdentity(0x1234/28), ie_extensions: None }",
+        "EUTRANCGI { plmn_identity: PLMNidentity(208-93), cell_id: CellIdentity(0x1234/28), \
+         ie_extensions: None }",
     );
     assert_eq!(oxirush_s1ap::encode(&container)?, octets);
     Ok(())
@@ -423,7 +425,7 @@ IEs it needs pays for those alone. Neither looks inside the octets that an IE
 carries. `criticality_diagnostics()` gives the diagnostics of an ERROR
 INDICATION, the answer where a procedure has no failure message.
 
-## A PDU as JSON
+## Edit a PDU as JSON
 
 With the `inspect` feature, a PDU is a JSON tree, to print a message or to
 write one: the name of the message and its IEs by name. The [`inspect`]
@@ -457,64 +459,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set a value, and pick another alternative of a CHOICE
     inspect::set(&mut tree, "/s1ap/eNB-UE-S1AP-ID", tree!(9))?;
     inspect::set(&mut tree, "/s1ap/Cause/nas", tree!("Normal Release"))?;
-    assert_eq!(S1APPDU::from_tree(&tree)?.to_tree(), tree!({"message": "UEContextReleaseRequest", "ies": [
+    let edited = tree!({"message": "UEContextReleaseRequest", "ies": [
         {"MME-UE-S1AP-ID": 42},
         {"eNB-UE-S1AP-ID": 9},
         {"Cause": {"nas": "normal-release"}},
-    ]}));
+    ]});
+    assert_eq!(S1APPDU::from_tree(&tree)?.to_tree(), edited);
 
     // A misspelt name is refused, and the tree stays as it was
     let before = tree.clone();
-    let error = inspect::set(&mut tree, "/s1ap/Cause/radioNetwrok", tree!("unspecified")).unwrap_err();
+    let misspelt = inspect::set(&mut tree, "/s1ap/Cause/radioNetwrok", tree!("unspecified"));
+    let error = misspelt.unwrap_err();
     assert_eq!(
         error.to_string(),
-        r#""radioNetwrok" is not a member of Cause, which has radioNetwork, transport, nas, protocol, misc, at /s1ap/Cause/radioNetwrok"#,
+        "\"radioNetwrok\" is not a member of Cause, which has radioNetwork, transport, nas, \
+         protocol, misc, at /s1ap/Cause/radioNetwrok",
     );
     assert_eq!(tree, before);
     Ok(())
 }
 ```
 
-The [`inspect`] module has the rules of the paths and more examples: adding
-and removing IEs, repeated IEs, list items, ENUMERATED names and handover
-containers.
-
-## What a path takes
-
-`inspect::at` names the type at a path, even where no PDU has a value yet:
-through lists and the IEs that they hold. It says what its tree takes, and
-which IEs an extension container may hold. `inspect::tree_at` reads octets of
-that type as the tree of a PDU shows them.
-
-```rust
-use oxirush_s1ap::tree::Takes;
-use oxirush_s1ap::{Presence, inspect, s1ap::*, tree};
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // The item of an E-RAB in the list of an INITIAL CONTEXT SETUP REQUEST
-    let item = "/s1ap/E-RABToBeSetupListCtxtSUReq/0/E-RABToBeSetupItemCtxtSUReq";
-    let at = inspect::at(item)?;
-    assert_eq!((at.name, at.ie), ("E-RABToBeSetupItemCtxtSUReq", Some(52)));
-
-    // A member of its value: a number up to 255
-    let qci = inspect::at(&format!("{item}/e-RABlevelQoSParameters/qCI"))?;
-    assert_eq!((qci.name, qci.takes), ("QCI", Takes::Number(255)));
-
-    // The extension container of the item may hold five IEs, each optional
-    let extensions = inspect::at(&format!("{item}/iE-Extensions"))?;
-    let ies = extensions.ies.ok_or("an extension container has IEs")?;
-    assert_eq!(ies.len(), 5);
-    assert!(ies.iter().all(|&(_, _, presence)| presence == Presence::Optional));
-
-    // A value of an IE from its tree, and its octets read back as a tree
-    let tree = tree!({"uEaggregateMaximumBitRateDL": 100_000_000, "uEaggregateMaximumBitRateUL": 50_000_000});
-    let value: UEAggregateMaximumBitrate = inspect::value_from_tree(&tree)?;
-    let octets = oxirush_s1ap::encode(&value)?;
-    assert_eq!(hex::encode(&octets), "1805f5e1006002faf080");
-    assert_eq!(inspect::tree_at("/s1ap/uEaggregateMaximumBitrate", &octets)?, tree);
-    Ok(())
-}
-```
+The tree is the crate's own JSON, with the names of the specification, and
+not the JSON Encoding Rules (ITU-T X.697).
+[The `inspect` module](https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/)
+has the rules of the paths and more examples: adding and removing IEs,
+repeated IEs, list items, ENUMERATED names, handover containers, and
+`inspect::at`, which names the type at a path and what its tree takes.
 
 ## Write a message from its tree
 
@@ -550,7 +521,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // where the message does not assign them
     assert_eq!(
         pdu.to_string(),
-        "UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, eNB-UE-S1AP-ID 7",
+        "UEContextReleaseRequest (procedure 18, initiating message), MME-UE-S1AP-ID 42, \
+         eNB-UE-S1AP-ID 7",
     );
     let tree = pdu.to_tree();
     let criticalities = inspect::select(&tree, "/s1ap/*/criticality")?;
@@ -566,60 +538,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - `check()` does not judge conditional IEs: their conditions are prose.
 - A value decoded as its type and encoded again loses what a later release
   added to it; a PDU and its tree keep those octets.
-- The tree is the crate's own JSON, with the names of the specification. It
-  is not the JSON Encoding Rules (ITU-T X.697).
 - RRC containers, and handover containers of systems other than E-UTRAN and
   NG-RAN, stay octets. NG-RAN's are read once a program calls
   `oxirush_ngap::inspect::register()`.
 - A PDU has no size limit, and a tree takes up to 142 octets per octet:
   bound what you read from SCTP.
-- The bindings are those of TS 36.413 V19.2.0 (Release 19), in aligned PER
-  (ITU-T X.691 (02/2021)).
-- No PDU of a commercial RAN or core is among the test fixtures.
 
 ## Performance
 
-Six common PDUs, each decoded with every IE as its type and encoded, against
-four other S1AP codecs:
-
-| | Decoding | Encoding |
-|---|---|---|
-| this crate | 79 to 266 ns | 64 to 170 ns |
-| rasn 0.29 | 6.3x to 9.6x | 12x to 14x |
-| hampi 0.7.2 | 6.7x to 15x | 19x to 31x |
-| asn1c (Open5GS 2.8.0) | 12x to 22x | 11x to 20x |
-| pycrate 0.8.1 | 540x to 990x | 680x to 940x |
+| Six common PDUs | This crate | rasn 0.29 | hampi 0.7.2 | asn1c (Open5GS 2.8.0) | pycrate 0.8.1 |
+|---|---|---|---|---|---|
+| Decoding, every IE as its type | 79 to 266 ns | 6.3–9.6× slower | 6.7–15× slower | 12–22× slower | 540–990× slower |
+| Encoding | 64 to 170 ns | 12–14× slower | 19–31× slower | 11–20× slower | 680–940× slower |
 
 On one core of an AMD Ryzen 7 5700G (Linux 7.0, Rust 1.98.1), at 774c1b5 on
-2026-10-18; a ratio is the other codec's time over this crate's.
-[`benches/README.md`](benches/README.md) has each PDU, the readers and the
-checks, the method and the command.
+2026-10-18. A cell of another codec says how much slower it is than this
+crate on the six PDUs. [`benches/README.md`](benches/README.md) has each PDU,
+the readers and the checks, the method and the command.
 
 ## Tests and fuzzing
 
 ```sh
 cargo test --all-features
-../oxirush-aper/protocols/fuzz/seed.sh && cargo +nightly fuzz run json -- -max_total_time=60
 cargo run --example s1ap_build_pdu
 ```
 
-The tests run 101 messages and 284 vectors that pycrate 0.8.1 encoded from
-the ASN.1, and 81 PDUs that the MME of Open5GS 2.8.0 sent in lab runs,
-through the codec and the trees, and 16 trees of each message of the
-protocol that its tables make, written as PDUs and read back. `fuzz/` has ten
-[cargo-fuzz](https://crates.io/crates/cargo-fuzz) targets, which read any
-octets, edit the PDUs of the tests, or write a PDU of any message from the
-tables. CI runs each for a minute, and the Fuzz workflow an hour each day
-but Sunday. `examples/` has four programs.
+Each example of this page checks what it gives with `assert_eq!`, and runs
+as a documentation test. The tests run 101 messages and 284 vectors that
+pycrate 0.8.1 encoded from the ASN.1, and 81 PDUs that the MME of Open5GS
+2.8.0 sent in lab runs, through the codec and the trees, and 16 trees of
+each message that the tables make. No PDU of a commercial RAN or core is
+among them. `fuzz/` has ten fuzz targets, and `examples/` four programs.
 
-[CONTRIBUTING.md](CONTRIBUTING.md) says how the bindings are
-generated, how the vectors were made and the PDUs captured, and what a change
-to them or to the pinned revisions takes.
-
-A pull request comes with a test for what it changes. Sign off your commits
-(`git commit -s`): by contributing you agree to the [Developer Certificate
-of Origin](https://developercertificate.org/). [SECURITY.md](SECURITY.md)
-says how to report a vulnerability.
+[CONTRIBUTING.md](CONTRIBUTING.md) has how the bindings are generated, the
+vectors made and the PDUs captured, how to run the fuzz targets, and how to
+contribute. [SECURITY.md](SECURITY.md) says how to report a vulnerability.
 
 ## The OxiRush family
 
@@ -639,4 +592,3 @@ Copyright 2025-2026 Valentin D'Emmanuele. Licensed under the Apache License,
 Version 2.0: see [LICENSE](LICENSE).
 
 [`inspect`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/inspect/index.html
-[`to_tree`]: https://docs.rs/oxirush-s1ap/latest/oxirush_s1ap/s1ap/s1_ap_pdu_descriptions/enum.S1APPDU.html#method.to_tree
